@@ -1,6 +1,9 @@
+import requests
+import json
 from rest_framework import serializers
 from .models import Contract, Heir
 from rest_framework.exceptions import PermissionDenied
+from lastwill.settings import SIGNER
 
 class HeirSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +18,7 @@ class ContractSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'address', 'owner_address', 'user_address',
                 'state', 'created_date', 'source_code', 'bytecode', 'abi',
                 'compiler_version', 'heirs', 'check_interval', 'active_to',
+                'balance', 'cost', 'last_check', 'next_check',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -26,11 +30,23 @@ class ContractSerializer(serializers.ModelSerializer):
             'bytecode': {'read_only': True},
             'abi': {'read_only': True},
             'compiler_version': {'read_only': True},
+            'balance': {'read_only': True},
+            'cost': {'read_only': True},
+            'last_check': {'read_only': True},
+            'next_check': {'read_only': True},
         }
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
+        response = requests.post('http://{}/get_key/'.format(SIGNER)).content
+        print(response)
+        validated_data['owner_address'] = json.loads(response.decode())['addr']
         heirs = validated_data.pop('heirs')
+        validated_data['cost'] = Contract.calc_cost(
+                len(heirs),
+                validated_data['active_to'],
+                validated_data['check_interval']
+        )
         contract = super().create(validated_data)
         for serialized_heir in heirs:
             Heir(contract=contract, **serialized_heir).save() 

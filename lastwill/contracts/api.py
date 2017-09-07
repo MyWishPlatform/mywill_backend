@@ -27,8 +27,8 @@ def get_cost(request):
     heirs_num = int(request.query_params['heirs_num'])
     active_to = datetime.date(*map(int, request.query_params['active_to'].split('-')))
     check_interval = int(request.query_params['check_interval'])
-    # TODO real formula
-    return Response({'result': heirs_num + check_interval})
+    result = Contract.calc_cost(heirs_num, active_to, check_interval)
+    return Response({'result': result})
 
 
 @api_view(['POST'])
@@ -41,4 +41,5 @@ def payment_notify(request):
         contract.state = state
         contract.save()
 #        if status == 'CONFIRMED': # deploy
+# set next check
     return Response({'status': 'ok'})
