@@ -42,3 +42,8 @@ def payment_notify(request):
         contract.save()
 #        if status == 'CONFIRMED': # deploy
     return Response({'status': 'ok'})
+
+
+@api_view()
+def get_code(request):
+    return Response({'result': ' { contract code } '})
