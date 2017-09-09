@@ -1,10 +1,17 @@
+from subprocess import Popen, PIPE
+from os import path
+import json
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from lastwill.settings import SOL_PATH
+
 
 MAX_WEI_DIGITS = len(str(2**256))
 
 class Contract(models.Model):
+    name = models.CharField(max_length=200, null=True, default=None)
     user = models.ForeignKey(User)
     address = models.CharField(max_length=50, null=True, default=None)
     owner_address = models.CharField(max_length=50, null=True, default=None)
@@ -24,8 +31,29 @@ class Contract(models.Model):
 
     @staticmethod
     def calc_cost(heirs_num, active_to, check_interval):
-        return 9999
+        Tg = 22000
+        Gp = 10 ** 9
+        Cg = 780476
+        CBg = 26561
+        Dg = 29435
+        DBg = 9646
+        B = heirs_num
+        Cc = 124852
+        DxC = abs((datetime.date.today() - active_to).total_seconds() / check_interval)
+        O = 25000 * 10 ** 9
+        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
+    def compile(self):
+        result = json.loads(Popen(
+                'solc --combined-json abi,bin {}'.format(SOL_PATH).split(),
+                stdout=PIPE,
+                cwd=path.dirname(SOL_PATH)
+        ).communicate()[0].decode())
+        self.compiler_version = result['version']
+        self.abi = json.loads(result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['abi'])
+        self.bytecode = result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['bin']
+        
+        
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)

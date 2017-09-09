@@ -174,6 +174,7 @@ REST_FRAMEWORK = {
 }
 
 SIGNER='127.0.0.1:5000'
+SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 
 try:
     from lastwill.settings_local import *

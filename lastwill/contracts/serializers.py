@@ -1,4 +1,5 @@
 import requests
+import datetime
 import json
 from rest_framework import serializers
 from .models import Contract, Heir
@@ -18,7 +19,7 @@ class ContractSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'address', 'owner_address', 'user_address',
                 'state', 'created_date', 'source_code', 'bytecode', 'abi',
                 'compiler_version', 'heirs', 'check_interval', 'active_to',
-                'balance', 'cost', 'last_check', 'next_check',
+                'balance', 'cost', 'last_check', 'next_check', 'name',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -44,7 +45,7 @@ class ContractSerializer(serializers.ModelSerializer):
         heirs = validated_data.pop('heirs')
         validated_data['cost'] = Contract.calc_cost(
                 len(heirs),
-                validated_data['active_to'],
+                validated_data['active_to'].date(),
                 validated_data['check_interval']
         )
         contract = super().create(validated_data)
