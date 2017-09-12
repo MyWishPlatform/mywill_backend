@@ -12,9 +12,11 @@ from .models import Contract
 from .serializers import ContractSerializer
 from lastwill.main.views import index
 from lastwill.settings import SOL_PATH, SIGNER
+from lastwill.permissions import IsOwner, IsStaff
 
 
 class ContractViewSet(ModelViewSet):
+    permission_classes = (IsStaff | IsOwner, )
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
     permission_classes = (IsAuthenticated,)
