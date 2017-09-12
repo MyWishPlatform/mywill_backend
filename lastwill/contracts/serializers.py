@@ -40,6 +40,7 @@ class ContractSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         validated_data['state'] = 'CREATED'
+        validated_data['user_address'] = validated_data['user_address'].lower()
         response = requests.post('http://{}/get_key/'.format(SIGNER)).content
         print(response)
         validated_data['owner_address'] = json.loads(response.decode())['addr']
@@ -51,6 +52,7 @@ class ContractSerializer(serializers.ModelSerializer):
         )
         contract = super().create(validated_data)
         for serialized_heir in heirs:
+            serialized_heir['address'] = serialized_heir['address'].lower()
             Heir(contract=contract, **serialized_heir).save() 
         return contract
 
