@@ -25,7 +25,7 @@ class ContractSerializer(serializers.ModelSerializer):
             'user': {'read_only': True},
             'address': {'read_only': True},
             'owner_address': {'read_only': True},
-            'state': {'read_only': True},
+#            'state': {'read_only': True},
             'created_date': {'read_only': True},
             'source_code': {'read_only': True},
             'bytecode': {'read_only': True},
@@ -39,6 +39,7 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
+        validated_data['state'] = 'CREATED'
         response = requests.post('http://{}/get_key/'.format(SIGNER)).content
         print(response)
         validated_data['owner_address'] = json.loads(response.decode())['addr']
@@ -59,5 +60,9 @@ class ContractSerializer(serializers.ModelSerializer):
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract.heir_set.all()]
         return res
 
-    def update(self, *args):
-        raise PermissionDenied()
+    def update(self, contract, validated_data):
+        if contract.state != 'CREATED':
+            raise PermissionDenied()
+        if 'state' in validated_data and validated_data['state'] not in ('CREATED', 'WAITING_FOR_PAYMENT'):
+            del validated_data['state']
+        return super().update(contract, validated_data)

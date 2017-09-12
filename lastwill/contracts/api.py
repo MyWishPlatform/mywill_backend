@@ -19,13 +19,17 @@ class ContractViewSet(ModelViewSet):
     serializer_class = ContractSerializer
     permission_classes = (IsAuthenticated,)
 
-    def destroy(self, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.state in ('CREATED',):
+            return super().destroy(request, *args, **kwargs)
         raise PermissionDenied()
 
     def get_queryset(self):
+        result = self.queryset.order_by('-created_date')
         if self.request.user.is_staff:
-            return self.queryset
-        return self.queryset.filter(user=self.request.user)
+            return result
+        return result.filter(user=self.request.user)
 
 
 @api_view()
@@ -37,62 +41,11 @@ def get_cost(request):
     return Response({'result': result})
 
 
-@api_view(['POST'])
-def payment_notify(request):
-    contract_id = request.data['contractId']
-    state = request.data['state']
-    contract = Contract.objects.get(id=contract_id)
-    if state == 'CONFIRMED' and contract.state == 'CREATED':
-        balance = request.data['balance']
-        if balance >= contract.cost:
-            contract.compile()
-            contract.save()
-            tr = abi.ContractTranslator(contract.abi)
-            arguments = [
-                    contract.user_address,
-                    [h.address for h in contract.heir_set.all()],
-                    [h.percentage for h in contract.heir_set.all()],
-#                    ['0x7e169Ef0a7915F9E6904b13308F9C995D2c295D6'],
-#                    [100],
-                    contract.check_interval,
-                    '0xf4c716ec3a201b960ca75a74452e663b00cf58b9',
-            ]
-            nonce = int(json.loads(requests.post('http://127.0.0.1:8545/', json={
-                    "method":"parity_nextNonce",
-                    "params": [contract.owner_address],
-                    "id":1,
-                    "jsonrpc":"2.0"
-            }, headers={'Content-Type': 'application/json'}).content.decode())['result'], 16)
-            signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                    'source' : contract.owner_address,
-                    'data': contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
-                    'nonce': nonce
-            }).content.decode())['result']
-
-
-#            return Response({'signed_data': signed_data})
-
-            result = json.loads(requests.post('http://127.0.0.1:8545/', json={
-                    "method":"eth_sendRawTransaction",
-                    "params": ['0x' + signed_data],
-                    "id":1,
-                    "jsonrpc":"2.0"
-            }, headers={'Content-Type': 'application/json'}).content.decode())
-
-            contract.address = '0x'+binascii.hexlify(utils.mk_contract_address(contract.owner_address, nonce)).decode()
-
-#            return Response({'result': result})
-            
-    # set next check
-    contract.state = state
-    contract.save()            
-    return Response({'status': 'ok'})
-
-
 @api_view()
 def get_code(request):
     with open(SOL_PATH) as f:
         return Response({'result': f.read()})
+
 
 @api_view()
 def test_comp(request):

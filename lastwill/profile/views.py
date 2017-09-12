@@ -6,12 +6,9 @@ from rest_framework.response import Response
 from allauth.account import app_settings
 from allauth.account.views import ConfirmEmailView
 from allauth.account.adapter import get_adapter
-
+from lastwill.contracts.models import Contract
 
 class UserConfirmEmailView(ConfirmEmailView):
-    """ 
-    от базовой вьюхи переопределён редирект
-    """
     def post(self, *args, **kwargs):
         self.object = confirmation = self.get_object()
         confirmation.confirm(self.request)
@@ -37,6 +34,7 @@ def profile_view(request):
     return Response({
             'username': request.user.username,
             'email': request.user.email,
+            'contracts': Contract.objects.filter(user=request.user).count(),
     })
 
 

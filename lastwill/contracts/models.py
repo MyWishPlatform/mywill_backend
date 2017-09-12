@@ -1,11 +1,14 @@
 from subprocess import Popen, PIPE
 from os import path
+import requests
 import json
+import binascii
 import datetime
+from ethereum import abi
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from lastwill.settings import SOL_PATH
+from lastwill.settings import SOL_PATH, ORACLIZE_PROXY, SIGNER
 
 
 MAX_WEI_DIGITS = len(str(2**256))
@@ -32,27 +35,86 @@ class Contract(models.Model):
     @staticmethod
     def calc_cost(heirs_num, active_to, check_interval):
         Tg = 22000
-        Gp = 10 ** 9
+        Gp = 20 * 10 ** 9
         Cg = 780476
         CBg = 26561
         Dg = 29435
         DBg = 9646
         B = heirs_num
         Cc = 124852
-        DxC = abs((datetime.date.today() - active_to).total_seconds() / check_interval)
+        DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
     def compile(self):
         result = json.loads(Popen(
-                'solc --combined-json abi,bin {}'.format(SOL_PATH).split(),
+                'solc --optimize --combined-json abi,bin {}'.format(SOL_PATH).split(),
                 stdout=PIPE,
                 cwd=path.dirname(SOL_PATH)
         ).communicate()[0].decode())
         self.compiler_version = result['version']
         self.abi = json.loads(result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['abi'])
         self.bytecode = result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['bin']
-        
+
+    def deploy(self):
+        self.compile()
+        tr = abi.ContractTranslator(self.abi)
+        arguments = [
+                self.user_address,
+                [h.address for h in self.heir_set.all()],
+                [h.percentage for h in self.heir_set.all()],
+                self.check_interval,
+                ORACLIZE_PROXY,
+        ]
+        nonce = int(json.loads(requests.post('http://127.0.0.1:8545/', json={
+                "method":"parity_nextNonce",
+                "params": [self.owner_address],
+                "id":1,
+                "jsonrpc":"2.0"
+        }, headers={'Content-Type': 'application/json'}).content.decode())['result'], 16)
+
+        print('nonce', nonce)
+
+        signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source' : self.owner_address,
+                'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
+                'nonce': nonce
+        }).content.decode())['result']
+
+
+        print('signed_data', signed_data)
+
+        result = json.loads(requests.post('http://127.0.0.1:8545/', json={
+                "method":"eth_sendRawTransaction",
+                "params": ['0x' + signed_data],
+                "id":1,
+                "jsonrpc":"2.0"
+        }, headers={'Content-Type': 'application/json'}).content.decode())
+
+# set addres only after success deploy
+#        self.address = '0x'+binascii.hexlify(utils.mk_contract_address(self.owner_address, nonce)).decode()
+
+        print(result)
+
+        if result.get('error', ''):
+            raise Exception(str(result))
+
+        # TODO set next check
+
+        self.state = 'WAITING_FOR_DEPLOYMENT'
+
+        self.save()
+
+    def save(self, *args, **kwargs):
+        # disable balance saving to prevent collisions with java daemon
+        print(args)
+        if self.id:
+            kwargs['update_fields'] = list(
+                    {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
+                    &
+                    set(kwargs.get('update_fields', [f.name for f in Contract._meta.fields]))
+            )
+        return super().save(*args, **kwargs)
         
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)

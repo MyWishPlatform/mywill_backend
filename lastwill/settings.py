@@ -67,7 +67,7 @@ ROOT_URLCONF = 'lastwill.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'lastwill-frontend/dist'), ],
+        'DIRS': [os.path.join(BASE_DIR, 'lastwill-frontend/dist'), os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -175,6 +175,7 @@ REST_FRAMEWORK = {
 
 SIGNER='127.0.0.1:5000'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
+ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
 try:
     from lastwill.settings_local import *
