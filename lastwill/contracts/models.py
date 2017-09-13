@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from lastwill.settings import SOL_PATH, ORACLIZE_PROXY, SIGNER
 
-
 MAX_WEI_DIGITS = len(str(2**256))
 
 class Contract(models.Model):
