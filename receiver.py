@@ -7,9 +7,10 @@ import json
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
-
+from django.core.mail import send_mail
 
 from lastwill.contracts.models import Contract
+from lastwill.settings import DEFAULT_FROM_EMAIL
 
 QUEUE = 'notification'
 
@@ -26,6 +27,12 @@ def deployed(message):
     contract.address = message['address']
     contract.state = 'ACTIVE'
     contract.save()
+    send_mail(
+            'Contract deployed',
+            'Contract deployed message',
+            DEFAULT_FROM_EMAIL,
+            [contract.user.email]
+    )
     print('deployed ok!')
 
 def killed(message):
@@ -64,6 +71,12 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(
         pika.PlainCredentials('java', 'java'),
 ))
 
+
+"""
+rabbitmqctl add_user java java
+rabbitmqctl add_vhost mywill
+rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
+"""
 
 channel = connection.channel()
 channel.queue_declare(queue=QUEUE, durable=True, auto_delete=False, exclusive=False)
