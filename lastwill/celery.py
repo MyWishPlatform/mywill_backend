@@ -8,6 +8,8 @@ import django
 django.setup()
 from django.utils import timezone
 from .contracts.models import Contract
+from lastwill.parint import *
+
 
 app = Celery('lastwill')
 
@@ -25,21 +27,11 @@ app.autodiscover_tasks()
 def check_task(self):
     for contract in Contract.objects.filter(next_check__lte=timezone.now()):
         tr = abi.ContractTranslator(contract.abi)
-        nonce = int(json.loads(requests.post('http://127.0.0.1:8545/', json={
-                "method":"parity_nextNonce",
-                "params": [contract.owner_address],
-                "id":1,
-                "jsonrpc":"2.0"
-        }, headers={'Content-Type': 'application/json'}).content.decode())['result'], 16)
+        par_int = ParInt()
+        nonce = int(par_int.parity_nextNonce(contract.owner.address), 16)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : contract.owner_address,
                 'data': binascii.hexlify(tr.encode_function_call('check', [])).decode(),
                 'nonce': nonce
         }).content.decode())['result']
-        result = json.loads(requests.post('http://127.0.0.1:8545/', json={
-                "method":"eth_sendRawTransaction",
-                "params": ['0x' + signed_data],
-                "id":1,
-                "jsonrpc":"2.0"
-        }, headers={'Content-Type': 'application/json'}).content.decode())
-
+        par_int.eth_sendRawTransaction('0x'+signed_data)

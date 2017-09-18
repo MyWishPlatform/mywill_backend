@@ -9,6 +9,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from lastwill.settings import SOL_PATH, ORACLIZE_PROXY, SIGNER
+from lastwill.parint import *
+
 
 MAX_WEI_DIGITS = len(str(2**256))
 
@@ -65,13 +67,8 @@ class Contract(models.Model):
                 self.check_interval,
                 ORACLIZE_PROXY,
         ]
-        nonce = int(json.loads(requests.post('http://127.0.0.1:8545/', json={
-                "method":"parity_nextNonce",
-                "params": [self.owner_address],
-                "id":1,
-                "jsonrpc":"2.0"
-        }, headers={'Content-Type': 'application/json'}).content.decode())['result'], 16)
-
+        par_int = ParInt()
+        nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
         print('nonce', nonce)
 
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
@@ -79,24 +76,9 @@ class Contract(models.Model):
                 'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
                 'nonce': nonce
         }).content.decode())['result']
-
-
         print('signed_data', signed_data)
 
-        result = json.loads(requests.post('http://127.0.0.1:8545/', json={
-                "method":"eth_sendRawTransaction",
-                "params": ['0x' + signed_data],
-                "id":1,
-                "jsonrpc":"2.0"
-        }, headers={'Content-Type': 'application/json'}).content.decode())
-
-# set addres only after success deploy
-#        self.address = '0x'+binascii.hexlify(utils.mk_contract_address(self.owner_address, nonce)).decode()
-
-        print(result)
-
-        if result.get('error', ''):
-            raise Exception(str(result))
+        par_int.eth_sendRawTransaction('0x' + signed_data)
 
         # TODO set next check
 
