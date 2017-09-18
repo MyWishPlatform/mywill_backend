@@ -48,14 +48,19 @@ class Contract(models.Model):
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
     def compile(self):
+        with open(SOL_PATH) as f:
+            source = f.read()
+        directory = path.dirname(SOL_PATH)
         result = json.loads(Popen(
-                'solc --optimize --combined-json abi,bin {}'.format(SOL_PATH).split(),
+                'solc --optimize --combined-json abi,bin --allow-paths={}'.format(directory).split(),
+                stdin=PIPE,
                 stdout=PIPE,
-                cwd=path.dirname(SOL_PATH)
-        ).communicate()[0].decode())
+                cwd=directory
+        ).communicate(source.encode())[0].decode())
+        self.source = source
         self.compiler_version = result['version']
-        self.abi = json.loads(result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['abi'])
-        self.bytecode = result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['bin']
+        self.abi = json.loads(result['contracts']['<stdin>:LastWillOraclize']['abi'])
+        self.bytecode = result['contracts']['<stdin>:LastWillOraclize']['bin']
 
     def deploy(self):
         self.compile()
