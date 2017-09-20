@@ -8,6 +8,7 @@ from ethereum import abi
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from django.utils import timezone
 from lastwill.settings import SOL_PATH, ORACLIZE_PROXY, SIGNER
 from lastwill.parint import *
 
@@ -57,7 +58,7 @@ class Contract(models.Model):
                 stdout=PIPE,
                 cwd=directory
         ).communicate(source.encode())[0].decode())
-        self.source = source
+        self.source_code = source
         self.compiler_version = result['version']
         self.abi = json.loads(result['contracts']['<stdin>:LastWillOraclize']['abi'])
         self.bytecode = result['contracts']['<stdin>:LastWillOraclize']['bin']
@@ -84,8 +85,6 @@ class Contract(models.Model):
         print('signed_data', signed_data)
 
         par_int.eth_sendRawTransaction('0x' + signed_data)
-
-        # TODO set next check
 
         self.state = 'WAITING_FOR_DEPLOYMENT'
 
