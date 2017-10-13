@@ -6,6 +6,7 @@ from django.shortcuts import render_to_response
 from django.middleware import csrf
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from lastwill.parint import *
 
 def index(request):
     csrf_token = csrf.get_token(request)
@@ -15,33 +16,19 @@ def index(request):
 def balance(request):
     address = request.query_params.get('address', None)
     try:
-        response = requests.post('http://127.0.0.1:8545', json={
-                'method': 'eth_getBalance',
-                'params': [address],
-                'id': 1,
-                'jsonrpc': '2.0'
-        }, headers = {'content-type': 'application/json'})
-#        return Response(response)
-        balance = json.loads(response.content.decode())['result']
-        return Response({'status': '0', 'result': int(balance, 16)})
-    except:
-        return Response({'status': 1, 'detail': '\n'.join(traceback.format_exception(*sys.exc_info()))})
-
+        return Response({
+                'result': ParInt().eth_getBalance(address),
+                'status': 0
+        })
+    except (ParConnectExc, ParErrorExc) as e:
+        return Response({
+                'detail': str(e),
+                'status': 1
+        })
+        
+        
 def login(request):
     csrf_token = csrf.get_token(request)
     return render_to_response('login.html', {'csrf_token': csrf_token, 'request': request})
 
 
-@api_view(http_method_names=['POST'])
-def create_ghost(request)
-    user = User()
-    user.username = str(uuid.uuid4)
-    user.save()
-    login(request, user)
-
-
-@api_view(http_method_names=['GET'])
-def profile_view(request):
-    if request.user.is_anonymous:
-        raise PermissionDenied()
-    return Response(UserSerializer(request.user).data)

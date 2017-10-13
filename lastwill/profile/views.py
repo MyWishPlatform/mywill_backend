@@ -38,3 +38,14 @@ def profile_view(request):
     })
 
 
+@api_view(http_method_names=['POST'])
+def create_ghost(request)
+    user = User()
+    user.username = str(uuid.uuid4)
+    user.save()
+    login(request, user)
+    return Response({
+            'username': user.username,
+            'email': None,
+            'contracts': 0
+    })

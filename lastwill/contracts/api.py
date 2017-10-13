@@ -23,7 +23,7 @@ class ContractViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.state in ('CREATED',):
+        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT'):
             return super().destroy(request, *args, **kwargs)
         raise PermissionDenied()
 

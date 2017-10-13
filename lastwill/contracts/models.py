@@ -8,7 +8,10 @@ from ethereum import abi
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from django.utils import timezone
 from lastwill.settings import SOL_PATH, ORACLIZE_PROXY, SIGNER
+from lastwill.parint import *
+
 
 MAX_WEI_DIGITS = len(str(2**256))
 
@@ -46,14 +49,19 @@ class Contract(models.Model):
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
     def compile(self):
+        with open(SOL_PATH) as f:
+            source = f.read()
+        directory = path.dirname(SOL_PATH)
         result = json.loads(Popen(
-                'solc --optimize --combined-json abi,bin {}'.format(SOL_PATH).split(),
+                'solc --optimize --combined-json abi,bin --allow-paths={}'.format(directory).split(),
+                stdin=PIPE,
                 stdout=PIPE,
-                cwd=path.dirname(SOL_PATH)
-        ).communicate()[0].decode())
+                cwd=directory
+        ).communicate(source.encode())[0].decode())
+        self.source_code = source
         self.compiler_version = result['version']
-        self.abi = json.loads(result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['abi'])
-        self.bytecode = result['contracts']['{}:LastWillOraclize'.format(SOL_PATH)]['bin']
+        self.abi = json.loads(result['contracts']['<stdin>:LastWillOraclize']['abi'])
+        self.bytecode = result['contracts']['<stdin>:LastWillOraclize']['bin']
 
     def deploy(self):
         self.compile()
@@ -65,13 +73,8 @@ class Contract(models.Model):
                 self.check_interval,
                 ORACLIZE_PROXY,
         ]
-        nonce = int(json.loads(requests.post('http://127.0.0.1:8545/', json={
-                "method":"parity_nextNonce",
-                "params": [self.owner_address],
-                "id":1,
-                "jsonrpc":"2.0"
-        }, headers={'Content-Type': 'application/json'}).content.decode())['result'], 16)
-
+        par_int = ParInt()
+        nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
         print('nonce', nonce)
 
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
@@ -79,26 +82,9 @@ class Contract(models.Model):
                 'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
                 'nonce': nonce
         }).content.decode())['result']
-
-
         print('signed_data', signed_data)
 
-        result = json.loads(requests.post('http://127.0.0.1:8545/', json={
-                "method":"eth_sendRawTransaction",
-                "params": ['0x' + signed_data],
-                "id":1,
-                "jsonrpc":"2.0"
-        }, headers={'Content-Type': 'application/json'}).content.decode())
-
-# set addres only after success deploy
-#        self.address = '0x'+binascii.hexlify(utils.mk_contract_address(self.owner_address, nonce)).decode()
-
-        print(result)
-
-        if result.get('error', ''):
-            raise Exception(str(result))
-
-        # TODO set next check
+        par_int.eth_sendRawTransaction('0x' + signed_data)
 
         self.state = 'WAITING_FOR_DEPLOYMENT'
 
