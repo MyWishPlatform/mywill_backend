@@ -19,7 +19,7 @@ from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login
-from lastwill.profile.views import UserConfirmEmailView, profile_view
+from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp
 
 
@@ -44,6 +44,7 @@ urlpatterns = [
     url(r'^auth/', login),
     url(r'^api/get_code/', get_code),
     url(r'^api/test_comp/', test_comp),
+    url(r'^api/create_ghost/', create_ghost),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

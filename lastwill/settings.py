@@ -177,6 +177,11 @@ SIGNER='127.0.0.1:5000'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
+REST_AUTH_REGISTER_SERIALIZERS = { 
+    'REGISTER_SERIALIZER': 'lastwill.profile.serializers.UserRegisterSerializer',
+}
+
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:

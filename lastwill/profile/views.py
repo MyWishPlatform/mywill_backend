@@ -1,3 +1,6 @@
+import uuid
+from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import redirect
 from rest_framework.decorators import api_view
@@ -35,17 +38,19 @@ def profile_view(request):
             'username': request.user.username,
             'email': request.user.email,
             'contracts': Contract.objects.filter(user=request.user).count(),
+            'is_ghost': not bool(len(request.user.password)),
     })
 
 
 @api_view(http_method_names=['POST'])
-def create_ghost(request)
+def create_ghost(request):
     user = User()
-    user.username = str(uuid.uuid4)
+    user.username = 'Unknown user'
     user.save()
     login(request, user)
     return Response({
             'username': user.username,
-            'email': None,
-            'contracts': 0
+            'email': "",
+            'contracts': 0,
+            'is_ghost': not bool(len(request.user.password)),
     })
