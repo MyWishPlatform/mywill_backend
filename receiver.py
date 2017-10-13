@@ -31,12 +31,13 @@ def deployed(message):
     contract.state = 'ACTIVE'
     contract.next_check = timezone.now() + datetime.timedelta(seconds=contract.check_interval)
     contract.save()
-    send_mail(
-            'Contract deployed',
-            'Contract deployed message',
-            DEFAULT_FROM_EMAIL,
-            [contract.user.email]
-    )
+    if contract.user.email:
+        send_mail(
+                'Contract deployed',
+                'Contract deployed message',
+                DEFAULT_FROM_EMAIL,
+                [contract.user.email]
+        )
     print('deployed ok!', flush=True)
 
 def killed(message):
