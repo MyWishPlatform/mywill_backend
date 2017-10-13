@@ -30,3 +30,18 @@ def balance(request):
 def login(request):
     csrf_token = csrf.get_token(request)
     return render_to_response('login.html', {'csrf_token': csrf_token, 'request': request})
+
+
+@api_view(http_method_names=['POST'])
+def create_ghost(request)
+    user = User()
+    user.username = str(uuid.uuid4)
+    user.save()
+    login(request, user)
+
+
+@api_view(http_method_names=['GET'])
+def profile_view(request):
+    if request.user.is_anonymous:
+        raise PermissionDenied()
+    return Response(UserSerializer(request.user).data)
