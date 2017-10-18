@@ -22,6 +22,7 @@ class ContractSerializer(serializers.ModelSerializer):
                 'state', 'created_date', 'source_code', 'bytecode', 'abi',
                 'compiler_version', 'heirs', 'check_interval', 'active_to',
                 'balance', 'cost', 'last_check', 'next_check', 'name',
+                'contract_type',
         )
         extra_kwargs = {
             'user': {'read_only': True},

@@ -20,7 +20,7 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login
 from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost
-from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp
+from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types
 
 
 router = DefaultRouter(trailing_slash=True)
@@ -45,6 +45,7 @@ urlpatterns = [
     url(r'^api/get_code/', get_code),
     url(r'^api/test_comp/', test_comp),
     url(r'^api/create_ghost/', create_ghost),
+    url(r'^api/get_contract_types', get_contract_types),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

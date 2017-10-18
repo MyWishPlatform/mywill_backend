@@ -9,8 +9,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
-from lastwill.settings import SOL_PATH, ORACLIZE_PROXY, SIGNER
+from lastwill.settings import ORACLIZE_PROXY, SIGNER
 from lastwill.parint import *
+from lastwill.contracts.types import contract_types
 
 
 MAX_WEI_DIGITS = len(str(2**256))
@@ -33,6 +34,7 @@ class Contract(models.Model):
     cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
+    contract_type = models.IntegerField(default=0)
 
     @staticmethod
     def calc_cost(heirs_num, active_to, check_interval):
@@ -49,9 +51,10 @@ class Contract(models.Model):
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
     def compile(self):
-        with open(SOL_PATH) as f:
+        sol_path = contract_types[self.contract_type]['sol_path']
+        with open(sol_path) as f:
             source = f.read()
-        directory = path.dirname(SOL_PATH)
+        directory = path.dirname(sol_path)
         result = json.loads(Popen(
                 'solc --optimize --combined-json abi,bin --allow-paths={}'.format(directory).split(),
                 stdin=PIPE,
@@ -60,19 +63,14 @@ class Contract(models.Model):
         ).communicate(source.encode())[0].decode())
         self.source_code = source
         self.compiler_version = result['version']
-        self.abi = json.loads(result['contracts']['<stdin>:LastWillOraclize']['abi'])
-        self.bytecode = result['contracts']['<stdin>:LastWillOraclize']['bin']
+        sol_path_name = os.path.basename(sol_path)[:4]
+        self.abi = json.loads(result['contracts']['<stdin>:'+sol_path_name]['abi'])
+        self.bytecode = result['contracts']['<stdin>:'+sol_path_name]['bin']
 
     def deploy(self):
         self.compile()
         tr = abi.ContractTranslator(self.abi)
-        arguments = [
-                self.user_address,
-                [h.address for h in self.heir_set.all()],
-                [h.percentage for h in self.heir_set.all()],
-                self.check_interval,
-                ORACLIZE_PROXY,
-        ]
+        arguments = contract_types[self.contract_type]['get_arguments']()
         par_int = ParInt()
         nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
         print('nonce', nonce)

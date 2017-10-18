@@ -13,7 +13,7 @@ from .serializers import ContractSerializer
 from lastwill.main.views import index
 from lastwill.settings import SOL_PATH, SIGNER
 from lastwill.permissions import IsOwner, IsStaff
-
+from lastwill.contracts.types import contract_types
 
 class ContractViewSet(ModelViewSet):
     permission_classes = (IsStaff | IsOwner, )
@@ -48,6 +48,9 @@ def get_code(request):
     with open(SOL_PATH) as f:
         return Response({'result': f.read()})
 
+@api_view()
+def get_contract_types(request):
+    return Response({x: contract_types[x]['name'] for x in range(len(contract_types))})
 
 @api_view()
 def test_comp(request):
