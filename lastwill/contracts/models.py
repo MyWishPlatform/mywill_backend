@@ -97,6 +97,7 @@ class Contract(models.Model):
         details_models = [ 
                 ContractDetailsLastwill,
                 ContractDetailsLastwill,
+                ContractDetailsDelayedPayment,
         ]   
         return details_models[contract_type]
 
@@ -111,7 +112,13 @@ class ContractDetailsLastwill(models.Model):
     next_check = models.DateTimeField(null=True, default=None)
     
     @staticmethod
-    def calc_cost(heirs_num, active_to, check_interval):
+    def calc_cost(kwargs):
+        heirs_num = int(kwargs['heirs_num'])
+        active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
+        check_interval = int(kwargs['check_interval'])
+#        heirs_num = int(request.query_params['heirs_num'])
+#        active_to = datetime.date(*map(int, request.query_params['active_to'].split('-')))
+#        check_interval = int(request.query_params['check_interval'])
         Tg = 22000
         Gp = 20 * 10 ** 9
         Cg = 780476
@@ -128,7 +135,14 @@ class ContractDetailsLastwill(models.Model):
 class ContractDetailsDelayedPayment(models.Model):
     related_name = 'details_delayed_payment'
     contract = models.ForeignKey(Contract, related_name=related_name)
+    date = models.DateTimeField()
+    user_address = models.CharField(max_length=50)
+    recepient_address = models.CharField(max_length=50)
+    recepient_email = models.CharField(max_length=200, null=True)
 
+    @staticmethod
+    def calc_cost(request):
+        return 666
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)

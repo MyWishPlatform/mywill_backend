@@ -22,12 +22,15 @@ contract_types = [
         'name': 'MyWish Original',
         'sol_path': '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol',
         'get_arguments': original_get_arguments,
-        'details_model': 'contracts.ContractDetailsLastwill',
     },
     {
         'name': 'MyWish Wallet',
         'sol_path': '/var/www/contracts_repos/lastwill/contracts/LastWillWallet.sol',
         'get_arguments': wallet_get_arguments,
-        'details_model': 'contracts.ContractDetailsLastwill',
+    },
+    {
+        'name': 'MyWish Delayed Payment',
+        'sol_path': '/var/www/contracts_repos/lastwill/contracts/LastWillWallet.sol',
+        'get_arguments': wallet_get_arguments,
     },
 ]

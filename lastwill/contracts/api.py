@@ -37,10 +37,10 @@ class ContractViewSet(ModelViewSet):
 @api_view()
 def get_cost(request):
     contract_type = int(request.query_params['contract_type'])
-    heirs_num = int(request.query_params['heirs_num'])
-    active_to = datetime.date(*map(int, request.query_params['active_to'].split('-')))
-    check_interval = int(request.query_params['check_interval'])
-    result = Contract.get_details_model(contract_type).calc_cost(heirs_num, active_to, check_interval)
+#    heirs_num = int(request.query_params['heirs_num'])
+#    active_to = datetime.date(*map(int, request.query_params['active_to'].split('-')))
+#    check_interval = int(request.query_params['check_interval'])
+    result = Contract.get_details_model(contract_type).calc_cost(request.query_params)
     return Response({'result': result})
 
 

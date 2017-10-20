@@ -3,7 +3,7 @@ import datetime
 import json
 from rest_framework import serializers
 from django.apps import apps
-from .models import Contract, Heir, ContractDetailsLastwill
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
@@ -76,6 +76,7 @@ class ContractSerializer(serializers.ModelSerializer):
         details_serializers = [
             ContractDetailsLastwillSerializer,
             ContractDetailsLastwillSerializer,
+            ContractDetailsDelayedPaymentSerializer,
         ]
         return details_serializers[contract_type]
 
@@ -112,11 +113,11 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%d %H:%M')
-        data['cost'] = self.Meta.model.calc_cost(
-                len(details['heirs']),
-                details['active_to'].date(),
-                details['check_interval']
-        )
+        data['cost'] = self.Meta.model.calc_cost({
+                'heirs_num': len(details['heirs']),
+                'active_to': details['active_to'].date(),
+                'check_interval': details['check_interval']
+        })
         for heir_json in details['heirs']:
             heir_json.get('email', None) and check.is_email(heir_json['email'])
             check.is_address(heir_json['address'])
@@ -126,3 +127,16 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
         return data
 
+class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsDelayedPayment
+        fields = ('user_address', 'date', 'recepient_address', 'recepient_email')
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def validate(self, data):
+        data['cost'] = self.Meta.model.calc_cost(dict())
+        return data
