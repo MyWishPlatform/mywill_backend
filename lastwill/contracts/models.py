@@ -92,6 +92,7 @@ class Contract(models.Model):
     def get_details(self):
         return getattr(self, self.get_details_model(self.contract_type).related_name).only()[0]
 
+    @classmethod
     def get_details_model(self, contract_type):
         details_models = [ 
                 ContractDetailsLastwill,

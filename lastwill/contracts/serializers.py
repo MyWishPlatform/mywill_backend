@@ -106,7 +106,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
             Heir(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        return super().create(**kwargs)
+        return super().create(kwargs)
 
     def validate(self, data):
         details = data['contract_details']
