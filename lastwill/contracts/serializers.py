@@ -2,11 +2,13 @@ import requests
 import datetime
 import json
 from rest_framework import serializers
-from .models import Contract, Heir
+from django.apps import apps
+from .models import Contract, Heir, ContractDetailsLastwill
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
-
+from lastwill.contracts.types import contract_types
+from lastwill.settings import ORACLIZE_PROXY
 
 class HeirSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,15 +16,15 @@ class HeirSerializer(serializers.ModelSerializer):
         fields = ('address', 'email', 'percentage')
 
 class ContractSerializer(serializers.ModelSerializer):
-    heirs = serializers.JSONField(write_only=True)
+#    heirs = serializers.JSONField(write_only=True)
+    contract_details = serializers.JSONField(write_only=True)
 
     class Meta:
         model = Contract
-        fields = ('id', 'user', 'address', 'owner_address', 'user_address',
+        fields = ('id', 'user', 'address', 'owner_address',
                 'state', 'created_date', 'source_code', 'bytecode', 'abi',
-                'compiler_version', 'heirs', 'check_interval', 'active_to',
-                'balance', 'cost', 'last_check', 'next_check', 'name',
-                'contract_type',
+                'compiler_version', 'balance', 'cost', 'name',
+                'contract_type', 'contract_details',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -43,23 +45,26 @@ class ContractSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         validated_data['state'] = 'CREATED'
-
+        
         response = requests.post('http://{}/get_key/'.format(SIGNER)).content
         print(response)
         validated_data['owner_address'] = json.loads(response.decode())['addr']
 
-        heirs = validated_data.pop('heirs')
+        details_serializer = self.get_details_serializer(validated_data['contract_type'])(context=self.context) 
+        details_serializer.validate(validated_data)
+        contract_details = validated_data.pop('contract_details')
+        
         contract = super().create(validated_data)
-
-        for heir_json in heirs:
-            heir_json['address'] = heir_json['address'].lower()
-            Heir(contract=contract, **heir_json).save() 
+        
+        details_serializer.create(contract, contract_details)
         return contract
+
 
     def to_representation(self, contract):
         res = super().to_representation(contract)
-        heir_serializer = HeirSerializer()
-        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract.heir_set.all()]
+        res['contract_details'] = self.get_details_serializer(contract.contract_type)(
+                context=self.context).to_representation(contract.get_details()
+        )
         return res
 
     def update(self, contract, validated_data):
@@ -69,22 +74,53 @@ class ContractSerializer(serializers.ModelSerializer):
             del validated_data['state']
         return super().update(contract, validated_data)
 
+    def get_details_serializer(self, contract_type):
+        details_serializers = [
+            ContractDetailsLastwillSerializer,
+            ContractDetailsLastwillSerializer,
+        ]
+        return details_serializers[contract_type]
+
+    
+class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsLastwill
+        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check')
+        extra_kwargs = {
+            'last_check': {'read_only': True},
+            'next_check': {'read_only': True},
+        }
+
+    def to_representation(self, contract_details_lastwill):
+        res = super().to_representation(contract_details_lastwill)
+        heir_serializer = HeirSerializer()
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details_lastwill.contract.heir_set.all()]
+        return res
+
+    def create(self, contract, contract_details):
+        heirs = contract_details.pop('heirs')
+        for heir_json in heirs:
+            heir_json['address'] = heir_json['address'].lower()
+            Heir(contract=contract, **heir_json).save()
+        return super().create({'contract': contract, **contract_details})
+
     def validate(self, data):
-        if 'user_address' in data:
-            check.is_address(data['user_address'])
-            data['user_address'] = data['user_address'].lower()
-        if 'heirs' in data and 'active_to' in data and 'check_interval' in data:
-            data['cost'] = Contract.calc_cost(
-                    len(data['heirs']),
-                    data['active_to'].date(),
-                    data['check_interval']
-            )
-        if 'heirs' in data:
-            for heir_json in data['heirs']:
-                heir_json.get('email', None) and check.is_email(heir_json['email'])
-                check.is_address(heir_json['address'])
-                heir_json['address'] = heir_json['address'].lower()
-                check.is_percent(heir_json['percentage'])
-                heir_json['percentage'] = int(heir_json['percentage'])
-            check.is_sum_eq_100([h['percentage'] for h in data['heirs']])
+        details = data['contract_details']
+        assert('user_address' in details and'heirs' in details and 'active_to' in details and 'check_interval' in details)
+        check.is_address(details['user_address'])
+        details['user_address'] = details['user_address'].lower()
+        details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%dT%H:%M')
+        data['cost'] = self.Meta.model.calc_cost(
+                len(details['heirs']),
+                details['active_to'].date(),
+                details['check_interval']
+        )
+        for heir_json in details['heirs']:
+            heir_json.get('email', None) and check.is_email(heir_json['email'])
+            check.is_address(heir_json['address'])
+            heir_json['address'] = heir_json['address'].lower()
+            check.is_percent(heir_json['percentage'])
+            heir_json['percentage'] = int(heir_json['percentage'])
+        check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
         return data
+

@@ -6,13 +6,16 @@ import binascii
 import datetime
 from ethereum import abi
 from django.db import models
+from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from lastwill.settings import ORACLIZE_PROXY, SIGNER
 from lastwill.parint import *
 from lastwill.contracts.types import contract_types
-
+import lastwill.check as check
 
 MAX_WEI_DIGITS = len(str(2**256))
 
@@ -28,27 +31,14 @@ class Contract(models.Model):
     bytecode = models.TextField()
     abi = JSONField(default={})
     compiler_version = models.CharField(max_length=200, null=True, default=None)
-    check_interval = models.IntegerField()
-    active_to = models.DateTimeField()
+    check_interval = models.IntegerField(null=True, default=None)
+    active_to = models.DateTimeField(null=True, default=None)
     balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, default=None)
     cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     contract_type = models.IntegerField(default=0)
 
-    @staticmethod
-    def calc_cost(heirs_num, active_to, check_interval):
-        Tg = 22000
-        Gp = 20 * 10 ** 9
-        Cg = 780476
-        CBg = 26561
-        Dg = 29435
-        DBg = 9646
-        B = heirs_num
-        Cc = 124852
-        DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
-        O = 25000 * 10 ** 9
-        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
     def compile(self):
         sol_path = contract_types[self.contract_type]['sol_path']
@@ -98,9 +88,51 @@ class Contract(models.Model):
                     set(kwargs.get('update_fields', [f.name for f in Contract._meta.fields]))
             )
         return super().save(*args, **kwargs)
+
+    def get_details(self):
+        return getattr(self, self.get_details_model(self.contract_type).related_name).only()[0]
+
+    def get_details_model(self, contract_type):
+        details_models = [ 
+                ContractDetailsLastwill,
+                ContractDetailsLastwill,
+        ]   
+        return details_models[contract_type]
+
+
+class ContractDetailsLastwill(models.Model):
+    related_name = 'details_lastwill'
+    contract = models.ForeignKey(Contract, related_name=related_name)
+    user_address = models.CharField(max_length=50, null=True, default=None)
+    check_interval = models.IntegerField()
+    active_to = models.DateTimeField()
+    last_check = models.DateTimeField(null=True, default=None)
+    next_check = models.DateTimeField(null=True, default=None)
+    
+    @staticmethod
+    def calc_cost(heirs_num, active_to, check_interval):
+        Tg = 22000
+        Gp = 20 * 10 ** 9
+        Cg = 780476
+        CBg = 26561
+        Dg = 29435
+        DBg = 9646
+        B = heirs_num
+        Cc = 124852
+        DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
+        O = 25000 * 10 ** 9
+        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
+
         
+class ContractDetailsDelayedPayment(models.Model):
+    related_name = 'details_delayed_payment'
+    contract = models.ForeignKey(Contract, related_name=related_name)
+
+
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)
     percentage = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
+
+
