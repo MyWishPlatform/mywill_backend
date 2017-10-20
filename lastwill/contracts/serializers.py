@@ -101,8 +101,12 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         heirs = contract_details.pop('heirs')
         for heir_json in heirs:
             heir_json['address'] = heir_json['address'].lower()
-            Heir(contract=contract, **heir_json).save()
-        return super().create({'contract': contract, **contract_details})
+            kwargs = heir_json.copy()
+            kwargs['contract'] = contract
+            Heir(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(**kwargs)
 
     def validate(self, data):
         details = data['contract_details']
