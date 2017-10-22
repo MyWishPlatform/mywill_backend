@@ -151,13 +151,6 @@ STATICFILES_DIRS = (
 )
 
 
-EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'fortestddg@gmail.com'
-EMAIL_HOST_PASSWORD = 'ForTestDdg1379'
-EMAIL_PORT = 587 
-EMAIL_USE_TLS = True
-   
 SITE_ID = 1 
 REST_SESSION_LOGIN = True
 
