@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
     'lastwill.main',
     'lastwill.contracts',
+    'lastwill.other',
 ]
 
 MIDDLEWARE = [

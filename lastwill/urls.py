@@ -21,10 +21,11 @@ from rest_framework.routers import DefaultRouter
 from lastwill.main.views import index, balance, login
 from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types
-
+from lastwill.other.api import SentenceViewSet
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
+router.register(r'sentences', SentenceViewSet)
 
 urlpatterns = [
     url(r'^reset', index),
