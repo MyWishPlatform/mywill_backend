@@ -158,7 +158,7 @@ class ContractDetailsLastwill(models.Model):
             self.contract.state = 'EXPIRED'
             contract.save()
             self.next_check = None
-        self..save()
+        self.save()
 
     def triggered(self, message):
         self.last_check = timezone.now()
@@ -220,7 +220,7 @@ class ContractDetailsLostKey(models.Model):
             self.contract.state = 'EXPIRED'
             contract.save()
             self.next_check = None
-        self..save()
+        self.save()
 
     def triggered(self, message):
         self.last_check = timezone.now()
