@@ -124,7 +124,10 @@ class ContractDetailsLastwill(models.Model):
     @staticmethod
     def calc_cost(kwargs):
         heirs_num = int(kwargs['heirs_num'])
-        active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
+        active_to = kwargs['active_to']
+        if isinstance(active_to, str):
+            active_to = datetime.date(*map(int, active_to.split('-')))
+#        active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
         check_interval = int(kwargs['check_interval'])
         Tg = 22000
         Gp = 20 * 10 ** 9
