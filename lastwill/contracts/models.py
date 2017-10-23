@@ -144,6 +144,27 @@ class ContractDetailsLastwill(models.Model):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
+    def deployed(self, message):
+        self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
+        self.save()
+
+    def checked(self, message):
+        now = timezone.now()
+        self.last_check = now
+        next_check = now + datetime.timedelta(seconds=self.check_interval)
+        if next_check < self.active_to:
+            self.next_check = next_check
+        else:
+            self.contract.state = 'EXPIRED'
+            contract.save()
+            self.next_check = None
+        self..save()
+
+    def triggered(self, message):
+        self.last_check = timezone.now()
+        self.next_check = None
+        self.sav()
+
 
 class ContractDetailsLostKey(models.Model):
     sol_path = '/var/www/contracts_repos/lastwill/contracts/LastWillParityWallet.sol'
@@ -185,6 +206,27 @@ class ContractDetailsLostKey(models.Model):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
+    def deployed(self, message):
+        self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
+        self.save()
+
+    def checked(self, message):
+        now = timezone.now()
+        self.last_check = now
+        next_check = now + datetime.timedelta(seconds=self.check_interval)
+        if next_check < self.active_to:
+            self.next_check = next_check
+        else:
+            self.contract.state = 'EXPIRED'
+            contract.save()
+            self.next_check = None
+        self..save()
+
+    def triggered(self, message):
+        self.last_check = timezone.now()
+        self.next_check = None
+        self.sav()
+
 
 class ContractDetailsDelayedPayment(models.Model):
     sol_path = '/var/www/contracts_repos/lastwill/contracts/DelayedPayment.sol'
@@ -199,6 +241,15 @@ class ContractDetailsDelayedPayment(models.Model):
     @staticmethod
     def calc_cost(request):
         return 666
+
+    def deployed(self, message):
+        pass
+
+    def checked(self, message):
+        pass
+
+    def triggered(self, message):
+        pass
 
 
 class Heir(models.Model):

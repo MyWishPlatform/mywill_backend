@@ -29,7 +29,7 @@ def deployed(message):
     contract = Contract.objects.get(id=message['contractId'])
     contract.address = message['address']
     contract.state = 'ACTIVE'
-    contract.next_check = timezone.now() + datetime.timedelta(seconds=contract.check_interval)
+    contract.get_details().deployed(message)
     contract.save()
     if contract.user.email:
         send_mail(
@@ -50,15 +50,7 @@ def killed(message):
 def checked(message):
     print('checked message', flush=True)
     contract = Contract.objects.get(id=message['contractId'])
-    now = timezone.now()
-    contract.last_check = now
-    next_check = now + datetime.timedelta(seconds=contract.check_interval)
-    if next_check < contract.active_to:
-        contract.next_check = next_check
-    else:
-        contract.state = 'EXPIRED'
-        contract.next_check = None
-    contract.save()
+    contract.get_details().checked(message)
     print('checked ok', flush=True)
 
 def repeat_check(message):
@@ -71,9 +63,8 @@ def triggered(message):
     print('triggered message', flush=True)
     contract = Contract.objects.get(id=message['contractId'])
     contract.state = 'TRIGGERED'
-    contract.last_check = timezone.now()
-    contract.next_check = None
     contract.save()
+    contract.get_details().triggered()
     print('triggered ok', flush=True)
 
 
