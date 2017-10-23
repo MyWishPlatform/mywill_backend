@@ -53,7 +53,7 @@ class Contract(models.Model):
         ).communicate(source.encode())[0].decode())
         self.source_code = source
         self.compiler_version = result['version']
-        sol_path_name = os.path.basename(sol_path)[:4]
+        sol_path_name = path.basename(sol_path)[:-4]
         self.abi = json.loads(result['contracts']['<stdin>:'+sol_path_name]['abi'])
         self.bytecode = result['contracts']['<stdin>:'+sol_path_name]['bin']
 
@@ -199,6 +199,14 @@ class ContractDetailsDelayedPayment(models.Model):
     @staticmethod
     def calc_cost(request):
         return 666
+
+    def get_arguments(self):
+        return [
+            self.user_address,
+            self.recepient_address,
+            2**256 - 1,
+            int(self.date.timestamp()),
+        ]
 
 
 class Heir(models.Model):
