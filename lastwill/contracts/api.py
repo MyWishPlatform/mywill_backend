@@ -46,7 +46,7 @@ def get_cost(request):
 
 @api_view()
 def get_code(request):
-    with open(SOL_PATH) as f:
+    with open(Contract.get_details_model(int(request.query_params['contract_type'])).sol_path) as f:
         return Response({'result': f.read()})
 
 @api_view()

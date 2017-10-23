@@ -41,7 +41,7 @@ class Contract(models.Model):
 
 
     def compile(self):
-        sol_path = contract_types[self.contract_type]['sol_path']
+        sol_path = self.get_details().sol_path
         with open(sol_path) as f:
             source = f.read()
         directory = path.dirname(sol_path)
@@ -60,7 +60,7 @@ class Contract(models.Model):
     def deploy(self):
         self.compile()
         tr = abi.ContractTranslator(self.abi)
-        arguments = contract_types[self.contract_type]['get_arguments']()
+        arguments = self.get_details().get_arguments()
         par_int = ParInt()
         nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
         print('nonce', nonce)
@@ -90,7 +90,7 @@ class Contract(models.Model):
         return super().save(*args, **kwargs)
 
     def get_details(self):
-        return getattr(self, self.get_details_model(self.contract_type).related_name).only()[0]
+        return getattr(self, self.get_details_model(self.contract_type).related_name).first()
 
     @classmethod
     def get_details_model(self, contract_type):
@@ -123,11 +123,14 @@ class ContractDetailsLastwill(models.Model):
 
     @staticmethod
     def calc_cost(kwargs):
-        heirs_num = int(kwargs['heirs_num'])
+        print('cost')
+        print(kwargs)
+        heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
             active_to = datetime.date(*map(int, active_to.split('-')))
-#        active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
+        elif isinstance(active_to, datetime.datetime):
+            active_to = active_to.date()
         check_interval = int(kwargs['check_interval'])
         Tg = 22000
         Gp = 20 * 10 ** 9
@@ -164,7 +167,11 @@ class ContractDetailsLostKey(models.Model):
     @staticmethod
     def calc_cost(kwargs):
         heirs_num = int(kwargs['heirs_num'])
-        active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
+        active_to = kwargs['active_to']
+        if isinstance(active_to, str):
+            active_to = datetime.date(*map(int, active_to.split('-')))
+        elif isinstance(active_to, datetime.datetime):
+            active_to = active_to.date()
         check_interval = int(kwargs['check_interval'])
         Tg = 22000
         Gp = 20 * 10 ** 9
