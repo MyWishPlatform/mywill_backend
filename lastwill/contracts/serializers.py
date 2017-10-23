@@ -3,7 +3,7 @@ import datetime
 import json
 from rest_framework import serializers
 from django.apps import apps
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
@@ -72,11 +72,12 @@ class ContractSerializer(serializers.ModelSerializer):
             del validated_data['state']
 
         contract_type = contract.contract_type
-        details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
-        contract_details = validated_data.pop('contract_details')
-        details_serializer.validate(contract_details)
-        validated_data['cost'] = contract.get_details().calc_cost(contract_details)
-        details_serializer.update(contract, contract.get_details(), contract_details)
+        contract_details = validated_data.pop('contract_details', None)
+        if contract_details:
+            details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
+            details_serializer.validate(contract_details)
+            validated_data['cost'] = contract.get_details().calc_cost(contract_details)
+            details_serializer.update(contract, contract.get_details(), contract_details)
 
         return super().update(contract, validated_data)
 
@@ -143,7 +144,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
 
 class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
     class Meta:
-        model = ContractDetailsLastwill
+        model = ContractDetailsLostKey
         fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check')
         extra_kwargs = {
             'last_check': {'read_only': True},

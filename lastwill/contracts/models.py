@@ -123,8 +123,6 @@ class ContractDetailsLastwill(models.Model):
 
     @staticmethod
     def calc_cost(kwargs):
-        print('cost')
-        print(kwargs)
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -187,7 +185,7 @@ class ContractDetailsLostKey(models.Model):
 
     @staticmethod
     def calc_cost(kwargs):
-        heirs_num = int(kwargs['heirs_num'])
+        heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
             active_to = datetime.date(*map(int, active_to.split('-')))
