@@ -53,12 +53,12 @@ class ContractSerializer(serializers.ModelSerializer):
         details_serializer = self.get_details_serializer(validated_data['contract_type'])(context=self.context) 
         details_serializer.validate(validated_data)
         contract_details = validated_data.pop('contract_details')
-        
+        validated_data['cost'] = self.get_details_model().calc_cost(contract_details)
+
         contract = super().create(validated_data)
         
         details_serializer.create(contract, contract_details)
         return contract
-
 
     def to_representation(self, contract):
         res = super().to_representation(contract)
@@ -73,12 +73,11 @@ class ContractSerializer(serializers.ModelSerializer):
         return super().update(contract, validated_data)
 
     def get_details_serializer(self, contract_type):
-        details_serializers = [
+        return [
             ContractDetailsLastwillSerializer,
-            ContractDetailsLastwillSerializer,
+            ContractDetailsLostKeySerializer,
             ContractDetailsDelayedPaymentSerializer,
-        ]
-        return details_serializers[contract_type]
+        ][contract_type]
 
     
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
@@ -113,11 +112,11 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%d %H:%M')
-        data['cost'] = self.Meta.model.calc_cost({
-                'heirs_num': len(details['heirs']),
-                'active_to': details['active_to'].date(),
-                'check_interval': details['check_interval']
-        })
+#        data['cost'] = self.Meta.model.calc_cost({
+#                'heirs_num': len(details['heirs']),
+#                'active_to': details['active_to'].date(),
+#                'check_interval': details['check_interval']
+#        })
         for heir_json in details['heirs']:
             heir_json.get('email', None) and check.is_email(heir_json['email'])
             check.is_address(heir_json['address'])
@@ -126,6 +125,9 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
             heir_json['percentage'] = int(heir_json['percentage'])
         check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
         return data
+
+class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
+    pass
 
 class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -137,6 +139,6 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         return super().create(kwargs)
 
-    def validate(self, data):
-        data['cost'] = self.Meta.model.calc_cost(dict())
-        return data
+#    def validate(self, data):
+#        data['cost'] = self.Meta.model.calc_cost(dict())
+#        return data

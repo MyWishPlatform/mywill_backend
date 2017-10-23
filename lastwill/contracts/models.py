@@ -94,31 +94,38 @@ class Contract(models.Model):
 
     @classmethod
     def get_details_model(self, contract_type):
-        details_models = [ 
+        return [ 
                 ContractDetailsLastwill,
-                ContractDetailsLastwill,
+                ContractDetailsLostKey,
                 ContractDetailsDelayedPayment,
-        ]   
-        return details_models[contract_type]
+        ][contract_type]
 
 
 class ContractDetailsLastwill(models.Model):
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
     related_name = 'details_lastwill'
+
     contract = models.ForeignKey(Contract, related_name=related_name)
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
-    
+
+    def get_arguments(self):
+        return [
+            self.user_address,
+            [h.address for h in self.contract.heir_set.all()],
+            [h.percentage for h in self.contract.heir_set.all()],
+            self.check_interval,
+            ORACLIZE_PROXY,
+        ]   
+
     @staticmethod
     def calc_cost(kwargs):
         heirs_num = int(kwargs['heirs_num'])
         active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
         check_interval = int(kwargs['check_interval'])
-#        heirs_num = int(request.query_params['heirs_num'])
-#        active_to = datetime.date(*map(int, request.query_params['active_to'].split('-')))
-#        check_interval = int(request.query_params['check_interval'])
         Tg = 22000
         Gp = 20 * 10 ** 9
         Cg = 780476
@@ -131,9 +138,48 @@ class ContractDetailsLastwill(models.Model):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
+
+class ContractDetailsLostKey(models.Model):
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/LastWillParityWallet.sol'
+    related_name = 'details_lostkey'
+    
+    contract = models.ForeignKey(Contract, related_name=related_name)
+    user_address = models.CharField(max_length=50, null=True, default=None)
+    check_interval = models.IntegerField()
+    active_to = models.DateTimeField()
+    last_check = models.DateTimeField(null=True, default=None)
+    next_check = models.DateTimeField(null=True, default=None)
         
+    def get_arguments(self):
+        return [
+            self.user_address,
+            [h.address for h in self.contract.heir_set.all()],
+            [h.percentage for h in self.contract.heir_set.all()],
+            self.check_interval,
+        ]   
+
+    @staticmethod
+    def calc_cost(kwargs):
+        heirs_num = int(kwargs['heirs_num'])
+        active_to = datetime.date(*map(int, kwargs['active_to'].split('-')))
+        check_interval = int(kwargs['check_interval'])
+        Tg = 22000
+        Gp = 20 * 10 ** 9
+        Cg = 780476
+        CBg = 26561
+        Dg = 29435
+        DBg = 9646
+        B = heirs_num
+        Cc = 124852
+        DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
+        O = 25000 * 10 ** 9
+        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
+
+
 class ContractDetailsDelayedPayment(models.Model):
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/DelayedPayment.sol'
     related_name = 'details_delayed_payment'
+
     contract = models.ForeignKey(Contract, related_name=related_name)
     date = models.DateTimeField()
     user_address = models.CharField(max_length=50)
@@ -143,6 +189,7 @@ class ContractDetailsDelayedPayment(models.Model):
     @staticmethod
     def calc_cost(request):
         return 666
+
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
