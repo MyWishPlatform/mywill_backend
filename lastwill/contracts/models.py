@@ -238,7 +238,7 @@ class ContractDetailsDelayedPayment(models.Model):
 
     @staticmethod
     def calc_cost(request):
-        return 666
+        return 25000000000000000
 
     def deployed(self, message):
         pass
