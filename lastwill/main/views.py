@@ -32,3 +32,6 @@ def login(request):
     return render_to_response('login.html', {'csrf_token': csrf_token, 'request': request})
 
 
+@api_view()
+def eth2rub(request):
+    return Response(json.loads(requests.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=RUB').content.decode()))

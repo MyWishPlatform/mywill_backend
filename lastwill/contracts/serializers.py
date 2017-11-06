@@ -1,9 +1,10 @@
 import requests
 import datetime
 import json
+import random
 from rest_framework import serializers
 from django.apps import apps
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
@@ -86,6 +87,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsLastwillSerializer,
             ContractDetailsLostKeySerializer,
             ContractDetailsDelayedPaymentSerializer,
+            ContractDetailsPizzaSerializer,
         ][contract_type]
 
  
@@ -172,4 +174,28 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
         check.is_address(details['user_address'])
         check.is_address(details['recepient_address'])
         details.get('recepient_email', None) and check.is_email(details['recepient_email'])
+        return details
+
+
+class ContractDetailsPizzaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsPizza
+        fields = ('user_address', 'pizzeria_address', 'pizza_cost', 'timeout', 'order_id', 'code')
+        read_only_fields = ('pizzeria_address', 'timeout', 'code')
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs['code'] = random.randrange(9999)
+        kwargs['salt'] = random.randrange(2**256)
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details_copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        assert('user_address' in details and 'pizza_cost' in details)
+        check.is_address(details['user_address'])
         return details

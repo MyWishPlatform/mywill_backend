@@ -16,10 +16,9 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.contracts.types import contract_types
 
 class ContractViewSet(ModelViewSet):
-    permission_classes = (IsStaff | IsOwner, )
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
-    permission_classes = (IsAuthenticated,)
+#    permission_classes = (IsAuthenticated, IsStaff | IsOwner)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -58,4 +57,16 @@ def test_comp(request):
     contract = Contract.objects.get(id=request.query_params['id'])
     contract.compile()
     contract.save()
+    return Response({'result': 'ok'})
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@api_view(http_method_names=['POST'])
+def pizza_delivered(request):
+    order_id = request.data['order_id']
+    contract = Contract.objects.get(contract_type=3, details_pizza__order_id=order_id)
+    code = request.data['code']
+    if contract.get_details().code != code:
+        return Response({'result': 'bad code'})
     return Response({'result': 'ok'})

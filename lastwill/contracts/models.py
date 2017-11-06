@@ -68,7 +68,9 @@ class Contract(models.Model):
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : self.owner_address,
                 'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
-                'nonce': nonce
+                'nonce': nonce,
+                'gaslimit': self.get_details().get_gaslimit(),
+                'value': self.get_details().get_value(),
         }).content.decode())['result']
         print('signed_data', signed_data)
 
@@ -98,6 +100,7 @@ class Contract(models.Model):
                 ContractDetailsLastwill,
                 ContractDetailsLostKey,
                 ContractDetailsDelayedPayment,
+                ContractDetailsPizza,
         ][contract_type]
 
 
@@ -119,7 +122,8 @@ class ContractDetailsLastwill(models.Model):
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
             ORACLIZE_PROXY,
-        ]   
+        ]
+   
 
     @staticmethod
     def calc_cost(kwargs):
@@ -130,10 +134,10 @@ class ContractDetailsLastwill(models.Model):
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
         check_interval = int(kwargs['check_interval'])
-        Tg = 22000
-        Gp = 20 * 10 ** 9
         Cg = 780476
         CBg = 26561
+        Tg = 22000
+        Gp = 20 * 10 ** 9
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -161,7 +165,15 @@ class ContractDetailsLastwill(models.Model):
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
-        self.sav()
+        self.save()
+
+    def get_gaslimit(self):
+        Cg = 780476
+        CBg = 26561
+        return Cg + len(self.contract.heir_set.all()) * CBg
+
+    def get_value(self):
+        return 0
 
 
 class ContractDetailsLostKey(models.Model):
@@ -183,6 +195,7 @@ class ContractDetailsLostKey(models.Model):
             self.check_interval,
         ]   
 
+
     @staticmethod
     def calc_cost(kwargs):
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
@@ -192,10 +205,10 @@ class ContractDetailsLostKey(models.Model):
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
         check_interval = int(kwargs['check_interval'])
+        Cg = 1476117
+        CBg = 28031
         Tg = 22000
         Gp = 20 * 10 ** 9
-        Cg = 780476
-        CBg = 26561
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -223,7 +236,15 @@ class ContractDetailsLostKey(models.Model):
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
-        self.sav()
+        self.save()
+
+    def get_gaslimit(self):
+        Cg = 1476117
+        CBg = 28031
+        return Cg + len(self.contract.heir_set.all()) * CBg
+
+    def get_value(self): 
+        return 0
 
 
 class ContractDetailsDelayedPayment(models.Model):
@@ -237,7 +258,7 @@ class ContractDetailsDelayedPayment(models.Model):
     recepient_email = models.CharField(max_length=200, null=True)
 
     @staticmethod
-    def calc_cost(request):
+    def calc_cost(kwargs):
         return 25000000000000000
 
     def deployed(self, message):
@@ -256,6 +277,55 @@ class ContractDetailsDelayedPayment(models.Model):
             2**256 - 1,
             int(self.date.timestamp()),
         ]
+
+    def get_gaslimit(self):
+        return 1700000
+
+    def get_value(self): 
+        return 0
+
+
+class ContractDetailsPizza(models.Model):
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/Pizza.sol'
+    related_name = 'details_pizza'
+
+    contract = models.ForeignKey(Contract, related_name=related_name)
+    user_address = models.CharField(max_length=50)
+    pizzeria_address = models.CharField(max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a')
+    timeout = models.IntegerField(default=60*60)
+    code = models.IntegerField()
+    salt = models.CharField(max_length=len(str(2**256)))
+    pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0) # weis
+    order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
+
+    def get_gaslimit(self):
+        return 423037 + 5000
+    
+    @staticmethod
+    def calc_cost(kwargs):
+        pizza_cost = int(kwargs['pizza_cost'])
+        '''
+        Construct: 423037
+        Check: 22764
+        Hot pizza: 56478
+        Check and send: 62716
+        Cold pizza: 56467
+        '''
+        Cg = 423037
+        Ch = 22764
+        Hp = 56478
+        CaS = 62716
+        Cp = 56467
+        return pizza_cost + 2*(Cg + Ch + max(Hp,Cp) + CaS)
+
+    def get_arguments(self):
+        return [
+            self.user_address,
+            self.pizzeria_address,            
+        ]
+
+    def get_value(self): 
+        return self.cost
 
 
 class Heir(models.Model):

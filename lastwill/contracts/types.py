@@ -9,4 +9,7 @@ contract_types = [
     {
         'name': 'MyWish Delayed Payment',
     },
+    {
+        'name': 'Pizza',
+    },
 ]
