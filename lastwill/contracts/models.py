@@ -321,11 +321,16 @@ class ContractDetailsPizza(models.Model):
     def get_arguments(self):
         return [
             self.user_address,
-            self.pizzeria_address,            
+            self.pizzeria_address,
+            sha3.keccak256(int(self.code).to_bytes(32,'big') + int(self.salt).to_bytes(32,'big')),
+            self.timeout,
         ]
 
     def get_value(self): 
         return self.cost
+
+    def deployed(self):
+        pass
 
 
 class Heir(models.Model):
