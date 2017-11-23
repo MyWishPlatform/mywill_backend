@@ -70,7 +70,7 @@ def pizza_delivered(request):
     order_id = request.data['order_id']
     contract = Contract.objects.get(contract_type=3, details_pizza__order_id=order_id)
 
-    assert(contract.state=='ACTIVE')
+    assert(contract.state == 'ACTIVE')
 
     code = request.data['code']
 
@@ -83,12 +83,16 @@ def pizza_delivered(request):
     par_int = ParInt()
     nonce = int(par_int.parity_nextNonce(contract.owner_address), 16)
     print('nonce', nonce)
+
+    Hp = 56478
+    Cp = 56467
+
     response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
             'source' : contract.owner_address,
-            'data': binascii.hexlify(tr.encode_function_call('hotPizza', [contract.get_details().code, contract.get_details().salt])).decode(),
+            'data': binascii.hexlify(tr.encode_function_call('hotPizza', [int(contract.get_details().code), int(contract.get_details().salt)])).decode(),
             'nonce': nonce,
             'dest': contract.address,
-            'gaslimit': 70000,
+            'gaslimit': max(Hp, Cp),
     }).content.decode())
     print('response', response)
     signed_data = response['result']

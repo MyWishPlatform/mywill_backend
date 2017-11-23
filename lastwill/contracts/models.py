@@ -3,6 +3,7 @@ from os import path
 import requests
 import json
 import binascii
+import sha3
 import datetime
 from ethereum import abi
 from django.db import models
@@ -105,7 +106,7 @@ class Contract(models.Model):
 
 
 class ContractDetailsLastwill(models.Model):
-    sol_path = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/contracts/LastWillOraclize.sol'
     related_name = 'details_lastwill'
 
     contract = models.ForeignKey(Contract, related_name=related_name)
@@ -177,7 +178,7 @@ class ContractDetailsLastwill(models.Model):
 
 
 class ContractDetailsLostKey(models.Model):
-    sol_path = '/var/www/contracts_repos/lastwill/contracts/LastWillParityWallet.sol'
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/contracts/LastWillParityWallet.sol'
     related_name = 'details_lostkey'
     
     contract = models.ForeignKey(Contract, related_name=related_name)
@@ -241,14 +242,14 @@ class ContractDetailsLostKey(models.Model):
     def get_gaslimit(self):
         Cg = 1476117
         CBg = 28031
-        return Cg + len(self.contract.heir_set.all()) * CBg
+        return Cg + len(self.contract.heir_set.all()) * CBg + 3000
 
     def get_value(self): 
         return 0
 
 
 class ContractDetailsDelayedPayment(models.Model):
-    sol_path = '/var/www/contracts_repos/lastwill/contracts/DelayedPayment.sol'
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/contracts/DelayedPayment.sol'
     related_name = 'details_delayed_payment'
 
     contract = models.ForeignKey(Contract, related_name=related_name)
@@ -286,7 +287,7 @@ class ContractDetailsDelayedPayment(models.Model):
 
 
 class ContractDetailsPizza(models.Model):
-    sol_path = '/var/www/contracts_repos/lastwill/contracts/Pizza.sol'
+    sol_path = '/var/www/contracts_repos/lastwill/contracts/contracts/Pizza.sol'
     related_name = 'details_pizza'
 
     contract = models.ForeignKey(Contract, related_name=related_name)
@@ -304,6 +305,7 @@ class ContractDetailsPizza(models.Model):
     @staticmethod
     def calc_cost(kwargs):
         pizza_cost = int(kwargs['pizza_cost'])
+        pizza_cost = 1 # for testing
         '''
         Construct: 423037
         Check: 22764
@@ -316,20 +318,20 @@ class ContractDetailsPizza(models.Model):
         Hp = 56478
         CaS = 62716
         Cp = 56467
-        return pizza_cost + 2*(Cg + Ch + max(Hp,Cp) + CaS)
+        return pizza_cost + 2*(Cg + Ch + max(Hp,Cp) + CaS) * 20000000000
 
     def get_arguments(self):
         return [
             self.user_address,
             self.pizzeria_address,
-            sha3.keccak256(int(self.code).to_bytes(32,'big') + int(self.salt).to_bytes(32,'big')),
-            self.timeout,
+            binascii.unhexlify(sha3.keccak_256(int(self.code).to_bytes(32,'big') + int(self.salt).to_bytes(32,'big')).hexdigest().encode()),
+            int(self.timeout),
         ]
 
     def get_value(self): 
-        return self.cost
+        return int(self.pizza_cost)
 
-    def deployed(self):
+    def deployed(self, message):
         pass
 
 

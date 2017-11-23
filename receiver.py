@@ -4,6 +4,7 @@ import sys
 import traceback
 import json
 import datetime
+import sha3
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
@@ -20,7 +21,7 @@ QUEUE = 'notification'
 def payment(message):
     print('payment message', flush=True)
     contract = Contract.objects.get(id=message['contractId'])
-    if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] > contract.cost:
+    if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
         contract.deploy()
     print('payment ok', flush=True)
 

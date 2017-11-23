@@ -43,7 +43,8 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
-        validated_data['state'] = 'CREATED'
+        if validated_data.get('state') not in ('CREATED', 'WAITING_FOR_PAYMENT'):
+            validated_data['state'] = 'CREATED'
         
         response = requests.post('http://{}/get_key/'.format(SIGNER)).content
         print(response)
@@ -188,11 +189,13 @@ class ContractDetailsPizzaSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         kwargs['code'] = random.randrange(9999)
         kwargs['salt'] = random.randrange(2**256)
+        kwargs['pizza_cost'] = 1 # for testing
         return super().create(kwargs)
 
     def update(self, contract, details, contract_details):
         kwargs = contract_details_copy()
         kwargs['contract'] = contract
+        kwargs['pizza_cost'] = 1 # for testing
         return super().update(details, kwargs)
 
     def validate(self, details):
