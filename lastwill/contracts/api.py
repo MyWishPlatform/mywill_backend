@@ -9,18 +9,17 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from .models import Contract
+from .models import Contract, contract_details_types
 from .serializers import ContractSerializer
 from lastwill.main.views import index
 from lastwill.settings import SOL_PATH, SIGNER
 from lastwill.permissions import IsOwner, IsStaff
-from lastwill.contracts.types import contract_types
 from lastwill.parint import *
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
-#    permission_classes = (IsAuthenticated, IsStaff | IsOwner)
+    permission_classes = (IsAuthenticated, IsStaff | IsOwner)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -38,9 +37,6 @@ class ContractViewSet(ModelViewSet):
 @api_view()
 def get_cost(request):
     contract_type = int(request.query_params['contract_type'])
-#    heirs_num = int(request.query_params['heirs_num'])
-#    active_to = datetime.date(*map(int, request.query_params['active_to'].split('-')))
-#    check_interval = int(request.query_params['check_interval'])
     result = Contract.get_details_model(contract_type).calc_cost(request.query_params)
     return Response({'result': result})
 
@@ -52,12 +48,12 @@ def get_code(request):
 
 @api_view()
 def get_contract_types(request):
-    return Response({x: contract_types[x]['name'] for x in range(len(contract_types))})
+    return Response({x: contract_details_types[x]['name'] for x in range(len(contract_details_types))})
 
 @api_view()
 def test_comp(request):
     contract = Contract.objects.get(id=request.query_params['id'])
-    contract.compile()
+    contract.get_details().compile()
     contract.save()
     return Response({'result': 'ok'})
 
@@ -73,8 +69,6 @@ def pizza_delivered(request):
     assert(contract.state == 'ACTIVE')
 
     code = request.data['code']
-
-#    return Response({'your code': code, 'your_order_id': order_id})   
 
     if contract.get_details().code != code:
         return Response({'result': 'bad code'})

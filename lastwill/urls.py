@@ -18,7 +18,7 @@ from django.contrib import admin
 from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
-from lastwill.main.views import index, balance, login, eth2rub
+from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered
 from lastwill.other.api import SentenceViewSet
@@ -48,6 +48,7 @@ urlpatterns = [
     url(r'^api/create_ghost/', create_ghost),
     url(r'^api/get_contract_types', get_contract_types),
     url(r'^api/eth2rub/', eth2rub),
+    url(r'^api/exc_rate/', exc_rate),
     url(r'^api/pizza_delivered/', pizza_delivered),
 ]
 

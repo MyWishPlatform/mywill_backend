@@ -16,7 +16,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(os.path.realpath(__file__))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -173,6 +172,12 @@ REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'lastwill.profile.serializers.UserRegisterSerializer',
 }
 
+SOLC = 'solc --optimize --combined-json abi,bin --allow-paths={}'
+
+CONTRACTS_DIR = '/var/www/contracts_repos/'
+
+# have to be writeable
+CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 
 try:
     from lastwill.settings_local import *

@@ -35,3 +35,8 @@ def login(request):
 @api_view()
 def eth2rub(request):
     return Response(json.loads(requests.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=RUB').content.decode()))
+
+
+@api_view()
+def exc_rate(request):
+    return Response(json.loads(requests.get('https://min-api.cryptocompare.com/data/price?fsym='+request.query_params.get('fsym')+'&tsyms='+request.query_params.get('tsyms')).content.decode()))

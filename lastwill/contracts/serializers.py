@@ -4,11 +4,11 @@ import json
 import random
 from rest_framework import serializers
 from django.apps import apps
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza
+from django.db import transaction
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
-from lastwill.contracts.types import contract_types
 from lastwill.settings import ORACLIZE_PROXY
 
 class HeirSerializer(serializers.ModelSerializer):
@@ -16,25 +16,32 @@ class HeirSerializer(serializers.ModelSerializer):
         model = Heir
         fields = ('address', 'email', 'percentage')
 
+
+class TokenHolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TokenHolder
+        fields = ('address', 'amount', 'freeze_date')
+
+    def to_representation(self, th):
+        res = super().to_representation(th)
+        res['amount'] = int(res['amount'])
+        return res
+
+
 class ContractSerializer(serializers.ModelSerializer):
     contract_details = serializers.JSONField(write_only=True)
 
     class Meta:
         model = Contract
-        fields = ('id', 'user', 'address', 'owner_address',
-                'state', 'created_date', 'source_code', 'bytecode', 'abi',
-                'compiler_version', 'balance', 'cost', 'name',
+        fields = ('id', 'user', 'owner_address',
+                'state', 'created_date',
+                'balance', 'cost', 'name',
                 'contract_type', 'contract_details',
         )
         extra_kwargs = {
             'user': {'read_only': True},
-            'address': {'read_only': True},
             'owner_address': {'read_only': True},
             'created_date': {'read_only': True},
-            'source_code': {'read_only': True},
-            'bytecode': {'read_only': True},
-            'abi': {'read_only': True},
-            'compiler_version': {'read_only': True},
             'balance': {'read_only': True},
             'cost': {'read_only': True},
             'last_check': {'read_only': True},
@@ -46,19 +53,26 @@ class ContractSerializer(serializers.ModelSerializer):
         if validated_data.get('state') not in ('CREATED', 'WAITING_FOR_PAYMENT'):
             validated_data['state'] = 'CREATED'
         
-        response = requests.post('http://{}/get_key/'.format(SIGNER)).content
-        print(response)
-        validated_data['owner_address'] = json.loads(response.decode())['addr']
+#        response = requests.post('http://{}/get_key/'.format(SIGNER)).content
+#        print(response)
+#        validated_data['owner_address'] = json.loads(response.decode())['addr']
 
         contract_type = validated_data['contract_type']
         details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
         contract_details = validated_data.pop('contract_details')
         details_serializer.validate(contract_details)
         validated_data['cost'] = Contract.get_details_model(contract_type).calc_cost(contract_details)
-
-        contract = super().create(validated_data)
-        
-        details_serializer.create(contract, contract_details)
+        transaction.set_autocommit(False)
+        try:
+            contract = super().create(validated_data)
+            details_serializer.create(contract, contract_details)
+        except:
+            transaction.rollback()
+            raise
+        else:
+            transaction.commit()
+        finally:
+            transaction.set_autocommit(True)
         return contract
 
     def to_representation(self, contract):
@@ -89,9 +103,16 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsLostKeySerializer,
             ContractDetailsDelayedPaymentSerializer,
             ContractDetailsPizzaSerializer,
+            ContractDetailsICOSerializer,
         ][contract_type]
 
- 
+
+class EthContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EthContract
+        fields = ('address', 'source_code', 'abi', 'bytecode', 'compiler_version')
+
+
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsLastwill
@@ -101,10 +122,11 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
             'next_check': {'read_only': True},
         }
 
-    def to_representation(self, contract_details_lastwill):
-        res = super().to_representation(contract_details_lastwill)
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
-        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details_lastwill.contract.heir_set.all()]
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
     def create(self, contract, contract_details):
@@ -131,7 +153,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert('user_address' in details and'heirs' in details and 'active_to' in details and 'check_interval' in details)
+        assert('user_address' in details and 'heirs' in details and 'active_to' in details and 'check_interval' in details)
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%d %H:%M')
@@ -177,6 +199,10 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
         details.get('recepient_email', None) and check.is_email(details['recepient_email'])
         return details
 
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        return res
 
 class ContractDetailsPizzaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -202,3 +228,56 @@ class ContractDetailsPizzaSerializer(serializers.ModelSerializer):
         assert('user_address' in details and 'pizza_cost' in details)
         check.is_address(details['user_address'])
         return details
+
+    def to_representation(self, contract_details):
+        tes = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        return res
+
+class ContractDetailsICOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsICO
+        fields = (
+                'soft_cap', 'hard_cap', 'token_name', 'token_short_name', 'is_transferable_at_once',
+                'start_date', 'stop_date', 'decimals', 'rate', 'admin_address', 'platform_as_admin',
+        )
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        pass
+
+    def validate(self, details):
+        assert('admin_address' in details and 'token_holders' in details)
+        assert(len(details['token_name']) and len(details['token_short_name']))
+        assert(1 <= details['rate'] <= 10**12)
+        assert(0 <= details['decimals'] <= 50)
+        check.is_address(details['admin_address'])
+        assert(details['start_date'] >= datetime.datetime.now().timestamp() + 60*60)
+        assert(details['stop_date'] >= details['start_date'] + 60*60)
+        assert(details['soft_cap'] >= 0)
+        assert(details['hard_cap'] > details['soft_cap'] + sum([th['amount'] for th in details['token_holders']]))
+        for th in details['token_holders']:
+            check.is_address(th['address'])
+            assert(th['amount'] > 0)
+            assert(th['freeze_date'] is None or th['freeze_date'] > details['stop_date'])
+
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.all()]
+        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
+        res['soft_cap'], res['hard_cap'] = map(int, [res['soft_cap'], res['hard_cap']])
+        return res
+
