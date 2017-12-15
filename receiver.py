@@ -20,7 +20,7 @@ QUEUE = 'notification'
 
 def payment(message):
     print('payment message', flush=True)
-    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract = Contract.objects.get(id=message['contractId'])
     if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
         contract.get_details().deploy()
     print('payment ok', flush=True)
