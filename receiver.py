@@ -22,23 +22,13 @@ def payment(message):
     print('payment message', flush=True)
     contract = Contract.objects.get(id=message['contractId'])
     if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
-        contract.deploy()
+        contract.get_details().deploy()
     print('payment ok', flush=True)
 
 def deployed(message):
     print('deployed message received', flush=True)
     contract = Contract.objects.get(id=message['contractId'])
-    contract.address = message['address']
-    contract.state = 'ACTIVE'
-    contract.get_details().deployed(message)
-    contract.save()
-    if contract.user.email:
-        send_mail(
-                'Contract deployed',
-                'Contract deployed message',
-                DEFAULT_FROM_EMAIL,
-                [contract.user.email]
-        )
+    contract.get_details().msg_deployed(message)
     print('deployed ok!', flush=True)
 
 def killed(message):

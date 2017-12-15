@@ -53,9 +53,9 @@ class ContractSerializer(serializers.ModelSerializer):
         if validated_data.get('state') not in ('CREATED', 'WAITING_FOR_PAYMENT'):
             validated_data['state'] = 'CREATED'
         
-#        response = requests.post('http://{}/get_key/'.format(SIGNER)).content
-#        print(response)
-#        validated_data['owner_address'] = json.loads(response.decode())['addr']
+        response = requests.post('http://{}/get_key/'.format(SIGNER)).content
+        print(response)
+        validated_data['owner_address'] = json.loads(response.decode())['addr']
 
         contract_type = validated_data['contract_type']
         details_serializer = self.get_details_serializer(contract_type)(context=self.context) 

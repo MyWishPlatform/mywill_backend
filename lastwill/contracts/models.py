@@ -60,28 +60,6 @@ class Contract(models.Model):
 
 
 
-    def deploy(self):
-        self.get_details().compile()
-        tr = abi.ContractTranslator(self.abi)
-        arguments = self.get_details().get_arguments()
-        par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
-        print('nonce', nonce)
-
-        signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : self.owner_address,
-                'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
-                'nonce': nonce,
-                'gaslimit': self.get_details().get_gaslimit(),
-                'value': self.get_details().get_value(),
-        }).content.decode())['result']
-        print('signed_data', signed_data)
-
-        par_int.eth_sendRawTransaction('0x' + signed_data)
-
-        self.state = 'WAITING_FOR_DEPLOYMENT'
-
-        self.save()
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -142,6 +120,43 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
+
+    def deploy(self):
+        self.compile()
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        arguments = self.get_arguments()
+        par_int = ParInt()
+        nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
+        print('nonce', nonce)
+
+        signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source' : self.owner_address,
+                'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
+                'nonce': nonce,
+                'gaslimit': self.get_details().get_gaslimit(),
+                'value': self.get_details().get_value(),
+        }).content.decode())['result']
+
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+        print('transaction sent')
+
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+
+        self.contract.save()
+
+    def msg_deployed(message):
+        self.eth_contract.address = message['address']
+        self.eth_contract.save()
+        self.contract.state = 'ACTIVE'
+        contract.save()
+#        self.contract.get_details().deployed(message)
+        if contract.user.email:
+            send_mail(
+                    'Contract deployed',
+                    'Contract deployed message',
+                    DEFAULT_FROM_EMAIL,
+                    [contract.user.email]
+            )
 
 @contract_details('MyWish Original')
 class ContractDetailsLastwill(CommonDetails):
