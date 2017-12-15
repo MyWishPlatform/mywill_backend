@@ -120,21 +120,20 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
-
-    def deploy(self):
-        self.compile()
-        tr = abi.ContractTranslator(self.eth_contract.abi)
-        arguments = self.get_arguments()
+    def deploy(self, eth_contract_attr_name='eth_contract'):
+        eth_contract = getattr(self, eth_contract_attr_name)
+        tr = abi.ContractTranslator(eth_contract.abi)
+        arguments = self.get_arguments(eth_contract_attr_name='eth_contract')
         par_int = ParInt()
         nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
         print('nonce', nonce)
 
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : self.owner_address,
-                'data': self.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
+                'data': eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
                 'nonce': nonce,
-                'gaslimit': self.get_details().get_gaslimit(),
-                'value': self.get_details().get_value(),
+                'gaslimit': self.get_gaslimit(),
+                'value': self.get_value(),
         }).content.decode())['result']
 
         par_int.eth_sendRawTransaction('0x' + signed_data)
@@ -148,15 +147,19 @@ class CommonDetails(models.Model):
         self.eth_contract.address = message['address']
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
-        contract.save()
+        self.contract.save()
 #        self.contract.get_details().deployed(message)
-        if contract.user.email:
+        if self.contract.user.email:
             send_mail(
                     'Contract deployed',
                     'Contract deployed message',
                     DEFAULT_FROM_EMAIL,
                     [contract.user.email]
             )
+
+    def get_value(self): 
+        return 0
+
 
 @contract_details('MyWish Original')
 class ContractDetailsLastwill(CommonDetails):
@@ -169,7 +172,7 @@ class ContractDetailsLastwill(CommonDetails):
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
-    def get_arguments(self):
+    def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
             [h.address for h in self.contract.heir_set.all()],
@@ -200,7 +203,8 @@ class ContractDetailsLastwill(CommonDetails):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
-    def deployed(self, message):
+    def msg_deployed(self, message):
+        super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
@@ -226,8 +230,6 @@ class ContractDetailsLastwill(CommonDetails):
         CBg = 26561
         return Cg + len(self.contract.heir_set.all()) * CBg
 
-    def get_value(self):
-        return 0
 
 
 @contract_details('MyWish Wallet')
@@ -240,7 +242,7 @@ class ContractDetailsLostKey(CommonDetails):
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
         
-    def get_arguments(self):
+    def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
             [h.address for h in self.contract.heir_set.all()],
@@ -270,7 +272,8 @@ class ContractDetailsLostKey(CommonDetails):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
 
-    def deployed(self, message):
+    def msg_deployed(self, message):
+        super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
@@ -296,9 +299,6 @@ class ContractDetailsLostKey(CommonDetails):
         CBg = 28031
         return Cg + len(self.contract.heir_set.all()) * CBg + 3000
 
-    def get_value(self): 
-        return 0
-
 
 @contract_details('MyWish Delayed Payment')
 class ContractDetailsDelayedPayment(CommonDetails):
@@ -313,8 +313,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
     def calc_cost(kwargs):
         return 25000000000000000
 
-    def deployed(self, message):
-        pass
+    def msg_deployed(self, message):
+        super().msg_deployed(message)
 
     def checked(self, message):
         pass
@@ -322,7 +322,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
     def triggered(self, message):
         pass
     
-    def get_arguments(self):
+    def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
             self.recepient_address,
@@ -332,9 +332,6 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     def get_gaslimit(self):
         return 1700000
-
-    def get_value(self): 
-        return 0
 
 
 @contract_details('Pizza')
@@ -370,7 +367,7 @@ class ContractDetailsPizza(CommonDetails):
         Cp = 56467
         return pizza_cost + 2*(Cg + Ch + max(Hp,Cp) + CaS) * 20000000000
 
-    def get_arguments(self):
+    def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
             self.pizzeria_address,
@@ -381,8 +378,8 @@ class ContractDetailsPizza(CommonDetails):
     def get_value(self): 
         return int(self.pizza_cost)
 
-    def deployed(self, message):
-        pass
+    def msg_deployed(self, message):
+        super().msg_deployed(message)
 
 
 
@@ -468,6 +465,22 @@ class ContractDetailsICO(CommonDetails):
         self.eth_contract_token = eth_contract_token
         self.save()
 #        shutil.rmtree(dest)
+
+    def msg_deployed(self, message):
+        if self.eth_contract_token.id == message['contractId']:
+            self.eth_contract_token['address'] = message['address']
+            self.deploy(eth_contract_attr_name='eth_contract_crowdsale')
+        else:
+            self.contract.state = 'ACTIVE'
+            self.contract.save()
+
+    def get_gaslimit(self):
+        pass
+
+
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        return super().deploy(eth_contract_attr_name)
+        
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)

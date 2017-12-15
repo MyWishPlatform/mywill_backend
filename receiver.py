@@ -20,39 +20,39 @@ QUEUE = 'notification'
 
 def payment(message):
     print('payment message', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
+    contract = EthContract.objects.get(id=message['contractId']).contract
     if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
         contract.get_details().deploy()
     print('payment ok', flush=True)
 
 def deployed(message):
     print('deployed message received', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
+    contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().msg_deployed(message)
     print('deployed ok!', flush=True)
 
 def killed(message):
     print('killed message', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
+    contract = EthContract.objects.get(id=message['contractId']).contract
     contract.state = 'KILLED'
     contract.save()
     print('killed ok', flush=True)
 
 def checked(message):
     print('checked message', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
+    contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().checked(message)
     print('checked ok', flush=True)
 
 def repeat_check(message):
     print('repeat check message', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
+    contract = EthContract.objects.get(id=message['contractId']).contract
     check_one(contract)
     print('repeat check ok', flush=True)
 
 def triggered(message):
     print('triggered message', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
+    contract = EthContract.objects.get(id=message['contractId']).contract
     contract.state = 'TRIGGERED'
     contract.save()
     contract.get_details().triggered()
