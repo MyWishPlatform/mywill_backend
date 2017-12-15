@@ -20,7 +20,7 @@ class HeirSerializer(serializers.ModelSerializer):
 class TokenHolderSerializer(serializers.ModelSerializer):
     class Meta:
         model = TokenHolder
-        fields = ('address', 'amount', 'freeze_date')
+        fields = ('address', 'amount', 'freeze_date', 'name')
 
     def to_representation(self, th):
         res = super().to_representation(th)
@@ -265,7 +265,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         assert(details['start_date'] >= datetime.datetime.now().timestamp() + 60*60)
         assert(details['stop_date'] >= details['start_date'] + 60*60)
         assert(details['soft_cap'] >= 0)
-        assert(details['hard_cap'] > details['soft_cap'] + sum([th['amount'] for th in details['token_holders']]))
+        assert(details['hard_cap'] >= details['soft_cap'] + sum([th['amount'] for th in details['token_holders']]))
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)

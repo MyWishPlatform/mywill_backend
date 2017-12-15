@@ -431,6 +431,27 @@ class ContractDetailsICO(CommonDetails):
 
             }}))
         os.system('cd {dest} && ./compile.sh'.format(dest=dest))
+        eth_contract_crowdsale = EthContract()
+        with open(path.join(dest, 'build/contracts/MainCrowdsale.json')) as f:
+            crowdsale_json = json.loads(f.read())
+        eth_contract_crowdsale.abi = crowdsale_json['abi']
+        eth_contract_crowdsale.bytecode = crowdsale_json['bytecode']
+        eth_contract_crowdsale.compiler_version = crowdsale_json['compiler']['version']
+        eth_contract_crowdsale.source = crowdsale_json['source']
+        eth_contract_crowdsale.contract = self.contract
+        eth_contract_crowdsale.save()
+        self.eth_contract_crowdsale = eth_contract_crowdsale
+        eth_contract_token = EthContract()
+        with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
+            token_json = json.loads(f.read())
+        eth_contract_token.abi = crowdsale_json['abi']
+        eth_contract_token.bytecode = crowdsale_json['bytecode']
+        eth_contract_token.compiler_version = crowdsale_json['compiler']['version']
+        eth_contract_token.source = crowdsale_json['source']
+        eth_contract_token.contract = self.contract
+        eth_contract_token.save()
+        self.eth_contract_token = eth_contract_token
+        self.save()
 #        shutil.rmtree(dest)
 
 class Heir(models.Model):
