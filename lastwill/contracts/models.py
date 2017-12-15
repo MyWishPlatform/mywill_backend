@@ -414,6 +414,7 @@ class ContractDetailsICO(CommonDetails):
         os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
+        token_holders = self.contract.tokenholders_set.all()
         with open(preproc_config, 'w') as f:
             f.write(json.dumps({"constants": {
                     "D_START_TIME": self.start_date,
@@ -428,19 +429,11 @@ class ContractDetailsICO(CommonDetails):
                     "D_AUTO_FINALISE": self.platform_as_admin,
                     "D_PAUSE_TOKENS": self.is_transferable_at_once,
 
-
-                    "D_TOKENS_ADDRESS_1": "0x0000001b717aDd3E840343364EC9d971FBa3955C",
-                    "D_TOKENS_FREEZE_1": 1539709200,
-                    "D_TOKENS_AMOUNT_1": "1000000",
-
-                    "D_TOKENS_ADDRESS_2": "0x0000002b717aDd3E840343364EC9d971FBa3955C",
-                    "D_TOKENS_FREEZE_2": 0,
-                    "D_TOKENS_AMOUNT_2": "2000000",
-
-                    "D_TOKENS_ADDRESS_3": "0x0000003b717aDd3E840343364EC9d971FBa3955C",
-                    "D_TOKENS_FREEZE_3": 1539709200,
-                    "D_TOKENS_AMOUNT_3": "3000000"
-
+                    "D_PREMINT_COUNT": len(token_holders),
+                    
+                    "D_PREMINT_ADDRESSES": ','.join(map(lambda th: 'address(%s)'%th.address, token_holders)),
+                    "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
+                    "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%th.freeze_date, token_holders)),
             }}))
         os.system('cd {dest} && ./compile.sh'.format(dest=dest))
         eth_contract_crowdsale = EthContract()
@@ -473,14 +466,26 @@ class ContractDetailsICO(CommonDetails):
         else:
             self.contract.state = 'ACTIVE'
             self.contract.save()
+            if contract.user.email:
+                send_mail(
+                        'Contract deployed',
+                        'Contract deployed message',
+                        DEFAULT_FROM_EMAIL,
+                        [contract.user.email]
+                )
 
     def get_gaslimit(self):
         pass
 
-
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
         
+    def get_arguments(self, eth_contract_attr_name):
+        return {
+                'eth_contract_token': [],
+                'eth_contract_crowdsale': [self.eth_contract_token.address],
+        }[eth_contract_attr_name]
+
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
