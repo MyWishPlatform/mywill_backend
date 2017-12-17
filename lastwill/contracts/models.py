@@ -121,6 +121,7 @@ class CommonDetails(models.Model):
         self.save()
 
     def deploy(self, eth_contract_attr_name='eth_contract'):
+        self.compile()
         eth_contract = getattr(self, eth_contract_attr_name)
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name='eth_contract')
