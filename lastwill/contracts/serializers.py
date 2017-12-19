@@ -257,6 +257,8 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         pass
 
     def validate(self, details):
+        for k in ('hard_cap', 'soft_cap'):
+            details[k] = int(details[k])
         assert('admin_address' in details and 'token_holders' in details)
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
@@ -264,8 +266,8 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         check.is_address(details['admin_address'])
         assert(details['start_date'] >= datetime.datetime.now().timestamp() + 60*60)
         assert(details['stop_date'] >= details['start_date'] + 60*60)
+        assert(details['hard_cap'] > details['soft_cap'])
         assert(details['soft_cap'] >= 0)
-        assert(details['hard_cap'] >= details['soft_cap'] + sum([th['amount'] for th in details['token_holders']]))
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
@@ -275,9 +277,9 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.all()]
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
-        res['soft_cap'], res['hard_cap'] = map(int, [res['soft_cap'], res['hard_cap']])
+        res['rate'] = int(res['rate'])
         return res
 

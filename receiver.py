@@ -12,7 +12,7 @@ django.setup()
 from django.core.mail import send_mail
 from django.utils import timezone
 
-from lastwill.contracts.models import Contract
+from lastwill.contracts.models import Contract, EthContract
 from lastwill.settings import DEFAULT_FROM_EMAIL
 from lastwill.checker import check_one
 

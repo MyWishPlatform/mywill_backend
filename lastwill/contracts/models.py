@@ -89,7 +89,7 @@ class EthContract(models.Model):
     bytecode = models.TextField()
     abi = JSONField(default={})
     compiler_version = models.CharField(max_length=200, null=True, default=None)
-
+    tx_hash = models.CharField(max_length=70, null=True, default=None)
 
 class CommonDetails(models.Model):
     class Meta:
@@ -121,23 +121,24 @@ class CommonDetails(models.Model):
         self.save()
 
     def deploy(self, eth_contract_attr_name='eth_contract'):
-        self.compile()
+        self.compile(eth_contract_attr_name)
         eth_contract = getattr(self, eth_contract_attr_name)
         tr = abi.ContractTranslator(eth_contract.abi)
-        arguments = self.get_arguments(eth_contract_attr_name='eth_contract')
+        arguments = self.get_arguments(eth_contract_attr_name)
+        print('arguments', arguments)
         par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(self.owner_address), 16)
+        nonce = int(par_int.parity_nextNonce(self.contract.owner_address), 16)
         print('nonce', nonce)
-
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : self.owner_address,
-                'data': eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode(),
+                'source' : self.contract.owner_address,
+                'data': eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else ''),
                 'nonce': nonce,
                 'gaslimit': self.get_gaslimit(),
                 'value': self.get_value(),
         }).content.decode())['result']
 
-        par_int.eth_sendRawTransaction('0x' + signed_data)
+        eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        eth_contract.save()
         print('transaction sent')
 
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -396,7 +397,7 @@ class ContractDetailsICO(CommonDetails):
     is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
-    rate = models.IntegerField()
+    rate = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     decimals = models.IntegerField()
     platform_as_admin = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
@@ -407,15 +408,19 @@ class ContractDetailsICO(CommonDetails):
     def calc_cost(self):
         return 10**18
 
-    def compile(self):
-        temp_directory = str(uuid.uuid4())
-        os.mkdir(os.path.join(CONTRACTS_TEMP_DIR, temp_directory))
+    def compile(self, eth_contract_attr_name):
+        print('ico_contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        self.temp_directory = str(uuid.uuid4())
         sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
-        dest = path.join(CONTRACTS_TEMP_DIR, temp_directory)
+        dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
+        os.mkdir(dest)
         os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
-        token_holders = self.contract.tokenholders_set.all()
+        token_holders = self.contract.tokenholder_set.all()
         with open(preproc_config, 'w') as f:
             f.write(json.dumps({"constants": {
                     "D_START_TIME": self.start_date,
@@ -434,14 +439,14 @@ class ContractDetailsICO(CommonDetails):
                     
                     "D_PREMINT_ADDRESSES": ','.join(map(lambda th: 'address(%s)'%th.address, token_holders)),
                     "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
-                    "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%th.freeze_date, token_holders)),
+                    "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%(th.freeze_date if th.freeze_date else 0), token_holders)),
             }}))
         os.system('cd {dest} && ./compile.sh'.format(dest=dest))
         eth_contract_crowdsale = EthContract()
-        with open(path.join(dest, 'build/contracts/MainCrowdsale.json')) as f:
+        with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json')) as f:
             crowdsale_json = json.loads(f.read())
         eth_contract_crowdsale.abi = crowdsale_json['abi']
-        eth_contract_crowdsale.bytecode = crowdsale_json['bytecode']
+        eth_contract_crowdsale.bytecode = crowdsale_json['bytecode'][2:]
         eth_contract_crowdsale.compiler_version = crowdsale_json['compiler']['version']
         eth_contract_crowdsale.source = crowdsale_json['source']
         eth_contract_crowdsale.contract = self.contract
@@ -450,10 +455,10 @@ class ContractDetailsICO(CommonDetails):
         eth_contract_token = EthContract()
         with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
             token_json = json.loads(f.read())
-        eth_contract_token.abi = crowdsale_json['abi']
-        eth_contract_token.bytecode = crowdsale_json['bytecode']
-        eth_contract_token.compiler_version = crowdsale_json['compiler']['version']
-        eth_contract_token.source = crowdsale_json['source']
+        eth_contract_token.abi = token_json['abi']
+        eth_contract_token.bytecode = token_json['bytecode'][2:]
+        eth_contract_token.compiler_version = token_json['compiler']['version']
+        eth_contract_token.source = token_json['source']
         eth_contract_token.contract = self.contract
         eth_contract_token.save()
         self.eth_contract_token = eth_contract_token
@@ -462,12 +467,15 @@ class ContractDetailsICO(CommonDetails):
 
     def msg_deployed(self, message):
         if self.eth_contract_token.id == message['contractId']:
-            self.eth_contract_token['address'] = message['address']
+            self.eth_contract_token.address = message['address']
+            self.eth_contract_token.save()
             self.deploy(eth_contract_attr_name='eth_contract_crowdsale')
         else:
+            self.eth_contract_crowdsale.address = message['address']
+            self.eth_contract_crowdsale.save()
             self.contract.state = 'ACTIVE'
             self.contract.save()
-            if contract.user.email:
+            if self.contract.user.email:
                 send_mail(
                         'Contract deployed',
                         'Contract deployed message',
@@ -476,7 +484,7 @@ class ContractDetailsICO(CommonDetails):
                 )
 
     def get_gaslimit(self):
-        pass
+        return 3200000
 
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
