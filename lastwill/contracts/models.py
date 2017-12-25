@@ -218,7 +218,7 @@ class ContractDetailsLastwill(CommonDetails):
         Cc = 124852
         DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * 10 ** 9
-        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
+        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)     + 80000
 
     def msg_deployed(self, message):
         super().msg_deployed(message)
