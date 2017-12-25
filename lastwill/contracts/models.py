@@ -182,7 +182,7 @@ class CommonDetails(models.Model):
 
 @contract_details('MyWish Original')
 class ContractDetailsLastwill(CommonDetails):
-    sol_path = 'lastwill/contracts/LastWillOraclize.sol'
+    sol_path = 'lastwill/contracts/contracts/LastWillOraclize.sol'
 
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
@@ -253,7 +253,7 @@ class ContractDetailsLastwill(CommonDetails):
 
 @contract_details('MyWish Wallet')
 class ContractDetailsLostKey(CommonDetails):
-    sol_path = 'lastwill/contracts/LastWillParityWallet.sol'
+    sol_path = 'lastwill/contracts/contracts/LastWillParityWallet.sol'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
@@ -321,7 +321,7 @@ class ContractDetailsLostKey(CommonDetails):
 
 @contract_details('MyWish Delayed Payment')
 class ContractDetailsDelayedPayment(CommonDetails):
-    sol_path = 'lastwill/contracts/DelayedPayment.sol'
+    sol_path = 'lastwill/contracts/contracts/DelayedPayment.sol'
     date = models.DateTimeField()
     user_address = models.CharField(max_length=50)
     recepient_address = models.CharField(max_length=50)
@@ -355,7 +355,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
 @contract_details('Pizza')
 class ContractDetailsPizza(CommonDetails):
-    sol_path = 'lastwill/contracts/Pizza.sol'
+    sol_path = 'lastwill/contracts/contracts/Pizza.sol'
     user_address = models.CharField(max_length=50)
     pizzeria_address = models.CharField(max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a')
     timeout = models.IntegerField(default=60*60)
@@ -404,7 +404,7 @@ class ContractDetailsPizza(CommonDetails):
 
 @contract_details('MyWish ICO')
 class ContractDetailsICO(CommonDetails):
-    sol_path = 'lastwill/contracts/ICO.sol'
+    sol_path = 'lastwill/contracts/contracts/ICO.sol'
 
     soft_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     hard_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
