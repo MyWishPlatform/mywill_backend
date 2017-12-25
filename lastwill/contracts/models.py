@@ -108,6 +108,7 @@ class CommonDetails(models.Model):
     contract = models.ForeignKey(Contract)#, related_name='%(class)s')
 
     def compile(self, eth_contract_attr_name='eth_contract'):
+        print('compiling')
         sol_path = self.sol_path
         if getattr(self, eth_contract_attr_name):
             getattr(self, eth_contract_attr_name).delete()
@@ -127,6 +128,7 @@ class CommonDetails(models.Model):
         sol_path_name = path.basename(sol_path)[:-4]
         eth_contract.abi = json.loads(result['contracts']['<stdin>:'+sol_path_name]['abi'])
         eth_contract.bytecode = result['contracts']['<stdin>:'+sol_path_name]['bin']
+        eth_contract.contract = self.contract
         eth_contract.save()
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
@@ -157,7 +159,8 @@ class CommonDetails(models.Model):
 
         self.contract.save()
 
-    def msg_deployed(message):
+    @postponable
+    def msg_deployed(self, message):
         self.eth_contract.address = message['address']
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
@@ -168,7 +171,7 @@ class CommonDetails(models.Model):
                     'Contract deployed',
                     'Contract deployed message',
                     DEFAULT_FROM_EMAIL,
-                    [contract.user.email]
+                    [self.contract.user.email]
             )
 
     def get_value(self): 

@@ -10,6 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
 from lastwill.settings import ORACLIZE_PROXY, DEPLOY_ADDR
+from exchange_API import to_wish
 
 class HeirSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,6 +75,7 @@ class ContractSerializer(serializers.ModelSerializer):
     def to_representation(self, contract):
         res = super().to_representation(contract)
         res['contract_details'] = self.get_details_serializer(contract.contract_type)(context=self.context).to_representation(contract.get_details())
+        res['cost'] = str(int(to_wish('ETH', int(res['cost']))))
         return res
 
     def update(self, contract, validated_data):
