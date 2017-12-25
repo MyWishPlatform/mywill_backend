@@ -50,7 +50,7 @@ class ContractViewSet(ModelViewSet):
 def get_cost(request):
     contract_type = int(request.query_params['contract_type'])
     result = Contract.get_details_model(contract_type).calc_cost(request.query_params)
-    return Response({'result': to_wish('ETH', result)})
+    return Response({'result': str(int(to_wish('ETH', result)))})
 
 
 @api_view()
