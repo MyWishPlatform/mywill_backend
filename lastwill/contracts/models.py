@@ -247,7 +247,7 @@ class ContractDetailsLastwill(CommonDetails):
     def get_gaslimit(self):
         Cg = 780476
         CBg = 26561
-        return Cg + len(self.contract.heir_set.all()) * CBg
+        return Cg + len(self.contract.heir_set.all()) * CBg + 80000
 
 
 
@@ -316,7 +316,7 @@ class ContractDetailsLostKey(CommonDetails):
     def get_gaslimit(self):
         Cg = 1476117
         CBg = 28031
-        return Cg + len(self.contract.heir_set.all()) * CBg + 3000
+        return Cg + len(self.contract.heir_set.all()) * CBg + 3000 + 80000
 
 
 @contract_details('MyWish Delayed Payment')
