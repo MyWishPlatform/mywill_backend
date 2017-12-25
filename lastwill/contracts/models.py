@@ -161,6 +161,8 @@ class CommonDetails(models.Model):
 
     @postponable
     def msg_deployed(self, message):
+        if not message['success']:
+            raise Exception('transaction failed')
         self.eth_contract.address = message['address']
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
@@ -287,7 +289,7 @@ class ContractDetailsLostKey(CommonDetails):
         Cc = 124852
         DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * 10 ** 9
-        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)
+        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC) + 80000
 
     def msg_deployed(self, message):
         super().msg_deployed(message)
@@ -489,6 +491,8 @@ class ContractDetailsICO(CommonDetails):
 
     @postponable
     def msg_deployed(self, message):
+        if not message['success']:
+            raise Exception('transaction failed')
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
             self.eth_contract_token.save()
