@@ -7,7 +7,7 @@ def die(message):
 
 
 def is_address(string):
-    re.match('^0x[a-fA-F\d]{40}$', string) or die('{} is not a valid ethereum address'.format(string))
+    re.match('^0[xX][a-fA-F\d]{40}$', string) or die('{} is not a valid ethereum address'.format(string))
 
 
 def is_email(string):

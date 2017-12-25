@@ -7,6 +7,7 @@ from django.middleware import csrf
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from lastwill.parint import *
+from exchange_API import convert
 
 def index(request):
     csrf_token = csrf.get_token(request)
@@ -34,9 +35,8 @@ def login(request):
 
 @api_view()
 def eth2rub(request):
-    return Response(json.loads(requests.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=RUB').content.decode()))
-
+    return Response(convert('ETH', 'RUB'))
 
 @api_view()
 def exc_rate(request):
-    return Response(json.loads(requests.get('https://min-api.cryptocompare.com/data/price?fsym='+request.query_params.get('fsym')+'&tsyms='+request.query_params.get('tsyms')).content.decode()))
+    return Response(convert(request.query_params.get('fsym'), request.query_params.get('tsyms')))

@@ -27,6 +27,6 @@ def check_one(contract):
 
 
 def check_all():
-    for contract in Contract.objects.filter(next_check__lte=timezone.now(), contract_type__in=(0,1)):
+    for contract in Contract.objects.filter(next_check__lte=timezone.now(), contract_type__in=(0,1,4)):
        check_one(contract)
 

@@ -10,6 +10,7 @@ from allauth.account import app_settings
 from allauth.account.views import ConfirmEmailView
 from allauth.account.adapter import get_adapter
 from lastwill.contracts.models import Contract
+from lastwill.profile.models import Profile
 
 class UserConfirmEmailView(ConfirmEmailView):
     def post(self, *args, **kwargs):
@@ -39,6 +40,9 @@ def profile_view(request):
             'email': request.user.email,
             'contracts': Contract.objects.filter(user=request.user).count(),
             'is_ghost': not bool(len(request.user.password)),
+            'balance': str(request.user.profile.balance),
+            'internal_address': request.user.profile.internal_address,
+            'internal_btc_address': request.user.profile.internal_btc_address,
     })
 
 
@@ -47,6 +51,7 @@ def create_ghost(request):
     user = User()
     user.username = str(uuid.uuid4())
     user.save()
+    Profile(user=user).save()
     login(request, user)
     return Response({
             'username': user.username,
