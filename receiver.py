@@ -5,24 +5,34 @@ import traceback
 import json
 import datetime
 import sha3
+import requests
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.db.models import F
 
-from lastwill.contracts.models import Contract
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.contracts.models import Contract, EthContract
+from lastwill.settings import DEFAULT_FROM_EMAIL, MESSAGE_QUEUE
 from lastwill.checker import check_one
+from lastwill.profile.models import Profile
+from exchange_API import to_wish
 
-QUEUE = 'notification'
 
 def payment(message):
     print('payment message', flush=True)
-    contract = Contract.objects.get(id=message['contractId'])
-    if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
-        contract.get_details().deploy()
+#    contract = Contract.objects.get(id=message['contractId'])
+#    if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
+#        contract.get_details().deploy()
+    print('message["amount"]', message['amount'])
+    value = message['amount'] if message['currency'] == 'WISH' else to_wish(
+            message['currency'], message['amount']
+    )
+    print(value)
+    Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
     print('payment ok', flush=True)
 
 def deployed(message):
@@ -58,10 +68,27 @@ def triggered(message):
     contract.get_details().triggered()
     print('triggered ok', flush=True)
 
+def launch(message):
+    print('launch message', flush=True)
+    contract_details = Contract.objects.get(id=message['contractId']).get_details()
+    contract_details.deploy()
+    print('launch ok')
 
 def unknown_handler(message):
     print('unknown message', message, flush=True)
 
+
+def ownershipTransferred(message):
+    print('ownershipTransferred message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().ownershipTransferred(message)
+    print('ownershipTransferred ok')
+
+def initialized(message):
+    print('initialized message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().initialized(message)
+    print('initialized ok')
 
 methods_dict = {
     'payment': payment,
@@ -70,10 +97,13 @@ methods_dict = {
     'checked': checked,
     'repeatCheck': repeat_check,
     'triggered': triggered,
+    'launch': launch,
+    'initialized': initialized,
+    'ownershipTransferred': ownershipTransferred,
 }
 
 def callback(ch, method, properties, body):
-    print('received', body, flush=True)
+    print('received', body, properties, method, flush=True)
     try:
         message = json.loads(body.decode())
         if message.get('status', '') == 'COMMITTED':
@@ -100,7 +130,9 @@ rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
 channel = connection.channel()
-channel.queue_declare(queue=QUEUE, durable=True, auto_delete=False, exclusive=False)
-channel.basic_consume(callback, queue=QUEUE)
+channel.queue_declare(queue=MESSAGE_QUEUE, durable=True, auto_delete=False, exclusive=False)
+channel.basic_consume(callback, queue=MESSAGE_QUEUE)
+
+print('receiver started', flush=True)
 
 channel.start_consuming()

@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'lastwill.main',
     'lastwill.contracts',
     'lastwill.other',
+    'lastwill.profile',
+    'lastwill.payments',
 ]
 
 MIDDLEWARE = [
@@ -178,6 +180,8 @@ CONTRACTS_DIR = '/var/www/contracts_repos/'
 
 # have to be writeable
 CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
+
+MESSAGE_QUEUE = 'notification'
 
 try:
     from lastwill.settings_local import *

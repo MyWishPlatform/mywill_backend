@@ -20,7 +20,7 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost
-from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered
+from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy
 from lastwill.other.api import SentenceViewSet
 
 router = DefaultRouter(trailing_slash=True)
@@ -50,6 +50,7 @@ urlpatterns = [
     url(r'^api/eth2rub/', eth2rub),
     url(r'^api/exc_rate/', exc_rate),
     url(r'^api/pizza_delivered/', pizza_delivered),
+    url(r'^api/deploy/', deploy),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
