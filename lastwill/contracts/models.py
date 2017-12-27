@@ -465,7 +465,10 @@ class ContractDetailsICO(CommonDetails):
                     "D_WEI_AMOUNT_MILLIRATES": 0,
                     "D_WEI_AMOUNT_BOUNDARIES": 0,
             }}))
-        os.system('cd {dest} && ./compile.sh'.format(dest=dest))
+        if not os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
+            raise Exception('compiler error')
+        if not os.system('cd {dest} && ./test.sh'.format(dest=dest)):
+            raise Exception('testing error')
         eth_contract_crowdsale = EthContract()
         with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json')) as f:
             crowdsale_json = json.loads(f.read())
