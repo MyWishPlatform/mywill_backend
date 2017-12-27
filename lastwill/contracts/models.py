@@ -419,8 +419,8 @@ class ContractDetailsICO(CommonDetails):
     platform_as_admin = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
-    eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token')
-    eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale')
+    eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token', on_delete=models.SET_NULL)
+    eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale', on_delete=models.SET_NULL)
 
     def calc_cost(self):
         return 10**18
