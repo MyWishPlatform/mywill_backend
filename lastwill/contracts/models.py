@@ -401,8 +401,8 @@ class ContractDetailsICO(CommonDetails):
     platform_as_admin = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
-    eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token')
-    eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale')
+    eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token', on_delete=models.SET_NULL)
+    eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale', on_delete=models.SET_NULL)
 
     def calc_cost(self):
         return 10**18
@@ -415,7 +415,7 @@ class ContractDetailsICO(CommonDetails):
         os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
-        token_holders = self.contract.tokenholders_set.all()
+        token_holders = self.contract.tokenholder_set.all()
         with open(preproc_config, 'w') as f:
             f.write(json.dumps({"constants": {
                     "D_START_TIME": self.start_date,
