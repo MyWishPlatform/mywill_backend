@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'lastwill.other',
     'lastwill.profile',
     'lastwill.payments',
+    'lastwill.deploy',
 ]
 
 MIDDLEWARE = [

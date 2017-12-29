@@ -8,8 +8,10 @@ import binascii
 import sha3
 import datetime
 import shutil
+from time import sleep
 from ethereum import abi
 from django.db import models
+from django.db.models import Q
 from django.core.mail import send_mail
 from django.apps import apps
 from django.contrib.auth.models import User
@@ -21,6 +23,7 @@ from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTR
 from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
+from lastwill.deploy.models import DeployAddress
 
 contract_details_types = []
 
@@ -33,20 +36,56 @@ def contract_details(name):
         return c
     return w
 
+class NeedRequeue(Exception):
+    pass
+
+class TxFail(Exception):
+    pass
+
+class AlreadyPostponed(Exception):
+    pass
+
+
+def check_transaction(f):
+    def wrapper(*args, **kwargs):
+        if not args[1].get('success', True):
+            print('message rejected because deploy failed', flush=True)
+            raise TxFail()
+        else:
+            return f(*args, **kwargs)
+    return wrapper
+
 def postponable(f):
     def wrapper(*args, **kwargs):
         contract = args[0].contract
         if contract.state == 'POSTPONED':
-            print('message rejected because contract postponed')
-            return None
+            print('message rejected because contract postponed', flush=True)
+            raise AlreadyPostponed
         try:
             return f(*args, **kwargs)
-        except:
+        except Exception as e:
+            print('contract postponed due to exception', flush=True)
             contract.state = 'POSTPONED'
             contract.save()
             raise
     return wrapper
 
+def blocking(f):
+    def wrapper(*args, **kwargs):
+        if not DeployAddress.objects.select_for_update().filter(
+                Q(address=DEPLOY_ADDR) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
+        ).update(locked_by=args[0].contract.id):
+            print('address locked. sleeping 5 and requeueing the message', flush=True)
+            sleep(5)
+            raise NeedRequeue()
+        else:
+            try:
+                return f(*args, **kwargs)
+            except:
+                print('releasing lock due to exception', flush=True)
+                DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+                raise
+    return wrapper
 
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
@@ -108,7 +147,7 @@ class CommonDetails(models.Model):
     contract = models.ForeignKey(Contract)#, related_name='%(class)s')
 
     def compile(self, eth_contract_attr_name='eth_contract'):
-        print('compiling')
+        print('compiling', flush=True)
         sol_path = self.sol_path
         if getattr(self, eth_contract_attr_name):
             getattr(self, eth_contract_attr_name).delete()
@@ -133,6 +172,7 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract'):
         self.compile(eth_contract_attr_name)
@@ -158,16 +198,13 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
 
         self.contract.save()
-
-    @postponable
+    
     def msg_deployed(self, message):
-        if not message['success']:
-            raise Exception('transaction failed')
+        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
         self.eth_contract.address = message['address']
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-#        self.contract.get_details().deployed(message)
         if self.contract.user.email:
             send_mail(
                     'Contract deployed',
@@ -222,11 +259,14 @@ class ContractDetailsLastwill(CommonDetails):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)     + 80000
 
+    @postponable
+    @check_transaction
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
+    @check_transaction
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -239,6 +279,7 @@ class ContractDetailsLastwill(CommonDetails):
             self.next_check = None
         self.save()
 
+    @check_transaction
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -291,11 +332,14 @@ class ContractDetailsLostKey(CommonDetails):
         O = 25000 * 10 ** 9
         return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC) + 80000
 
+    @postponable
+    @check_transaction
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
+    @check_transaction
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -308,6 +352,7 @@ class ContractDetailsLostKey(CommonDetails):
             self.next_check = None
         self.save()
 
+    @check_transaction
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -332,6 +377,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
     def calc_cost(kwargs):
         return 25000000000000000
 
+    @postponable
+    @check_transaction
     def msg_deployed(self, message):
         super().msg_deployed(message)
 
@@ -431,6 +478,7 @@ class ContractDetailsICO(CommonDetails):
             print('already compiled')
             return
         self.temp_directory = str(uuid.uuid4())
+        print(self.temp_directory, flush=True)
         sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
         os.mkdir(dest)
@@ -438,8 +486,7 @@ class ContractDetailsICO(CommonDetails):
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
         token_holders = self.contract.tokenholder_set.all()
-        with open(preproc_config, 'w') as f:
-            f.write(json.dumps({"constants": {
+        preproc_params = {"constants": {
                     "D_START_TIME": self.start_date,
                     "D_END_TIME": self.stop_date,
                     "D_SOFT_CAP_WEI": str(self.soft_cap),
@@ -448,7 +495,7 @@ class ContractDetailsICO(CommonDetails):
                     "D_NAME": self.token_name,
                     "D_SYMBOL": self.token_short_name,
                     "D_DECIMALS": int(self.decimals),
-                    "D_COLD_WALLET": self.admin_address,
+                    "D_COLD_WALLET": '0x9b37d7b266a41ef130c4625850c8484cf928000d', # self.admin_address,
                     "D_AUTO_FINALISE": self.platform_as_admin,
                     "D_PAUSE_TOKENS": self.is_transferable_at_once,
 
@@ -458,17 +505,26 @@ class ContractDetailsICO(CommonDetails):
                     "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
                     "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%(th.freeze_date if th.freeze_date else 0), token_holders)),
 
-                    "D_BONUS_TOKEN": "false",
+                    "D_BONUS_TOKENS": "false",
 
                     "D_WEI_RAISED_AND_TIME_BONUS_COUNT": 0,
                     "D_WEI_AMOUNT_BONUS_COUNT": 0,
                     "D_WEI_AMOUNT_MILLIRATES": 0,
                     "D_WEI_AMOUNT_BOUNDARIES": 0,
-            }}))
-        if not os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
-            raise Exception('compiler error')
-        if not os.system('cd {dest} && ./test.sh'.format(dest=dest)):
+        }}
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
+            raise Exception('compiler error while testing')
+        if os.system('cd {dest} && ./test.sh'.format(dest=dest)):
             raise Exception('testing error')
+
+        preproc_params['D_COLD_WALLET'] = self.admin_address
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
         eth_contract_crowdsale = EthContract()
         with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json')) as f:
             crowdsale_json = json.loads(f.read())
@@ -492,10 +548,10 @@ class ContractDetailsICO(CommonDetails):
         self.save()
 #        shutil.rmtree(dest)
 
+    @blocking
+    @check_transaction
     @postponable
     def msg_deployed(self, message):
-        if not message['success']:
-            raise Exception('transaction failed')
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
             self.eth_contract_token.save()
@@ -523,6 +579,7 @@ class ContractDetailsICO(CommonDetails):
     def get_gaslimit(self):
         return 3200000
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
@@ -534,6 +591,8 @@ class ContractDetailsICO(CommonDetails):
         }[eth_contract_attr_name]
 
     # token
+    @blocking
+    @check_transaction
     @postponable
     def ownershipTransferred(self, message):
         if message['contractId'] != self.eth_contract_token.id:
@@ -557,8 +616,10 @@ class ContractDetailsICO(CommonDetails):
 
 
     # crowdsale
+    @check_transaction
     @postponable
     def initialized(self, message):
+        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
             return

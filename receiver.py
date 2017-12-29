@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import F
 
-from lastwill.contracts.models import Contract, EthContract
+from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
 from lastwill.settings import DEFAULT_FROM_EMAIL, MESSAGE_QUEUE
 from lastwill.checker import check_one
 from lastwill.profile.models import Profile
@@ -108,6 +108,11 @@ def callback(ch, method, properties, body):
         message = json.loads(body.decode())
         if message.get('status', '') == 'COMMITTED':
             methods_dict.get(properties.type, unknown_handler)(message)
+    except (TxFail, AlreadyPostponed):
+        ch.basic_ack(delivery_tag = method.delivery_tag)
+    except NeedRequeue:
+        print('requeueing message', flush=True)
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
     except Exception as e:
         print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
     else:

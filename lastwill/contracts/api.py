@@ -142,6 +142,6 @@ def deploy(request):
             body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
             properties=pika.BasicProperties(type='launch'),
     )
-    print('compilation request sended')
+    print('deploy request sended')
     connection.close()
     return Response('ok')
