@@ -7,3 +7,8 @@ class InternalPayment(models.Model):
     delta = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     tx_hash = models.CharField(max_length=66)
     datetime = models.DateTimeField(auto_now=True)
+
+class BTCAccount(models.Model):
+    address = models.CharField(max_length=50)
+    used = models.BooleanField(default=False)
+    balance = models.IntegerField(default=0)
