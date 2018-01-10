@@ -42,7 +42,7 @@ def profile_view(request):
             'is_ghost': not bool(len(request.user.password)),
             'balance': str(request.user.profile.balance),
             'internal_address': request.user.profile.internal_address,
-            'internal_btc_address': request.user.profile.internal_btc_address,
+            'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None)
     })
 
 
