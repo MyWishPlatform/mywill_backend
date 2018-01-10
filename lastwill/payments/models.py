@@ -12,3 +12,4 @@ class BTCAccount(models.Model):
     address = models.CharField(max_length=50)
     used = models.BooleanField(default=False)
     balance = models.IntegerField(default=0)
+    user = models.ForeignKey(User, null=True, default=None)
