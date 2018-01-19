@@ -114,7 +114,8 @@ def deploy(request):
     
     assert(contract.user == request.user and request.user.email)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
-
+    if contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
+        return Response({'result': 1}, status=400)
     cost = contract.cost
     wish_cost = to_wish('ETH', int(cost))
     if not Profile.objects.select_for_update().filter(

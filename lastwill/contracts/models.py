@@ -8,6 +8,7 @@ import binascii
 import sha3
 import datetime
 import shutil
+from copy import deepcopy
 from time import sleep
 from ethereum import abi
 from django.db import models
@@ -465,6 +466,8 @@ class ContractDetailsICO(CommonDetails):
     decimals = models.IntegerField()
     platform_as_admin = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
+    time_bonuses = JSONField(null=True, default=None)
+    amount_bonuses = JSONField(null=True, default=None)
 
     eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token', on_delete=models.SET_NULL)
     eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale', on_delete=models.SET_NULL)
@@ -486,6 +489,40 @@ class ContractDetailsICO(CommonDetails):
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
         token_holders = self.contract.tokenholder_set.all()
+
+        amount_bonuses = []
+        if self.amount_bonuses:
+            curr_min_amount = 0
+            for bonus in self.amount_bonuses:
+                if int(bonus['min_amount']) > curr_min_amount:
+                    amount_bonuses.append({
+                             'max_amount': bonus['min_amount'],
+                             'bonus': 0
+                    })
+                amount_bonuses.append({
+                         'max_amount': bonus['max_amount'],
+                         'bonus': bonus['bonus']
+                })
+                curr_min_amount = int(bonus['max_amount'])
+
+        time_bonuses = []
+        if self.time_bonuses:
+            orig_time_bonuses = deepcopy(self.time_bonuses)
+            first_date = orig_time_bonuses[0].get('min_time', None)
+            first_amount = orig_time_bonuses[0].get('min_amount', None)
+            if (first_date is not None and int(first_date) > self.start_date) or (first_amount is not None and int(first_amount) > 0):
+                time_bonuses.append({
+                        'max_amount': int(first_amount) if first_amount else self.hard_cap,
+                        'max_time': (first_date or self.stop_date) - 5, # lag needed for truffle tests
+                        'bonus': 0
+                })
+            for bonus in orig_time_bonuses:
+                time_bonuses.append({
+                        'max_amount': int(bonus.get('max_amount', None)) if bonus.get('max_amount', None) else self.hard_cap,
+                        'max_time': (bonus.get('max_time', None) or self.stop_date) - 5,
+                        'bonus': bonus['bonus'],
+                })
+
         preproc_params = {"constants": {
                     "D_START_TIME": self.start_date,
                     "D_END_TIME": self.stop_date,
@@ -505,12 +542,16 @@ class ContractDetailsICO(CommonDetails):
                     "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
                     "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%(th.freeze_date if th.freeze_date else 0), token_holders)),
 
-                    "D_BONUS_TOKENS": "false",
+                    "D_BONUS_TOKENS": "true" if time_bonuses or amount_bonuses else "false",
 
-                    "D_WEI_RAISED_AND_TIME_BONUS_COUNT": 0,
-                    "D_WEI_AMOUNT_BONUS_COUNT": 0,
-                    "D_WEI_AMOUNT_MILLIRATES": 0,
-                    "D_WEI_AMOUNT_BOUNDARIES": 0,
+                    "D_WEI_RAISED_AND_TIME_BONUS_COUNT": len(time_bonuses),
+                    "D_WEI_RAISED_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], time_bonuses)),
+                    "D_TIME_BOUNDARIES": ','.join(map(lambda b: 'uint64(%s)'%b['max_time'], time_bonuses)),
+                    "D_WEI_RAISED_AND_TIME_MILLIRATES": ','.join(map(lambda b: 'uint(%s)'%(int(10*b['bonus'])), time_bonuses)),
+
+                    "D_WEI_AMOUNT_BONUS_COUNT": len(amount_bonuses),
+                    "D_WEI_AMOUNT_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], reversed(amount_bonuses))),
+                    "D_WEI_AMOUNT_MILLIRATES": ','.join(map(lambda b: 'uint(%s)'%(int(10*b['bonus'])), reversed(amount_bonuses))),
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -519,7 +560,7 @@ class ContractDetailsICO(CommonDetails):
         if os.system('cd {dest} && ./test.sh'.format(dest=dest)):
             raise Exception('testing error')
 
-        preproc_params['D_COLD_WALLET'] = self.admin_address
+        preproc_params['constants']['D_COLD_WALLET'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
@@ -552,6 +593,7 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     @postponable
     def msg_deployed(self, message):
+        assert(message['success'])
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
             self.eth_contract_token.save()
