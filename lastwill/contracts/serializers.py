@@ -270,7 +270,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         check.is_address(details['admin_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
-        assert(details['stop_date'] >= details['start_date'] + 60*60)
+        assert(details['stop_date'] >= details['start_date'] + 30*60)
         assert(details['hard_cap'] >= details['soft_cap'])
         assert(details['soft_cap'] >= 0)
         for th in details['token_holders']:
@@ -285,24 +285,16 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
                 assert(int(bonus['min_amount']) >= min_amount)
                 min_amount = int(bonus['max_amount'])
             assert(int(bonus['min_amount']) < int(bonus['max_amount']))
-            assert(0.1 <= bonus['bonus'] <= 100)
+            assert(0.1 <= bonus['bonus'])
         time_bonuses = details['time_bonuses']
-        min_time = details['start_date']
-        min_amount = 0
         for bonus in time_bonuses:
             if bonus.get('min_amount', None) is not None:
                 assert(bonus.get('max_amount', None) is not None)
-                assert(int(bonus['min_amount']) >= min_amount)
-                min_amount = int(bonus['max_amount'])
+                assert(0 <= int(bonus['min_amount']) < int(bonus['max_amount']) <= int(details['hard_cap']))
             if bonus.get('min_time', None) is not None:
                 assert(bonus.get('max_time', None) is not None)
-                assert(int(bonus['min_time']) >= min_time)
-                min_time = int(bonus['max_time'])
-            assert(bonus.get('min_amount', None) is None or int(bonus['min_amount']) < int(bonus['max_amount']))
-            assert(bonus.get('min_time', None) is None or int(bonus['min_time']) < int(bonus['max_time']))
-            assert(int(bonus.get('max_time', 0)) <= int(details['stop_date']))
-            assert(int(bonus.get('max_amount', 0)) <= int(details['hard_cap']))
-            assert(0.1 <= bonus['bonus'] <= 100)
+                assert(int(details['start_date']) <= int(bonus['min_time']) < int(bonus['max_time']) <= int(details['stop_date']))
+            assert(0.1 <= bonus['bonus'])
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

@@ -494,34 +494,30 @@ class ContractDetailsICO(CommonDetails):
         if self.amount_bonuses:
             curr_min_amount = 0
             for bonus in self.amount_bonuses:
-                if int(bonus['min_amount']) > curr_min_amount:
-                    amount_bonuses.append({
-                             'max_amount': bonus['min_amount'],
-                             'bonus': 0
-                    })
                 amount_bonuses.append({
-                         'max_amount': bonus['max_amount'],
+                         'max_amount': bonus['min_amount'],
                          'bonus': bonus['bonus']
                 })
+                if int(bonus['min_amount']) > curr_min_amount: # fill gap with zero
+                    amount_bonuses.append({
+                             'max_amount': bonus['max_amount'],
+                             'bonus': 0
+                    })
                 curr_min_amount = int(bonus['max_amount'])
 
-        time_bonuses = []
-        if self.time_bonuses:
-            orig_time_bonuses = deepcopy(self.time_bonuses)
-            first_date = orig_time_bonuses[0].get('min_time', None)
-            first_amount = orig_time_bonuses[0].get('min_amount', None)
-            if (first_date is not None and int(first_date) > self.start_date) or (first_amount is not None and int(first_amount) > 0):
-                time_bonuses.append({
-                        'max_amount': int(first_amount) if first_amount else self.hard_cap,
-                        'max_time': (first_date or self.stop_date) - 5, # lag needed for truffle tests
-                        'bonus': 0
-                })
-            for bonus in orig_time_bonuses:
-                time_bonuses.append({
-                        'max_amount': int(bonus.get('max_amount', None)) if bonus.get('max_amount', None) else self.hard_cap,
-                        'max_time': (bonus.get('max_time', None) or self.stop_date) - 5,
-                        'bonus': bonus['bonus'],
-                })
+
+        time_bonuses = deepcopy(self.time_bonuses)
+        for bonus in time_bonuses:
+            if bonus.get('min_time', None) is None:
+                bonus['min_time'] = self.start_date
+                bonus['max_time'] = self.stop_date - 5
+            else:
+                if int(bonus['max_time']) > int(self.stop_date) - 5:
+                    bonus['max_time'] = int(self.stop_date) - 5
+            if bonus.get('min_amount', None) is None:
+                bonus['min_amount'] = 0
+                bonus['max_amount'] = self.hard_cap
+
 
         preproc_params = {"constants": {
                     "D_START_TIME": self.start_date,
@@ -534,7 +530,7 @@ class ContractDetailsICO(CommonDetails):
                     "D_DECIMALS": int(self.decimals),
                     "D_COLD_WALLET": '0x9b37d7b266a41ef130c4625850c8484cf928000d', # self.admin_address,
                     "D_AUTO_FINALISE": self.platform_as_admin,
-                    "D_PAUSE_TOKENS": self.is_transferable_at_once,
+                    "D_PAUSE_TOKENS": not self.is_transferable_at_once,
 
                     "D_PREMINT_COUNT": len(token_holders),
                     
@@ -545,8 +541,10 @@ class ContractDetailsICO(CommonDetails):
                     "D_BONUS_TOKENS": "true" if time_bonuses or amount_bonuses else "false",
 
                     "D_WEI_RAISED_AND_TIME_BONUS_COUNT": len(time_bonuses),
-                    "D_WEI_RAISED_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], time_bonuses)),
-                    "D_TIME_BOUNDARIES": ','.join(map(lambda b: 'uint64(%s)'%b['max_time'], time_bonuses)),
+                    "D_WEI_RAISED_STARTS_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['min_amount'], time_bonuses)),
+                    "D_WEI_RAISED_ENDS_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], time_bonuses)),
+                    "D_TIME_STARTS_BOUNDARIES": ','.join(map(lambda b: 'uint64(%s)'%b['min_time'], time_bonuses)),
+                    "D_TIME_ENDS_BOUNDARIES": ','.join(map(lambda b: 'uint64(%s)'%b['max_time'], time_bonuses)),
                     "D_WEI_RAISED_AND_TIME_MILLIRATES": ','.join(map(lambda b: 'uint(%s)'%(int(10*b['bonus'])), time_bonuses)),
 
                     "D_WEI_AMOUNT_BONUS_COUNT": len(amount_bonuses),
@@ -594,6 +592,8 @@ class ContractDetailsICO(CommonDetails):
     @postponable
     def msg_deployed(self, message):
         assert(message['success'])
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
             self.eth_contract_token.save()
@@ -637,6 +637,8 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     @postponable
     def ownershipTransferred(self, message):
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
         if message['contractId'] != self.eth_contract_token.id:
             print('ignored', flush=True)
             return
@@ -661,6 +663,8 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     @postponable
     def initialized(self, message):
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
         DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
