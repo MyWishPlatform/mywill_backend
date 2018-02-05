@@ -468,6 +468,7 @@ class ContractDetailsICO(CommonDetails):
     temp_directory = models.CharField(max_length=36)
     time_bonuses = JSONField(null=True, default=None)
     amount_bonuses = JSONField(null=True, default=None)
+    continue_minting = models.BooleanField(default=False)
 
     eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token', on_delete=models.SET_NULL)
     eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale', on_delete=models.SET_NULL)
@@ -550,6 +551,9 @@ class ContractDetailsICO(CommonDetails):
                     "D_WEI_AMOUNT_BONUS_COUNT": len(amount_bonuses),
                     "D_WEI_AMOUNT_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], reversed(amount_bonuses))),
                     "D_WEI_AMOUNT_MILLIRATES": ','.join(map(lambda b: 'uint(%s)'%(int(10*b['bonus'])), reversed(amount_bonuses))),
+
+                    "D_CONTINUE_MINTING": self.continue_minting,
+                    "D_MYWISH_ADDRESS": '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd',
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -559,6 +563,7 @@ class ContractDetailsICO(CommonDetails):
             raise Exception('testing error')
 
         preproc_params['constants']['D_COLD_WALLET'] = self.admin_address
+        preproc_params['constants']['D_MYWISH_ADDRESS'] = DEPLOY_ADDR
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
@@ -637,9 +642,9 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     @postponable
     def ownershipTransferred(self, message):
-        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            return
         if message['contractId'] != self.eth_contract_token.id:
+            if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+                DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
             print('ignored', flush=True)
             return
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)

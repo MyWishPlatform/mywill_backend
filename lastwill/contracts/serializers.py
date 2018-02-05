@@ -239,7 +239,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         fields = (
                 'soft_cap', 'hard_cap', 'token_name', 'token_short_name', 'is_transferable_at_once',
                 'start_date', 'stop_date', 'decimals', 'rate', 'admin_address', 'platform_as_admin',
-                'time_bonuses', 'amount_bonuses',
+                'time_bonuses', 'amount_bonuses', 'continue_minting',
         )
 
     def create(self, contract, contract_details):
