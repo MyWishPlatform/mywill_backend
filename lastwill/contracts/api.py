@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from .models import Contract, contract_details_types
+from .models import Contract, contract_details_types, EthContract
 from .serializers import ContractSerializer
 from lastwill.main.views import index
 from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, MESSAGE_QUEUE
@@ -36,7 +36,6 @@ class ContractViewSet(ModelViewSet):
             except Http404:
                 pass
             return Response(status=status.HTTP_204_NO_CONTENT)
-#            return super().destroy(request, *args, **kwargs)
         raise PermissionDenied()
 
     def get_queryset(self):
@@ -68,6 +67,41 @@ def test_comp(request):
     contract.get_details().compile()
     contract.save()
     return Response({'result': 'ok'})
+
+@api_view()
+def get_token_contracts(request):
+    if request.user.is_anonymous:
+        return Response(dict())
+    res = []
+    eth_contracts = EthContract.objects.filter(
+             contract__contract_type=4,
+             contract__user=request.user,
+    )
+    for ec in eth_contracts:
+        details = ec.contract.get_details()
+        if details.eth_contract_token == ec:
+            if any([x.contract.state not in ('ENDED', 'CREATED') for x in ec.ico_details_token.all()]):
+                state = 'running'
+            elif any([not x.continue_minting and x.contract.state != 'CREATED' for x in ec.ico_details_token.all()]):
+                state = 'closed'
+            else:
+                state = 'ok'
+            res.append({
+                    'id': ec.id,
+                    'address': ec.address,
+                    'token_name': details.token_name, 
+                    'token_short_name': details.token_short_name,
+                    'decimals': details.decimals,
+                    'state': state
+            })
+    return Response(res)
+    return Response({int(x.id): {
+            'address': x.address,
+            'token_name': x.ico_details_token.all()[0].token_name,
+            'token_short_name': x.ico_details_token.all()[0].token_short_name,
+            'decimals': x.ico_details_token.all()[0].decimals,
+    } for x in token_contracts})
+
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -116,6 +150,7 @@ def deploy(request):
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
     if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
         return Response({'result': 1}, status=400)
+    # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     wish_cost = to_wish('ETH', int(cost))
     if not Profile.objects.select_for_update().filter(
@@ -135,8 +170,6 @@ def deploy(request):
     channel = connection.channel()
     channel.queue_declare(queue=MESSAGE_QUEUE, durable=True, auto_delete=False, exclusive=False)
 
-#    details = contract.get_details()
-#    details.deploy()
     channel.basic_publish(
             exchange='',
             routing_key=MESSAGE_QUEUE,

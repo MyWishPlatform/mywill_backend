@@ -80,7 +80,9 @@ def unknown_handler(message):
 
 def ownershipTransferred(message):
     print('ownershipTransferred message')
-    contract = EthContract.objects.get(id=message['contractId']).contract
+#    contract = EthContract.objects.get(id=message['contractId']).contract
+#    contract = EthContract.objects.get(id=message['contractId']).ico_details_token.all().order_by('-id').first().contract
+    contract = EthContract.objects.get(id=message['crowdsaleId']).contract
     contract.get_details().ownershipTransferred(message)
     print('ownershipTransferred ok')
 
@@ -89,6 +91,29 @@ def initialized(message):
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().initialized(message)
     print('initialized ok')
+
+def finalized(message):
+    print('finalized message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().finalized(message)
+    print('finalized ok')
+
+def transactionCompleted(message):
+    print('transactionCompleted')
+    if message['transactionStatus']:
+        print('success, ignoring')
+        return
+    try:
+        contract = Contract.objects.get(id=message['lockedBy'])
+        assert((contract.contract_type != 4 and contract.get_details().eth_contract.tx_hash == message['transactionHash']) or
+                (message['transactionHash'] in (contract.get_details().eth_contract_token.tx_hash, contract.get_details().eth_contract_crowdsale.tx_hash))
+        )
+        contract.get_details().tx_failed(message)
+    except Exception as e:
+        print(e)
+        print('not found, returning')
+        return
+    print('transactionCompleted ok')
 
 methods_dict = {
     'payment': payment,
@@ -100,6 +125,8 @@ methods_dict = {
     'launch': launch,
     'initialized': initialized,
     'ownershipTransferred': ownershipTransferred,
+    'finalized': finalized,
+    'transactionCompleted': transactionCompleted,
 }
 
 def callback(ch, method, properties, body):

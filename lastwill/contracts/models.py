@@ -217,6 +217,11 @@ class CommonDetails(models.Model):
     def get_value(self): 
         return 0
 
+    def tx_failed(message):
+        print('set contract postponed due to transaction fail')
+        self.contract.state = 'POSTPONED'
+        self.contract.save()
+
 
 @contract_details('MyWish Original')
 class ContractDetailsLastwill(CommonDetails):
@@ -469,9 +474,12 @@ class ContractDetailsICO(CommonDetails):
     time_bonuses = JSONField(null=True, default=None)
     amount_bonuses = JSONField(null=True, default=None)
     continue_minting = models.BooleanField(default=False)
+    cold_wallet_address = models.CharField(max_length=50, default='')
 
     eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_token', on_delete=models.SET_NULL)
     eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale', on_delete=models.SET_NULL)
+
+    reused_token = models.BooleanField(default=False)
 
     def calc_cost(self):
         return 10**18
@@ -529,7 +537,9 @@ class ContractDetailsICO(CommonDetails):
                     "D_NAME": self.token_name,
                     "D_SYMBOL": self.token_short_name,
                     "D_DECIMALS": int(self.decimals),
-                    "D_COLD_WALLET": '0x9b37d7b266a41ef130c4625850c8484cf928000d', # self.admin_address,
+                    "D_COLD_WALLET": '0x9b37d7b266a41ef130c4625850c8484cf928000d',
+                    "D_CONTRACTS_OWNER": '0x8ffff2c69f000c790809f6b8f9abfcbaab46b322',
+
                     "D_AUTO_FINALISE": self.platform_as_admin,
                     "D_PAUSE_TOKENS": not self.is_transferable_at_once,
 
@@ -562,8 +572,9 @@ class ContractDetailsICO(CommonDetails):
         if os.system('cd {dest} && ./test.sh'.format(dest=dest)):
             raise Exception('testing error')
 
-        preproc_params['constants']['D_COLD_WALLET'] = self.admin_address
+        preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         preproc_params['constants']['D_MYWISH_ADDRESS'] = DEPLOY_ADDR
+        preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
@@ -579,16 +590,17 @@ class ContractDetailsICO(CommonDetails):
         eth_contract_crowdsale.contract = self.contract
         eth_contract_crowdsale.save()
         self.eth_contract_crowdsale = eth_contract_crowdsale
-        eth_contract_token = EthContract()
-        with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
-            token_json = json.loads(f.read())
-        eth_contract_token.abi = token_json['abi']
-        eth_contract_token.bytecode = token_json['bytecode'][2:]
-        eth_contract_token.compiler_version = token_json['compiler']['version']
-        eth_contract_token.source_code = token_json['source']
-        eth_contract_token.contract = self.contract
-        eth_contract_token.save()
-        self.eth_contract_token = eth_contract_token
+        if not self.reused_token:
+            eth_contract_token = EthContract()
+            with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
+                token_json = json.loads(f.read())
+            eth_contract_token.abi = token_json['abi']
+            eth_contract_token.bytecode = token_json['bytecode'][2:]
+            eth_contract_token.compiler_version = token_json['compiler']['version']
+            eth_contract_token.source_code = token_json['source']
+            eth_contract_token.contract = self.contract
+            eth_contract_token.save()
+            self.eth_contract_token = eth_contract_token
         self.save()
 #        shutil.rmtree(dest)
 
@@ -596,8 +608,17 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     @postponable
     def msg_deployed(self, message):
-        assert(message['success'])
+        print('msg_deployed method of the ico contract')
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+            return
+        if self.reused_token:
+            self.contract.state = 'WAITING_ACTIVATION'
+            self.contract.save()
+            self.eth_contract_crowdsale.address = message['address']
+            self.eth_contract_crowdsale.save()
+            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+            print('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
@@ -606,7 +627,6 @@ class ContractDetailsICO(CommonDetails):
         else:
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
-
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
             par_int = ParInt()
             nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16) 
@@ -629,6 +649,8 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        if self.reused_token:
+            eth_contract_attr_name = 'eth_contract_crowdsale'
         return super().deploy(eth_contract_attr_name)
         
     def get_arguments(self, eth_contract_attr_name):
@@ -643,10 +665,17 @@ class ContractDetailsICO(CommonDetails):
     @postponable
     def ownershipTransferred(self, message):
         if message['contractId'] != self.eth_contract_token.id:
-            if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
                 DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
             print('ignored', flush=True)
             return
+        if self.contract.state in ('ACTIVE', 'ENDED'):
+            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+            return
+        if self.contract.state == 'WAITING_ACTIVATION':
+            self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+            self.contract.save()
+            # continue deploy: call init
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         par_int = ParInt()
         nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
@@ -683,6 +712,10 @@ class ContractDetailsICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+
+    def finalized(self, message):
+        self.contract.state = 'ENDED'
+        self.contract.save()
 
 
 class Heir(models.Model):

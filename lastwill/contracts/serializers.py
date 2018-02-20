@@ -50,11 +50,6 @@ class ContractSerializer(serializers.ModelSerializer):
         if validated_data.get('state') not in ('CREATED', 'WAITING_FOR_PAYMENT'):
             validated_data['state'] = 'CREATED'
 
-#        response = requests.post('http://{}/get_key/'.format(SIGNER)).content
-#        print(response)
-#        validated_data['owner_address'] = json.loads(response.decode())['addr']
-#        validated_data['owner_address'] = DEPLOY_ADDR
-
         contract_type = validated_data['contract_type']
         details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
         contract_details = validated_data.pop('contract_details')
@@ -109,7 +104,7 @@ class ContractSerializer(serializers.ModelSerializer):
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
-        fields = ('address', 'source_code', 'abi', 'bytecode', 'compiler_version')
+        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version')
 
 
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
@@ -239,10 +234,11 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         fields = (
                 'soft_cap', 'hard_cap', 'token_name', 'token_short_name', 'is_transferable_at_once',
                 'start_date', 'stop_date', 'decimals', 'rate', 'admin_address', 'platform_as_admin',
-                'time_bonuses', 'amount_bonuses', 'continue_minting',
+                'time_bonuses', 'amount_bonuses', 'continue_minting', 'cold_wallet_address', 'reused_token',
         )
 
     def create(self, contract, contract_details):
+        token_id = contract_details.pop('token_id', None)
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
@@ -251,14 +247,27 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        return super().create(kwargs)
-
-    def update(self, contract, details, contract_details):
-        pass
+        res = super().create(kwargs)
+        if token_id:
+            res.eth_contract_token_id = token_id
+            res.save()
+        return res
 
     def validate(self, details):
-        assert('"' not in details['token_name'] and '\n' not in details['token_name'])
-        assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
+        if 'eth_contract_token' in details and 'id' in details['eth_contract_token'] and details['eth_contract_token']['id']:
+            token_model = EthContract.objects.get(id=details['eth_contract_token']['id'])
+            token_details = token_model.contract.get_details()
+            details.pop('eth_contract_token')
+            details['token_name'] = token_details.token_name
+            details['token_short_name'] = token_details.token_short_name
+            details['decimals'] = token_details.decimals
+            details['reused_token'] = True
+            details['token_id'] = token_model.id
+        else:
+            assert('"' not in details['token_name'] and '\n' not in details['token_name'])
+            assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
+            assert(0 <= details['decimals'] <= 50)
+            details['reused_token'] = False
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
         for th in details['token_holders']:
@@ -266,11 +275,10 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         assert('admin_address' in details and 'token_holders' in details)
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
-        assert(0 <= details['decimals'] <= 50)
         check.is_address(details['admin_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
-        assert(details['stop_date'] >= details['start_date'] + 30*60)
+        assert(details['stop_date'] >= details['start_date'] + 5*60)
         assert(details['hard_cap'] >= details['soft_cap'])
         assert(details['soft_cap'] >= 0)
         for th in details['token_holders']:
@@ -306,6 +314,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         return res
 
     def update(self, contract, details, contract_details): 
+        token_id = contract_details.pop('token_id', None)
         contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
@@ -315,6 +324,9 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        del(kwargs['eth_contract_token'])
-        del(kwargs['eth_contract_crowdsale'])
+        kwargs.pop('eth_contract_token', None)
+        kwargs.pop('eth_contract_crowdsale', None)
+
+        if token_id:
+            details.eth_contract_token_id = token_id
         return super().update(details, kwargs)
