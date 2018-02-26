@@ -184,6 +184,11 @@ CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 
 MESSAGE_QUEUE = 'notification'
 
+REST_AUTH_SERIALIZERS = { 
+        'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer',
+}
+
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:

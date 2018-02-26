@@ -1,9 +1,13 @@
 import requests
 import json
+import pyotp
 from django.db import transaction
 from rest_auth.registration.serializers import RegisterSerializer
+from rest_framework.exceptions import PermissionDenied
+from rest_framework import serializers
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
+from rest_auth.serializers import LoginSerializer
 from lastwill.profile.models import Profile
 from lastwill.settings import SIGNER
 from lastwill.payments.models import BTCAccount
@@ -39,3 +43,15 @@ class UserRegisterSerializer(RegisterSerializer):
             btc_account.user = user
             btc_account.save()
         return user
+
+
+class UserLoginSerializer(LoginSerializer):
+    totp = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        res = super().validate(attrs)
+        if attrs['user']:
+            user = attrs['user']
+            if user.profile.use_totp and attrs.get('totp') != pyotp.TOTP(user.profile.totp_key).now():
+                raise PermissionDenied('Unable to log in with provided credentials.')
+        return res

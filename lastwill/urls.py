@@ -19,7 +19,7 @@ from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
-from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost
+from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost, generate_key, enable_2fa, disable_2fa
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts
 from lastwill.other.api import SentenceViewSet
 
@@ -52,6 +52,9 @@ urlpatterns = [
     url(r'^api/pizza_delivered/', pizza_delivered),
     url(r'^api/deploy/', deploy),
     url(r'^api/get_token_contracts/', get_token_contracts),
+    url(r'^api/generate_key/', generate_key),
+    url(r'^api/enable_2fa/', enable_2fa),
+    url(r'^api/disable_2fa/', disable_2fa),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
