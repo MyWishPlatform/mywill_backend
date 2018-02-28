@@ -84,6 +84,8 @@ def enable_2fa(request):
     if user.is_anonymous or not user.email:
         raise PermissionDenied()
     assert(user.profile.totp_key)
+    if pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
+        raise PermissionDenied()
     user.profile.use_totp = True
     user.profile.save()
     return Response({"result": "ok"})
