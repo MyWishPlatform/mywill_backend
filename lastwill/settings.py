@@ -187,6 +187,7 @@ MESSAGE_QUEUE = 'notification'
 REST_AUTH_SERIALIZERS = { 
         'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
         'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
+        'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
 }
 
 OLD_PASSWORD_FIELD_ENABLED = True
