@@ -217,7 +217,7 @@ class CommonDetails(models.Model):
     def get_value(self): 
         return 0
 
-    def tx_failed(message):
+    def tx_failed(self, message):
         print('set contract postponed due to transaction fail')
         self.contract.state = 'POSTPONED'
         self.contract.save()
