@@ -11,6 +11,7 @@ from allauth.account.views import ConfirmEmailView
 from allauth.account.adapter import get_adapter
 from lastwill.contracts.models import Contract
 from lastwill.profile.models import Profile
+import pyotp
 
 class UserConfirmEmailView(ConfirmEmailView):
     def post(self, *args, **kwargs):
@@ -42,7 +43,8 @@ def profile_view(request):
             'is_ghost': not bool(len(request.user.password)),
             'balance': str(request.user.profile.balance),
             'internal_address': request.user.profile.internal_address,
-            'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None)
+            'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None),
+            'use_totp': request.user.profile.use_totp,
     })
 
 
@@ -59,3 +61,43 @@ def create_ghost(request):
             'contracts': 0,
             'is_ghost': not bool(len(request.user.password)),
     })
+
+
+@api_view(http_method_names=['POST'])
+def generate_key(request):
+    user = request.user
+    if user.is_anonymous or not user.email:
+        raise PermissionDenied()
+    assert(not user.profile.use_totp)
+    user.profile.totp_key = pyotp.random_base32()
+    user.profile.save()
+    return Response({
+            'secret': user.profile.totp_key,
+            'issuer': 'mywish.io',
+            'user': user.email,
+    })
+
+
+@api_view(http_method_names=['POST'])
+def enable_2fa(request):
+    user = request.user
+    if user.is_anonymous or not user.email:
+        raise PermissionDenied()
+    assert(user.profile.totp_key)
+    if pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
+        raise PermissionDenied()
+    user.profile.use_totp = True
+    user.profile.save()
+    return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['POST'])
+def disable_2fa(request):
+    user = request.user
+    if user.is_anonymous or not user.email:
+        raise PermissionDenied()
+    if user.profile.use_totp and pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
+        raise PermissionDenied()
+    user.profile.use_totp = False
+    user.profile.save()
+    return Response({"result": "ok"})
