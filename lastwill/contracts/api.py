@@ -71,7 +71,7 @@ def test_comp(request):
 @api_view()
 def get_token_contracts(request):
     if request.user.is_anonymous:
-        return Response(dict())
+        return Response([])
     res = []
     eth_contracts = EthContract.objects.filter(
              contract__contract_type=4,
@@ -146,7 +146,7 @@ def pizza_delivered(request):
 def deploy(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     
-    assert(contract.user == request.user and request.user.email)
+    assert(contract.user == request.user)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
     if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
         return Response({'result': 1}, status=400)

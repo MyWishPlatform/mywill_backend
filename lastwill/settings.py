@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'allauth',
     'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
     'rest_auth',
     'rest_auth.registration',
     'djcelery_email',
@@ -191,6 +194,22 @@ REST_AUTH_SERIALIZERS = {
 }
 
 OLD_PASSWORD_FIELD_ENABLED = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        'SCOPE': ['email'],
+    },
+    'google': {
+        'SCOPE': ['email'],
+    }
+}
+
+
+
+# SOCIALACCOUNT_EMAIL_REQUIRED = True
+
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+
 
 try:
     from lastwill.settings_local import *

@@ -37,17 +37,17 @@ def profile_view(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
     return Response({
-            'username': request.user.username,
-            'email': request.user.email,
+            'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
             'contracts': Contract.objects.filter(user=request.user).count(),
-            'is_ghost': not bool(len(request.user.password)),
             'balance': str(request.user.profile.balance),
             'internal_address': request.user.profile.internal_address,
             'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None),
             'use_totp': request.user.profile.use_totp,
+            'is_social': request.user.profile.is_social,
     })
 
 
+'''
 @api_view(http_method_names=['POST'])
 def create_ghost(request):
     user = User()
@@ -61,12 +61,12 @@ def create_ghost(request):
             'contracts': 0,
             'is_ghost': not bool(len(request.user.password)),
     })
-
+'''
 
 @api_view(http_method_names=['POST'])
 def generate_key(request):
     user = request.user
-    if user.is_anonymous or not user.email:
+    if user.is_anonymous:
         raise PermissionDenied()
     assert(not user.profile.use_totp)
     user.profile.totp_key = pyotp.random_base32()
@@ -74,14 +74,14 @@ def generate_key(request):
     return Response({
             'secret': user.profile.totp_key,
             'issuer': 'mywish.io',
-            'user': user.email,
+            'user': user.email if user.email else str(user.id),
     })
 
 
 @api_view(http_method_names=['POST'])
 def enable_2fa(request):
     user = request.user
-    if user.is_anonymous or not user.email:
+    if user.is_anonymous:
         raise PermissionDenied()
     assert(user.profile.totp_key)
     if pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
@@ -94,7 +94,7 @@ def enable_2fa(request):
 @api_view(http_method_names=['POST'])
 def disable_2fa(request):
     user = request.user
-    if user.is_anonymous or not user.email:
+    if user.is_anonymous:
         raise PermissionDenied()
     if user.profile.use_totp and pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
         raise PermissionDenied()

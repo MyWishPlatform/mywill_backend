@@ -19,9 +19,10 @@ from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
-from lastwill.profile.views import UserConfirmEmailView, profile_view, create_ghost, generate_key, enable_2fa, disable_2fa
+from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts
 from lastwill.other.api import SentenceViewSet
+from lastwill.social.views import FacebookLogin, GoogleLogin
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -30,7 +31,7 @@ router.register(r'sentences', SentenceViewSet)
 urlpatterns = [
     url(r'^reset', index),
     url(r'^', include('django.contrib.auth.urls')),
-    url(r'^admin/', admin.site.urls),
+    url(r'^jopa/', admin.site.urls),
     url(r'^api/', include(router.urls)),
     url(
             r'^api/rest-auth/registration/account-confirm-email/(?P<key>[-:\w]+)/$',
@@ -45,7 +46,7 @@ urlpatterns = [
     url(r'^auth/', login),
     url(r'^api/get_code/', get_code),
     url(r'^api/test_comp/', test_comp),
-    url(r'^api/create_ghost/', create_ghost),
+#    url(r'^api/create_ghost/', create_ghost),
     url(r'^api/get_contract_types', get_contract_types),
     url(r'^api/eth2rub/', eth2rub),
     url(r'^api/exc_rate/', exc_rate),
@@ -55,6 +56,9 @@ urlpatterns = [
     url(r'^api/generate_key/', generate_key),
     url(r'^api/enable_2fa/', enable_2fa),
     url(r'^api/disable_2fa/', disable_2fa),
+    url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
+    url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
+    url(r'^/$', index, name='socialaccount_signup'),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

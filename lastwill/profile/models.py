@@ -9,3 +9,4 @@ class Profile(models.Model):
     internal_btc_address = models.CharField(max_length=50, null=True, default=None)
     totp_key = models.CharField(max_length=16, null=True, default=None)
     use_totp = models.BooleanField(default=False)
+    is_social = models.BooleanField(default=False)
