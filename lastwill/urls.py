@@ -24,7 +24,7 @@ from lastwill.main.views import index, balance, login, eth2rub, exc_rate, count_
 from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts
 from lastwill.other.api import SentenceViewSet
-from lastwill.social.views import FacebookLogin, GoogleLogin, MyView
+from lastwill.social.views import FacebookLogin, GoogleLogin
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
