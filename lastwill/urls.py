@@ -61,7 +61,7 @@ urlpatterns = [
     url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
     url(r'^/$', index, name='socialaccount_signup'),
-    url(r'^test/$', MyView.as_view(), name='test'),
+    # url(r'^test/$', MyView.as_view(), name='test'),
     url(r'^/count_tokens_in_ICO/', count_tokens_of_ICOcontract, name='count_ICOtokens'),
 ]
 
