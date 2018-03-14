@@ -1,4 +1,4 @@
-lastwill/settings_local.py
+*/settings_local.py
 templates/.DS_Store
 templates/account/.DS_Store
 .DS_Store
@@ -9,3 +9,7 @@ __pycache__/
 */__pycache__/
 */contracts/__pycache__/
 */*/__pycache__/
+lastwill-frontend/
+lastwill/static_collect/
+mywill_frontend/
+mywill_sign/

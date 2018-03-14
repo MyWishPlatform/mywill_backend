@@ -586,7 +586,10 @@ class ContractDetailsICO(CommonDetails):
         eth_contract_crowdsale.abi = crowdsale_json['abi']
         eth_contract_crowdsale.bytecode = crowdsale_json['bytecode'][2:]
         eth_contract_crowdsale.compiler_version = crowdsale_json['compiler']['version']
-        eth_contract_crowdsale.source_code = crowdsale_json['source']
+        # eth_contract_crowdsale.source_code = crowdsale_json['source']
+        with open(path.join(dest, 'build/TemplateCrowdsale.sol')) as f:
+            source_code = f.read()
+        eth_contract_crowdsale.source_code = source_code
         eth_contract_crowdsale.contract = self.contract
         eth_contract_crowdsale.save()
         self.eth_contract_crowdsale = eth_contract_crowdsale
@@ -597,7 +600,10 @@ class ContractDetailsICO(CommonDetails):
             eth_contract_token.abi = token_json['abi']
             eth_contract_token.bytecode = token_json['bytecode'][2:]
             eth_contract_token.compiler_version = token_json['compiler']['version']
-            eth_contract_token.source_code = token_json['source']
+            # eth_contract_token.source_code = token_json['source']
+            with open (path.join(dest, 'build/MainToken.sol')) as f:
+                source_code = f.read()
+            eth_contract_token.source_code = source_code
             eth_contract_token.contract = self.contract
             eth_contract_token.save()
             self.eth_contract_token = eth_contract_token
