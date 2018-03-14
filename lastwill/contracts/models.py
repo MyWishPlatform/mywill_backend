@@ -281,7 +281,7 @@ class ContractDetailsLastwill(CommonDetails):
             self.next_check = next_check
         else:
             self.contract.state = 'EXPIRED'
-            contract.save()
+            self.contract.save()
             self.next_check = None
         self.save()
 
@@ -354,7 +354,7 @@ class ContractDetailsLostKey(CommonDetails):
             self.next_check = next_check
         else:
             self.contract.state = 'EXPIRED'
-            contract.save()
+            self.contract.save()
             self.next_check = None
         self.save()
 

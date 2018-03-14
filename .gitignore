@@ -1,0 +1,11 @@
+lastwill/settings_local.py
+templates/.DS_Store
+templates/account/.DS_Store
+.DS_Store
+.idea/
+.venv/
+__pycache__/
+*/.DS_Store
+*/__pycache__/
+*/contracts/__pycache__/
+*/*/__pycache__/
