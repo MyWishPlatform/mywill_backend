@@ -8,6 +8,7 @@ from ethereum import abi
 from django.utils import timezone
 from django.db.models import F
 from django.http import Http404
+from django.views.generic import View
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -22,6 +23,8 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
 from exchange_API import to_wish
+from lastwill.settings import SIGNER, DEPLOY_ADDR
+from lastwill.contracts.models import ContractDetailsICO
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
@@ -95,12 +98,12 @@ def get_token_contracts(request):
                     'state': state
             })
     return Response(res)
-    return Response({int(x.id): {
-            'address': x.address,
-            'token_name': x.ico_details_token.all()[0].token_name,
-            'token_short_name': x.ico_details_token.all()[0].token_short_name,
-            'decimals': x.ico_details_token.all()[0].decimals,
-    } for x in token_contracts})
+    # return Response({int(x.id): {
+    #         'address': x.address,
+    #         'token_name': x.ico_details_token.all()[0].token_name,
+    #         'token_short_name': x.ico_details_token.all()[0].token_short_name,
+    #         'decimals': x.ico_details_token.all()[0].decimals,
+    # } for x in token_contracts})
 
 
 from django.views.decorators.csrf import csrf_exempt
@@ -179,3 +182,30 @@ def deploy(request):
     print('deploy request sended')
     connection.close()
     return Response('ok')
+
+
+class ICObalanceView(View):
+
+    def get(self, request, *args, **kwargs):
+        print('ololo')
+        contract_id = request.GET.get('contract', None)
+        contract = ContractDetailsICO.objects.get(id=contract_id)
+        print(type(contract))
+        tr = abi.ContractTranslator(contract.eth_contract_token.abi)
+        par_int = ParInt()
+        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
+
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': DEPLOY_ADDR,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('getBalance', [
+                        contract.eth_contract_crowdsale.address])).decode(),
+                'nonce': nonce,
+                'dest': contract.eth_contract_token.address,
+                'gaslimit': 100000,
+            }).content.decode())
+        signed_data = response['result']
+        balance = par_int.eth_getBalance('0x'+signed_data)
+        print('balance ', balance)
+        return Response({'balance': balance})

@@ -46,27 +46,3 @@ def eth2rub(request):
 def exc_rate(request):
     return Response(convert(request.query_params.get('fsym'), request.query_params.get('tsyms')))
 
-
-class ICObalanceView(View):
-
-    def get(self, request, *args, **kwargs):
-        print('ololo')
-        contract = request.GET.get('contract', None)
-        tr = abi.ContractTranslator(contract.eth_contract_token.abi)
-        par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
-
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': DEPLOY_ADDR,
-                'data': binascii.hexlify(
-                    tr.encode_function_call('getBalance', [
-                        contract.eth_contract_crowdsale.address])).decode(),
-                'nonce': nonce,
-                'dest': contract.eth_contract_token.address,
-                'gaslimit': 100000,
-            }).content.decode())
-        signed_data = response['result']
-        balance = par_int.eth_getBalance('0x'+signed_data)
-        print('balance ', balance)
-        return Response({'balance': balance})
