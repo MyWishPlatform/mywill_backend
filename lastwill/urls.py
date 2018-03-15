@@ -20,7 +20,7 @@ from django.conf.urls.static import static
 from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
-from lastwill.main.views import index, balance, login, eth2rub, exc_rate, count_tokens_of_ICOcontract
+from lastwill.main.views import index, balance, login, eth2rub, exc_rate, ICObalanceView
 from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts
 from lastwill.other.api import SentenceViewSet
@@ -62,7 +62,8 @@ urlpatterns = [
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
     url(r'^/$', index, name='socialaccount_signup'),
     # url(r'^test/$', MyView.as_view(), name='test'),
-    url(r'^/count_tokens_in_ICO/', count_tokens_of_ICOcontract, name='count_ICOtokens'),
+    url(r'^api/count_tokens_in_ICO/$', ICObalanceView.as_view(),
+        name='count_ICOtokens'),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
