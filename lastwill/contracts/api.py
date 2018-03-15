@@ -202,6 +202,5 @@ class ICOtokensView(View):
         sold_tokens = par_int.eth_call({'to': address_to,
                      'data': method_sign,
                      'from': address})
-        # convert to int
-        sold_tokens = sold_tokens / contract.decimals
+        sold_tokens = int(sold_tokens, 16) / contract.decimals
         return Response(sold_tokens)
