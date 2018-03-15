@@ -5,6 +5,8 @@ import requests
 from os import path
 import binascii
 from ethereum import abi
+from ethereum.abi import method_id as m_id
+from rlp.utils import int_to_big_endian
 from django.utils import timezone
 from django.db.models import F
 from django.http import Http404
@@ -191,22 +193,15 @@ class ICOtokensView(View):
         address = request.GET.get('address', None)
         assert (EthContract.objects.filter(address=address) != [])
         contract = ContractDetailsICO.objects.get(eth_contract_crowdsale__address=address)
-        tokens = contract.eth_contract_token
+        address_to = contract.eth_contract_token.address
 
-        tr = abi.ContractTranslator(contract.eth_contract_token.abi)
         par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                            'source': DEPLOY_ADDR,
-                            'data': binascii.hexlify(
-                                tr.encode_function_call('getBalance', [
-                                 contract.eth_contract_crowdsale.address])).decode(),
-                            'nonce': nonce,
-                            'dest': contract.eth_contract_token.address,
-                    }).content.decode())
-        signed_data = response['result']
 
-        sold_tokens = par_int.eth_call('get_tokensSold', '0x' + signed_data)
-
+        method_sign = '0x' + binascii.hexlify(
+            int_to_big_endian(m_id('totalSupply', []))).decode()
+        sold_tokens = par_int.eth_call({'to': address_to,
+                     'data': method_sign,
+                     'from': address})
+        # convert to int
+        sold_tokens = sold_tokens / contract.decimals
         return Response(sold_tokens)
