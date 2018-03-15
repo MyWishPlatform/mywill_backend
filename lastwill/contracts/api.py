@@ -98,12 +98,12 @@ def get_token_contracts(request):
                     'state': state
             })
     return Response(res)
-    # return Response({int(x.id): {
-    #         'address': x.address,
-    #         'token_name': x.ico_details_token.all()[0].token_name,
-    #         'token_short_name': x.ico_details_token.all()[0].token_short_name,
-    #         'decimals': x.ico_details_token.all()[0].decimals,
-    # } for x in token_contracts})
+    return Response({int(x.id): {
+            'address': x.address,
+            'token_name': x.ico_details_token.all()[0].token_name,
+            'token_short_name': x.ico_details_token.all()[0].token_short_name,
+            'decimals': x.ico_details_token.all()[0].decimals,
+    } for x in token_contracts})
 
 
 from django.views.decorators.csrf import csrf_exempt
@@ -184,28 +184,13 @@ def deploy(request):
     return Response('ok')
 
 
-class ICObalanceView(View):
+class ICOtokensView(View):
 
     def get(self, request, *args, **kwargs):
-        print('ololo')
-        contract_id = request.GET.get('contract', None)
-        contract = ContractDetailsICO.objects.get(id=contract_id)
-        print(type(contract))
-        tr = abi.ContractTranslator(contract.eth_contract_token.abi)
-        par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
 
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': DEPLOY_ADDR,
-                'data': binascii.hexlify(
-                    tr.encode_function_call('getBalance', [
-                        contract.eth_contract_crowdsale.address])).decode(),
-                'nonce': nonce,
-                'dest': contract.eth_contract_token.address,
-                'gaslimit': 100000,
-            }).content.decode())
-        signed_data = response['result']
-        balance = par_int.eth_getBalance('0x'+signed_data)
-        print('balance ', balance)
-        return Response({'balance': balance})
+        address = request.GET.get('address', None)
+        assert (EthContract.objects.filter(address=address) != [])
+        contract = ContractDetailsICO.objects.get(eth_contract_crowdsale__address=address)
+        tokens = contract.eth_contract_token
+
+        return Response({'quantity of sold tokens': tokens})
