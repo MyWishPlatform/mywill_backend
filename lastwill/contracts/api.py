@@ -5,8 +5,6 @@ import requests
 from os import path
 import binascii
 from ethereum import abi
-from ethereum.abi import method_id as m_id
-from rlp.utils import int_to_big_endian
 from django.utils import timezone
 from django.db.models import F
 from django.http import Http404
@@ -18,7 +16,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from .models import Contract, contract_details_types, EthContract
-from .serializers import ContractSerializer
+from .serializers import ContractSerializer, count_sold_tokens
 from lastwill.main.views import index
 from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, MESSAGE_QUEUE
 from lastwill.permissions import IsOwner, IsStaff
@@ -27,6 +25,7 @@ from lastwill.profile.models import Profile
 from exchange_API import to_wish
 from lastwill.settings import SIGNER, DEPLOY_ADDR
 from lastwill.contracts.models import ContractDetailsICO
+
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
@@ -192,15 +191,5 @@ class ICOtokensView(View):
 
         address = request.GET.get('address', None)
         assert (EthContract.objects.filter(address=address) != [])
-        contract = ContractDetailsICO.objects.get(eth_contract_crowdsale__address=address)
-        address_to = contract.eth_contract_token.address
-
-        par_int = ParInt()
-
-        method_sign = '0x' + binascii.hexlify(
-            int_to_big_endian(m_id('totalSupply', []))).decode()
-        sold_tokens = par_int.eth_call({'to': address_to,
-                     'data': method_sign,
-                     'from': address})
-        sold_tokens = int(sold_tokens, 16) / contract.decimals
-        return Response(sold_tokens)
+        sold_tokens = count_sold_tokens(address)
+        return Response({'sold tokens': sold_tokens})

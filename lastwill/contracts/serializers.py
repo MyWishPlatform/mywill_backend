@@ -2,6 +2,9 @@ import requests
 import datetime
 import json
 import random
+import binascii
+from ethereum.abi import method_id as m_id
+from rlp.utils import int_to_big_endian
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.apps import apps
@@ -12,6 +15,24 @@ from lastwill.settings import SIGNER
 import lastwill.check as check
 from lastwill.settings import ORACLIZE_PROXY, DEPLOY_ADDR
 from exchange_API import to_wish
+from lastwill.parint import ParInt
+
+
+def count_sold_tokens(address):
+    contract = ContractDetailsICO.objects.get(
+        eth_contract_crowdsale__address=address)
+    address_to = contract.eth_contract_token.address
+
+    par_int = ParInt()
+
+    method_sign = '0x' + binascii.hexlify(
+        int_to_big_endian(m_id('totalSupply', []))).decode()
+    sold_tokens = par_int.eth_call({'to': address_to,
+                                    'data': method_sign,
+                                    'from': address})
+    sold_tokens = int(sold_tokens, 16) / contract.decimals
+    return sold_tokens
+
 
 class HeirSerializer(serializers.ModelSerializer):
     class Meta:
@@ -311,6 +332,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
+        res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_crowdsale.address)
         return res
 
     def update(self, contract, details, contract_details): 
