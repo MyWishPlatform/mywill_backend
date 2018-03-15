@@ -193,4 +193,20 @@ class ICOtokensView(View):
         contract = ContractDetailsICO.objects.get(eth_contract_crowdsale__address=address)
         tokens = contract.eth_contract_token
 
-        return Response({'quantity of sold tokens': tokens})
+        tr = abi.ContractTranslator(contract.eth_contract_token.abi)
+        par_int = ParInt()
+        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                            'source': DEPLOY_ADDR,
+                            'data': binascii.hexlify(
+                                tr.encode_function_call('getBalance', [
+                                 contract.eth_contract_crowdsale.address])).decode(),
+                            'nonce': nonce,
+                            'dest': contract.eth_contract_token.address,
+                    }).content.decode())
+        signed_data = response['result']
+
+        sold_tokens = par_int.eth_call('get_tokensSold', '0x' + signed_data)
+
+        return Response(sold_tokens)
