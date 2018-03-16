@@ -214,7 +214,7 @@ class ICOtokensView(View):
 
 
 @api_view(http_method_names=['GET'])
-# @permission_classes((permissions.IsAdminUser,))
+@permission_classes((permissions.IsAdminUser,))
 def get_statistics(request):
 
     # Statistic of currency
