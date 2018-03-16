@@ -264,8 +264,7 @@ def get_statistics(request):
                                  float(eth_info['percent_change_24h']), 1)
                              }
 
-    for type in contract_details_types:
-        print(type['model'])
-        answer[type['name']] = type['model'].objects.filter().count()
+    for ctype in contract_details_types:
+        answer[ctype['name']] = ctype['model'].objects.filter().count()
 
     return JsonResponse(answer)
