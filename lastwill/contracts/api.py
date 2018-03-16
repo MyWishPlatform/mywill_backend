@@ -220,16 +220,16 @@ def get_statistics(request):
     # Statistic of currency
 
     mywish_info = json.loads(requests.get(
-            'https://api.coinmarketcap.com/v1/ticker/mywish/?convert=ETH'
-                                        ).content.decode())[0]
+        'https://api.coinmarketcap.com/v1/ticker/mywish/?convert=ETH'
+    ).content.decode())[0]
 
     btc_info = json.loads(requests.get(
-            'https://api.coinmarketcap.com/v1/ticker/bitcoin/'
-                                        ).content.decode())[0]
+        'https://api.coinmarketcap.com/v1/ticker/bitcoin/'
+    ).content.decode())[0]
 
     eth_info = json.loads(requests.get(
-            'https://api.coinmarketcap.com/v1/ticker/ethereum/'
-                                        ).content.decode())[0]
+        'https://api.coinmarketcap.com/v1/ticker/ethereum/'
+    ).content.decode())[0]
 
     now = datetime.datetime.now()
     day = now - datetime.timedelta(days=1)
@@ -247,36 +247,44 @@ def get_statistics(request):
     active = contracts.filter(state__in=['ACTIVE', 'WAITING'])
     now_active = active.filter(created_date__lte=now, created_date__gte=day)
     done = contracts.filter(state__in=[
-                                    'DONE', 'CANCELLED', 'ENDED', 'EXPIRED'])
+        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED']
+    )
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT', 'POSTPONED'])
     now_error = error.filter(created_date__lte=now, created_date__gte=day)
 
-    answer = {'users': len(users),
-                'contracts': len(contracts),
-                'new_users': len(new_users),
-                'new_contracts': len(new_contracts),
-                'active_contracts': len(active),
-                'created_contracts': len(created),
-                'done': len(done),
-                'error': len(error),
-                'now_created': len(now_created),
-                'now_active': len(now_active),
-                'now_done': len(now_done),
-                'now_error': len(now_error),
-                'wish_price_usd': round(float(mywish_info['price_usd']), 2),
-                'wish_usd_percent_change_24h': round(float(mywish_info[
-                                 'percent_change_24h']), 2),
-                'wish_price_eth': round(float(mywish_info['price_eth']), 5),
-                'wish_eth_percent_change_24h': round(float(mywish_info[
-                                 '24h_volume_eth']), 1),
-                'btc_price_usd': round(float(btc_info['price_usd'])),
-                'btc_percent_change_24h': round(float(btc_info[
-                                 'percent_change_24h']), 1),
-                'eth_price_usd': round(float(eth_info['price_usd'])),
-                'eth_percent_change_24h': round(
-                                 float(eth_info['percent_change_24h']), 1)
-                             }
+    answer = {
+        'users': len(users),
+        'contracts': len(contracts),
+        'new_users': len(new_users),
+        'new_contracts': len(new_contracts),
+        'active_contracts': len(active),
+        'created_contracts': len(created),
+        'done': len(done),
+        'error': len(error),
+        'now_created': len(now_created),
+        'now_active': len(now_active),
+        'now_done': len(now_done),
+        'now_error': len(now_error),
+        'wish_price_usd': round(
+            float(mywish_info['price_usd']), 2),
+            'wish_usd_percent_change_24h': round(float(mywish_info[
+            'percent_change_24h']), 2
+        ),
+        'wish_price_eth': round(float(mywish_info['price_eth']), 5),
+        'wish_eth_percent_change_24h': round(
+            float(mywish_info['24h_volume_eth']), 1
+        ),
+        'btc_price_usd': round(float(btc_info['price_usd'])),
+        'btc_percent_change_24h': round(float(
+            btc_info['percent_change_24h']), 1
+        ),
+        'eth_price_usd': round(
+            float(eth_info['price_usd'])),
+            'eth_percent_change_24h': round(
+            float(eth_info['percent_change_24h']), 1
+        )
+    }
 
     for ctype in contract_details_types:
         answer[ctype['name']] = ctype['model'].objects.filter().count()
