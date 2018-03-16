@@ -22,7 +22,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Contract, contract_details_types, EthContract
 from .serializers import ContractSerializer, count_sold_tokens
 from lastwill.main.views import index
-from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, MESSAGE_QUEUE
+from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, MESSAGE_QUEUE, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
@@ -240,7 +240,7 @@ def get_statistics(request):
     contracts = Contract.objects.all()
 
     try:
-        test_addresses = json.load(open('test_addresses.json'))['addresses']
+        test_addresses = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))['addresses']
     except(FileNotFoundError, IOError):
         test_addresses = []
 
