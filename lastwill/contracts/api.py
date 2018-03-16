@@ -211,13 +211,13 @@ class StatisticsView(View):
         contracts = Contract.objects.all()
         new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
 
-        created = contracts.filter(state='CREATED')
+        created = contracts.filter(state__in=['CREATED'])
         now_created = created.filter(created_date__lte=now, created_date__gte=day)
-        active = contracts.filter(state='ACTIVE')
+        active = contracts.filter(state__in=['ACTIVE', 'WAITING'])
         now_active = active.filter(created_date__lte=now, created_date__gte=day)
-        done = contracts.filter(state='DONE')
+        done = contracts.filter(state__in=['DONE', 'CANCELLED'])
         now_done = done.filter(created_date__lte=now, created_date__gte=day)
-        error = contracts.filter(state='WAITING_FORDEPLOYMENT')
+        error = contracts.filter(state__in=['WAITING_FORDEPLOYMENT', 'POSTPONED'])
         now_error = error.filter(created_date__lte=now, created_date__gte=day)
         print(len(users), len(contracts))
         return JsonResponse({'users': len(users),
