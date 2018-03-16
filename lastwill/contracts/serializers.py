@@ -19,7 +19,7 @@ from lastwill.parint import ParInt
 
 
 def count_sold_tokens(address):
-    contract = EthContract.objects.get(address=address).contract
+    EthContract.objects.get(address=address).contract
 
     par_int = ParInt()
 
@@ -27,7 +27,7 @@ def count_sold_tokens(address):
         int_to_big_endian(m_id('totalSupply', []))).decode()
     sold_tokens = par_int.eth_call({'to': address,
                                     'data': method_sign,
-                                    'from': address})
+    })
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
     sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
     return sold_tokens
