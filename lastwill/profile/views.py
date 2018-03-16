@@ -1,5 +1,6 @@
 import uuid
 from django.contrib.auth import login
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -7,6 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from allauth.account import app_settings
+from allauth.account.models import EmailAddress
 from allauth.account.views import ConfirmEmailView
 from allauth.account.adapter import get_adapter
 from lastwill.contracts.models import Contract
@@ -101,3 +103,16 @@ def disable_2fa(request):
     user.profile.use_totp = False
     user.profile.save()
     return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['POST'])
+def resend_email(request):
+    try:
+        em = EmailAddress.objects.get(email=request.data['email'])
+    except ObjectDoesNotExist:
+        raise PermissionDenied()
+    if em.verified:
+        raise PermissionDenied()
+    em.send_confirmation()
+    return Response({"result": "ok"})
+    

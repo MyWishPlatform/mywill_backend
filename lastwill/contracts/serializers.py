@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.db import transaction
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
@@ -97,7 +97,8 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsLostKeySerializer,
             ContractDetailsDelayedPaymentSerializer,
             ContractDetailsPizzaSerializer,
-            ContractDetailsICOSerializer,
+            ContractDetailsICOSerializer, 
+            ContractDetailsTokenSerializer,
         ][contract_type]
 
 
@@ -235,6 +236,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
                 'soft_cap', 'hard_cap', 'token_name', 'token_short_name', 'is_transferable_at_once',
                 'start_date', 'stop_date', 'decimals', 'rate', 'admin_address', 'platform_as_admin',
                 'time_bonuses', 'amount_bonuses', 'continue_minting', 'cold_wallet_address', 'reused_token',
+                'token_type',
         )
 
     def create(self, contract, contract_details):
@@ -263,16 +265,19 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             details['decimals'] = token_details.decimals
             details['reused_token'] = True
             details['token_id'] = token_model.id
+            details['token_type'] = token_details.token_type
         else:
             assert('"' not in details['token_name'] and '\n' not in details['token_name'])
             assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
             assert(0 <= details['decimals'] <= 50)
             details['reused_token'] = False
+            assert(details.get('token_type', 'ERC20') in ('ERC20, ERC223'))
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
+        assert('admin_address' in details and 'token_holders' in details)
+        assert(len(details['token_holders']) <= 5)
         for th in details['token_holders']:
             th['amount'] = int(th['amount'])
-        assert('admin_address' in details and 'token_holders' in details)
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
         check.is_address(details['admin_address'])
@@ -329,4 +334,56 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
 
         if token_id:
             details.eth_contract_token_id = token_id
+        return super().update(details, kwargs)
+
+
+class ContractDetailsTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsToken
+        fields = (
+                'token_name', 'token_short_name', 'decimals', 'admin_address', 'token_type', 'future_minting',
+        )
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+          
+    def validate(self, details):
+        assert('"' not in details['token_name'] and '\n' not in details['token_name'])
+        assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
+        assert(0 <= details['decimals'] <= 50)
+        for th in details['token_holders']:
+            th['amount'] = int(th['amount'])
+        assert('admin_address' in details and 'token_holders' in details)
+        assert(len(details['token_name']) and len(details['token_short_name']))
+        check.is_address(details['admin_address'])
+        for th in details['token_holders']:
+            check.is_address(th['address'])
+            assert(th['amount'] > 0)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('eth_contract_token', None)
         return super().update(details, kwargs)

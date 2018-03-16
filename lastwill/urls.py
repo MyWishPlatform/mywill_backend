@@ -19,10 +19,11 @@ from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
-from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa
+from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa, resend_email
 from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
+from lastwill.promo.api import get_discount
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -46,7 +47,6 @@ urlpatterns = [
     url(r'^auth/', login),
     url(r'^api/get_code/', get_code),
     url(r'^api/test_comp/', test_comp),
-#    url(r'^api/create_ghost/', create_ghost),
     url(r'^api/get_contract_types', get_contract_types),
     url(r'^api/eth2rub/', eth2rub),
     url(r'^api/exc_rate/', exc_rate),
@@ -58,6 +58,8 @@ urlpatterns = [
     url(r'^api/disable_2fa/', disable_2fa),
     url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
+    url(r'^api/resend_email/', resend_email),
+    url(r'^api/get_discount/', get_discount),
     url(r'^/$', index, name='socialaccount_signup'),
 ]
 

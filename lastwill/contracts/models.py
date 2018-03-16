@@ -25,6 +25,7 @@ from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
 from lastwill.deploy.models import DeployAddress
+import email_messages
 
 contract_details_types = []
 
@@ -199,17 +200,21 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
 
         self.contract.save()
-    
-    def msg_deployed(self, message):
+
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
-        self.eth_contract.address = message['address']
-        self.eth_contract.save()
+        eth_contract = getattr(self, eth_contract_attr_name)
+        eth_contract.address = message['address']
+        eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                    'Contract deployed',
-                    'Contract deployed message',
+                    email_messages.common_subject,
+                    email_messages.common_text.format(
+                            contract_type_name=contract_details_types[self.contract.contract_type]['name'],
+                            address=eth_contract.address
+                    ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
@@ -223,7 +228,7 @@ class CommonDetails(models.Model):
         self.contract.save()
 
 
-@contract_details('MyWish Original')
+@contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/LastWillOraclize.sol'
 
@@ -298,7 +303,7 @@ class ContractDetailsLastwill(CommonDetails):
 
 
 
-@contract_details('MyWish Wallet')
+@contract_details('Wallet contract (lost key)')
 class ContractDetailsLostKey(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/LastWillParityWallet.sol'
     user_address = models.CharField(max_length=50, null=True, default=None)
@@ -370,7 +375,7 @@ class ContractDetailsLostKey(CommonDetails):
         return Cg + len(self.contract.heir_set.all()) * CBg + 3000 + 80000
 
 
-@contract_details('MyWish Delayed Payment')
+@contract_details('Deferred payment contract')
 class ContractDetailsDelayedPayment(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/DelayedPayment.sol'
     date = models.DateTimeField()
@@ -480,8 +485,10 @@ class ContractDetailsICO(CommonDetails):
     eth_contract_crowdsale = models.ForeignKey(EthContract, null=True, default=None, related_name='ico_details_crowdsale', on_delete=models.SET_NULL)
 
     reused_token = models.BooleanField(default=False)
+    token_type = models.CharField(max_length=32, default='ERC20')
 
-    def calc_cost(self):
+    @staticmethod
+    def calc_cost(kwargs):
         return 10**18
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
@@ -564,12 +571,13 @@ class ContractDetailsICO(CommonDetails):
 
                     "D_CONTINUE_MINTING": self.continue_minting,
                     "D_MYWISH_ADDRESS": '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd',
+                    "D_ERC": self.token_type,
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(dest=dest)):
             raise Exception('compiler error while testing')
-        if os.system('cd {dest} && ./test.sh'.format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./test.sh'".format(dest=dest)):
             raise Exception('testing error')
 
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
@@ -577,7 +585,7 @@ class ContractDetailsICO(CommonDetails):
         preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         eth_contract_crowdsale = EthContract()
@@ -707,8 +715,11 @@ class ContractDetailsICO(CommonDetails):
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                    'Contract deployed',
-                    'Contract deployed message',
+                    email_messages.ico_subject,
+                    email_messages.ico_text.format(
+                            token_address=self.eth_contract_token.address,
+                            crowdsale_address=self.eth_contract_crowdsale.address
+                    ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
@@ -717,6 +728,88 @@ class ContractDetailsICO(CommonDetails):
         self.contract.state = 'ENDED'
         self.contract.save()
 
+
+@contract_details('Token contract')
+class ContractDetailsToken(CommonDetails):
+    token_name = models.CharField(max_length=512)
+    token_short_name = models.CharField(max_length=64)
+    admin_address = models.CharField(max_length=50)
+    decimals = models.IntegerField()
+    token_type = models.CharField(max_length=32, default='ERC20')
+    eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='token_details_token', on_delete=models.SET_NULL)
+    future_minting = models.BooleanField(default=False)
+    temp_directory = models.CharField(max_length=36)
+
+    @staticmethod
+    def calc_cost(kwargs):
+        return int(10**18/2)
+
+    def get_arguments(self, eth_contract_attr_name):
+        return []
+
+    def compile(self, eth_contract_attr_name='eth_contract_token'):
+        print('standalone token contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        self.temp_directory = str(uuid.uuid4())
+        print(self.temp_directory, flush=True)
+        sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
+        dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
+        os.mkdir(dest)
+        os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
+        preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
+        os.unlink(preproc_config)
+        token_holders = self.contract.tokenholder_set.all()
+        preproc_params = {"constants": {
+		    "D_ONLY_TOKEN": True,
+		    "D_ERC": self.token_type,
+		    "D_NAME": self.token_name,
+		    "D_SYMBOL": self.token_short_name,
+		    "D_DECIMALS": self.decimals,
+		    "D_CONTINUE_MINTING": self.future_minting,
+		    "D_CONTRACTS_OWNER": "0x8ffff2c69f000c790809f6b8f9abfcbaab46b322",
+		    "D_PAUSE_TOKENS": False,
+
+		    "D_PREMINT_COUNT": len(token_holders),
+		    "D_PREMINT_ADDRESSES": ','.join(map(lambda th: 'address(%s)'%th.address, token_holders)),
+		    "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
+		    "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%(th.freeze_date if th.freeze_date else 0), token_holders)),
+        }}
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+            raise Exception('compiler error while testing')
+        if os.system('cd {dest} && ./test-token.sh'.format(dest=dest)):
+            raise Exception('testing error')
+        preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
+        eth_contract_token = EthContract()
+        with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
+            token_json = json.loads(f.read())
+        eth_contract_token.abi = token_json['abi']
+        eth_contract_token.bytecode = token_json['bytecode'][2:]
+        eth_contract_token.compiler_version = token_json['compiler']['version']
+        eth_contract_token.source_code = token_json['source']
+        eth_contract_token.contract = self.contract
+        eth_contract_token.save()
+        self.eth_contract_token = eth_contract_token
+        self.save()
+
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        return super().deploy(eth_contract_attr_name)
+
+    def get_gaslimit(self):
+        return 3200000
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        return super().msg_deployed(message, 'eth_contract_token')
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
@@ -731,4 +824,7 @@ class TokenHolder(models.Model):
     address = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     freeze_date = models.IntegerField(null=True)
+
+
+
 

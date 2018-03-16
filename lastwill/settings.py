@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'lastwill.profile',
     'lastwill.payments',
     'lastwill.deploy',
+    'lastwill.promo',
 ]
 
 MIDDLEWARE = [

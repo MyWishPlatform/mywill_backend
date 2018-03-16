@@ -22,6 +22,9 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
 from exchange_API import to_wish
+from lastwill.promo.models import Promo, User2Promo
+from lastwill.promo.api import check_and_get_discount
+
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
@@ -152,11 +155,23 @@ def deploy(request):
         return Response({'result': 1}, status=400)
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
+    promo_str = request.data.get('promo', None)
+    if promo_str:
+        try:
+            discount = check_and_get_discount(promo_str, contract.contract_type, request.user)
+        except PermissionDenied:
+           promo_str = None
+        else:
+           cost = cost - cost * discount / 100
     wish_cost = to_wish('ETH', int(cost))
     if not Profile.objects.select_for_update().filter(
             user__email=request.user.email, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
+    if promo_str:
+        promo_object = Promo.objects.get(promo_str=promo_str.upper())
+        User2Promo(user=request.user, promo=promo_object).save()
+        Promo.objects.select_for_update().filter(promo_str=promo_str.upper()).update(use_count=F('use_count')+1)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
 
