@@ -1,5 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import logout
+from django.http import HttpResponse
+from django.views import View
 from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from rest_auth.registration.views import SocialLoginView
@@ -44,3 +46,7 @@ class FacebookLogin(ProfileAndTotpSocialLoginView):
 class GoogleLogin(ProfileAndTotpSocialLoginView):
     adapter_class = GoogleOAuth2Adapter
 
+# class MyView(View):
+#
+#     def get(self, request):
+#         return HttpResponse('OK!')

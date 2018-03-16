@@ -15,12 +15,16 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa, resend_email
-from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts
+from lastwill.contracts.api import (ContractViewSet, get_cost, get_code, test_comp,
+                                    get_contract_types, pizza_delivered, deploy,
+                                    get_token_contracts, ICOtokensView, get_statistics)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -61,7 +65,12 @@ urlpatterns = [
     url(r'^api/resend_email/', resend_email),
     url(r'^api/get_discount/', get_discount),
     url(r'^/$', index, name='socialaccount_signup'),
+    # url(r'^test/$', MyView.as_view(), name='test'),
+    url(r'^api/count_sold_tokens_in_ICO/$', ICOtokensView.as_view(),
+        name='count_ICOtokens'),
+    url(r'^api/get_statistics/$', get_statistics, name='get statistics'),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
 
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
