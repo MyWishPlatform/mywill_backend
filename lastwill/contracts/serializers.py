@@ -399,6 +399,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
+            res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
+        else:
+            res['sold_tokens'] = 0
         return res
 
     def update(self, contract, details, contract_details):

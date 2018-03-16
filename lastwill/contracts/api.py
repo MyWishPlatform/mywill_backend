@@ -214,7 +214,7 @@ class ICOtokensView(View):
 
 
 @api_view(http_method_names=['GET'])
-@permission_classes((permissions.IsAdminUser,))
+# @permission_classes((permissions.IsAdminUser,))
 def get_statistics(request):
 
     # Statistic of currency
@@ -238,7 +238,7 @@ def get_statistics(request):
     users = User.objects.all()
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
     contracts = Contract.objects.all()
-    contracts = contracts.exclude(address__in=TEST_ADDRESSES)
+    contracts = contracts.exclude(user__email__in=TEST_ADDRESSES)
     new_contracts = contracts.filter(created_date__lte=now,
                                      created_date__gte=day)
 
