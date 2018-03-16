@@ -1,5 +1,6 @@
 import datetime
 import pika
+import pytz
 import json
 import requests
 from os import path
@@ -8,7 +9,9 @@ from ethereum import abi
 from django.utils import timezone
 from django.db.models import F
 from django.http import Http404
+from django.http import JsonResponse
 from django.views.generic import View
+from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -24,8 +27,10 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from exchange_API import to_wish
 from lastwill.settings import SIGNER, DEPLOY_ADDR
-from lastwill.contracts.models import ContractDetailsICO
+from lastwill.contracts.models import ContractDetailsICO, Contract
 
+
+utc=pytz.UTC
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
@@ -193,3 +198,37 @@ class ICOtokensView(View):
         assert (EthContract.objects.filter(address=address) != [])
         sold_tokens = count_sold_tokens(address)
         return Response({'sold tokens': sold_tokens})
+
+
+class StatisticsView(View):
+
+    def get(self, request, *args, **kwargs):
+        now = datetime.datetime.now()
+        day = now - datetime.timedelta(days=1)
+
+        users = User.objects.all()
+        new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
+        contracts = Contract.objects.all()
+        new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
+
+        created = contracts.filter(state='CREATED')
+        now_created = created.filter(created_date__lte=now, created_date__gte=day)
+        active = contracts.filter(state='ACTIVE')
+        now_active = active.filter(created_date__lte=now, created_date__gte=day)
+        done = contracts.filter(state='DONE')
+        now_done = done.filter(created_date__lte=now, created_date__gte=day)
+        error = contracts.filter(state='WAITING_FORDEPLOYMENT')
+        now_error = error.filter(created_date__lte=now, created_date__gte=day)
+        print(len(users), len(contracts))
+        return JsonResponse({'users': len(users),
+                             'contracts': len(contracts),
+                             'new_users': len(new_users),
+                             'new_contracts': len(new_contracts),
+                             'active_contracts': len(active),
+                             'created_contracts': len(created),
+                             'done': len(done),
+                             'error': len(error),
+                             'now_created': len(now_created),
+                             'now_active': len(now_active),
+                             'now_done': len(now_done),
+                             'now_error': len(now_error)})

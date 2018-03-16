@@ -22,7 +22,9 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa
-from lastwill.contracts.api import ContractViewSet, get_cost, get_code, test_comp, get_contract_types, pizza_delivered, deploy, get_token_contracts, ICOtokensView
+from lastwill.contracts.api import (ContractViewSet, get_cost, get_code, test_comp,
+                                    get_contract_types, pizza_delivered, deploy,
+                                    get_token_contracts, ICOtokensView, StatisticsView)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 
@@ -64,6 +66,8 @@ urlpatterns = [
     # url(r'^test/$', MyView.as_view(), name='test'),
     url(r'^api/count_sold_tokens_in_ICO/$', ICOtokensView.as_view(),
         name='count_ICOtokens'),
+    url(r'^api/get_statistics/$', StatisticsView.as_view(),
+        name='get statistics'),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
