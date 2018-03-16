@@ -19,18 +19,17 @@ from lastwill.parint import ParInt
 
 
 def count_sold_tokens(address):
-    contract = ContractDetailsICO.objects.get(
-        eth_contract_crowdsale__address=address)
-    address_to = contract.eth_contract_token.address
+    contract = EthContract.objects.get(address=address).contract
 
     par_int = ParInt()
 
     method_sign = '0x' + binascii.hexlify(
         int_to_big_endian(m_id('totalSupply', []))).decode()
-    sold_tokens = par_int.eth_call({'to': address_to,
+    sold_tokens = par_int.eth_call({'to': address,
                                     'data': method_sign,
                                     'from': address})
-    sold_tokens = int(sold_tokens, 16) / contract.decimals
+    sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
+    sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
     return sold_tokens
 
 
@@ -142,6 +141,8 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
+        if not contract_details:
+           print('*'*50, self.id)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
@@ -337,7 +338,10 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
-        res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_crowdsale.address)
+        if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
+            res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
+        else:
+            res['sold_tokens'] = 0
         return res
 
     def update(self, contract, details, contract_details): 
