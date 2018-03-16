@@ -15,8 +15,9 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
+from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Contract, contract_details_types, EthContract
 from .serializers import ContractSerializer, count_sold_tokens
@@ -198,41 +199,41 @@ class ICOtokensView(View):
         return Response({'sold tokens': sold_tokens})
 
 
-class StatisticsView(View):
+@api_view(http_method_names=['GET'])
+@permission_classes((permissions.IsAdminUser,))
+def get_statistics(request):
 
-    def get(self, request, *args, **kwargs):
+    # Statistic of currency
 
-        # Statistic of currency
-
-        mywish_info = json.loads(requests.get(
+    mywish_info = json.loads(requests.get(
             'https://api.coinmarketcap.com/v1/ticker/mywish/?convert=ETH').content.decode())[0]
 
-        btc_info = json.loads(requests.get(
+    btc_info = json.loads(requests.get(
             'https://api.coinmarketcap.com/v1/ticker/bitcoin/').content.decode())[0]
 
-        eth_info = json.loads(requests.get(
+    eth_info = json.loads(requests.get(
             'https://api.coinmarketcap.com/v1/ticker/ethereum/').content.decode())[0]
 
-        now = datetime.datetime.now()
-        day = now - datetime.timedelta(days=1)
+    now = datetime.datetime.now()
+    day = now - datetime.timedelta(days=1)
 
-        # Statistic of users and contracts
-        users = User.objects.all()
-        new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
-        contracts = Contract.objects.all()
-        contracts = contracts.exclude(address__in=TEST_ADDRESSES)
-        new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
+    # Statistic of users and contracts
+    users = User.objects.all()
+    new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
+    contracts = Contract.objects.all()
+    contracts = contracts.exclude(address__in=TEST_ADDRESSES)
+    new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
 
-        created = contracts.filter(state__in=['CREATED'])
-        now_created = created.filter(created_date__lte=now, created_date__gte=day)
-        active = contracts.filter(state__in=['ACTIVE', 'WAITING'])
-        now_active = active.filter(created_date__lte=now, created_date__gte=day)
-        done = contracts.filter(state__in=['DONE', 'CANCELLED', 'ENDED', 'EXPIRED'])
-        now_done = done.filter(created_date__lte=now, created_date__gte=day)
-        error = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT', 'POSTPONED'])
-        now_error = error.filter(created_date__lte=now, created_date__gte=day)
+    created = contracts.filter(state__in=['CREATED'])
+    now_created = created.filter(created_date__lte=now, created_date__gte=day)
+    active = contracts.filter(state__in=['ACTIVE', 'WAITING'])
+    now_active = active.filter(created_date__lte=now, created_date__gte=day)
+    done = contracts.filter(state__in=['DONE', 'CANCELLED', 'ENDED', 'EXPIRED'])
+    now_done = done.filter(created_date__lte=now, created_date__gte=day)
+    error = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT', 'POSTPONED'])
+    now_error = error.filter(created_date__lte=now, created_date__gte=day)
 
-        answer = {'users': len(users),
+    answer = {'users': len(users),
                              'contracts': len(contracts),
                              'new_users': len(new_users),
                              'new_contracts': len(new_contracts),
@@ -258,7 +259,7 @@ class StatisticsView(View):
                                  float(eth_info['percent_change_24h']), 1)
                              }
 
-        for type in contract_details_types:
-            answer[type['name']] = type['model'].objects.all().count()
+    for type in contract_details_types:
+        answer[type['name']] = type['model'].objects.filter(state='ACTIVE').count()
 
-        return JsonResponse(answer)
+    return JsonResponse(answer)
