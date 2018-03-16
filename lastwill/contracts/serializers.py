@@ -20,8 +20,8 @@ from lastwill.parint import ParInt
 
 def count_sold_tokens(address):
     contract = ContractDetailsICO.objects.get(
-        eth_contract_crowdsale__address=address)
-    address_to = contract.eth_contract_token.address
+        eth_contract_token__address=address)
+    address_to = contract.eth_contract_crowdsale.address
 
     par_int = ParInt()
 
@@ -337,7 +337,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
-        res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_crowdsale.address)
+        res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
         return res
 
     def update(self, contract, details, contract_details): 
