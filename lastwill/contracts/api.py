@@ -293,6 +293,6 @@ def get_statistics(request):
     }
 
     for ctype in contract_details_types:
-        answer[ctype['name']] = contracts.objects.filter(contract_type=ctype).count()
+        answer[ctype['name']] = contracts.filter(contract_type=ctype).count()
 
     return JsonResponse(answer)
