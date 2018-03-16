@@ -29,7 +29,7 @@ from lastwill.profile.models import Profile
 from exchange_API import to_wish
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.settings import SIGNER, DEPLOY_ADDR, TEST_ADDRESSES
+from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
 
 
@@ -238,7 +238,13 @@ def get_statistics(request):
     users = User.objects.all()
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
     contracts = Contract.objects.all()
-    contracts = contracts.exclude(user__email__in=TEST_ADDRESSES)
+
+    try:
+        test_addresses = json.load(open('test_addresses.json'))['addresses']
+    except(FileNotFoundError, IOError):
+        test_addresses = []
+
+    contracts = contracts.exclude(user__email__in=test_addresses)
     new_contracts = contracts.filter(created_date__lte=now,
                                      created_date__gte=day)
 
