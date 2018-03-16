@@ -19,7 +19,7 @@ from lastwill.parint import ParInt
 
 
 def count_sold_tokens(address):
-    EthContract.objects.get(address=address).contract
+    contract = EthContract.objects.get(address=address).contract
 
     par_int = ParInt()
 
