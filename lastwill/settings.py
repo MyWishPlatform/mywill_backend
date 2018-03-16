@@ -210,6 +210,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 
+TEST_ADDRESSES = []
 
 try:
     from lastwill.settings_local import *

@@ -26,7 +26,7 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
 from exchange_API import to_wish
-from lastwill.settings import SIGNER, DEPLOY_ADDR
+from lastwill.settings import SIGNER, DEPLOY_ADDR, TEST_ADDRESSES
 from lastwill.contracts.models import ContractDetailsICO, Contract
 
 
@@ -220,6 +220,7 @@ class StatisticsView(View):
         users = User.objects.all()
         new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
         contracts = Contract.objects.all()
+        contracts = contracts.exclude(address__in=TEST_ADDRESSES)
         new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
 
         created = contracts.filter(state__in=['CREATED'])
