@@ -27,7 +27,7 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from exchange_API import to_wish
 from lastwill.settings import SIGNER, DEPLOY_ADDR, TEST_ADDRESSES
-from lastwill.contracts.models import ContractDetailsICO, Contract
+from lastwill.contracts.models import contract_details_types, Contract
 
 
 class ContractViewSet(ModelViewSet):
@@ -232,7 +232,7 @@ class StatisticsView(View):
         error = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT', 'POSTPONED'])
         now_error = error.filter(created_date__lte=now, created_date__gte=day)
 
-        return JsonResponse({'users': len(users),
+        answer = {'users': len(users),
                              'contracts': len(contracts),
                              'new_users': len(new_users),
                              'new_contracts': len(new_contracts),
@@ -256,4 +256,9 @@ class StatisticsView(View):
                              'eth_price_usd': round(float(eth_info['price_usd'])),
                              'eth_percent_change_24h': round(
                                  float(eth_info['percent_change_24h']), 1)
-                             })
+                             }
+
+        for type in contract_details_types:
+            answer[type['name']] = type['model'].objects.all().count()
+
+        return JsonResponse(answer)
