@@ -289,7 +289,10 @@ def get_statistics(request):
             float(eth_info['price_usd'])),
             'eth_percent_change_24h': round(
             float(eth_info['percent_change_24h']), 1
-        )
+        ),
+        'mywish_rank': mywish_info['rank'],
+        'bitcoin_rank': btc_info['rank'],
+        'eth_rank': eth_info['rank']
     }
 
     for num, ctype in enumerate(contract_details_types):
