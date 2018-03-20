@@ -214,6 +214,10 @@ def get_statistics(request):
     # Statistic of currency
 
     mywish_info = json.loads(requests.get(
+        'https://api.coinmarketcap.com/v1/ticker/mywish/'
+    ).content.decode())[0]
+
+    mywish_info_eth = json.loads(requests.get(
         'https://api.coinmarketcap.com/v1/ticker/mywish/?convert=ETH'
     ).content.decode())[0]
 
@@ -271,9 +275,9 @@ def get_statistics(request):
             'wish_usd_percent_change_24h': round(float(mywish_info[
             'percent_change_24h']), 2
         ),
-        'wish_price_eth': round(float(mywish_info['price_eth']), 5),
+        'wish_price_eth': round(float(mywish_info_eth['price_eth']), 5),
         'wish_eth_percent_change_24h': round(
-            float(mywish_info['24h_volume_eth']), 1
+            float(mywish_info_eth['percent_change_24h']), 1
         ),
         'btc_price_usd': round(float(btc_info['price_usd'])),
         'btc_percent_change_24h': round(float(
