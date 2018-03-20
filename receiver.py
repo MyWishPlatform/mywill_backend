@@ -105,8 +105,9 @@ def transactionCompleted(message):
         return
     try:
         contract = Contract.objects.get(id=message['lockedBy'])
-        assert((contract.contract_type != 4 and contract.get_details().eth_contract.tx_hash == message['transactionHash']) or
-                (message['transactionHash'] in (contract.get_details().eth_contract_token.tx_hash, contract.get_details().eth_contract_crowdsale.tx_hash))
+        assert((contract.contract_type not in (4,5) and message['transactionHash'] == contract.get_details().eth_contract.tx_hash) or
+                (contract.contract_type == 4 and message['transactionHash'] in (contract.get_details().eth_contract_token.tx_hash, contract.get_details().eth_contract_crowdsale.tx_hash)) or 
+                (contract.contract_type == 5 and message['transactionHash'] == contract.get_details().eth_contract_token.tx_hash)
         )
         contract.get_details().tx_failed(message)
     except Exception as e:

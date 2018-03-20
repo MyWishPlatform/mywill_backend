@@ -84,7 +84,7 @@ def get_token_contracts(request):
         return Response([])
     res = []
     eth_contracts = EthContract.objects.filter(
-             contract__contract_type=4,
+             contract__contract_type__in=(4,5),
              contract__user=request.user,
     )
     for ec in eth_contracts:
@@ -105,12 +105,6 @@ def get_token_contracts(request):
                     'state': state
             })
     return Response(res)
-    return Response({int(x.id): {
-            'address': x.address,
-            'token_name': x.ico_details_token.all()[0].token_name,
-            'token_short_name': x.ico_details_token.all()[0].token_short_name,
-            'decimals': x.ico_details_token.all()[0].decimals,
-    } for x in token_contracts})
 
 
 from django.views.decorators.csrf import csrf_exempt

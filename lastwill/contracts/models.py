@@ -66,9 +66,11 @@ def postponable(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
-            print('contract postponed due to exception', flush=True)
             contract.state = 'POSTPONED'
             contract.save()
+            print('contract postponed due to exception', flush=True)
+            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR, locked_by=contract.id).update(locked_by=None)
+            print('queue unlocked due to exception', flush=True)
             raise
     return wrapper
 
@@ -80,6 +82,8 @@ def blocking(f):
             print('address locked. sleeping 5 and requeueing the message', flush=True)
             sleep(5)
             raise NeedRequeue()
+        return f(*args, **kwargs)
+    '''
         else:
             try:
                 return f(*args, **kwargs)
@@ -87,6 +91,7 @@ def blocking(f):
                 print('releasing lock due to exception', flush=True)
                 DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
                 raise
+    '''
     return wrapper
 
 '''
@@ -575,9 +580,9 @@ class ContractDetailsICO(CommonDetails):
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)):
             raise Exception('compiler error while testing')
-        if os.system("/bin/bash -c 'cd {dest} && ./test.sh'".format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./test-crowdsale.sh'".format(dest=dest)):
             raise Exception('testing error')
 
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
@@ -585,7 +590,7 @@ class ContractDetailsICO(CommonDetails):
         preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         eth_contract_crowdsale = EthContract()
@@ -660,8 +665,6 @@ class ContractDetailsICO(CommonDetails):
     def get_gaslimit(self):
         return 3200000
 
-    @blocking
-    @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
@@ -816,6 +819,15 @@ class ContractDetailsToken(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         return super().msg_deployed(message, 'eth_contract_token')
+
+    def ownershipTransferred(self, message):
+        self.contract.state = 'UNDER_CROWDSALE'
+        self.contract.save()
+
+    def finalized(self, message):
+        self.contract.state = 'ENDED'
+        self.contract.save()
+
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
