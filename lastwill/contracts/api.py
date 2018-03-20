@@ -295,5 +295,6 @@ def get_statistics(request):
 
     for num, ctype in enumerate(contract_details_types):
         answer['contract_type_'+str(num)] = contracts.filter(contract_type=num).count()
+        answer['contract_type_'+str(num)+'_new'] = contracts.filter(contract_type=num).filter(created_date__lte=now, created_date__gte=day).count()
 
     return JsonResponse(answer)
