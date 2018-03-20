@@ -290,6 +290,6 @@ def get_statistics(request):
     }
 
     for num, ctype in enumerate(contract_details_types):
-        answer[ctype['name']] = contracts.filter(contract_type=num).count()
+        answer['contract_type_'+str(num)] = contracts.filter(contract_type=num).count()
 
     return JsonResponse(answer)
