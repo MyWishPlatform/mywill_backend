@@ -758,12 +758,9 @@ class ContractDetailsICO(CommonDetails):
             )
 
     def finalized(self, message):
-        if self.original_contract.state != 'ENDED':
-            self.original_contract.state = 'ENDED'
-            self.original_contract.save()
-        if self.original_contract.id != self.contract.id and self.contract.state != 'ENDED':
-            self.contract.state = 'ENDED'
-            self.contract.save()
+        if self.eth_contract_token.contract.state != 'ENDED':
+            self.eth_contract_token.contract.state = 'ENDED'
+            self.eth_contract_token.contract.save()
 
 
 @contract_details('Token contract')
