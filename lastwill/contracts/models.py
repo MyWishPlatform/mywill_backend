@@ -51,7 +51,7 @@ class AlreadyPostponed(Exception):
 def check_transaction(f):
     def wrapper(*args, **kwargs):
         if not args[1].get('success', True):
-            print('message rejected because deploy failed', flush=True)
+            print('message rejected because transaction failed', flush=True)
             raise TxFail()
         else:
             return f(*args, **kwargs)
@@ -94,6 +94,7 @@ def blocking(f):
     '''
     return wrapper
 
+
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
 '''
@@ -135,6 +136,7 @@ class Contract(models.Model):
     def get_details_model(self, contract_type):
         return contract_details_types[contract_type]['model']
 
+
 '''
 real contract to deploy to ethereum
 '''
@@ -146,6 +148,7 @@ class EthContract(models.Model):
     abi = JSONField(default={})
     compiler_version = models.CharField(max_length=200, null=True, default=None)
     tx_hash = models.CharField(max_length=70, null=True, default=None)
+    original_contract = models.ForeignKey(Contract, null=True, default=None, related_name='orig_ethcontract')
 
 
 class CommonDetails(models.Model):
@@ -175,6 +178,7 @@ class CommonDetails(models.Model):
         eth_contract.abi = json.loads(result['contracts']['<stdin>:'+sol_path_name]['abi'])
         eth_contract.bytecode = result['contracts']['<stdin>:'+sol_path_name]['bin']
         eth_contract.contract = self.contract
+        eth_contract.original_contract = self.contract
         eth_contract.save()
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
@@ -228,9 +232,11 @@ class CommonDetails(models.Model):
         return 0
 
     def tx_failed(self, message):
-        print('set contract postponed due to transaction fail')
         self.contract.state = 'POSTPONED'
         self.contract.save()
+        print('contract postponed due to transaction fail', flush=True)
+        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR, locked_by=contract.id).update(locked_by=None)
+        print('queue unlocked due to transaction fail', flush=True)
 
 
 @contract_details('Will contract')
@@ -253,7 +259,6 @@ class ContractDetailsLastwill(CommonDetails):
             ORACLIZE_PROXY,
         ]
    
-
     @staticmethod
     def calc_cost(kwargs):
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
@@ -604,6 +609,7 @@ class ContractDetailsICO(CommonDetails):
             source_code = f.read()
         eth_contract_crowdsale.source_code = source_code
         eth_contract_crowdsale.contract = self.contract
+        eth_contract_crowdsale.original_contract = self.contract
         eth_contract_crowdsale.save()
         self.eth_contract_crowdsale = eth_contract_crowdsale
         if not self.reused_token:
@@ -618,14 +624,15 @@ class ContractDetailsICO(CommonDetails):
                 source_code = f.read()
             eth_contract_token.source_code = source_code
             eth_contract_token.contract = self.contract
+            eth_contract_token.original_contract = self.contract
             eth_contract_token.save()
             self.eth_contract_token = eth_contract_token
         self.save()
 #        shutil.rmtree(dest)
 
     @blocking
-    @check_transaction
     @postponable
+    @check_transaction
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
@@ -678,14 +685,17 @@ class ContractDetailsICO(CommonDetails):
 
     # token
     @blocking
-    @check_transaction
     @postponable
+    @check_transaction
     def ownershipTransferred(self, message):
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
                 DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
             print('ignored', flush=True)
             return
+
+
+        '''
         if self.contract.state in ('ACTIVE', 'ENDED'):
             DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
             return
@@ -711,17 +721,31 @@ class ContractDetailsICO(CommonDetails):
 
 
     # crowdsale
-    @check_transaction
     @postponable
+    @check_transaction
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
+        '''
+
+
+
         DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+
+
+
+        '''
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
             return
+        '''
+
+
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        if self.eth_contract_token.original_contract.contract_type == 5:
+            self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
+            self.eth_contract_token.original_contract.save()
         if self.contract.user.email:
             send_mail(
                     email_messages.ico_subject,
@@ -734,8 +758,12 @@ class ContractDetailsICO(CommonDetails):
             )
 
     def finalized(self, message):
-        self.contract.state = 'ENDED'
-        self.contract.save()
+        if self.original_contract.state != 'ENDED':
+            self.original_contract.state = 'ENDED'
+            self.original_contract.save()
+        if self.original_contract.id != self.contract.id and self.contract.state != 'ENDED':
+            self.contract.state = 'ENDED'
+            self.contract.save()
 
 
 @contract_details('Token contract')
@@ -805,6 +833,7 @@ class ContractDetailsToken(CommonDetails):
         eth_contract_token.compiler_version = token_json['compiler']['version']
         eth_contract_token.source_code = token_json['source']
         eth_contract_token.contract = self.contract
+        eth_contract_token.original_contract = self.contract
         eth_contract_token.save()
         self.eth_contract_token = eth_contract_token
         self.save()
@@ -818,15 +847,24 @@ class ContractDetailsToken(CommonDetails):
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        return super().msg_deployed(message, 'eth_contract_token')
+        res = super().msg_deployed(message, 'eth_contract_token')
+        if not self.future_minting:
+            self.contract.state = 'ENDED'
+            self.contract.save()
+        return res
 
     def ownershipTransferred(self, message):
-        self.contract.state = 'UNDER_CROWDSALE'
-        self.contract.save()
+        if self.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
+            self.original_contract.state = 'UNDER_CROWDSALE'
+            self.original_contract.save()
 
     def finalized(self, message):
-        self.contract.state = 'ENDED'
-        self.contract.save()
+        if self.original_contract.state != 'ENDED':
+            self.original_contract.state = 'ENDED'
+            self.original_contract.save()
+        if self.original_contract.id != self.contract.id and self.contract.state != 'ENDED':
+            self.contract.state = 'ENDED'
+            self.contract.save()
 
 
 class Heir(models.Model):

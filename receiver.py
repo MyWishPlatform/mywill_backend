@@ -6,6 +6,7 @@ import json
 import datetime
 import sha3
 import requests
+from pika.exceptions import ConnectionClosed
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
@@ -14,6 +15,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import F
+from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
 from lastwill.settings import DEFAULT_FROM_EMAIL, MESSAGE_QUEUE
@@ -70,8 +72,13 @@ def triggered(message):
 
 def launch(message):
     print('launch message', flush=True)
-    contract_details = Contract.objects.get(id=message['contractId']).get_details()
-    contract_details.deploy()
+    try:
+        contract_details = Contract.objects.get(id=message['contractId']).get_details()
+        contract_details.deploy()
+    except ObjectDoesNotExist:
+        # only when contract removed manually
+        print('no contract, ignoging')
+        return
     print('launch ok')
 
 def unknown_handler(message):
@@ -104,11 +111,14 @@ def transactionCompleted(message):
         print('success, ignoring')
         return
     try:
+        contract = EthContract.objects.get(tx_hash=message['transactionHash']).contract
+        '''
         contract = Contract.objects.get(id=message['lockedBy'])
         assert((contract.contract_type not in (4,5) and message['transactionHash'] == contract.get_details().eth_contract.tx_hash) or
                 (contract.contract_type == 4 and message['transactionHash'] in (contract.get_details().eth_contract_token.tx_hash, contract.get_details().eth_contract_crowdsale.tx_hash)) or 
                 (contract.contract_type == 5 and message['transactionHash'] == contract.get_details().eth_contract_token.tx_hash)
         )
+        '''
         contract.get_details().tx_failed(message)
     except Exception as e:
         print(e)
@@ -148,12 +158,6 @@ def callback(ch, method, properties, body):
         ch.basic_ack(delivery_tag = method.delivery_tag)
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
-        'mywill',
-        pika.PlainCredentials('java', 'java'),
-))
 
 
 """
@@ -162,10 +166,20 @@ rabbitmqctl add_vhost mywill
 rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+        heartbeat_interval = 0,
+))
 channel = connection.channel()
 channel.queue_declare(queue=MESSAGE_QUEUE, durable=True, auto_delete=False, exclusive=False)
 channel.basic_consume(callback, queue=MESSAGE_QUEUE)
 
+
+
 print('receiver started', flush=True)
 
 channel.start_consuming()
+        

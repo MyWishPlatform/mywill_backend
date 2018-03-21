@@ -86,13 +86,16 @@ def get_token_contracts(request):
     eth_contracts = EthContract.objects.filter(
              contract__contract_type__in=(4,5),
              contract__user=request.user,
+             address__isnull = False,
     )
     for ec in eth_contracts:
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
-            if any([x.contract.state not in ('ENDED', 'CREATED') for x in ec.ico_details_token.all()]):
+            if any([x.contract.contract_type == 4 and x.contract.state not in ('CREATED', 'ENDED') for x in ec.ico_details_token.all()]):
                 state = 'running'
-            elif any([not x.continue_minting and x.contract.state != 'CREATED' for x in ec.ico_details_token.all()]):
+            elif any([x.contract.contract_type == 4 and not x.continue_minting and x.contract.state =='ENDED' for x in ec.ico_details_token.all()]):
+                state = 'closed'
+            elif any([x.contract.contract_type == 5 and x.contract.state == 'ENDED' for x in ec.token_details_token.all()]):
                 state = 'closed'
             else:
                 state = 'ok'
@@ -154,6 +157,8 @@ def deploy(request):
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
     if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
         return Response({'result': 1}, status=400)
+    if contract.contract_type == 5 and any([th.freeze_date is not None and th.freeze_date < datetime.datetime.now().timestamp() + 5*60 for th in contract.tokenholder_set.all()]):
+        return Response({'result': 2}, status=400)
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     promo_str = request.data.get('promo', None)

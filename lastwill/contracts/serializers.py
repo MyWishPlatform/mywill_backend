@@ -403,6 +403,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
         else:
             res['sold_tokens'] = 0
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.original_contract != contract_details.contract:
+            res['crowdsale'] = ContractDetailsCrowdsaleSerializer.to_representation(contract_details.eth_contract_token.original_contract)
         return res
 
     def update(self, contract, details, contract_details):
