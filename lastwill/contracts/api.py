@@ -212,6 +212,19 @@ class ICOtokensView(View):
         return Response({'sold tokens': sold_tokens})
 
 
+def get_users(names):
+    users = []
+    for name in names:
+        first_name, last_name = name.split()
+        user = User.objects.filter(
+            last_name=last_name,
+            first_name=first_name
+        ).first()
+        if user:
+            users.append(user)
+    return users
+
+
 @api_view(http_method_names=['GET'])
 # @permission_classes((permissions.IsAdminUser,))
 def get_statistics(request):
@@ -243,11 +256,16 @@ def get_statistics(request):
     contracts = Contract.objects.all()
 
     try:
-        test_addresses = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))['addresses']
+        test_info = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))
+        test_addresses = test_info['addresses']
+        persons = test_info['persons']
+        fb_test_users = get_users(persons)
     except(FileNotFoundError, IOError):
         test_addresses = []
+        fb_test_users = []
 
     contracts = contracts.exclude(user__email__in=test_addresses)
+    contracts = contracts.exclude(user__in=fb_test_users)
     new_contracts = contracts.filter(created_date__lte=now,
                                      created_date__gte=day)
 
