@@ -235,7 +235,7 @@ class CommonDetails(models.Model):
         self.contract.state = 'POSTPONED'
         self.contract.save()
         print('contract postponed due to transaction fail', flush=True)
-        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR, locked_by=contract.id).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR, locked_by=self.contract.id).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
 
 
@@ -686,7 +686,7 @@ class ContractDetailsICO(CommonDetails):
     # token
     @blocking
     @postponable
-    @check_transaction
+#    @check_transaction
     def ownershipTransferred(self, message):
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
@@ -695,7 +695,6 @@ class ContractDetailsICO(CommonDetails):
             return
 
 
-        '''
         if self.contract.state in ('ACTIVE', 'ENDED'):
             DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
             return
@@ -726,7 +725,6 @@ class ContractDetailsICO(CommonDetails):
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
-        '''
 
 
 
@@ -734,11 +732,9 @@ class ContractDetailsICO(CommonDetails):
 
 
 
-        '''
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
             return
-        '''
 
 
         self.contract.state = 'ACTIVE'
