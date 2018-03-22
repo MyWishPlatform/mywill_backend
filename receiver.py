@@ -99,6 +99,12 @@ def initialized(message):
     contract.get_details().initialized(message)
     print('initialized ok')
 
+def finish(message):
+    print('finish message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().finalized(message)
+    print('finish ok')
+
 def finalized(message):
     print('finalized message')
     contract = EthContract.objects.get(id=message['contractId']).contract
@@ -137,6 +143,7 @@ methods_dict = {
     'initialized': initialized,
     'ownershipTransferred': ownershipTransferred,
     'finalized': finalized,
+    'finish': finish,
     'transactionCompleted': transactionCompleted,
 }
 

@@ -667,6 +667,7 @@ class ContractDetailsICO(CommonDetails):
             print('transferOwnership message signed')
             signed_data = response['result']
             self.eth_contract_token.tx_hash = par_int.eth_sendRawTransaction('0x'+signed_data)
+            self.eth_contract_token.save()
             print('transferOwnership message sended')
 
     def get_gaslimit(self):
@@ -716,6 +717,7 @@ class ContractDetailsICO(CommonDetails):
         print('init message signed')
         signed_data = response['result']
         self.eth_contract_crowdsale.tx_hash = par_int.eth_sendRawTransaction('0x'+signed_data)
+        self.eth_contract_crowdsale.save()
         print('init message sended')
 
 
@@ -754,9 +756,13 @@ class ContractDetailsICO(CommonDetails):
             )
 
     def finalized(self, message):
-        if self.eth_contract_token.contract.state != 'ENDED':
-            self.eth_contract_token.contract.state = 'ENDED'
-            self.eth_contract_token.contract.save()
+        if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
+            self.eth_contract_token.original_contract.state = 'ENDED'
+            self.eth_contract_token.original_contract.save()
+        if self.eth_contract_crowdsale.contract.state != 'ENDED':
+            self.eth_contract_crowdsale.contract.state = 'ENDED'
+            self.eth_contract_crowdsale.contract.save()
+        
 
 
 @contract_details('Token contract')
@@ -847,17 +853,17 @@ class ContractDetailsToken(CommonDetails):
         return res
 
     def ownershipTransferred(self, message):
-        if self.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
-            self.original_contract.state = 'UNDER_CROWDSALE'
-            self.original_contract.save()
+        if self.eth_contract_token.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
+            self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
+            self.eth_contract_token.original_contract.save()
 
     def finalized(self, message):
-        if self.original_contract.state != 'ENDED':
-            self.original_contract.state = 'ENDED'
-            self.original_contract.save()
-        if self.original_contract.id != self.contract.id and self.contract.state != 'ENDED':
-            self.contract.state = 'ENDED'
-            self.contract.save()
+        if self.eth_contract_token.original_contract.state != 'ENDED':
+            self.eth_contract_token.original_contract.state = 'ENDED'
+            self.eth_contract_token.original_contract.save()
+        if self.eth_contract_token.original_contract.id != self.eth_contract_token.contract.id and self.eth_contract_token.contract.state != 'ENDED':
+            self.eth_contract_token.contract.state = 'ENDED'
+            self.eth_contract_token.contract.save()
 
 
 class Heir(models.Model):
