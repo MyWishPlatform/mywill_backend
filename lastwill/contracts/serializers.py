@@ -338,10 +338,10 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
-        if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
-            res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
-        else:
-            res['sold_tokens'] = 0
+#        if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
+#            res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
+#        else:
+#            res['sold_tokens'] = 0
         return res
 
     def update(self, contract, details, contract_details): 
@@ -403,8 +403,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
         else:
             res['sold_tokens'] = 0
-        if contract_details.eth_contract_token and contract_details.eth_contract_token.original_contract != contract_details.contract:
-            res['crowdsale'] = ContractDetailsCrowdsaleSerializer.to_representation(contract_details.eth_contract_token.original_contract)
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(contract__state='ACTIVE'):
+            res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(contract__state__in=('ACTIVE','ENDED')).order_by('id')[0].contract.id
         return res
 
     def update(self, contract, details, contract_details):
