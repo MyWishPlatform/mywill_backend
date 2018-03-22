@@ -251,7 +251,8 @@ def get_statistics(request):
     day = now - datetime.timedelta(days=1)
 
     # Statistic of users and contracts
-    users = User.objects.all()
+    users = User.objects.all().exclude(email='', password='', last_name='', first_name='')
+    anonimys = User.objects.filter(email='', password='', last_name='', first_name='')
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
     contracts = Contract.objects.all()
 
@@ -265,7 +266,7 @@ def get_statistics(request):
         fb_test_users = []
 
     contracts = contracts.exclude(user__email__in=test_addresses)
-    contracts = contracts.exclude(user__in=fb_test_users)
+    contracts = contracts.exclude(user__in=fb_test_users).exclude(user__in=anonimys)
     new_contracts = contracts.filter(created_date__lte=now,
                                      created_date__gte=day)
 
