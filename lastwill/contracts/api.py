@@ -1,4 +1,5 @@
 import datetime
+from datetime import datetime, time
 import pika
 import pytz
 import json
@@ -247,8 +248,10 @@ def get_statistics(request):
         'https://api.coinmarketcap.com/v1/ticker/ethereum/'
     ).content.decode())[0]
 
-    now = datetime.datetime.now()
-    day = now - datetime.timedelta(days=1)
+    now = datetime.now()
+    # day = now - datetime.timedelta(days=1)
+    day = datetime.combine(datetime.now().today(), time(0, 0))
+    print(day)
 
     # Statistic of users and contracts
     users = User.objects.all().exclude(email='', password='', last_name='', first_name='')
