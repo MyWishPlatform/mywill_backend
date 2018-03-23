@@ -301,7 +301,7 @@ def get_statistics(request):
         ),
         'wish_price_eth': round(float(mywish_info_eth['price_eth']), 5),
         'wish_eth_percent_change_24h': round(
-            float(mywish_info_eth['percent_change_24h']), 1
+            float(eth_info['percent_change_24h'])/float(mywish_info_eth['percent_change_24h']), 1
         ),
         'btc_price_usd': round(float(btc_info['price_usd'])),
         'btc_percent_change_24h': round(float(
