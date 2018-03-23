@@ -298,22 +298,22 @@ def get_statistics(request):
         'now_done': len(now_done),
         'now_error': len(now_error),
         'wish_price_usd': round(
-            float(mywish_info['price_usd']), 2),
+            float(mywish_info['price_usd']), 10),
             'wish_usd_percent_change_24h': round(float(mywish_info[
-            'percent_change_24h']), 2
+            'percent_change_24h']), 10
         ),
-        'wish_price_eth': round(float(mywish_info_eth['price_eth']), 5),
+        'wish_price_eth': round(float(mywish_info_eth['price_eth']), 10),
         'wish_eth_percent_change_24h': round(
-            float(eth_info['percent_change_24h'])/float(mywish_info_eth['percent_change_24h']), 1
+            float(eth_info['percent_change_24h'])/float(mywish_info_eth['percent_change_24h']), 10
         ),
         'btc_price_usd': round(float(btc_info['price_usd'])),
         'btc_percent_change_24h': round(float(
-            btc_info['percent_change_24h']), 1
+            btc_info['percent_change_24h']), 10
         ),
         'eth_price_usd': round(
             float(eth_info['price_usd'])),
             'eth_percent_change_24h': round(
-            float(eth_info['percent_change_24h']), 1
+            float(eth_info['percent_change_24h']), 10
         ),
         'mywish_rank': mywish_info['rank'],
         'bitcoin_rank': btc_info['rank'],
