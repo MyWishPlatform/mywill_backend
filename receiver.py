@@ -21,6 +21,7 @@ from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue
 from lastwill.settings import DEFAULT_FROM_EMAIL, MESSAGE_QUEUE
 from lastwill.checker import check_one
 from lastwill.profile.models import Profile
+from lastwill.payments.models import InternalPayment
 from exchange_API import to_wish
 
 
@@ -36,6 +37,14 @@ def payment(message):
     print(value)
     Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
     print('payment ok', flush=True)
+    pay = InternalPayment(
+        user=message['userId'],
+        delta=value,
+        tx_hash=message['transactionHash'],
+        original_currency=message['currency'],
+        original_delta=message['amount']
+    )
+    pay.save()
 
 def deployed(message):
     print('deployed message received', flush=True)
