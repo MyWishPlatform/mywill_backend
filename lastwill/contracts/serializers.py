@@ -258,7 +258,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
                 'soft_cap', 'hard_cap', 'token_name', 'token_short_name', 'is_transferable_at_once',
                 'start_date', 'stop_date', 'decimals', 'rate', 'admin_address', 'platform_as_admin',
                 'time_bonuses', 'amount_bonuses', 'continue_minting', 'cold_wallet_address', 'reused_token',
-                'token_type',
+                'token_type', 'min_wei', 'max_wei',
         )
 
     def create(self, contract, contract_details):
@@ -296,6 +296,9 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             assert(details.get('token_type', 'ERC20') in ('ERC20, ERC223'))
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
+        for k in ('max_wei', 'min_wei'):
+            if details[k]:
+                details[k] = int(details[k])
         assert('admin_address' in details and 'token_holders' in details)
         assert(len(details['token_holders']) <= 5)
         for th in details['token_holders']:

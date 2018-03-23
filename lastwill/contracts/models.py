@@ -497,6 +497,9 @@ class ContractDetailsICO(CommonDetails):
     reused_token = models.BooleanField(default=False)
     token_type = models.CharField(max_length=32, default='ERC20')
 
+    min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+    max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+
     @staticmethod
     def calc_cost(kwargs):
         return 10**18
@@ -583,6 +586,11 @@ class ContractDetailsICO(CommonDetails):
                     "D_MYWISH_ADDRESS": '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd',
                     "D_ERC": self.token_type,
         }}
+        if self.min_wei:
+            preproc_params["constants"]["D_MIN_VALUE_WEI"] = self.min_wei
+        if self.max_wei:
+            preproc_params["constants"]["D_MAX_VALUE_WEI"] = self.max_wei
+
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)):
