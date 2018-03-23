@@ -175,7 +175,7 @@ SIGNER='127.0.0.1:5000'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
-REST_AUTH_REGISTER_SERIALIZERS = { 
+REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'lastwill.profile.serializers.UserRegisterSerializer',
 }
 
@@ -188,7 +188,7 @@ CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 
 MESSAGE_QUEUE = 'notification'
 
-REST_AUTH_SERIALIZERS = { 
+REST_AUTH_SERIALIZERS = {
         'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
         'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
         'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
