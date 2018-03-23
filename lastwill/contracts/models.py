@@ -497,8 +497,8 @@ class ContractDetailsICO(CommonDetails):
     reused_token = models.BooleanField(default=False)
     token_type = models.CharField(max_length=32, default='ERC20')
 
-    min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None)
-    max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None)
+    min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+    max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
     @staticmethod
     def calc_cost(kwargs):
