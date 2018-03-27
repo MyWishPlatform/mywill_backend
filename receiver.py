@@ -35,7 +35,7 @@ def payment(message):
             message['currency'], message['amount']
     )
     print(value)
-    Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
+    # Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
     print('payment ok', flush=True)
     create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
 
