@@ -32,7 +32,7 @@ from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
 from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
-from lastwill.payments.models import InternalPayment
+from lastwill.payments.functions import create_payment
 
 
 class ContractViewSet(ModelViewSet):
@@ -176,11 +176,8 @@ def deploy(request):
             user__email=request.user.email, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
-    payment = InternalPayment(
-        user=request.user, delta=-wish_cost,
-        original_currency='ETH', original_delta=cost
-    )
-    payment.save()
+    create_payment(request.user.id, -wish_cost, '', 'ETH', cost)
+
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo_object).save()

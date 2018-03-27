@@ -14,7 +14,7 @@ from exchange_API import to_wish
 from lastwill.payments.models import BTCAccount
 from exchange_API import to_wish
 from lastwill.profile.models import Profile
-from lastwill.payments.models import InternalPayment
+from lastwill.payments.functions import create_payment
 
 sleep(10)
 
@@ -33,14 +33,7 @@ while 1:
             print(user.email, new_balance)
             wish_value = int(to_wish('BTC', (new_balance-btc_account.balance)/10**8) * 10**18)
             BTCAccount.objects.select_for_update().filter(id=btc_account.id).update(balance=new_balance)
-            Profile.objects.select_for_update().filter(id=user.profile.id).update(balance=F('balance')+wish_value)
-            payment = InternalPayment(
-                user=user,
-                delta=wish_value,
-                original_currency='BTC',
-                original_delta=((new_balance-btc_account.balance)/10**8) * 10**18
-            )
-            payment.save()
-
+            # Profile.objects.select_for_update().filter(id=user.profile.id).update(balance=F('balance')+wish_value)
+            create_payment(user.id, wish_value, '', 'BTC', ((new_balance-btc_account.balance)/10**8) * 10**18)
     print('ok')
     sleep(10*60)
