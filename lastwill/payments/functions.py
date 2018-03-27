@@ -5,12 +5,12 @@ from lastwill.payments.models import InternalPayment
 from lastwill.profile.models import Profile
 
 
-def create_payment(uid, value, tx, currency, amount):
+def create_payment(uid, value, tx, currency, amount, update=True):
     user = User.objects.get(id=uid)
 
-    if not Profile.objects.select_for_update().filter(id=user.profile.id).update(
-        balance=F('balance') + value):
-        raise Exception('no money')
+    if update:
+        Profile.objects.select_for_update().filter(id=user.profile.id).update(
+        balance=F('balance') + value)
 
     payment = InternalPayment(
         user=uid,

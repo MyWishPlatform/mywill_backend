@@ -172,11 +172,11 @@ def deploy(request):
         else:
            cost = cost - cost * discount / 100
     wish_cost = to_wish('ETH', int(cost))
-    # if not Profile.objects.select_for_update().filter(
-    #         user__email=request.user.email, balance__gte=wish_cost
-    # ).update(balance=F('balance') - wish_cost):
-    #     raise Exception('no money')
-    create_payment(request.user.id, -wish_cost, '', 'ETH', cost)
+    if not Profile.objects.select_for_update().filter(
+            user__email=request.user.email, balance__gte=wish_cost
+    ).update(balance=F('balance') - wish_cost):
+        raise Exception('no money')
+    create_payment(request.user.id, -wish_cost, '', 'ETH', cost, False)
 
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
