@@ -181,7 +181,11 @@ def deploy(request):
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo_object).save()
-        Promo.objects.select_for_update().filter(promo_str=promo_str.upper()).update(use_count=F('use_count')+1)
+        Promo.objects.select_for_update().filter(
+            promo_str=promo_str.upper()
+        ).update(use_count=F('use_count')+1,
+                 referral_bonus=F('referral_bonus')+wish_cost
+                 )
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
 
