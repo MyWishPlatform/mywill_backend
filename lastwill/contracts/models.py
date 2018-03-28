@@ -587,9 +587,9 @@ class ContractDetailsICO(CommonDetails):
                     "D_ERC": self.token_type,
         }}
         if self.min_wei:
-            preproc_params["constants"]["D_MIN_VALUE_WEI"] = self.min_wei
+            preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(int(self.min_wei))
         if self.max_wei:
-            preproc_params["constants"]["D_MAX_VALUE_WEI"] = self.max_wei
+            preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(int(self.max_wei))
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
