@@ -154,7 +154,7 @@ def pizza_delivered(request):
 @api_view(http_method_names=['POST'])
 def deploy(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    
+
     assert(contract.user == request.user)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
     if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:

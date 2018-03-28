@@ -6,6 +6,7 @@ from lastwill.profile.models import Profile
 
 
 def create_payment(uid, value, tx, currency, amount, update=True):
+    print('create payment')
     user = User.objects.get(id=uid)
 
     if update:
@@ -13,7 +14,7 @@ def create_payment(uid, value, tx, currency, amount, update=True):
         balance=F('balance') + value)
 
     payment = InternalPayment(
-        user=uid,
+        user_id=uid,
         delta=value,
         tx_hash=tx,
         original_currency=currency,
