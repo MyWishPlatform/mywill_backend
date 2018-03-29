@@ -18,7 +18,7 @@ from lastwill.profile.models import Profile
 sleep(10)
 
 while 1:
-    for user in User.objects.exclude(email=''):
+    for user in User.objects.exclude(email='', password='', last_name='', first_name=''):
         btc_account = user.btcaccount_set.first()
         r = requests.post('http://user:password@127.0.0.1:8332/', json={
                 'method': 'getreceivedbyaddress',
