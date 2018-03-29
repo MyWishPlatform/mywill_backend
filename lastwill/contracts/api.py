@@ -153,7 +153,7 @@ def pizza_delivered(request):
 @api_view(http_method_names=['POST'])
 def deploy(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    
+
     assert(contract.user == request.user)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
     if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
@@ -172,13 +172,18 @@ def deploy(request):
            cost = cost - cost * discount / 100
     wish_cost = to_wish('ETH', int(cost))
     if not Profile.objects.select_for_update().filter(
-            user__email=request.user.email, balance__gte=wish_cost
+            user=request.user, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo_object).save()
-        Promo.objects.select_for_update().filter(promo_str=promo_str.upper()).update(use_count=F('use_count')+1)
+        Promo.objects.select_for_update().filter(
+            promo_str=promo_str.upper()
+         ).update(use_count=F('use_count') + 1,
+                  referral_bonus=F('referral_bonus') + wish_cost
+                  )
+        # Promo.objects.select_for_update().filter(promo_str=promo_str.upper()).update(use_count=F('use_count')+1)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
 
