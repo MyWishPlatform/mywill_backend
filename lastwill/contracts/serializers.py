@@ -297,8 +297,9 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
         for k in ('max_wei', 'min_wei'):
-            if details[k]:
-                details[k] = int(details[k])
+            details[k] = (int(details[k]) if details.get(k, None) else None)
+        assert(details['min_wei'] is None or details['max_wei'] is None or details['min_wei'] <= details['max_wei'])
+        assert(details['max_wei'] is None or details['max_wei'] >= 10*10**18)
         assert('admin_address' in details and 'token_holders' in details)
         assert(len(details['token_holders']) <= 5)
         for th in details['token_holders']:

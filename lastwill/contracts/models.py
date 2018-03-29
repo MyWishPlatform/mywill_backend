@@ -24,7 +24,7 @@ from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTR
 from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
-from lastwill.deploy.models import DeployAddress
+from lastwill.deploy.models import DeployAddress, Network
 import email_messages
 
 contract_details_types = []
@@ -101,6 +101,7 @@ contract as user see it at site. contract as service. can contain more then one 
 class Contract(models.Model):
     name = models.CharField(max_length=200, null=True, default=None)
     user = models.ForeignKey(User)
+    network = models.ForeignKey(Network, default=1)
     address = models.CharField(max_length=50, null=True, default=None)
     owner_address = models.CharField(max_length=50, null=True, default=None)
     user_address = models.CharField(max_length=50, null=True, default=None)
@@ -154,7 +155,7 @@ class EthContract(models.Model):
 class CommonDetails(models.Model):
     class Meta:
         abstract = True
-    contract = models.ForeignKey(Contract)#, related_name='%(class)s')
+    contract = models.ForeignKey(Contract)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
@@ -186,6 +187,9 @@ class CommonDetails(models.Model):
     @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract'):
+        if self.contract.state == 'ACTIVE':
+            print('launch message ignored because already deployed', flush=True)
+            return
         self.compile(eth_contract_attr_name)
         eth_contract = getattr(self, eth_contract_attr_name)
         tr = abi.ContractTranslator(eth_contract.abi)
