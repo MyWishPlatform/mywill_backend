@@ -191,4 +191,4 @@ channel.basic_consume(callback, queue=MESSAGE_QUEUE)
 print('receiver started', flush=True)
 
 channel.start_consuming()
-        
+
