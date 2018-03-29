@@ -9,13 +9,15 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.db import transaction
+from django.core.mail import send_mail
 from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
-from lastwill.settings import ORACLIZE_PROXY, DEPLOY_ADDR
+from lastwill.settings import ORACLIZE_PROXY, DEPLOY_ADDR, DEFAULT_FROM_EMAIL
 from exchange_API import to_wish
 from lastwill.parint import ParInt
+import email_messages
 
 
 def count_sold_tokens(address):
@@ -86,6 +88,13 @@ class ContractSerializer(serializers.ModelSerializer):
             transaction.commit()
         finally:
             transaction.set_autocommit(True)
+        if validated_data['user'].email:
+            send_mail(
+                    email_messages.create_subject,
+                    email_messages.create_message,
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
+            )
         return contract
 
     def to_representation(self, contract):
