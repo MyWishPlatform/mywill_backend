@@ -32,6 +32,7 @@ from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
 from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
+from lastwill.deploy.models import Network
 
 
 class ContractViewSet(ModelViewSet):
@@ -231,12 +232,7 @@ def get_users(names):
     return users
 
 
-@api_view(http_method_names=['GET'])
-# @permission_classes((permissions.IsAdminUser,))
-def get_statistics(request):
-
-    # Statistic of currency
-
+def get_currency_statistics():
     mywish_info = json.loads(requests.get(
         'https://api.coinmarketcap.com/v1/ticker/mywish/'
     ).content.decode())[0]
@@ -252,32 +248,38 @@ def get_statistics(request):
     eth_info = json.loads(requests.get(
         'https://api.coinmarketcap.com/v1/ticker/ethereum/'
     ).content.decode())[0]
+    answer = {
+        'wish_price_usd': round(
+        float(mywish_info['price_usd']), 10),
+                          'wish_usd_percent_change_24h': round(
+        float(mywish_info[
+                  'percent_change_24h']), 10
+        ),
+    'wish_price_eth': round(float(mywish_info_eth['price_eth']), 10),
+    'wish_eth_percent_change_24h': round(
+        float(eth_info['percent_change_24h']) / float(
+            mywish_info_eth['percent_change_24h']), 10
+    ),
+    'btc_price_usd': round(float(btc_info['price_usd'])),
+    'btc_percent_change_24h': round(float(
+        btc_info['percent_change_24h']), 10
+    ),
+    'eth_price_usd': round(
+        float(eth_info['price_usd'])),
+    'eth_percent_change_24h': round(
+        float(eth_info['percent_change_24h']), 10
+    ),
+    'mywish_rank': mywish_info['rank'],
+    'bitcoin_rank': btc_info['rank'],
+    'eth_rank': eth_info['rank']
+    }
+    return answer
 
-    now = datetime.datetime.now()
-    # day = now - datetime.timedelta(days=1)
-    day = datetime.datetime.combine(datetime.datetime.now().today(), datetime.time(0, 0))
-    print(day)
 
-    # Statistic of users and contracts
-    users = User.objects.all().exclude(email='', password='', last_name='', first_name='')
-    anonimys = User.objects.filter(email='', password='', last_name='', first_name='')
-    new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
-    contracts = Contract.objects.all()
-
-    try:
-        test_info = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))
-        test_addresses = test_info['addresses']
-        persons = test_info['persons']
-        fb_test_users = get_users(persons)
-    except(FileNotFoundError, IOError):
-        test_addresses = []
-        fb_test_users = []
-
-    contracts = contracts.exclude(user__email__in=test_addresses)
-    contracts = contracts.exclude(user__in=fb_test_users).exclude(user__in=anonimys)
+def get_contracts_for_network(net, all_contracts, now, day):
+    contracts = all_contracts.filter(network=net)
     new_contracts = contracts.filter(created_date__lte=now,
                                      created_date__gte=day)
-
     created = contracts.filter(state__in=['CREATED'])
     now_created = created.filter(created_date__lte=now, created_date__gte=day)
     active = contracts.filter(state__in=['ACTIVE', 'WAITING'])
@@ -288,11 +290,8 @@ def get_statistics(request):
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT', 'POSTPONED'])
     now_error = error.filter(created_date__lte=now, created_date__gte=day)
-
     answer = {
-        'users': len(users),
         'contracts': len(contracts),
-        'new_users': len(new_users),
         'new_contracts': len(new_contracts),
         'active_contracts': len(active),
         'created_contracts': len(created),
@@ -301,32 +300,41 @@ def get_statistics(request):
         'now_created': len(now_created),
         'now_active': len(now_active),
         'now_done': len(now_done),
-        'now_error': len(now_error),
-        'wish_price_usd': round(
-            float(mywish_info['price_usd']), 10),
-            'wish_usd_percent_change_24h': round(float(mywish_info[
-            'percent_change_24h']), 10
-        ),
-        'wish_price_eth': round(float(mywish_info_eth['price_eth']), 10),
-        'wish_eth_percent_change_24h': round(
-            float(eth_info['percent_change_24h'])/float(mywish_info_eth['percent_change_24h']), 10
-        ),
-        'btc_price_usd': round(float(btc_info['price_usd'])),
-        'btc_percent_change_24h': round(float(
-            btc_info['percent_change_24h']), 10
-        ),
-        'eth_price_usd': round(
-            float(eth_info['price_usd'])),
-            'eth_percent_change_24h': round(
-            float(eth_info['percent_change_24h']), 10
-        ),
-        'mywish_rank': mywish_info['rank'],
-        'bitcoin_rank': btc_info['rank'],
-        'eth_rank': eth_info['rank']
-    }
-
+        'now_error': len(now_error)
+        }
     for num, ctype in enumerate(contract_details_types):
         answer['contract_type_'+str(num)] = contracts.filter(contract_type=num).count()
         answer['contract_type_'+str(num)+'_new'] = contracts.filter(contract_type=num).filter(created_date__lte=now, created_date__gte=day).count()
+    return answer
+
+
+@api_view(http_method_names=['GET'])
+# @permission_classes((permissions.IsAdminUser,))
+def get_statistics(request):
+
+    now = datetime.datetime.now()
+    day = datetime.datetime.combine(datetime.datetime.now().today(), datetime.time(0, 0))
+
+    users = User.objects.all().exclude(email='', password='', last_name='', first_name='')
+    anonimys = User.objects.filter(email='', password='', last_name='', first_name='')
+    new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
+
+    try:
+        test_info = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))
+        test_addresses = test_info['addresses']
+        persons = test_info['persons']
+        fb_test_users = get_users(persons)
+    except(FileNotFoundError, IOError):
+        test_addresses = []
+        fb_test_users = []
+
+    answer = {
+        'user_statistics': {'users': len(users), 'new_users': len(new_users)},
+        'currency_statistics': get_currency_statistics()
+    }
+    networks = Network.objects.all()
+    contracts = Contract.objects.all().exclude(user__in=anonimys).exclude(user__in=fb_test_users).exclude(user__email__in=test_addresses)
+    for network in networks:
+        answer[network.name] = get_contracts_for_network(network, contracts, now, day)
 
     return JsonResponse(answer)
