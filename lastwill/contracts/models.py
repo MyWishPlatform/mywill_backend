@@ -305,6 +305,15 @@ class ContractDetailsLastwill(CommonDetails):
         self.last_check = timezone.now()
         self.next_check = None
         self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    email_messages.heir_subject,
+                    email_messages.heir_message,
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
 
     def get_gaslimit(self):
         Cg = 780476
@@ -378,6 +387,15 @@ class ContractDetailsLostKey(CommonDetails):
         self.last_check = timezone.now()
         self.next_check = None
         self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    email_messages.heir_subject,
+                    email_messages.heir_message,
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
 
     def get_gaslimit(self):
         Cg = 1476117

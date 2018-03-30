@@ -30,3 +30,6 @@ If you have any question or want to get free promotion of your project in MyWish
 
 Thank you for using MyWish.
 """
+
+heir_subject = """ """
+heir_message = """ """
