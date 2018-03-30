@@ -310,7 +310,10 @@ class ContractDetailsLastwill(CommonDetails):
             if heir.email:
                 send_mail(
                     email_messages.heir_subject,
-                    email_messages.heir_message,
+                    email_messages.heir_message.format(
+                            user_address=heir.address,
+                            tx=message['transactionHash']
+                    ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
                 )
@@ -392,7 +395,10 @@ class ContractDetailsLostKey(CommonDetails):
             if heir.email:
                 send_mail(
                     email_messages.heir_subject,
-                    email_messages.heir_message,
+                    email_messages.heir_message.format(
+                        user_address=heir.address,
+                        tx=message['transactionHash']
+                    ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
                 )
@@ -428,7 +434,10 @@ class ContractDetailsDelayedPayment(CommonDetails):
         if self.recepient_email:
             send_mail(
                 email_messages.heir_subject,
-                email_messages.heir_message,
+                email_messages.heir_message.format(
+                    user_address=self.recepient_address,
+                    tx=message['transactionHash']
+                ),
                 DEFAULT_FROM_EMAIL,
                 [self.recepient_email]
             )

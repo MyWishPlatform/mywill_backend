@@ -31,5 +31,9 @@ If you have any question or want to get free promotion of your project in MyWish
 Thank you for using MyWish.
 """
 
-heir_subject = """ """
-heir_message = """ """
+heir_subject = """MyWish notification"""
+heir_message = """Hello!
+
+In accordance with the contract created on MyWish platform Funds have been transfered to address {user_address} :  "https://etherscan.io/tx/{tx}"
+
+If you have any questions, please contact support@mywish.io"""
