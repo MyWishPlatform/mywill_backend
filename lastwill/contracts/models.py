@@ -425,7 +425,13 @@ class ContractDetailsDelayedPayment(CommonDetails):
         pass
 
     def triggered(self, message):
-        pass
+        if self.recepient_email:
+            send_mail(
+                email_messages.heir_subject,
+                email_messages.heir_message,
+                DEFAULT_FROM_EMAIL,
+                [self.recepient_email]
+            )
     
     def get_arguments(self, *args, **kwargs):
         return [
