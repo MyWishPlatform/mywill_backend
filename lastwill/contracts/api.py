@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Contract, contract_details_types, EthContract
 from .serializers import ContractSerializer, count_sold_tokens
 from lastwill.main.views import index
-from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, MESSAGE_QUEUE, BASE_DIR
+from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
@@ -88,6 +88,7 @@ def get_token_contracts(request):
              contract__contract_type__in=(4,5),
              contract__user=request.user,
              address__isnull = False,
+             contract__network = request.query_params['network'],
     )
     for ec in eth_contracts:
         details = ec.contract.get_details()
@@ -194,12 +195,14 @@ def deploy(request):
             pika.PlainCredentials('java', 'java'),
     ))
 
+
+    queue = NETWORKS[contract.network.name]['queue']
     channel = connection.channel()
-    channel.queue_declare(queue=MESSAGE_QUEUE, durable=True, auto_delete=False, exclusive=False)
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False, exclusive=False)
 
     channel.basic_publish(
             exchange='',
-            routing_key=MESSAGE_QUEUE,
+            routing_key=queue,
             body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
             properties=pika.BasicProperties(type='launch'),
     )

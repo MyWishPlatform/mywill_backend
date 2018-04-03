@@ -13,7 +13,7 @@ from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDela
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
-from lastwill.settings import ORACLIZE_PROXY, DEPLOY_ADDR
+from lastwill.settings import ORACLIZE_PROXY
 from exchange_API import to_wish
 from lastwill.parint import ParInt
 
@@ -53,7 +53,7 @@ class ContractSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'owner_address',
                 'state', 'created_date',
                 'balance', 'cost', 'name',
-                'contract_type', 'contract_details',
+                'contract_type', 'contract_details', 'network',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -74,7 +74,7 @@ class ContractSerializer(serializers.ModelSerializer):
         details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
         contract_details = validated_data.pop('contract_details')
         details_serializer.validate(contract_details)
-        validated_data['cost'] = Contract.get_details_model(contract_type).calc_cost(contract_details)
+        validated_data['cost'] = Contract.get_details_model(contract_type).calc_cost(contract_details, validated_data['network'])
         transaction.set_autocommit(False)
         try:
             contract = super().create(validated_data)
@@ -106,7 +106,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract_details:
             details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
             details_serializer.validate(contract_details)
-            validated_data['cost'] = contract.get_details_model(contract_type).calc_cost(contract_details)
+            validated_data['cost'] = contract.get_details_model(contract_type).calc_cost(contract_details, validated_data['network'])
             details_serializer.update(contract, contract.get_details(), contract_details)
 
         return super().update(contract, validated_data)
