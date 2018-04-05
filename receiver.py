@@ -6,6 +6,7 @@ import json
 import datetime
 import sha3
 import requests
+import sys
 from pika.exceptions import ConnectionClosed
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
@@ -18,9 +19,10 @@ from django.db.models import F
 from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
-from lastwill.settings import DEFAULT_FROM_EMAIL, MESSAGE_QUEUE
+from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
 from lastwill.checker import check_one
 from lastwill.profile.models import Profile
+from lastwill.payments.functions import create_payment
 from exchange_API import to_wish
 
 
@@ -34,8 +36,9 @@ def payment(message):
             message['currency'], message['amount']
     )
     print(value)
-    Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
+    # Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
     print('payment ok', flush=True)
+    create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
 
 def deployed(message):
     print('deployed message received', flush=True)
@@ -180,13 +183,17 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(
         pika.PlainCredentials('java', 'java'),
         heartbeat_interval = 0,
 ))
+
+network = sys.argv[1]
+
 channel = connection.channel()
-channel.queue_declare(queue=MESSAGE_QUEUE, durable=True, auto_delete=False, exclusive=False)
-channel.basic_consume(callback, queue=MESSAGE_QUEUE)
+channel.queue_declare(queue=NETWORKS[network]['queue'], durable=True, auto_delete=False, exclusive=False)
+channel.basic_consume(callback, queue=NETWORKS[network]['queue'])
 
 
 
 print('receiver started', flush=True)
+print('listening', network, flush=True)
 
 channel.start_consuming()
-        
+

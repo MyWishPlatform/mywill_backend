@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
 import requests
+import sys
+from lastwill.settings import NETWORKS
 
 class ParConnectExc(Exception):
     def __init__(self, *args):
@@ -14,9 +16,17 @@ class ParErrorExc(Exception):
 
     
 class ParInt:
-    def __init__(self, addr='127.0.0.1', port='8545'):
-        self.addr = addr
-        self.port = port
+    def __init__(self, network=None):
+        if network is None:
+            if len(sys.argv) > 1 and sys.argv[1] in NETWORKS:
+                network = sys.argv[1]
+            else:
+                network = 'ETHEREUM_MAINNET'
+        print('network', network, type(network))
+        self.addr = NETWORKS[network]['host']
+        self.port = NETWORKS[network]['port']
+        print('parity interface', self.addr, self.port, flush=True)
+
 
     def __getattr__(self, method):
         def f(*args):
@@ -40,9 +50,3 @@ class ParInt:
             return result['result']
         return f
     
-if __name__ == '__main__':
-    par_int = ParInt('127.0.0.1', '8545')
-    try:
-        print(par_int.parity_nextNonce('0x' + '0'*40))
-    except (ParConnectExc, ParErrorExc) as e :
-        print(e)

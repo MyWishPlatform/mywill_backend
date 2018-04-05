@@ -9,13 +9,15 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.db import transaction
+from django.core.mail import send_mail
 from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
-from lastwill.settings import ORACLIZE_PROXY, DEPLOY_ADDR
+from lastwill.settings import ORACLIZE_PROXY, DEFAULT_FROM_EMAIL
 from exchange_API import to_wish
 from lastwill.parint import ParInt
+import email_messages
 
 
 def count_sold_tokens(address):
@@ -53,7 +55,7 @@ class ContractSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'owner_address',
                 'state', 'created_date',
                 'balance', 'cost', 'name',
-                'contract_type', 'contract_details',
+                'contract_type', 'contract_details', 'network',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -74,7 +76,7 @@ class ContractSerializer(serializers.ModelSerializer):
         details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
         contract_details = validated_data.pop('contract_details')
         details_serializer.validate(contract_details)
-        validated_data['cost'] = Contract.get_details_model(contract_type).calc_cost(contract_details)
+        validated_data['cost'] = Contract.get_details_model(contract_type).calc_cost(contract_details, validated_data['network'])
         transaction.set_autocommit(False)
         try:
             contract = super().create(validated_data)
@@ -86,6 +88,13 @@ class ContractSerializer(serializers.ModelSerializer):
             transaction.commit()
         finally:
             transaction.set_autocommit(True)
+        if validated_data['user'].email:
+            send_mail(
+                    email_messages.create_subject,
+                    email_messages.create_message,
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
+            )
         return contract
 
     def to_representation(self, contract):
@@ -106,7 +115,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract_details:
             details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
             details_serializer.validate(contract_details)
-            validated_data['cost'] = contract.get_details_model(contract_type).calc_cost(contract_details)
+            validated_data['cost'] = contract.get_details_model(contract_type).calc_cost(contract_details, validated_data['network'])
             details_serializer.update(contract, contract.get_details(), contract_details)
 
         return super().update(contract, validated_data)

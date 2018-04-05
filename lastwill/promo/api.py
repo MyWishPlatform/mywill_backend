@@ -9,7 +9,7 @@ def check_and_get_discount(promo_str, contract_type, user):
     promo = Promo.objects.filter(promo_str=promo_str.upper()).first()
     if promo is None:
         raise PermissionDenied(2000)
-    now = datetime.datetime.now()
+    now = datetime.datetime.now().date()
     if (promo.start and promo.start > now) or (promo.stop and promo.stop < now):
         raise PermissionDenied(2003)
     if promo.use_count_max and promo.use_count >= promo.use_count_max:

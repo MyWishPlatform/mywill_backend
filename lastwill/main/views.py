@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from lastwill.parint import *
 from exchange_API import convert
-from lastwill.settings import SIGNER, DEPLOY_ADDR
+from lastwill.settings import SIGNER, NETWORKS
 
 
 def index(request):

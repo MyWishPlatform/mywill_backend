@@ -186,7 +186,7 @@ CONTRACTS_DIR = '/var/www/contracts_repos/'
 # have to be writeable
 CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 
-MESSAGE_QUEUE = 'notification'
+# MESSAGE_QUEUE = 'notification'
 
 REST_AUTH_SERIALIZERS = {
         'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
@@ -211,7 +211,12 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/dashboard/first_entry'
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
     print("Can't load local settings")
+
+
+

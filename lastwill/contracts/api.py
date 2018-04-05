@@ -1,5 +1,4 @@
 import datetime
-# from datetime import datetime, time
 import pika
 import pytz
 import json
@@ -23,7 +22,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Contract, contract_details_types, EthContract
 from .serializers import ContractSerializer, count_sold_tokens
 from lastwill.main.views import index
-from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, MESSAGE_QUEUE, BASE_DIR
+from lastwill.settings import SOL_PATH, SIGNER, CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
@@ -33,6 +32,10 @@ from lastwill.promo.api import check_and_get_discount
 from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
+<<<<<<< HEAD
+=======
+from lastwill.payments.functions import create_payment
+>>>>>>> e1dcad189ac288e6208c41be648561c6aaa68e6c
 
 
 class ContractViewSet(ModelViewSet):
@@ -60,7 +63,8 @@ class ContractViewSet(ModelViewSet):
 @api_view()
 def get_cost(request):
     contract_type = int(request.query_params['contract_type'])
-    result = Contract.get_details_model(contract_type).calc_cost(request.query_params)
+    network = Network.objects.get(id=request.query_params['network_id'])
+    result = Contract.get_details_model(contract_type).calc_cost(request.query_params, network)
     return Response({'result': str(int(to_wish('ETH', result)))})
 
 
@@ -89,6 +93,7 @@ def get_token_contracts(request):
              contract__contract_type__in=(4,5),
              contract__user=request.user,
              address__isnull = False,
+             contract__network = request.query_params['network'],
     )
     for ec in eth_contracts:
         details = ec.contract.get_details()
@@ -176,15 +181,17 @@ def deploy(request):
             user=request.user, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
+    create_payment(request.user.id, -wish_cost, '', 'ETH', cost, False)
+
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo_object).save()
         Promo.objects.select_for_update().filter(
-            promo_str=promo_str.upper()
-         ).update(use_count=F('use_count') + 1,
-                  referral_bonus=F('referral_bonus') + wish_cost
-                  )
-        # Promo.objects.select_for_update().filter(promo_str=promo_str.upper()).update(use_count=F('use_count')+1)
+                promo_str=promo_str.upper()
+        ).update(
+                use_count=F('use_count') + 1,
+                referral_bonus=F('referral_bonus') + wish_cost
+        )
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
 
@@ -195,12 +202,14 @@ def deploy(request):
             pika.PlainCredentials('java', 'java'),
     ))
 
+
+    queue = NETWORKS[contract.network.name]['queue']
     channel = connection.channel()
-    channel.queue_declare(queue=MESSAGE_QUEUE, durable=True, auto_delete=False, exclusive=False)
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False, exclusive=False)
 
     channel.basic_publish(
             exchange='',
-            routing_key=MESSAGE_QUEUE,
+            routing_key=queue,
             body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
             properties=pika.BasicProperties(type='launch'),
     )

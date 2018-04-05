@@ -8,6 +8,7 @@ import binascii
 import sha3
 import datetime
 import shutil
+import sys
 from copy import deepcopy
 from time import sleep
 from ethereum import abi
@@ -20,7 +21,7 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEPLOY_ADDR, DEFAULT_FROM_EMAIL
+from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL
 from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
@@ -69,29 +70,22 @@ def postponable(f):
             contract.state = 'POSTPONED'
             contract.save()
             print('contract postponed due to exception', flush=True)
-            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR, locked_by=contract.id).update(locked_by=None)
+            address = NETWORKS[sys.argv[1]]['address']
+            DeployAddress.objects.select_for_update().filter(address=address, locked_by=contract.id).update(locked_by=None)
             print('queue unlocked due to exception', flush=True)
             raise
     return wrapper
 
 def blocking(f):
     def wrapper(*args, **kwargs):
+        address = NETWORKS[sys.argv[1]]['address']
         if not DeployAddress.objects.select_for_update().filter(
-                Q(address=DEPLOY_ADDR) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
+                Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
         ).update(locked_by=args[0].contract.id):
             print('address locked. sleeping 5 and requeueing the message', flush=True)
             sleep(5)
             raise NeedRequeue()
         return f(*args, **kwargs)
-    '''
-        else:
-            try:
-                return f(*args, **kwargs)
-            except:
-                print('releasing lock due to exception', flush=True)
-                DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
-                raise
-    '''
     return wrapper
 
 
@@ -187,6 +181,7 @@ class CommonDetails(models.Model):
     @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract'):
+        address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state == 'ACTIVE':
             print('launch message ignored because already deployed', flush=True)
             return
@@ -196,10 +191,11 @@ class CommonDetails(models.Model):
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments)
         par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
+        address = NETWORKS[sys.argv[1]]['address']
+        nonce = int(par_int.parity_nextNonce(address), 16)
         print('nonce', nonce)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : DEPLOY_ADDR,
+                'source' : address,
                 'data': eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else ''),
                 'nonce': nonce,
                 'gaslimit': self.get_gaslimit(),
@@ -215,7 +211,8 @@ class CommonDetails(models.Model):
         self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+        address = NETWORKS[sys.argv[1]]['address']
+        DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
         eth_contract.save()
@@ -239,7 +236,8 @@ class CommonDetails(models.Model):
         self.contract.state = 'POSTPONED'
         self.contract.save()
         print('contract postponed due to transaction fail', flush=True)
-        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR, locked_by=self.contract.id).update(locked_by=None)
+        address = NETWORKS[sys.argv[1]]['address']
+        DeployAddress.objects.select_for_update().filter(address=address, locked_by=self.contract.id).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
 
 
@@ -264,7 +262,9 @@ class ContractDetailsLastwill(CommonDetails):
         ]
    
     @staticmethod
-    def calc_cost(kwargs):
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -309,6 +309,18 @@ class ContractDetailsLastwill(CommonDetails):
         self.last_check = timezone.now()
         self.next_check = None
         self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    email_messages.heir_subject,
+                    email_messages.heir_message.format(
+                            user_address=heir.address,
+                            tx=message['transactionHash']
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
 
     def get_gaslimit(self):
         Cg = 780476
@@ -337,7 +349,9 @@ class ContractDetailsLostKey(CommonDetails):
 
 
     @staticmethod
-    def calc_cost(kwargs):
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -382,6 +396,18 @@ class ContractDetailsLostKey(CommonDetails):
         self.last_check = timezone.now()
         self.next_check = None
         self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    email_messages.heir_subject,
+                    email_messages.heir_message.format(
+                        user_address=heir.address,
+                        tx=message['transactionHash']
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
 
     def get_gaslimit(self):
         Cg = 1476117
@@ -399,7 +425,9 @@ class ContractDetailsDelayedPayment(CommonDetails):
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
     @staticmethod
-    def calc_cost(kwargs):
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return 25000000000000000
 
     @postponable
@@ -411,7 +439,16 @@ class ContractDetailsDelayedPayment(CommonDetails):
         pass
 
     def triggered(self, message):
-        pass
+        if self.recepient_email:
+            send_mail(
+                email_messages.heir_subject,
+                email_messages.heir_message.format(
+                    user_address=self.recepient_address,
+                    tx=message['transactionHash']
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.recepient_email]
+            )
     
     def get_arguments(self, *args, **kwargs):
         return [
@@ -441,7 +478,9 @@ class ContractDetailsPizza(CommonDetails):
         return 423037 + 5000
     
     @staticmethod
-    def calc_cost(kwargs):
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         pizza_cost = int(kwargs['pizza_cost'])
         pizza_cost = 1 # for testing
         '''
@@ -505,7 +544,9 @@ class ContractDetailsICO(CommonDetails):
     max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
     @staticmethod
-    def calc_cost(kwargs):
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return 10**18
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
@@ -602,8 +643,9 @@ class ContractDetailsICO(CommonDetails):
         if os.system("/bin/bash -c 'cd {dest} && ./test-crowdsale.sh'".format(dest=dest)):
             raise Exception('testing error')
 
+        address = NETWORKS[sys.argv[1]]['address']
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
-        preproc_params['constants']['D_MYWISH_ADDRESS'] = DEPLOY_ADDR
+        preproc_params['constants']['D_MYWISH_ADDRESS'] = address
         preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -647,15 +689,16 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
+        address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
             return
         if self.reused_token:
             self.contract.state = 'WAITING_ACTIVATION'
             self.contract.save()
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
-            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
             print('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
@@ -667,10 +710,10 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.save()
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
             par_int = ParInt()
-            nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16) 
+            nonce = int(par_int.parity_nextNonce(address), 16) 
             print('nonce', nonce)
             response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                    'source' : DEPLOY_ADDR,
+                    'source' : address,
                     'data': binascii.hexlify(tr.encode_function_call('transferOwnership', [self.eth_contract_crowdsale.address])).decode(),
                     'nonce': nonce,
                     'dest': self.eth_contract_token.address,
@@ -701,15 +744,16 @@ class ContractDetailsICO(CommonDetails):
     @postponable
 #    @check_transaction
     def ownershipTransferred(self, message):
+        address = NETWORKS[sys.argv[1]]['address']
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
-                DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+                DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
             print('ignored', flush=True)
             return
 
 
         if self.contract.state in ('ACTIVE', 'ENDED'):
-            DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
             return
         if self.contract.state == 'WAITING_ACTIVATION':
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -717,10 +761,10 @@ class ContractDetailsICO(CommonDetails):
             # continue deploy: call init
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(DEPLOY_ADDR), 16)
+        nonce = int(par_int.parity_nextNonce(address), 16)
         print('nonce', nonce)
         response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : DEPLOY_ADDR,
+                'source' : address,
                 'data': binascii.hexlify(tr.encode_function_call('init', [])).decode(),
                 'nonce': nonce,
                 'dest': self.eth_contract_crowdsale.address,
@@ -737,12 +781,13 @@ class ContractDetailsICO(CommonDetails):
     @postponable
     @check_transaction
     def initialized(self, message):
+        address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
 
 
 
-        DeployAddress.objects.select_for_update().filter(address=DEPLOY_ADDR).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
 
 
 
@@ -789,7 +834,9 @@ class ContractDetailsToken(CommonDetails):
     temp_directory = models.CharField(max_length=36)
 
     @staticmethod
-    def calc_cost(kwargs):
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return int(10**18/2)
 
     def get_arguments(self, eth_contract_attr_name):

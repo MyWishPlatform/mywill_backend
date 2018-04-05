@@ -14,12 +14,15 @@ from exchange_API import to_wish
 from lastwill.payments.models import BTCAccount
 from exchange_API import to_wish
 from lastwill.profile.models import Profile
+from lastwill.payments.functions import create_payment
 
 sleep(10)
 
 while 1:
     for user in User.objects.exclude(email='', password='', last_name='', first_name=''):
         btc_account = user.btcaccount_set.first()
+        if btc_account is None:
+            continue
         r = requests.post('http://user:password@127.0.0.1:8332/', json={
                 'method': 'getreceivedbyaddress',
                 'jsonrpc': '1.0',
@@ -32,7 +35,7 @@ while 1:
             print(user.email, new_balance)
             wish_value = int(to_wish('BTC', (new_balance-btc_account.balance)/10**8) * 10**18)
             BTCAccount.objects.select_for_update().filter(id=btc_account.id).update(balance=new_balance)
-            Profile.objects.select_for_update().filter(id=user.profile.id).update(balance=F('balance')+wish_value)
-
+            # Profile.objects.select_for_update().filter(id=user.profile.id).update(balance=F('balance')+wish_value)
+            create_payment(user.id, wish_value, '', 'BTC', ((new_balance-btc_account.balance)/10**8) * 10**18)
     print('ok')
     sleep(10*60)
