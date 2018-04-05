@@ -211,7 +211,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 
-
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/dashboard/first_entry'
 
 try:
     from lastwill.settings_local import *

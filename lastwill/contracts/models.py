@@ -192,7 +192,7 @@ class CommonDetails(models.Model):
         print('arguments', arguments)
         par_int = ParInt()
         address = NETWORKS[sys.argv[1]]['address']
-        nonce = int(par_int.parity_nextNonce(address), 16)
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : address,
@@ -251,6 +251,8 @@ class ContractDetailsLastwill(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    email = models.CharField(max_length=256, null=True, default=None)
+
 
     def get_arguments(self, *args, **kwargs):
         return [
@@ -667,7 +669,7 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.save()
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
             par_int = ParInt()
-            nonce = int(par_int.parity_nextNonce(address), 16) 
+            nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16) 
             print('nonce', nonce)
             response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                     'source' : address,
@@ -718,7 +720,7 @@ class ContractDetailsICO(CommonDetails):
             # continue deploy: call init
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(address), 16)
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : address,
