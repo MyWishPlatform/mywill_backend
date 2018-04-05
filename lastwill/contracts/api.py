@@ -1,5 +1,4 @@
 import datetime
-# from datetime import datetime, time
 import pika
 import pytz
 import json
@@ -33,6 +32,7 @@ from lastwill.promo.api import check_and_get_discount
 from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
+from lastwill.payments.functions import create_payment
 
 
 class ContractViewSet(ModelViewSet):
@@ -178,15 +178,17 @@ def deploy(request):
             user=request.user, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
+    create_payment(request.user.id, -wish_cost, '', 'ETH', cost, False)
+
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo_object).save()
         Promo.objects.select_for_update().filter(
-            promo_str=promo_str.upper()
-         ).update(use_count=F('use_count') + 1,
-                  referral_bonus=F('referral_bonus') + wish_cost
-                  )
-        # Promo.objects.select_for_update().filter(promo_str=promo_str.upper()).update(use_count=F('use_count')+1)
+                promo_str=promo_str.upper()
+        ).update(
+                use_count=F('use_count') + 1,
+                referral_bonus=F('referral_bonus') + wish_cost
+        )
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
 
