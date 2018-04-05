@@ -9,6 +9,7 @@ import sha3
 import datetime
 import shutil
 import sys
+import bitcoin
 from copy import deepcopy
 from time import sleep
 from ethereum import abi
@@ -315,6 +316,16 @@ class ContractDetailsLastwill(CommonDetails):
         CBg = 26561
         return Cg + len(self.contract.heir_set.all()) * CBg + 80000
 
+    def deploy(self):
+        priv = os.urandom(32)
+        address = bitcoin.privkey_to_address(priv)
+        btc_keys = BtcKeys(
+            contract_details_lastwill_id=self.id,
+            private_key=priv,
+            btc_address=address
+        )
+        btc_keys.save()
+        super().deploy(eth_contract_attr_name='eth_contract_token')
 
 
 @contract_details('Wallet contract (lost key)')
@@ -899,5 +910,7 @@ class TokenHolder(models.Model):
     freeze_date = models.IntegerField(null=True)
 
 
-
-
+class BtcKeys(models.Model):
+    contract_details_lastwill = models.ForeignKey(ContractDetailsLastwill)
+    btc_address = models.CharField(max_length=50, null=True, default=None)
+    private_key = models.CharField(max_length=50, null=True, default=None)
