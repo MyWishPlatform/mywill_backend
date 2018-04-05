@@ -32,10 +32,7 @@ from lastwill.promo.api import check_and_get_discount
 from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
-<<<<<<< HEAD
-=======
 from lastwill.payments.functions import create_payment
->>>>>>> e1dcad189ac288e6208c41be648561c6aaa68e6c
 
 
 class ContractViewSet(ModelViewSet):
