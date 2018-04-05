@@ -22,6 +22,7 @@ from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue
 from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
 from lastwill.checker import check_one
 from lastwill.profile.models import Profile
+from lastwill.payments.functions import create_payment
 from exchange_API import to_wish
 
 
@@ -35,8 +36,9 @@ def payment(message):
             message['currency'], message['amount']
     )
     print(value)
-    Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
+    # Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
     print('payment ok', flush=True)
+    create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
 
 def deployed(message):
     print('deployed message received', flush=True)
@@ -194,4 +196,4 @@ print('receiver started', flush=True)
 print('listening', network, flush=True)
 
 channel.start_consuming()
-        
+

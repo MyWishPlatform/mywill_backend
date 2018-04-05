@@ -20,3 +20,20 @@ Please contact support@mywish.io if you have any questions.
 
 Best wishes,
 MyWish Team."""
+
+create_subject = """Your contract is ready for deployment"""
+create_message = """Congratulations!
+
+Your contract is created and ready for deployment to Ethereum.
+
+If you have any question or want to get free promotion of your project in MyWish social channels please contact support@mywish.io.
+
+Thank you for using MyWish.
+"""
+
+heir_subject = """MyWish notification"""
+heir_message = """Hello!
+
+In accordance with the contract created on MyWish platform, Funds have been transfered to address "{user_address}" :  "https://etherscan.io/tx/{tx}"
+
+If you have any questions, please contact support@mywish.io"""

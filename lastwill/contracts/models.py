@@ -266,6 +266,8 @@ class ContractDetailsLastwill(CommonDetails):
    
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -310,6 +312,18 @@ class ContractDetailsLastwill(CommonDetails):
         self.last_check = timezone.now()
         self.next_check = None
         self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    email_messages.heir_subject,
+                    email_messages.heir_message.format(
+                            user_address=heir.address,
+                            tx=message['transactionHash']
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
 
     def get_gaslimit(self):
         Cg = 780476
@@ -349,6 +363,8 @@ class ContractDetailsLostKey(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -393,6 +409,18 @@ class ContractDetailsLostKey(CommonDetails):
         self.last_check = timezone.now()
         self.next_check = None
         self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    email_messages.heir_subject,
+                    email_messages.heir_message.format(
+                        user_address=heir.address,
+                        tx=message['transactionHash']
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
 
     def get_gaslimit(self):
         Cg = 1476117
@@ -411,6 +439,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return 25000000000000000
 
     @postponable
@@ -422,7 +452,16 @@ class ContractDetailsDelayedPayment(CommonDetails):
         pass
 
     def triggered(self, message):
-        pass
+        if self.recepient_email:
+            send_mail(
+                email_messages.heir_subject,
+                email_messages.heir_message.format(
+                    user_address=self.recepient_address,
+                    tx=message['transactionHash']
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.recepient_email]
+            )
     
     def get_arguments(self, *args, **kwargs):
         return [
@@ -453,6 +492,8 @@ class ContractDetailsPizza(CommonDetails):
     
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         pizza_cost = int(kwargs['pizza_cost'])
         pizza_cost = 1 # for testing
         '''
@@ -517,6 +558,8 @@ class ContractDetailsICO(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return 10**18
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
