@@ -266,7 +266,7 @@ def get_statistics(request):
     print(day)
 
     # Statistic of users and contracts
-    users = User.objects.all().exclude(email='', password='', last_name='', first_name='')
+    users = User.objects.all().exclude(email='', password='', last_name='', first_name='').exclude(email__startswith='testermc')
     anonimys = User.objects.filter(email='', password='', last_name='', first_name='')
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
     contracts = Contract.objects.all()
