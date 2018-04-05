@@ -6,6 +6,8 @@ from lastwill.profile.models import Profile
 
 
 def create_payment(uid, value, tx, currency, amount, update=True):
+    if value == 0.0:
+        return
     print('create payment')
     user = User.objects.get(id=uid)
 
