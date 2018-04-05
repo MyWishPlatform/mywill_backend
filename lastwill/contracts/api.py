@@ -294,8 +294,10 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'DONE', 'CANCELLED', 'ENDED', 'EXPIRED']
     )
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
-    error = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT', 'POSTPONED'])
+    error = contracts.filter(state__in=['POSTPONED'])
     now_error = error.filter(created_date__lte=now, created_date__gte=day)
+    in_progress = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT'])
+    now_in_progress = in_progress.filter(created_date__lte=now, created_date__gte=day)
     answer = {
         'contracts': len(contracts),
         'new_contracts': len(new_contracts),
@@ -306,7 +308,9 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'now_created': len(now_created),
         'now_active': len(now_active),
         'now_done': len(now_done),
-        'now_error': len(now_error)
+        'now_error': len(now_error),
+        'in_progress': len(in_progress),
+        'now_in_progress': len(now_in_progress)
         }
     for num, ctype in enumerate(contract_details_types):
         answer['contract_type_'+str(num)] = contracts.filter(contract_type=num).count()
