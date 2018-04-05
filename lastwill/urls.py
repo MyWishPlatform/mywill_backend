@@ -65,7 +65,6 @@ urlpatterns = [
     url(r'^api/resend_email/', resend_email),
     url(r'^api/get_discount/', get_discount),
     url(r'^/$', index, name='socialaccount_signup'),
-    # url(r'^test/$', MyView.as_view(), name='test'),
     url(r'^api/count_sold_tokens_in_ICO/$', ICOtokensView.as_view(),
         name='count_ICOtokens'),
     url(r'^api/get_statistics/$', get_statistics, name='get statistics'),

@@ -45,8 +45,3 @@ class FacebookLogin(ProfileAndTotpSocialLoginView):
 
 class GoogleLogin(ProfileAndTotpSocialLoginView):
     adapter_class = GoogleOAuth2Adapter
-
-# class MyView(View):
-#
-#     def get(self, request):
-#         return HttpResponse('OK!')

@@ -263,6 +263,8 @@ class ContractDetailsLastwill(CommonDetails):
    
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -336,6 +338,8 @@ class ContractDetailsLostKey(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
@@ -398,6 +402,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return 25000000000000000
 
     @postponable
@@ -440,6 +446,8 @@ class ContractDetailsPizza(CommonDetails):
     
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         pizza_cost = int(kwargs['pizza_cost'])
         pizza_cost = 1 # for testing
         '''
@@ -504,6 +512,8 @@ class ContractDetailsICO(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
         return 10**18
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
