@@ -32,6 +32,7 @@ from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
 from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
+from lastwill.deploy.models import Network
 
 
 class ContractViewSet(ModelViewSet):
@@ -59,7 +60,8 @@ class ContractViewSet(ModelViewSet):
 @api_view()
 def get_cost(request):
     contract_type = int(request.query_params['contract_type'])
-    result = Contract.get_details_model(contract_type).calc_cost(request.query_params)
+    network = Network.objects.get(id=request.query_params['network_id'])
+    result = Contract.get_details_model(contract_type).calc_cost(request.query_params, network)
     return Response({'result': str(int(to_wish('ETH', result)))})
 
 
