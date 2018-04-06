@@ -288,10 +288,10 @@ def get_contracts_for_network(net, all_contracts, now, day):
                                      created_date__gte=day)
     created = contracts.filter(state__in=['CREATED'])
     now_created = created.filter(created_date__lte=now, created_date__gte=day)
-    active = contracts.filter(state__in=['ACTIVE', 'WAITING'])
+    active = contracts.filter(state__in=['ACTIVE', 'WAITING', 'WAITING_ACTIVATION'])
     now_active = active.filter(created_date__lte=now, created_date__gte=day)
     done = contracts.filter(state__in=[
-        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED']
+        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE']
     )
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['POSTPONED'])
@@ -309,8 +309,8 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'now_active': len(now_active),
         'now_done': len(now_done),
         'now_error': len(now_error),
-        'in_progress': len(in_progress),
-        'now_in_progress': len(now_in_progress)
+        'launch': len(in_progress),
+        'now_launch': len(now_in_progress)
         }
     for num, ctype in enumerate(contract_details_types):
         answer['contract_type_'+str(num)] = contracts.filter(contract_type=num).count()
