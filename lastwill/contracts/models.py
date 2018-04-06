@@ -22,7 +22,7 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL
+from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
 from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
@@ -64,12 +64,29 @@ def postponable(f):
         contract = args[0].contract
         if contract.state == 'POSTPONED':
             print('message rejected because contract postponed', flush=True)
+            send_mail(
+                email_messages.postponed_subject,
+                email_messages.postponed_message.format(
+                    contract_id=contract.id
+                ),
+                DEFAULT_FROM_EMAIL,
+                [EMAIL_FOR_POSTPONED_MESSAGE]
+            )
+
             raise AlreadyPostponed
         try:
             return f(*args, **kwargs)
         except Exception as e:
             contract.state = 'POSTPONED'
             contract.save()
+            send_mail(
+                email_messages.postponed_subject,
+                email_messages.postponed_message.format(
+                    contract_id=contract.id
+                ),
+                DEFAULT_FROM_EMAIL,
+                [EMAIL_FOR_POSTPONED_MESSAGE]
+            )
             print('contract postponed due to exception', flush=True)
             address = NETWORKS[sys.argv[1]]['address']
             DeployAddress.objects.select_for_update().filter(address=address, locked_by=contract.id).update(locked_by=None)
@@ -213,6 +230,7 @@ class CommonDetails(models.Model):
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         address = NETWORKS[sys.argv[1]]['address']
+        network_link = NETWORKS[sys.argv[1]]['link_address']
         DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
@@ -224,7 +242,7 @@ class CommonDetails(models.Model):
                     email_messages.common_subject,
                     email_messages.common_text.format(
                             contract_type_name=contract_details_types[self.contract.contract_type]['name'],
-                            address=eth_contract.address
+                            link=network_link.format(address=eth_contract.address)
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -236,6 +254,14 @@ class CommonDetails(models.Model):
     def tx_failed(self, message):
         self.contract.state = 'POSTPONED'
         self.contract.save()
+        send_mail(
+            email_messages.postponed_subject,
+            email_messages.postponed_message.format(
+                contract_id=self.contract.id
+            ),
+            DEFAULT_FROM_EMAIL,
+            [EMAIL_FOR_POSTPONED_MESSAGE]
+        )
         print('contract postponed due to transaction fail', flush=True)
         address = NETWORKS[sys.argv[1]]['address']
         DeployAddress.objects.select_for_update().filter(address=address, locked_by=self.contract.id).update(locked_by=None)
@@ -814,12 +840,13 @@ class ContractDetailsICO(CommonDetails):
         if self.eth_contract_token.original_contract.contract_type == 5:
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
+        network_link = NETWORKS[self.contract.network.name]['link_address']
         if self.contract.user.email:
             send_mail(
                     email_messages.ico_subject,
                     email_messages.ico_text.format(
-                            token_address=self.eth_contract_token.address,
-                            crowdsale_address=self.eth_contract_crowdsale.address
+                            link1=network_link.format(address=self.eth_contract_token.address,),
+                            link2=network_link.format(address=self.eth_contract_crowdsale.address)
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
