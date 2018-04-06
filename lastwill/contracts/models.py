@@ -22,6 +22,7 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from rest_framework.exceptions import ValidationError
 from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
 from lastwill.parint import *
 import lastwill.check as check
@@ -46,7 +47,7 @@ class NeedRequeue(Exception):
 class TxFail(Exception):
     pass
 
-class AlreadyPostponed(Exception):
+class Already0x0025ea8bBBB72199cf70FE25F92d3B298C3B162A(Exception):
     pass
 
 
@@ -267,6 +268,9 @@ class CommonDetails(models.Model):
         DeployAddress.objects.select_for_update().filter(address=address, locked_by=self.contract.id).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
 
+    def predeploy_validate(self):
+        pass
+
 
 @contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
@@ -280,6 +284,10 @@ class ContractDetailsLastwill(CommonDetails):
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     email = models.CharField(max_length=256, null=True, default=None)
 
+    def predeploy_validate(self):
+        now = datetime.datetime.now()
+        if self.active_to < now:
+            raise ValidationError({'result': 1}, code=400)
 
     def get_arguments(self, *args, **kwargs):
         return [
@@ -377,6 +385,12 @@ class ContractDetailsLostKey(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+
+
+    def predeploy_validate(self):
+        now = datetime.datetime.now()
+        if self.active_to < now:
+            raise ValidationError({'result': 1}, code=400)
         
     def get_arguments(self, *args, **kwargs):
         return [
@@ -462,6 +476,12 @@ class ContractDetailsDelayedPayment(CommonDetails):
     recepient_address = models.CharField(max_length=50)
     recepient_email = models.CharField(max_length=200, null=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+
+
+    def predeploy_validate(self):
+        now = datetime.datetime.now()
+        if self.date < now:
+            raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -581,6 +601,14 @@ class ContractDetailsICO(CommonDetails):
 
     min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
     max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+
+
+    def predeploy_validate(self):
+        now = datetime.datetime.now()
+        if self.start_date < now:
+            raise ValidationError({'result': 1}, code=400)
+        if self.stop_date < now:
+            raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):
