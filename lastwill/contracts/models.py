@@ -47,7 +47,7 @@ class NeedRequeue(Exception):
 class TxFail(Exception):
     pass
 
-class Already0x0025ea8bBBB72199cf70FE25F92d3B298C3B162A(Exception):
+class AlreadyPostponed(Exception):
     pass
 
 
