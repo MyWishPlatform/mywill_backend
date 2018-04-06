@@ -607,8 +607,6 @@ class ContractDetailsICO(CommonDetails):
         now = datetime.datetime.now()
         if self.start_date < now:
             raise ValidationError({'result': 1}, code=400)
-        if self.stop_date < now:
-            raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):
