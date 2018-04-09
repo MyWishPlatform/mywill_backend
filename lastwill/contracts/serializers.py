@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.db import transaction
 from django.core.mail import send_mail
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken, BtcKeys4RSK
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
@@ -140,10 +140,11 @@ class EthContractSerializer(serializers.ModelSerializer):
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsLastwill
-        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email')
+        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email', 'btc_address')
         extra_kwargs = {
             'last_check': {'read_only': True},
             'next_check': {'read_only': True},
+            'btc_address': {'read_only': True}
         }
 
     def to_representation(self, contract_details):
@@ -153,6 +154,9 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         if not contract_details:
            print('*'*50, self.id)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if self.ethcontract.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
+            btc_keys = BtcKeys4RSK.objects.get(contract_details_lastwill_id=self.id)
+            res['btc_address'] = btc_keys.btc_address
         return res
 
     def create(self, contract, contract_details):
