@@ -217,6 +217,7 @@ class CommonDetails(models.Model):
                 'nonce': nonce,
                 'gaslimit': self.get_gaslimit(),
                 'value': self.get_value(),
+                'network': sys.argv[1],
         }).content.decode())['result']
 
         eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
@@ -798,6 +799,7 @@ class ContractDetailsICO(CommonDetails):
                     'nonce': nonce,
                     'dest': self.eth_contract_token.address,
                     'gaslimit': 100000,
+                    'network': sys.argv[1],
             }).content.decode())
             print('transferOwnership message signed')
             signed_data = response['result']
@@ -851,6 +853,7 @@ class ContractDetailsICO(CommonDetails):
                 'nonce': nonce,
                 'dest': self.eth_contract_crowdsale.address,
                 'gaslimit': 100000 + 50000 * self.contract.tokenholder_set.all().count(),
+                'network': sys.argv[1],
         }).content.decode())
         print('init message signed')
         signed_data = response['result']
