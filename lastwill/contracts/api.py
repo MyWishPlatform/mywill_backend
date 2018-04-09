@@ -156,7 +156,8 @@ def pizza_delivered(request):
 @api_view(http_method_names=['POST'])
 def deploy(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    contract.predeploy_validate()
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
 
     assert(contract.user == request.user)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
