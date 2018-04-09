@@ -365,14 +365,15 @@ class ContractDetailsLastwill(CommonDetails):
         return Cg + len(self.contract.heir_set.all()) * CBg + 80000
 
     def deploy(self):
-        priv = os.urandom(32)
-        address = bitcoin.privkey_to_address(priv)
-        btc_keys = BtcKeys4RSK(
-            contract_details_lastwill_id=self.id,
-            private_key=binascii.hexlify(priv).decode(),
-            btc_address=address
-        )
-        btc_keys.save()
+        if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
+            priv = os.urandom(32)
+            address = bitcoin.privkey_to_address(priv)
+            btc_keys = BtcKeys4RSK(
+                contract_details_lastwill_id=self.id,
+                private_key=binascii.hexlify(priv).decode(),
+                btc_address=address
+            )
+            btc_keys.save()
         super().deploy(eth_contract_attr_name='eth_contract_token')
 
 
