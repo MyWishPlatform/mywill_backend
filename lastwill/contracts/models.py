@@ -367,9 +367,9 @@ class ContractDetailsLastwill(CommonDetails):
     def deploy(self):
         priv = os.urandom(32)
         address = bitcoin.privkey_to_address(priv)
-        btc_keys = BtcKeys(
+        btc_keys = BtcKeys4RSK(
             contract_details_lastwill_id=self.id,
-            private_key=priv,
+            private_key=binascii.hexlify(priv).decode(),
             btc_address=address
         )
         btc_keys.save()
@@ -1006,7 +1006,7 @@ class TokenHolder(models.Model):
     freeze_date = models.IntegerField(null=True)
 
 
-class BtcKeys(models.Model):
+class BtcKeys4RSK(models.Model):
     contract_details_lastwill = models.ForeignKey(ContractDetailsLastwill)
-    btc_address = models.CharField(max_length=50, null=True, default=None)
-    private_key = models.CharField(max_length=50, null=True, default=None)
+    btc_address = models.CharField(max_length=100, null=True, default=None)
+    private_key = models.CharField(max_length=100, null=True, default=None)
