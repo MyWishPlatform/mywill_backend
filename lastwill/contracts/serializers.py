@@ -155,9 +155,9 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
         if contract_details.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
-            btc_keys = BtcKeys4RSK.objects.filter(contract_details_lastwill_id=contract_details.id).first()
-            if btc_keys:
-                res['btc_address'] = btc_keys.btc_address
+            btc_key = BtcKeys4RSK.objects.filter(contract_details_lastwill_id=contract_details.id).first()
+            if btc_key:
+                res['btc_address'] = btc_key.btc_address
         return res
 
     def create(self, contract, contract_details):
