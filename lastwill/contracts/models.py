@@ -283,7 +283,7 @@ class ContractDetailsLastwill(CommonDetails):
     email = models.CharField(max_length=256, null=True, default=None)
 
     def predeploy_validate(self):
-        now = datetime.datetime.now()
+        now = timezone.now()
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
 
@@ -389,7 +389,7 @@ class ContractDetailsLostKey(CommonDetails):
 
 
     def predeploy_validate(self):
-        now = datetime.datetime.now()
+        now = timezone.now()
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
         
@@ -485,7 +485,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
 
     def predeploy_validate(self):
-        now = datetime.datetime.now()
+        now = timezone.now()
         if self.date < now:
             raise ValidationError({'result': 1}, code=400)
 
@@ -619,7 +619,7 @@ class ContractDetailsICO(CommonDetails):
 
 
     def predeploy_validate(self):
-        now = datetime.datetime.now()
+        now = timezone.now()
         if self.start_date < now:
             raise ValidationError({'result': 1}, code=400)
 
