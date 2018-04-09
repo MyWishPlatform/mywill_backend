@@ -374,7 +374,7 @@ class ContractDetailsLastwill(CommonDetails):
                 btc_address=address
             )
             btc_keys.save()
-        super().deploy(eth_contract_attr_name='eth_contract_token')
+        super().deploy()
 
 
 @contract_details('Wallet contract (lost key)')
@@ -470,8 +470,8 @@ class ContractDetailsLostKey(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
-        return super().deploy(eth_contract_attr_name)
+    def deploy(self):
+        return super().deploy()
 
 
 @contract_details('Deferred payment contract')
@@ -583,8 +583,8 @@ class ContractDetailsPizza(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
-        return super().deploy(eth_contract_attr_name)
+    def deploy(self):
+        return super().deploy()
 
 
 @contract_details('MyWish ICO')
