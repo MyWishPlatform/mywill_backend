@@ -197,7 +197,6 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
-    @blocking
     def deploy(self, eth_contract_attr_name='eth_contract'):
         address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state == 'ACTIVE':
@@ -363,6 +362,7 @@ class ContractDetailsLastwill(CommonDetails):
         CBg = 26561
         return Cg + len(self.contract.heir_set.all()) * CBg + 80000
 
+    @blocking
     @postponable
     def deploy(self):
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
@@ -468,6 +468,7 @@ class ContractDetailsLostKey(CommonDetails):
         CBg = 28031
         return Cg + len(self.contract.heir_set.all()) * CBg + 3000 + 80000
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
@@ -525,6 +526,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
     def get_gaslimit(self):
         return 1700000
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
@@ -579,6 +581,7 @@ class ContractDetailsPizza(CommonDetails):
     def msg_deployed(self, message):
         super().msg_deployed(message)
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
@@ -805,6 +808,7 @@ class ContractDetailsICO(CommonDetails):
     def get_gaslimit(self):
         return 3200000
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         if self.reused_token:
@@ -975,6 +979,7 @@ class ContractDetailsToken(CommonDetails):
         self.eth_contract_token = eth_contract_token
         self.save()
 
+    @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
