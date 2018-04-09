@@ -140,11 +140,10 @@ class EthContractSerializer(serializers.ModelSerializer):
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsLastwill
-        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email', 'btc_address')
+        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email')
         extra_kwargs = {
             'last_check': {'read_only': True},
             'next_check': {'read_only': True},
-            'btc_address': {'read_only': True}
         }
 
     def to_representation(self, contract_details):
