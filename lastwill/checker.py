@@ -41,8 +41,8 @@ def check_all():
 def send_reminders(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
-        if details['state'] == 'ACTIVE' and contract.user.email:
-            delta = details['active_to'] - details['last_check']
+        if contract.state == 'ACTIVE' and contract.user.email:
+            delta = details.active_to - details.last_check
             if delta.days <= 1:
                 send_mail(
                     email_messages.remind_subject,
@@ -69,8 +69,8 @@ def send_reminders(contract):
 def carry_out_lastwillcontract(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
-        if details['state'] == 'ACTIVE' and contract.user.email:
-            delta = details['active_to'] - details['last_check']
+        if contract.state == 'ACTIVE' and contract.user.email:
+            delta = details.active_to - details.last_check
             if delta < 0:
                 contract.state = 'DONE'
                 contract.save()
