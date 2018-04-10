@@ -17,6 +17,7 @@ import lastwill.check as check
 from lastwill.settings import ORACLIZE_PROXY, DEFAULT_FROM_EMAIL
 from exchange_API import to_wish
 from lastwill.parint import ParInt
+from lastwill.deploy.models import Network
 import email_messages
 
 
@@ -89,9 +90,21 @@ class ContractSerializer(serializers.ModelSerializer):
         finally:
             transaction.set_autocommit(True)
         if validated_data['user'].email:
+            network_name = ''
+            network = Network.objects.filter(id=validated_data['network_id'])
+            if network.name == 'ETHEREUM_MAINNET':
+                network_name = 'Ethereum'
+            if network.name == 'ETHEREUM_ROPSTEN':
+                network_name = 'Ropsten (Ethereum Testnet)'
+            if network.name == 'RSK_MAINNET':
+                network_name = 'RSK'
+            if network.name == 'RSK_TESTNET':
+                network_name = 'RSK Testnet'
             send_mail(
                     email_messages.create_subject,
-                    email_messages.create_message,
+                    email_messages.create_message.format(
+                        network_name=network_name
+                    ),
                     DEFAULT_FROM_EMAIL,
                     [validated_data['user'].email]
             )

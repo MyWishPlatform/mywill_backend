@@ -1,7 +1,7 @@
 common_subject = """Your contract is ready"""
 common_text = """Hello,
 
-We are happy to inform you that your contract was successfully created and deployed to Ethereum network.
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 {contract_type_name}: {link}
 
 Please contact support@mywish.io if you need if you have any questions.
@@ -12,7 +12,7 @@ MyWish Team."""
 ico_subject = """Your contract is ready"""
 ico_text = """Hello,
 
-We are happy to inform you that your contract was successfully created and deployed to Ethereum network.
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 Token contract: {link1}
 Crowdsale contract: {link2}
 
@@ -24,7 +24,7 @@ MyWish Team."""
 create_subject = """Your contract is ready for deployment"""
 create_message = """Congratulations!
 
-Your contract is created and ready for deployment to Ethereum.
+Your contract is created and ready for deployment to {network_name}.
 
 If you have any question or want to get free promotion of your project in MyWish social channels please contact support@mywish.io.
 

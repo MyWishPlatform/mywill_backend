@@ -231,6 +231,15 @@ class CommonDetails(models.Model):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         address = NETWORKS[sys.argv[1]]['address']
         network_link = NETWORKS[sys.argv[1]]['link_address']
+        network_name = ''
+        if sys.argv[1] == 'ETHEREUM_MAINNET':
+            network_name = 'Ethereum'
+        if sys.argv[1] == 'ETHEREUM_ROPSTEN':
+            network_name = 'Ropsten (Ethereum Testnet)'
+        if sys.argv[1] == 'RSK_MAINNET':
+            network_name = 'RSK'
+        if sys.argv[1] == 'RSK_TESTNET':
+            network_name = 'RSK Testnet'
         DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
@@ -242,7 +251,8 @@ class CommonDetails(models.Model):
                     email_messages.common_subject,
                     email_messages.common_text.format(
                             contract_type_name=contract_details_types[self.contract.contract_type]['name'],
-                            link=network_link.format(address=eth_contract.address)
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -887,12 +897,22 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
         network_link = NETWORKS[self.contract.network.name]['link_address']
+        network_name = ''
+        if self.contract.network.name == 'ETHEREUM_MAINNET':
+            network_name = 'Ethereum'
+        if self.contract.network.name == 'ETHEREUM_ROPSTEN':
+            network_name = 'Ropsten (Ethereum Testnet)'
+        if self.contract.network.name == 'RSK_MAINNET':
+            network_name = 'RSK'
+        if self.contract.network.name == 'RSK_TESTNET':
+            network_name = 'RSK Testnet'
         if self.contract.user.email:
             send_mail(
                     email_messages.ico_subject,
                     email_messages.ico_text.format(
                             link1=network_link.format(address=self.eth_contract_token.address,),
-                            link2=network_link.format(address=self.eth_contract_crowdsale.address)
+                            link2=network_link.format(address=self.eth_contract_crowdsale.address),
+                            network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
