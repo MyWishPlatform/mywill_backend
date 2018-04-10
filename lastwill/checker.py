@@ -1,5 +1,6 @@
 from ethereum import abi
 import binascii
+import datetime
 from django.utils import timezone
 from django.core.mail import send_mail
 from lastwill.contracts.models import Contract
@@ -42,8 +43,9 @@ def send_reminders(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
         if contract.state == 'ACTIVE' and contract.user.email:
-            if details.active_to and details.last_check:
-                delta = details.active_to - details.last_check
+            if details.last_check:
+                now = datetime.datetime.now()
+                delta = now - (details.last_check + datetime.timedelta(details.check_interval))
                 if delta.days <= 1:
                     send_mail(
                         email_messages.remind_subject,
@@ -71,8 +73,9 @@ def carry_out_lastwillcontract(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
         if contract.state == 'ACTIVE' and contract.user.email:
-            if details.active_to and details.last_check:
-                delta = details.active_to - details.last_check
+            if details.last_check:
+                now = datetime.datetime.now()
+                delta = now - (details.last_check + datetime.timedelta(details.check_interval))
                 if delta < 0:
                     contract.state = 'DONE'
                     contract.save()
