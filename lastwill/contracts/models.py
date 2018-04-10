@@ -356,13 +356,14 @@ class ContractDetailsLastwill(CommonDetails):
         self.next_check = None
         self.save()
         heirs = Heir.objects.filter(contract=self.contract)
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         for heir in heirs:
             if heir.email:
                 send_mail(
                     email_messages.heir_subject,
                     email_messages.heir_message.format(
                             user_address=heir.address,
-                            tx=message['transactionHash']
+                            link_tx=link.format(tx=message['transactionHash'])
                     ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
@@ -462,13 +463,14 @@ class ContractDetailsLostKey(CommonDetails):
         self.next_check = None
         self.save()
         heirs = Heir.objects.filter(contract=self.contract)
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         for heir in heirs:
             if heir.email:
                 send_mail(
                     email_messages.heir_subject,
                     email_messages.heir_message.format(
                         user_address=heir.address,
-                        tx=message['transactionHash']
+                        link_tx=link.format(tx=message['transactionHash'])
                     ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
@@ -515,12 +517,13 @@ class ContractDetailsDelayedPayment(CommonDetails):
         pass
 
     def triggered(self, message):
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         if self.recepient_email:
             send_mail(
                 email_messages.heir_subject,
                 email_messages.heir_message.format(
                     user_address=self.recepient_address,
-                    tx=message['transactionHash']
+                    link_tx=link.format(tx=message['transactionHash'])
                 ),
                 DEFAULT_FROM_EMAIL,
                 [self.recepient_email]
@@ -631,7 +634,7 @@ class ContractDetailsICO(CommonDetails):
 
     def predeploy_validate(self):
         now = timezone.now()
-        if self.start_date < now:
+        if self.start_date < now.timestamp():
             raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
