@@ -90,7 +90,7 @@ def postponable(f):
             )
             print('contract postponed due to exception', flush=True)
             address = NETWORKS[sys.argv[1]]['address']
-            DeployAddress.objects.select_for_update().filter(address=address, locked_by=contract.id).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address, locked_by=contract.id).update(locked_by=None)
             print('queue unlocked due to exception', flush=True)
             raise
     return wrapper
@@ -99,7 +99,7 @@ def blocking(f):
     def wrapper(*args, **kwargs):
         address = NETWORKS[sys.argv[1]]['address']
         if not DeployAddress.objects.select_for_update().filter(
-                Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
+                Q(network__name=sys.argv[1]) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
         ).update(locked_by=args[0].contract.id):
             print('address locked. sleeping 5 and requeueing the message', flush=True)
             sleep(5)
@@ -231,7 +231,7 @@ class CommonDetails(models.Model):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         address = NETWORKS[sys.argv[1]]['address']
         network_link = NETWORKS[sys.argv[1]]['link_address']
-        DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
         eth_contract.save()
@@ -264,7 +264,7 @@ class CommonDetails(models.Model):
         )
         print('contract postponed due to transaction fail', flush=True)
         address = NETWORKS[sys.argv[1]]['address']
-        DeployAddress.objects.select_for_update().filter(address=address, locked_by=self.contract.id).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address, locked_by=self.contract.id).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
 
     def predeploy_validate(self):
@@ -772,14 +772,14 @@ class ContractDetailsICO(CommonDetails):
         print('msg_deployed method of the ico contract')
         address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             return
         if self.reused_token:
             self.contract.state = 'WAITING_ACTIVATION'
             self.contract.save()
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
-            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             print('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
@@ -831,13 +831,13 @@ class ContractDetailsICO(CommonDetails):
         address = NETWORKS[sys.argv[1]]['address']
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
-                DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+                DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             print('ignored', flush=True)
             return
 
 
         if self.contract.state in ('ACTIVE', 'ENDED'):
-            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             return
         if self.contract.state == 'WAITING_ACTIVATION':
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -872,7 +872,7 @@ class ContractDetailsICO(CommonDetails):
 
 
 
-        DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
 
 
 
