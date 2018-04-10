@@ -42,41 +42,43 @@ def send_reminders(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
         if contract.state == 'ACTIVE' and contract.user.email:
-            delta = details.active_to - details.last_check
-            if delta.days <= 1:
-                send_mail(
-                    email_messages.remind_subject,
-                    email_messages.remind_message.format(days=1),
-                    DEFAULT_FROM_EMAIL,
-                    [contract.user.email]
-                )
-            elif delta.days <= 5:
-                send_mail(
-                    email_messages.remind_subject,
-                    email_messages.remind_message.format(days=5),
-                    DEFAULT_FROM_EMAIL,
-                    [contract.user.email]
-                )
-            elif delta.days <= 10:
-                send_mail(
-                    email_messages.remind_subject,
-                    email_messages.remind_message.format(days=10),
-                    DEFAULT_FROM_EMAIL,
-                    [contract.user.email]
-                )
+            if details.active_to and details.last_check:
+                delta = details.active_to - details.last_check
+                if delta.days <= 1:
+                    send_mail(
+                        email_messages.remind_subject,
+                        email_messages.remind_message.format(days=1),
+                        DEFAULT_FROM_EMAIL,
+                        [contract.user.email]
+                    )
+                elif delta.days <= 5:
+                    send_mail(
+                        email_messages.remind_subject,
+                        email_messages.remind_message.format(days=5),
+                        DEFAULT_FROM_EMAIL,
+                        [contract.user.email]
+                    )
+                elif delta.days <= 10:
+                    send_mail(
+                        email_messages.remind_subject,
+                        email_messages.remind_message.format(days=10),
+                        DEFAULT_FROM_EMAIL,
+                        [contract.user.email]
+                    )
 
 
 def carry_out_lastwillcontract(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
         if contract.state == 'ACTIVE' and contract.user.email:
-            delta = details.active_to - details.last_check
-            if delta < 0:
-                contract.state = 'DONE'
-                contract.save()
-                send_mail(
-                    email_messages.carry_out_subject,
-                    email_messages.carry_out_message,
-                    DEFAULT_FROM_EMAIL,
-                    [contract.user.email]
-                )
+            if details.active_to and details.last_check:
+                delta = details.active_to - details.last_check
+                if delta < 0:
+                    contract.state = 'DONE'
+                    contract.save()
+                    send_mail(
+                        email_messages.carry_out_subject,
+                        email_messages.carry_out_message,
+                        DEFAULT_FROM_EMAIL,
+                        [contract.user.email]
+                    )
