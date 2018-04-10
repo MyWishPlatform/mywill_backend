@@ -45,7 +45,7 @@ def send_reminders(contract):
         if contract.state == 'ACTIVE' and contract.user.email:
             if details.last_check:
                 now = timezone.now()
-                delta = now - (details.last_check + datetime.timedelta(details.check_interval))
+                delta = details.next_check - now
                 if delta.days <= 1:
                     send_mail(
                         email_messages.remind_subject,
@@ -53,14 +53,14 @@ def send_reminders(contract):
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )
-                elif delta.days <= 5:
+                elif delta.days <= 5 and delta.days > 4:
                     send_mail(
                         email_messages.remind_subject,
                         email_messages.remind_message.format(days=5),
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )
-                elif delta.days <= 10:
+                elif delta.days <= 10 and delta.days > 9:
                     send_mail(
                         email_messages.remind_subject,
                         email_messages.remind_message.format(days=10),
@@ -75,7 +75,7 @@ def carry_out_lastwillcontract(contract):
         if contract.state == 'ACTIVE' and contract.user.email:
             if details.last_check:
                 now = timezone.now()
-                delta = now - (details.last_check + datetime.timedelta(details.check_interval))
+                delta = details.next_check - now
                 if delta.days < 0:
                     contract.state = 'DONE'
                     contract.save()
