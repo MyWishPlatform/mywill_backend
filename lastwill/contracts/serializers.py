@@ -91,7 +91,7 @@ class ContractSerializer(serializers.ModelSerializer):
             transaction.set_autocommit(True)
         if validated_data['user'].email:
             network_name = ''
-            network = Network.objects.filter(id=validated_data['network']).first()
+            network = validated_data['network']
             if network.name == 'ETHEREUM_MAINNET':
                 network_name = 'Ethereum'
             if network.name == 'ETHEREUM_ROPSTEN':
