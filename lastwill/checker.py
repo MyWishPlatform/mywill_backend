@@ -31,7 +31,7 @@ def check_one(contract):
 def check_all():
     print('check_all method')
     for contract in Contract.objects.filter(contract_type__in=(0,1,4)):
-       if contract.next_check <= timezone.now:
+       if contract.next_check <= timezone.now():
            check_one(contract)
        send_reminders(contract)
        carry_out_lastwillcontract(contract)
