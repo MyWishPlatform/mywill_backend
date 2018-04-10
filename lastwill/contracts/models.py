@@ -283,7 +283,7 @@ class CommonDetails(models.Model):
 
 @contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
-    sol_path = 'lastwill/contracts/contracts/LastWillOraclize.sol'
+    sol_path = 'lastwill/contracts/contracts/LastWillNotify.sol'
 
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
@@ -304,7 +304,7 @@ class ContractDetailsLastwill(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            ORACLIZE_PROXY,
+#            ORACLIZE_PROXY,
         ]
    
     @staticmethod
