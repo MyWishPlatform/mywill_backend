@@ -185,6 +185,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
 
     def validate(self, details):
         assert('user_address' in details and 'heirs' in details and 'active_to' in details and 'check_interval' in details)
+        assert(details['check_interval'] <= 315360000)
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%d %H:%M')
