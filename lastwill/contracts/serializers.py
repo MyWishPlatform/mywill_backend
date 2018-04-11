@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.db import transaction
 from django.core.mail import send_mail
+from django.utils import timezone
 from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken, BtcKeys4RSK
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
@@ -306,6 +307,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
+        now = timezone.now().timestamp() + 600
         if 'eth_contract_token' in details and 'id' in details['eth_contract_token'] and details['eth_contract_token']['id']:
             token_model = EthContract.objects.get(id=details['eth_contract_token']['id'])
             token_details = token_model.contract.get_details()
@@ -343,7 +345,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
-            assert(th['freeze_date'] is None or th['freeze_date'] > details['stop_date'])
+            assert(th['freeze_date'] is None or th['freeze_date'] > now)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
         for bonus in amount_bonuses:
@@ -414,6 +416,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         return super().create(kwargs)
           
     def validate(self, details):
+        now = timezone.now().timestamp() + 600
         assert('"' not in details['token_name'] and '\n' not in details['token_name'])
         assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
         assert(0 <= details['decimals'] <= 50)
@@ -425,7 +428,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
-            assert(th['freeze_date'] is None or th['freeze_date'] > details['stop_date'])
+            assert(th['freeze_date'] is None or th['freeze_date'] > now)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

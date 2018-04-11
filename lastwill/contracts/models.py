@@ -639,7 +639,7 @@ class ContractDetailsICO(CommonDetails):
         token_holders = self.contract.tokenholder_set.all()
         for th in token_holders:
             if th.freeze_date:
-                if th.freeze_date < now.timestamp():
+                if th.freeze_date < now.timestamp() + 600:
                     raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
@@ -952,7 +952,7 @@ class ContractDetailsToken(CommonDetails):
         token_holders = self.contract.tokenholder_set.all()
         for th in token_holders:
             if th.freeze_date:
-                if th.freeze_date < now.timestamp():
+                if th.freeze_date < now.timestamp() + 600:
                     raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
