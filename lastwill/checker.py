@@ -10,7 +10,7 @@ import email_messages
 
 def check_one(contract):
     print('checking', contract.name)
-    tr = abi.ContractTranslator(contract.abi)
+    tr = abi.ContractTranslator(contract.get_details().eth_contract.abi)
     par_int = ParInt()
     address = contract.network.deployaddress_set.all()[0].address
     nonce = int(par_int.parity_nextNonce(address), 16)
