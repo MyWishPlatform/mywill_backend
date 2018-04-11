@@ -12,7 +12,8 @@ def check_one(contract):
     print('checking', contract.name)
     tr = abi.ContractTranslator(contract.abi)
     par_int = ParInt()
-    nonce = int(par_int.parity_nextNonce(contract.owner_address), 16)
+    address = contract.network.deployaddress_set.all()[0].address
+    nonce = int(par_int.parity_nextNonce(address), 16)
     print('nonce', nonce)
     response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
             'source' : contract.owner_address,
