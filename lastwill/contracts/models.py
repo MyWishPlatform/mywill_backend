@@ -542,8 +542,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
-        return super().deploy(eth_contract_attr_name)
+    def deploy(self):
+        return super().deploy()
 
 
 @contract_details('Pizza')
