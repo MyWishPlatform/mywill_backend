@@ -345,7 +345,8 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
-            assert(th['freeze_date'] is None or th['freeze_date'] > now)
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                raise ValidationError({'result': 2}, code=400)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
         for bonus in amount_bonuses:
@@ -428,7 +429,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
-            assert(th['freeze_date'] is None or th['freeze_date'] > now)
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
