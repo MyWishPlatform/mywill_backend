@@ -425,6 +425,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
+            assert(th['freeze_date'] is None or th['freeze_date'] > details['stop_date'])
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

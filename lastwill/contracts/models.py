@@ -636,6 +636,11 @@ class ContractDetailsICO(CommonDetails):
         now = timezone.now()
         if self.start_date < now.timestamp():
             raise ValidationError({'result': 1}, code=400)
+        token_holders = self.contract.tokenholder_set.all()
+        for th in token_holders:
+            if th.freeze_date:
+                if th.freeze_date < now.timestamp():
+                    raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -941,6 +946,14 @@ class ContractDetailsToken(CommonDetails):
     eth_contract_token = models.ForeignKey(EthContract, null=True, default=None, related_name='token_details_token', on_delete=models.SET_NULL)
     future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        token_holders = self.contract.tokenholder_set.all()
+        for th in token_holders:
+            if th.freeze_date:
+                if th.freeze_date < now.timestamp():
+                    raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):
