@@ -135,6 +135,20 @@ def transactionCompleted(message):
         return
     print('transactionCompleted ok')
 
+
+def cancel(message):
+    print('cancel message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().cancel(message)
+    print('cancel ok')
+
+
+def confirm_alive(message):
+    print('confirm_alive message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().i_am_alive(message)
+    print('confirm_alive ok')
+
 methods_dict = {
     'payment': payment,
     'deployed': deployed,

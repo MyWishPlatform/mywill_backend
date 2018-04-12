@@ -293,7 +293,8 @@ class CommonDetails(models.Model):
             requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source': address,
                 'data': binascii.hexlify(
-                    tr.encode_function_call('check', [])).decode(),
+                    tr.encode_function_call('check', [])
+                ).decode(),
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
@@ -412,6 +413,47 @@ class ContractDetailsLastwill(CommonDetails):
             btc_keys.save()
         super().deploy()
 
+    @blocking
+    def i_am_alive(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('imAvailable', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+
+    @blocking
+    def cancel(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('cancel', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+
+
 
 @contract_details('Wallet contract (lost key)')
 class ContractDetailsLostKey(CommonDetails):
@@ -509,6 +551,46 @@ class ContractDetailsLostKey(CommonDetails):
     @postponable
     def deploy(self):
         return super().deploy()
+
+    @blocking
+    def i_am_alive(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('imAvailable', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+
+    @blocking
+    def cancel(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('cancel', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        par_int.eth_sendRawTransaction('0x' + signed_data)
 
 
 @contract_details('Deferred payment contract')

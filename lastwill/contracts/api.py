@@ -217,6 +217,64 @@ def deploy(request):
     return Response('ok')
 
 
+@api_view(http_method_names=['POST'])
+def i_am_alive(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert(contract.user == request.user)
+    assert(contract.state == 'ACTIVE')
+    assert(contract.contract_type in (0, 1))
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+
+    queue = NETWORKS[contract.network.name]['queue']
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                          exclusive=False)
+
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
+        properties=pika.BasicProperties(type='confirm_alive'),
+    )
+    connection.close()
+    return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def cancel(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert(contract.user == request.user)
+    assert(contract.contract_type in (0, 1))
+    assert(contract.state == 'ACTIVE')
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+
+    queue = NETWORKS[contract.network.name]['queue']
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                          exclusive=False)
+
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
+        properties=pika.BasicProperties(type='cancel'),
+    )
+    connection.close()
+    return Response('ok')
+
+
 class ICOtokensView(View):
 
     def get(self, request, *args, **kwargs):
