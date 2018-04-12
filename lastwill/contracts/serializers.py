@@ -145,11 +145,6 @@ class ContractSerializer(serializers.ModelSerializer):
         ][contract_type]
 
 
-class BtcKey4RSKSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BtcKey4RSK
-        fields = ('btc_address')
-
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
@@ -176,7 +171,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         if contract_details.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
             btc_key = contract_details.btc_key
             if btc_key:
-                res['btc_address'] = BtcKey4RSKSerializer().to_representation(contract_details.btc_key)
+                res['btc_address'] = contract_details.btc_key.btc_address
         return res
 
     def create(self, contract, contract_details):
