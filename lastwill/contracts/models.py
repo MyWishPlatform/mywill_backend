@@ -317,6 +317,7 @@ class ContractDetailsLastwill(CommonDetails):
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     email = models.CharField(max_length=256, null=True, default=None)
+    btc_keys = models.ForeignKey(BtcKeys4RSK, null=True, default=None)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -406,11 +407,12 @@ class ContractDetailsLastwill(CommonDetails):
             priv = os.urandom(32)
             address = bitcoin.privkey_to_address(priv)
             btc_keys = BtcKeys4RSK(
-                contract_details_lastwill_id=self.id,
                 private_key=binascii.hexlify(priv).decode(),
                 btc_address=address
             )
             btc_keys.save()
+            self.btc_keys = btc_keys
+            self.save()
         super().deploy()
 
     @blocking
@@ -1177,6 +1179,5 @@ class TokenHolder(models.Model):
 
 
 class BtcKeys4RSK(models.Model):
-    contract_details_lastwill = models.ForeignKey(ContractDetailsLastwill)
     btc_address = models.CharField(max_length=100, null=True, default=None)
     private_key = models.CharField(max_length=100, null=True, default=None)
