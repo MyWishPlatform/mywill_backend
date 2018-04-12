@@ -89,7 +89,7 @@ def postponable(f):
                 [EMAIL_FOR_POSTPONED_MESSAGE]
             )
             print('contract postponed due to exception', flush=True)
-            address = NETWORKS[sys.argv[1]]['address']
+            address = NETWORKS[contract.network.name]['address']
             DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address, locked_by=contract.id).update(locked_by=None)
             print('queue unlocked due to exception', flush=True)
             raise
@@ -200,7 +200,6 @@ class CommonDetails(models.Model):
         self.save()
 
     def deploy(self, eth_contract_attr_name='eth_contract'):
-        address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state == 'ACTIVE':
             print('launch message ignored because already deployed', flush=True)
             return
@@ -210,7 +209,7 @@ class CommonDetails(models.Model):
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments)
         par_int = ParInt()
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
@@ -231,8 +230,8 @@ class CommonDetails(models.Model):
         self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        address = NETWORKS[sys.argv[1]]['address']
-        network_link = NETWORKS[sys.argv[1]]['link_address']
+        address = NETWORKS[self.contract.network.name]['address']
+        network_link = NETWORKS[self.contract.network.name]['link_address']
         network_name = ''
         if sys.argv[1] == 'ETHEREUM_MAINNET':
             network_name = 'Ethereum'
@@ -242,7 +241,7 @@ class CommonDetails(models.Model):
             network_name = 'RSK'
         if sys.argv[1] == 'RSK_TESTNET':
             network_name = 'RSK Testnet'
-        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(network__name=self.contract.network.name, address=address).update(locked_by=None)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
         eth_contract.save()
@@ -275,7 +274,7 @@ class CommonDetails(models.Model):
             [EMAIL_FOR_POSTPONED_MESSAGE]
         )
         print('contract postponed due to transaction fail', flush=True)
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address, locked_by=self.contract.id).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
 
@@ -768,7 +767,7 @@ class ContractDetailsICO(CommonDetails):
         if os.system("/bin/bash -c 'cd {dest} && ./test-crowdsale.sh'".format(dest=dest)):
             raise Exception('testing error')
 
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         preproc_params['constants']['D_MYWISH_ADDRESS'] = address
         preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
@@ -814,7 +813,7 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             return
@@ -872,7 +871,7 @@ class ContractDetailsICO(CommonDetails):
     @postponable
 #    @check_transaction
     def ownershipTransferred(self, message):
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
                 DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
@@ -910,7 +909,7 @@ class ContractDetailsICO(CommonDetails):
     @postponable
     @check_transaction
     def initialized(self, message):
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
 
