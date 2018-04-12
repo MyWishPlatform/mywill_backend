@@ -293,7 +293,7 @@ def get_contracts_for_network(net, all_contracts, now, day):
     active = contracts.filter(state__in=['ACTIVE', 'WAITING', 'WAITING_ACTIVATION'])
     now_active = active.filter(created_date__lte=now, created_date__gte=day)
     done = contracts.filter(state__in=[
-        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE']
+        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE', 'TRIGGERED']
     )
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['POSTPONED'])

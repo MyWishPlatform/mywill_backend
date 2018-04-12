@@ -70,7 +70,7 @@ def triggered(message):
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.state = 'TRIGGERED'
     contract.save()
-    contract.get_details().triggered()
+    contract.get_details().triggered(message)
     print('triggered ok', flush=True)
 
 def launch(message):
