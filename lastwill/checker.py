@@ -3,11 +3,12 @@ import binascii
 import datetime
 from django.utils import timezone
 from django.core.mail import send_mail
-from lastwill.contracts.models import Contract
+from lastwill.contracts.models import Contract, blocking
 from lastwill.parint import *
 from lastwill.settings import SIGNER, DEFAULT_FROM_EMAIL
 import email_messages
 
+@blocking
 def check_one(contract):
     print('checking', contract.name)
     tr = abi.ContractTranslator(contract.get_details().eth_contract.abi)
