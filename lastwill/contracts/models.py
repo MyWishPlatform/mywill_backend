@@ -97,9 +97,11 @@ def postponable(f):
 
 def blocking(f):
     def wrapper(*args, **kwargs):
-        address = NETWORKS[sys.argv[1]]['address']
+        # address = NETWORKS[sys.argv[1]]['address']
+        network_name = args[0].contract.network.name
+        address = NETWORKS[args[0].contract.network.name]['address']
         if not DeployAddress.objects.select_for_update().filter(
-                Q(network__name=sys.argv[1]) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
+                Q(network__name=network_name) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
         ).update(locked_by=args[0].contract.id):
             print('address locked. sleeping 5 and requeueing the message', flush=True)
             sleep(5)
@@ -290,7 +292,7 @@ class CommonDetails(models.Model):
         print('nonce', nonce)
         response = json.loads(
             requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': self.contract.owner_address,
+                'source': address,
                 'data': binascii.hexlify(
                     tr.encode_function_call('check', [])).decode(),
                 'nonce': nonce,
