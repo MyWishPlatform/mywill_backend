@@ -29,7 +29,7 @@ def check_one(contract):
     # print('signed_data', signed_data)
     # par_int.eth_sendRawTransaction('0x'+signed_data)
     # print('check ok!')
-    contract.get_details().check()
+    contract.get_details().check_contract()
 
 
 def check_all():

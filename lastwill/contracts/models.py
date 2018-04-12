@@ -286,7 +286,7 @@ class CommonDetails(models.Model):
         pass
 
     @blocking
-    def check(self):
+    def check_contract(self):
         print('checking', self.contract.name)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
@@ -1046,7 +1046,7 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.contract.state = 'ENDED'
             self.eth_contract_crowdsale.contract.save()
 
-    def check(self):
+    def check_contract(self):
         pass
         
 
@@ -1163,7 +1163,7 @@ class ContractDetailsToken(CommonDetails):
             self.eth_contract_token.contract.state = 'ENDED'
             self.eth_contract_token.contract.save()
 
-    def check(self):
+    def check_contract(self):
         pass
 
 
