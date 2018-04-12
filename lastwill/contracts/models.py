@@ -296,8 +296,7 @@ class CommonDetails(models.Model):
                     tr.encode_function_call('check', [])).decode(),
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
-                'value': int(0.005 * 10 ** 18),
-                'gaslimit': 300000,
+                'gaslimit': 600000,
             }).content.decode())
         print('response', response)
         signed_data = response['result']
