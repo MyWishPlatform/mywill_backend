@@ -153,6 +153,10 @@ class Contract(models.Model):
         return contract_details_types[contract_type]['model']
 
 
+class BtcKey4RSK(models.Model):
+    btc_address = models.CharField(max_length=100, null=True, default=None)
+    private_key = models.CharField(max_length=100, null=True, default=None)
+
 '''
 real contract to deploy to ethereum
 '''
@@ -317,7 +321,7 @@ class ContractDetailsLastwill(CommonDetails):
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     email = models.CharField(max_length=256, null=True, default=None)
-    btc_keys = models.ForeignKey(BtcKeys4RSK, null=True, default=None)
+    btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -406,12 +410,12 @@ class ContractDetailsLastwill(CommonDetails):
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
             priv = os.urandom(32)
             address = bitcoin.privkey_to_address(priv)
-            btc_keys = BtcKeys4RSK(
+            btc_key = BtcKey4RSK(
                 private_key=binascii.hexlify(priv).decode(),
                 btc_address=address
             )
-            btc_keys.save()
-            self.btc_keys = btc_keys
+            btc_key.save()
+            self.btc_key = btc_key
             self.save()
         super().deploy()
 
@@ -1176,8 +1180,3 @@ class TokenHolder(models.Model):
     address = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     freeze_date = models.IntegerField(null=True)
-
-
-class BtcKeys4RSK(models.Model):
-    btc_address = models.CharField(max_length=100, null=True, default=None)
-    private_key = models.CharField(max_length=100, null=True, default=None)
