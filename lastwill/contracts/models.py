@@ -280,6 +280,30 @@ class CommonDetails(models.Model):
     def predeploy_validate(self):
         pass
 
+    @blocking
+    def check(self):
+        print('checking', self.contract.name)
+        tr = abi.ContractTranslator(self.contract.get_details().eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        print('nonce', nonce)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': self.contract.owner_address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('check', [])).decode(),
+                'nonce': nonce,
+                'dest': self.contract.address,
+                'value': int(0.005 * 10 ** 18),
+                'gaslimit': 300000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        print('signed_data', signed_data)
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+        print('check ok!')
+
 
 @contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
@@ -933,6 +957,9 @@ class ContractDetailsICO(CommonDetails):
         if self.eth_contract_crowdsale.contract.state != 'ENDED':
             self.eth_contract_crowdsale.contract.state = 'ENDED'
             self.eth_contract_crowdsale.contract.save()
+
+    def check(self):
+        pass
         
 
 
@@ -1047,6 +1074,9 @@ class ContractDetailsToken(CommonDetails):
         if self.eth_contract_token.original_contract.id != self.eth_contract_token.contract.id and self.eth_contract_token.contract.state != 'ENDED':
             self.eth_contract_token.contract.state = 'ENDED'
             self.eth_contract_token.contract.save()
+
+    def check(self):
+        pass
 
 
 class Heir(models.Model):

@@ -8,27 +8,28 @@ from lastwill.parint import *
 from lastwill.settings import SIGNER, DEFAULT_FROM_EMAIL
 import email_messages
 
-@blocking
+
 def check_one(contract):
-    print('checking', contract.name)
-    tr = abi.ContractTranslator(contract.get_details().eth_contract.abi)
-    par_int = ParInt()
-    address = contract.network.deployaddress_set.all()[0].address
-    nonce = int(par_int.parity_nextNonce(address), 16)
-    print('nonce', nonce)
-    response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-            'source' : contract.owner_address,
-            'data': binascii.hexlify(tr.encode_function_call('check', [])).decode(),
-            'nonce': nonce,
-            'dest': contract.address,
-            'value': int(0.005 * 10 ** 18),
-            'gaslimit': 300000,
-    }).content.decode())
-    print('response', response)
-    signed_data = response['result']
-    print('signed_data', signed_data)
-    par_int.eth_sendRawTransaction('0x'+signed_data)
-    print('check ok!')
+    # print('checking', contract.name)
+    # tr = abi.ContractTranslator(contract.get_details().eth_contract.abi)
+    # par_int = ParInt()
+    # address = contract.network.deployaddress_set.all()[0].address
+    # nonce = int(par_int.parity_nextNonce(address), 16)
+    # print('nonce', nonce)
+    # response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
+    #         'source' : contract.owner_address,
+    #         'data': binascii.hexlify(tr.encode_function_call('check', [])).decode(),
+    #         'nonce': nonce,
+    #         'dest': contract.address,
+    #         'value': int(0.005 * 10 ** 18),
+    #         'gaslimit': 300000,
+    # }).content.decode())
+    # print('response', response)
+    # signed_data = response['result']
+    # print('signed_data', signed_data)
+    # par_int.eth_sendRawTransaction('0x'+signed_data)
+    # print('check ok!')
+    contract.get_details().check()
 
 
 def check_all():
