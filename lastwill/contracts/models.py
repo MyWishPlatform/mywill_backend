@@ -285,7 +285,7 @@ class CommonDetails(models.Model):
     @blocking
     def check(self):
         print('checking', self.contract.name)
-        tr = abi.ContractTranslator(self.contract.get_details().eth_contract.abi)
+        tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.parity_nextNonce(address), 16)
@@ -296,7 +296,7 @@ class CommonDetails(models.Model):
                 'data': binascii.hexlify(
                     tr.encode_function_call('check', [])).decode(),
                 'nonce': nonce,
-                'dest': self.contract.address,
+                'dest': self.eth_contract.address,
                 'value': int(0.005 * 10 ** 18),
                 'gaslimit': 300000,
             }).content.decode())
