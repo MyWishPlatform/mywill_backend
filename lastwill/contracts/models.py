@@ -409,7 +409,7 @@ class ContractDetailsLastwill(CommonDetails):
     @blocking
     @postponable
     def deploy(self):
-        if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
+        if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
             priv = os.urandom(32)
             address = bitcoin.privkey_to_address(priv)
             btc_key = BtcKey4RSK(
