@@ -154,7 +154,7 @@ class EthContractSerializer(serializers.ModelSerializer):
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsLastwill
-        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email')
+        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email', 'platform_alive', 'platform_cancel')
         extra_kwargs = {
             'last_check': {'read_only': True},
             'next_check': {'read_only': True},
