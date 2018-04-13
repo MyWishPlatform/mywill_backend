@@ -339,6 +339,7 @@ class ContractDetailsLastwill(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
+            False if self.contract.network.name in ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
 #            ORACLIZE_PROXY,
         ]
    
@@ -445,7 +446,8 @@ class ContractDetailsLastwill(CommonDetails):
             }).content.decode())
         print('response', response)
         signed_data = response['result']
-        par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.save()
 
     @blocking
     def cancel(self, message):
@@ -465,7 +467,8 @@ class ContractDetailsLastwill(CommonDetails):
             }).content.decode())
         print('response', response)
         signed_data = response['result']
-        par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.save()
 
 
 
