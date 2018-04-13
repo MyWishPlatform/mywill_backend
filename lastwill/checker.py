@@ -1,6 +1,7 @@
 from ethereum import abi
 import binascii
 import datetime
+import time
 from django.utils import timezone
 from django.core.mail import send_mail
 from lastwill.contracts.models import Contract, blocking
@@ -93,3 +94,9 @@ def carry_out_lastwillcontract(contract):
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )
+
+
+if __name__ == '__main__':
+    while 1:
+        check_all()
+        time.sleep(60 * 60 * 24)

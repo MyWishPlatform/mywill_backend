@@ -11,15 +11,15 @@ from lastwill.checker import check_all
 app = Celery('lastwill')
 
 
-@app.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(minute=20),
-        check_task,
-    )
+# @app.on_after_configure.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     sender.add_periodic_task(
+#         crontab(hour=12, minute=0),
+#         check_task,
+#     )
 
 app.autodiscover_tasks()
 
-@app.task(bind=True)
-def check_task(self):
-    check_all()
+# @app.task(bind=True)
+# def check_task(self):
+#     check_all()
