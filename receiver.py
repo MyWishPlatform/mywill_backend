@@ -22,6 +22,7 @@ from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue
 from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
 from lastwill.checker import check_one
 from lastwill.profile.models import Profile
+from lastwill.deploy.models import DeployAddress
 from lastwill.payments.functions import create_payment
 from exchange_API import to_wish
 
@@ -51,6 +52,8 @@ def killed(message):
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.state = 'KILLED'
     contract.save()
+    network = contract.network
+    DeployAddress.objects.filter(network=network, locked_by=contract.id).update(locked_by=None)
     print('killed ok', flush=True)
 
 def checked(message):
