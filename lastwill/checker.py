@@ -79,7 +79,7 @@ def carry_out_lastwillcontract(contract):
             if details.next_check:
                 now = timezone.now()
                 delta = details.next_check - now
-                if delta.days < -1:
+                if delta.days < 0:
                     contract.state = 'ENDED'
                     contract.save()
                     send_mail(

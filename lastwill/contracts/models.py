@@ -754,7 +754,7 @@ class ContractDetailsICO(CommonDetails):
         for th in token_holders:
             if th.freeze_date:
                 if th.freeze_date < now.timestamp() + 600:
-                    raise ValidationError({'result': 1}, code=400)
+                    raise ValidationError({'result': 2}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):

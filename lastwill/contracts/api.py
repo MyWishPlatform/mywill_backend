@@ -161,10 +161,10 @@ def deploy(request):
 
     assert(contract.user == request.user)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
-    if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
-        return Response({'result': 1}, status=400)
-    if contract.contract_type == 5 and any([th.freeze_date is not None and th.freeze_date < datetime.datetime.now().timestamp() + 5*60 for th in contract.tokenholder_set.all()]):
-        return Response({'result': 2}, status=400)
+    # if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
+    #     return Response({'result': 1}, status=400)
+    # if contract.contract_type == 5 and any([th.freeze_date is not None and th.freeze_date < datetime.datetime.now().timestamp() + 5*60 for th in contract.tokenholder_set.all()]):
+    #     return Response({'result': 2}, status=400)
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     promo_str = request.data.get('promo', None)

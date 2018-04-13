@@ -82,6 +82,7 @@ def launch(message):
         # only when contract removed manually
         print('no contract, ignoging')
         return
+    contract_details.refresh_from_db()
     print('launch ok')
 
 def unknown_handler(message):

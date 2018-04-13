@@ -163,9 +163,9 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
-        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         if not contract_details:
            print('*'*50, self.id)
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
         if contract_details.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
