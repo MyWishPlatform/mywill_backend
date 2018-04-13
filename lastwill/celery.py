@@ -14,7 +14,7 @@ app = Celery('lastwill')
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
-        crontab(hour=12, minute=0),
+        crontab(minute=20),
         check_task,
     )
 
