@@ -160,6 +160,15 @@ def contractPayment(message):
     contract.get_details().contractPayment(message)
     print('contract Payment ok')
 
+
+def notified(message):
+    print('notified message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    details = contract.get_details()
+    details.last_reset = timezone.now()
+    details.save()
+    print('notified ok')
+
 methods_dict = {
     'payment': payment,
     'deployed': deployed,
@@ -176,6 +185,7 @@ methods_dict = {
     'confirm_alive': confirm_alive,
     'cancel': cancel,
     'contractPayment': contractPayment,
+    'notified': notified,
 }
 
 def callback(ch, method, properties, body):

@@ -324,6 +324,7 @@ class ContractDetailsLastwill(CommonDetails):
     btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None)
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
+    last_reset = models.DateTimeField(null=True, default=None)
 
     def predeploy_validate(self):
         now = timezone.now()
