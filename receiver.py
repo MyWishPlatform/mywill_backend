@@ -139,14 +139,14 @@ def transactionCompleted(message):
 
 def cancel(message):
     print('cancel message')
-    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract = Contract.objects.get(id=message['contractId'])
     contract.get_details().cancel(message)
     print('cancel ok')
 
 
 def confirm_alive(message):
     print('confirm_alive message')
-    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract = Contract.objects.get(id=message['contractId'])
     contract.get_details().i_am_alive(message)
     print('confirm_alive ok')
 
