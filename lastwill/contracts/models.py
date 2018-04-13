@@ -457,7 +457,7 @@ class ContractDetailsLastwill(CommonDetails):
             requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source': address,
                 'data': binascii.hexlify(
-                    tr.encode_function_call('cancel', [])
+                    tr.encode_function_call('kill', [])
                 ).decode(),
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
