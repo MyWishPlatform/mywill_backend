@@ -2,6 +2,10 @@ from ethereum import abi
 import binascii
 import datetime
 import time
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
+import django
+django.setup()
 from django.utils import timezone
 from django.core.mail import send_mail
 from lastwill.contracts.models import Contract, blocking
