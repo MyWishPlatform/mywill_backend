@@ -162,6 +162,8 @@ methods_dict = {
     'finalized': finalized,
     'finish': finish,
     'transactionCompleted': transactionCompleted,
+    'confirm_alive': confirm_alive,
+    'cancel': cancel,
 }
 
 def callback(ch, method, properties, body):
