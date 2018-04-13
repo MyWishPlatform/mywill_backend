@@ -58,7 +58,7 @@ def send_reminders(contract):
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )
-                elif delta.days == 5:
+                if delta.days == 5:
                     print('5 days message')
                     send_mail(
                         email_messages.remind_subject,
@@ -66,7 +66,7 @@ def send_reminders(contract):
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )
-                elif delta.days == 10:
+                if delta.days == 10:
                     print('10 days message')
                     send_mail(
                         email_messages.remind_subject,

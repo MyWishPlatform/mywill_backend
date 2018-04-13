@@ -465,7 +465,6 @@ class ContractDetailsLastwill(CommonDetails):
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
             }).content.decode())
-        print('response', response)
         signed_data = response['result']
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         self.eth_contract.save()
