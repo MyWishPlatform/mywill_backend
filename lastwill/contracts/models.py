@@ -330,6 +330,9 @@ class ContractDetailsLastwill(CommonDetails):
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
 
+    def contractPayment(self, message):
+        pass
+
     def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
@@ -360,7 +363,10 @@ class ContractDetailsLastwill(CommonDetails):
         Cc = 124852
         DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * 10 ** 9
-        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)     + 80000
+        result = 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC) + 80000
+        if network.name == 'RSK_MAINNET':
+            result += 2 * (10 ** 18)
+        return result
 
     @postponable
     @check_transaction

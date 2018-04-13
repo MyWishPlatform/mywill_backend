@@ -150,6 +150,13 @@ def confirm_alive(message):
     contract.get_details().i_am_alive(message)
     print('confirm_alive ok')
 
+
+def contractPayment(message):
+    print('contract Payment message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().contractPayment(message)
+    print('contract Payment ok')
+
 methods_dict = {
     'payment': payment,
     'deployed': deployed,
@@ -165,6 +172,7 @@ methods_dict = {
     'transactionCompleted': transactionCompleted,
     'confirm_alive': confirm_alive,
     'cancel': cancel,
+    'contractPayment': contractPayment,
 }
 
 def callback(ch, method, properties, body):
