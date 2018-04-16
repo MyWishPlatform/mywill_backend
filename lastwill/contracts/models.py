@@ -291,7 +291,7 @@ class CommonDetails(models.Model):
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.parity_nextNonce(address), 16)
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         response = json.loads(
             requests.post('http://{}/sign/'.format(SIGNER), json={
