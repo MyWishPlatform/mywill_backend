@@ -2,6 +2,7 @@ from ethereum import abi
 import binascii
 import datetime
 import time
+import pika
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
@@ -20,7 +21,28 @@ def check_all():
         details = contract.get_details()
         if details.next_check and details.next_check <= timezone.now():
             print('checking contract', contract.id, flush=True)
-            details.check_contract()
+            # details.check_contract()
+            connection = pika.BlockingConnection(pika.ConnectionParameters(
+                'localhost',
+                5672,
+                'mywill',
+                pika.PlainCredentials('java', 'java'),
+            ))
+
+            queue = NETWORKS[contract.network.name]['queue']
+            channel = connection.channel()
+            channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                                  exclusive=False)
+
+            channel.basic_publish(
+                exchange='',
+                routing_key=queue,
+                body=json.dumps(
+                    {'status': 'COMMITTED', 'contractId': contract.id}),
+                properties=pika.BasicProperties(type='check_contract'),
+            )
+            print('send check contract')
+            connection.close()
         send_reminders(contract)
        # carry_out_lastwillcontract(contract)
     print('checked all', flush=True)

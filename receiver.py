@@ -67,6 +67,12 @@ def repeat_check(message):
     contract.get_details().check_contracts()
     print('repeat check ok', flush=True)
 
+def check_contract(message):
+    print('check contract message', flush=True)
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().check_contracts()
+    print('check contract ok', flush=True)
+
 def triggered(message):
     print('triggered message', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
@@ -183,6 +189,7 @@ methods_dict = {
     'cancel': cancel,
     'contractPayment': contractPayment,
     'notified': notified,
+    'check_contract': check_contract,
 }
 
 def callback(ch, method, properties, body):
