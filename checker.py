@@ -45,7 +45,7 @@ def check_all():
             check_one(contract)
        send_reminders(contract)
        carry_out_lastwillcontract(contract)
-    print('checked all', flush=Tue)
+    print('checked all', flush=True)
 
 
 def send_reminders(contract):
