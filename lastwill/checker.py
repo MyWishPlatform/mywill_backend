@@ -103,4 +103,6 @@ def carry_out_lastwillcontract(contract):
 if __name__ == '__main__':
     while 1:
         check_all()
-        time.sleep(60 * 60 * 24)
+        # time.sleep(60 * 60 * 24)
+        time.sleep(60 * 10)
+

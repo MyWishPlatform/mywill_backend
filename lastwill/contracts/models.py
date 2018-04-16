@@ -23,7 +23,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.exceptions import ValidationError
-from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
+from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE, BITCOIN_URLS
 from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
@@ -427,6 +427,11 @@ class ContractDetailsLastwill(CommonDetails):
             btc_key.save()
             self.btc_key = btc_key
             self.save()
+            network = 'main' if self.contract.network.name == 'RSK_MAINNET' else 'test'
+            r = requests.post(
+                       BITCOIN_URLS[network],
+                       json={'method': 'importaddress', 'params': [address, address, False], 'id': 1, 'jsonrpc': '1.0'}
+               )
         super().deploy()
 
     @blocking
