@@ -3,7 +3,7 @@ import binascii
 import datetime
 import time
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 import django
 django.setup()
 from django.utils import timezone
