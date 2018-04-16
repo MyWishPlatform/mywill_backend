@@ -72,7 +72,7 @@ def send_reminders(contract):
                         [contract.user.email]
                     )
                 if delta.days == 10:
-                    print('10 days message', contract.id, flush=Tue)
+                    print('10 days message', contract.id, flush=True)
                     send_mail(
                         email_messages.remind_subject,
                         email_messages.remind_message.format(days=10),
