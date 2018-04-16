@@ -165,7 +165,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
         if not contract_details:
-           print('*'*50, contract_details.id)
+           print('*'*50, contract_details.id, flush=True)
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
