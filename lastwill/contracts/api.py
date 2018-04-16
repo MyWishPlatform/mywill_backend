@@ -403,7 +403,7 @@ def get_statistics(request):
         'currency_statistics': get_currency_statistics()
     }
     networks = Network.objects.all()
-    contracts = Contract.objects.all().exclude(user__in=anonimys).exclude(user__in=fb_test_users).exclude(user__email__in=test_addresses).exclude(email__startswith='testermc')
+    contracts = Contract.objects.all().exclude(user__in=anonimys).exclude(user__in=fb_test_users).exclude(user__email__in=test_addresses).exclude(user__email__startswith='testermc')
     for network in networks:
         answer[network.name] = get_contracts_for_network(network, contracts, now, day)
 
