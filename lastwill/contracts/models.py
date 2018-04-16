@@ -428,7 +428,10 @@ class ContractDetailsLastwill(CommonDetails):
     def deploy(self):
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
             priv = os.urandom(32)
-            address = bitcoin.privkey_to_address(priv)
+            if self.contract.network.name == 'RSK_MAINNET':
+                address = bitcoin.privkey_to_address(priv, magicbyte=0)
+            else:
+                address = bitcoin.privkey_to_address(priv, magicbyte=0x6F)
             btc_key = BtcKey4RSK(
                 private_key=binascii.hexlify(priv).decode(),
                 btc_address=address
