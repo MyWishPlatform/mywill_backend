@@ -15,35 +15,18 @@ import email_messages
 
 
 def check_one(contract):
-    # print('checking', contract.name)
-    # tr = abi.ContractTranslator(contract.get_details().eth_contract.abi)
-    # par_int = ParInt()
-    # address = contract.network.deployaddress_set.all()[0].address
-    # nonce = int(par_int.parity_nextNonce(address), 16)
-    # print('nonce', nonce)
-    # response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-    #         'source' : contract.owner_address,
-    #         'data': binascii.hexlify(tr.encode_function_call('check', [])).decode(),
-    #         'nonce': nonce,
-    #         'dest': contract.address,
-    #         'value': int(0.005 * 10 ** 18),
-    #         'gaslimit': 300000,
-    # }).content.decode())
-    # print('response', response)
-    # signed_data = response['result']
-    # print('signed_data', signed_data)
-    # par_int.eth_sendRawTransaction('0x'+signed_data)
-    # print('check ok!')
+
     contract.get_details().check_contract()
 
 
 def check_all():
     print('check_all method', flush=True)
     for contract in Contract.objects.filter(contract_type__in=(0,1,4)):
-       if contract.next_check:
-           if contract.next_check <= timezone.now():
-            check_one(contract)
-       send_reminders(contract)
+        if contract.next_check:
+            if contract.next_check <= timezone.now():
+                print('checking contract', contract.id, flush=True)
+                check_one(contract)
+        send_reminders(contract)
        # carry_out_lastwillcontract(contract)
     print('checked all', flush=True)
 
