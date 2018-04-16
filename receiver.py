@@ -20,7 +20,6 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
 from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
-from checker import check_one
 from lastwill.profile.models import Profile
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.functions import create_payment
