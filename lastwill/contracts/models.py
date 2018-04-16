@@ -389,6 +389,10 @@ class ContractDetailsLastwill(CommonDetails):
             self.contract.save()
             self.next_check = None
         self.save()
+        DeployAddress.objects.filter(
+            network=self.contract.network,
+            locked_by=self.contract.id
+        ).update(locked_by=None)
 
     @check_transaction
     def triggered(self, message):
@@ -556,6 +560,10 @@ class ContractDetailsLostKey(CommonDetails):
             self.contract.save()
             self.next_check = None
         self.save()
+        DeployAddress.objects.filter(
+            network=self.contract.network,
+            locked_by=self.contract.id
+        ).update(locked_by=None)
 
     @check_transaction
     def triggered(self, message):
