@@ -17,7 +17,7 @@ import email_messages
 
 def check_all():
     print('check_all method', flush=True)
-    for contract in Contract.objects.filter(contract_type__in=(0,1)):
+    for contract in Contract.objects.filter(contract_type__in=(0,1), state='ACTIVE'):
         details = contract.get_details()
         if details.next_check and details.next_check <= timezone.now():
             print('checking contract', contract.id, flush=True)
