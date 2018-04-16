@@ -65,7 +65,7 @@ def checked(message):
 def repeat_check(message):
     print('repeat check message', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
-    check_one(contract)
+    contract.get_details().check_contracts()
     print('repeat check ok', flush=True)
 
 def triggered(message):
