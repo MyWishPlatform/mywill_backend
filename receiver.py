@@ -69,7 +69,7 @@ def repeat_check(message):
 
 def check_contract(message):
     print('check contract message', flush=True)
-    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract = Contract.objects.get(id=message['contractId'])
     contract.get_details().check_contracts()
     print('check contract ok', flush=True)
 
