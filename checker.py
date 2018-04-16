@@ -44,7 +44,7 @@ def check_all():
            if contract.next_check <= timezone.now():
             check_one(contract)
        send_reminders(contract)
-       carry_out_lastwillcontract(contract)
+       # carry_out_lastwillcontract(contract)
     print('checked all', flush=True)
 
 
@@ -76,25 +76,6 @@ def send_reminders(contract):
                     send_mail(
                         email_messages.remind_subject,
                         email_messages.remind_message.format(days=10),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
-
-
-def carry_out_lastwillcontract(contract):
-    if contract.contract_type == 0:
-        details = contract.get_details()
-        if contract.state == 'ACTIVE' and contract.user.email:
-            if details.next_check:
-                now = timezone.now()
-                delta = details.next_check - now
-                if delta.days < 0:
-                    contract.state = 'ENDED'
-                    contract.save()
-                    print(contract.id, 'ended', flush=True)
-                    send_mail(
-                        email_messages.carry_out_subject,
-                        email_messages.carry_out_message,
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )

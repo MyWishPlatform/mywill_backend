@@ -408,6 +408,15 @@ class ContractDetailsLastwill(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
                 )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                email_messages.carry_out_subject,
+                email_messages.carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
 
     def get_gaslimit(self):
         Cg = 780476
@@ -563,6 +572,15 @@ class ContractDetailsLostKey(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
                 )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                email_messages.carry_out_subject,
+                email_messages.carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
 
     def get_gaslimit(self):
         Cg = 1476117
@@ -655,6 +673,15 @@ class ContractDetailsDelayedPayment(CommonDetails):
                 ),
                 DEFAULT_FROM_EMAIL,
                 [self.recepient_email]
+            )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                email_messages.carry_out_subject,
+                email_messages.carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
             )
     
     def get_arguments(self, *args, **kwargs):
