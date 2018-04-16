@@ -3,13 +3,9 @@ import binascii
 import datetime
 import time
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
-try:
-    from settings_local import *
-except ImportError as exc:
-    print("Can't load local settings")
 from django.utils import timezone
 from django.core.mail import send_mail
 from lastwill.contracts.models import Contract, blocking
