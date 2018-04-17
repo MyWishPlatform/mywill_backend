@@ -768,7 +768,7 @@ class ContractDetailsICO(CommonDetails):
                 'data': binascii.hexlify(tr.encode_function_call('init', [])).decode(),
                 'nonce': nonce,
                 'dest': self.eth_contract_crowdsale.address,
-                'gaslimit': 100000 + 50000 * self.contract.tokenholder_set.all().count(),
+                'gaslimit': 300000 + 50000 * self.contract.tokenholder_set.all().count(),
         }).content.decode())
         print('init message signed')
         signed_data = response['result']
