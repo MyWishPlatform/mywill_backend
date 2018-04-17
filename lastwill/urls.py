@@ -24,7 +24,8 @@ from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import UserConfirmEmailView, profile_view, generate_key, enable_2fa, disable_2fa, resend_email
 from lastwill.contracts.api import (ContractViewSet, get_cost, get_code, test_comp,
                                     get_contract_types, pizza_delivered, deploy,
-                                    get_token_contracts, ICOtokensView, get_statistics)
+                                    get_token_contracts, ICOtokensView, get_statistics,
+                                    i_am_alive, cancel)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -68,6 +69,9 @@ urlpatterns = [
     url(r'^api/count_sold_tokens_in_ICO/$', ICOtokensView.as_view(),
         name='count_ICOtokens'),
     url(r'^api/get_statistics/$', get_statistics, name='get statistics'),
+    url(r'^api/i_am_alive/', i_am_alive),
+    url(r'^api/cancel/', cancel),
+
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

@@ -20,8 +20,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
 from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
-from lastwill.checker import check_one
 from lastwill.profile.models import Profile
+from lastwill.deploy.models import DeployAddress
 from lastwill.payments.functions import create_payment
 from exchange_API import to_wish
 
@@ -51,6 +51,8 @@ def killed(message):
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.state = 'KILLED'
     contract.save()
+    network = contract.network
+    DeployAddress.objects.filter(network=network, locked_by=contract.id).update(locked_by=None)
     print('killed ok', flush=True)
 
 def checked(message):
@@ -62,15 +64,19 @@ def checked(message):
 def repeat_check(message):
     print('repeat check message', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
-    check_one(contract)
+    contract.get_details().check_contract()
     print('repeat check ok', flush=True)
+
+def check_contract(message):
+    print('check contract message', flush=True)
+    contract = Contract.objects.get(id=message['contractId'])
+    contract.get_details().check_contract()
+    print('check contract ok', flush=True)
 
 def triggered(message):
     print('triggered message', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
-    contract.state = 'TRIGGERED'
-    contract.save()
-    contract.get_details().triggered()
+    contract.get_details().triggered(message)
     print('triggered ok', flush=True)
 
 def launch(message):
@@ -82,6 +88,7 @@ def launch(message):
         # only when contract removed manually
         print('no contract, ignoging')
         return
+    contract_details.refresh_from_db()
     print('launch ok')
 
 def unknown_handler(message):
@@ -135,6 +142,42 @@ def transactionCompleted(message):
         return
     print('transactionCompleted ok')
 
+
+def cancel(message):
+    print('cancel message')
+    contract = Contract.objects.get(id=message['contractId'])
+    contract.get_details().cancel(message)
+    print('cancel ok')
+
+
+def confirm_alive(message):
+    print('confirm_alive message')
+    contract = Contract.objects.get(id=message['contractId'])
+    contract.get_details().i_am_alive(message)
+    print('confirm_alive ok')
+
+
+def contractPayment(message):
+    print('contract Payment message')
+    contract = Contract.objects.get(id=message['contractId'])
+    contract.get_details().contractPayment(message)
+    print('contract Payment ok')
+
+
+def notified(message):
+    print('notified message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    details = contract.get_details()
+    details.last_reset = timezone.now()
+    details.save()
+    print('notified ok')
+
+
+def fgwOutcome(message):
+    # complite move funds from duty
+    pass
+
+
 methods_dict = {
     'payment': payment,
     'deployed': deployed,
@@ -148,6 +191,12 @@ methods_dict = {
     'finalized': finalized,
     'finish': finish,
     'transactionCompleted': transactionCompleted,
+    'confirm_alive': confirm_alive,
+    'cancel': cancel,
+    'contractPayment': contractPayment,
+    'notified': notified,
+    'check_contract': check_contract,
+    'fgwOutcome': fgwOutcome,
 }
 
 def callback(ch, method, properties, body):

@@ -9,11 +9,12 @@ import sha3
 import datetime
 import shutil
 import sys
+import bitcoin
 from copy import deepcopy
 from time import sleep
 from ethereum import abi
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.core.mail import send_mail
 from django.apps import apps
 from django.contrib.auth.models import User
@@ -21,7 +22,8 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL
+from rest_framework.exceptions import ValidationError
+from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE, BITCOIN_URLS
 from lastwill.parint import *
 import lastwill.check as check
 from lastwill.consts import MAX_WEI_DIGITS
@@ -63,24 +65,43 @@ def postponable(f):
         contract = args[0].contract
         if contract.state == 'POSTPONED':
             print('message rejected because contract postponed', flush=True)
+            send_mail(
+                email_messages.postponed_subject,
+                email_messages.postponed_message.format(
+                    contract_id=contract.id
+                ),
+                DEFAULT_FROM_EMAIL,
+                [EMAIL_FOR_POSTPONED_MESSAGE]
+            )
+
             raise AlreadyPostponed
         try:
             return f(*args, **kwargs)
         except Exception as e:
             contract.state = 'POSTPONED'
             contract.save()
+            send_mail(
+                email_messages.postponed_subject,
+                email_messages.postponed_message.format(
+                    contract_id=contract.id
+                ),
+                DEFAULT_FROM_EMAIL,
+                [EMAIL_FOR_POSTPONED_MESSAGE]
+            )
             print('contract postponed due to exception', flush=True)
-            address = NETWORKS[sys.argv[1]]['address']
-            DeployAddress.objects.select_for_update().filter(address=address, locked_by=contract.id).update(locked_by=None)
+            address = NETWORKS[contract.network.name]['address']
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address, locked_by=contract.id).update(locked_by=None)
             print('queue unlocked due to exception', flush=True)
             raise
     return wrapper
 
 def blocking(f):
     def wrapper(*args, **kwargs):
-        address = NETWORKS[sys.argv[1]]['address']
+        # address = NETWORKS[sys.argv[1]]['address']
+        network_name = args[0].contract.network.name
+        address = NETWORKS[args[0].contract.network.name]['address']
         if not DeployAddress.objects.select_for_update().filter(
-                Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
+                Q(network__name=network_name) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
         ).update(locked_by=args[0].contract.id):
             print('address locked. sleeping 5 and requeueing the message', flush=True)
             sleep(5)
@@ -132,6 +153,10 @@ class Contract(models.Model):
         return contract_details_types[contract_type]['model']
 
 
+class BtcKey4RSK(models.Model):
+    btc_address = models.CharField(max_length=100, null=True, default=None)
+    private_key = models.CharField(max_length=100, null=True, default=None)
+
 '''
 real contract to deploy to ethereum
 '''
@@ -178,10 +203,7 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
-    @blocking
-    @postponable
     def deploy(self, eth_contract_attr_name='eth_contract'):
-        address = NETWORKS[sys.argv[1]]['address']
         if self.contract.state == 'ACTIVE':
             print('launch message ignored because already deployed', flush=True)
             return
@@ -191,8 +213,8 @@ class CommonDetails(models.Model):
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments)
         par_int = ParInt()
-        address = NETWORKS[sys.argv[1]]['address']
-        nonce = int(par_int.parity_nextNonce(address), 16)
+        address = NETWORKS[self.contract.network.name]['address']
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : address,
@@ -200,6 +222,7 @@ class CommonDetails(models.Model):
                 'nonce': nonce,
                 'gaslimit': self.get_gaslimit(),
                 'value': self.get_value(),
+                'network': sys.argv[1],
         }).content.decode())['result']
 
         eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
@@ -211,8 +234,18 @@ class CommonDetails(models.Model):
         self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        address = NETWORKS[sys.argv[1]]['address']
-        DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+        address = NETWORKS[self.contract.network.name]['address']
+        network_link = NETWORKS[self.contract.network.name]['link_address']
+        network_name = ''
+        if sys.argv[1] == 'ETHEREUM_MAINNET':
+            network_name = 'Ethereum'
+        if sys.argv[1] == 'ETHEREUM_ROPSTEN':
+            network_name = 'Ropsten (Ethereum Testnet)'
+        if sys.argv[1] == 'RSK_MAINNET':
+            network_name = 'RSK'
+        if sys.argv[1] == 'RSK_TESTNET':
+            network_name = 'RSK Testnet'
+        DeployAddress.objects.select_for_update().filter(network__name=self.contract.network.name, address=address).update(locked_by=None)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
         eth_contract.save()
@@ -223,7 +256,8 @@ class CommonDetails(models.Model):
                     email_messages.common_subject,
                     email_messages.common_text.format(
                             contract_type_name=contract_details_types[self.contract.contract_type]['name'],
-                            address=eth_contract.address
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -235,15 +269,50 @@ class CommonDetails(models.Model):
     def tx_failed(self, message):
         self.contract.state = 'POSTPONED'
         self.contract.save()
+        send_mail(
+            email_messages.postponed_subject,
+            email_messages.postponed_message.format(
+                contract_id=self.contract.id
+            ),
+            DEFAULT_FROM_EMAIL,
+            [EMAIL_FOR_POSTPONED_MESSAGE]
+        )
         print('contract postponed due to transaction fail', flush=True)
-        address = NETWORKS[sys.argv[1]]['address']
-        DeployAddress.objects.select_for_update().filter(address=address, locked_by=self.contract.id).update(locked_by=None)
+        address = NETWORKS[self.contract.network.name]['address']
+        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address, locked_by=self.contract.id).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
+
+    def predeploy_validate(self):
+        pass
+
+    @blocking
+    def check_contract(self):
+        print('checking', self.contract.name)
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        print('nonce', nonce)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('check', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        print('signed_data', signed_data)
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+        print('check ok!')
 
 
 @contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
-    sol_path = 'lastwill/contracts/contracts/LastWillOraclize.sol'
+    sol_path = 'lastwill/contracts/contracts/LastWillNotify.sol'
 
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
@@ -251,6 +320,24 @@ class ContractDetailsLastwill(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    email = models.CharField(max_length=256, null=True, default=None)
+    btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None)
+    platform_alive = models.BooleanField(default=False)
+    platform_cancel = models.BooleanField(default=False)
+    last_reset = models.DateTimeField(null=True, default=None)
+    btc_duty = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.active_to < now:
+            raise ValidationError({'result': 1}, code=400)
+
+    def contractPayment(self, message):
+        if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
+            return
+        ContractDetailsLastwill.objects.select_for_update().filter(
+            id=self.id
+        ).update(btc_duty=F('btc_duty') + message['amount'])
 
     def get_arguments(self, *args, **kwargs):
         return [
@@ -258,7 +345,8 @@ class ContractDetailsLastwill(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            ORACLIZE_PROXY,
+            False if self.contract.network.name in ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
+#            ORACLIZE_PROXY,
         ]
    
     @staticmethod
@@ -268,6 +356,8 @@ class ContractDetailsLastwill(CommonDetails):
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
+            if 'T' in active_to:
+                active_to = active_to[:active_to.index('T')]
             active_to = datetime.date(*map(int, active_to.split('-')))
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
@@ -282,7 +372,10 @@ class ContractDetailsLastwill(CommonDetails):
         Cc = 124852
         DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * 10 ** 9
-        return 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC)     + 80000
+        result = 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC) + 80000
+        if network.name == 'RSK_MAINNET':
+            result += 2 * (10 ** 18)
+        return result
 
     @postponable
     @check_transaction
@@ -299,10 +392,12 @@ class ContractDetailsLastwill(CommonDetails):
         if next_check < self.active_to:
             self.next_check = next_check
         else:
-            self.contract.state = 'EXPIRED'
-            self.contract.save()
             self.next_check = None
         self.save()
+        DeployAddress.objects.filter(
+            network=self.contract.network,
+            locked_by=self.contract.id
+        ).update(locked_by=None)
 
     @check_transaction
     def triggered(self, message):
@@ -310,22 +405,96 @@ class ContractDetailsLastwill(CommonDetails):
         self.next_check = None
         self.save()
         heirs = Heir.objects.filter(contract=self.contract)
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         for heir in heirs:
             if heir.email:
                 send_mail(
                     email_messages.heir_subject,
                     email_messages.heir_message.format(
                             user_address=heir.address,
-                            tx=message['transactionHash']
+                            link_tx=link.format(tx=message['transactionHash'])
                     ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
                 )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                email_messages.carry_out_subject,
+                email_messages.carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
 
     def get_gaslimit(self):
         Cg = 780476
         CBg = 26561
         return Cg + len(self.contract.heir_set.all()) * CBg + 80000
+
+    @blocking
+    @postponable
+    def deploy(self):
+        if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
+            priv = os.urandom(32)
+            if self.contract.network.name == 'RSK_MAINNET':
+                address = bitcoin.privkey_to_address(priv, magicbyte=0)
+            else:
+                address = bitcoin.privkey_to_address(priv, magicbyte=0x6F)
+            btc_key = BtcKey4RSK(
+                private_key=binascii.hexlify(priv).decode(),
+                btc_address=address
+            )
+            btc_key.save()
+            self.btc_key = btc_key
+            self.save()
+            network = 'main' if self.contract.network.name == 'RSK_MAINNET' else 'test'
+            r = requests.post(
+                       BITCOIN_URLS[network],
+                       json={'method': 'importaddress', 'params': [address, address, False], 'id': 1, 'jsonrpc': '1.0'}
+               )
+        super().deploy()
+
+    @blocking
+    def i_am_alive(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('imAvailable', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.save()
+
+    @blocking
+    def cancel(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('kill', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        signed_data = response['result']
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.save()
 
 
 
@@ -338,6 +507,12 @@ class ContractDetailsLostKey(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.active_to < now:
+            raise ValidationError({'result': 1}, code=400)
         
     def get_arguments(self, *args, **kwargs):
         return [
@@ -355,6 +530,8 @@ class ContractDetailsLostKey(CommonDetails):
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
+            if 'T' in active_to:
+                active_to = active_to[:active_to.index('T')]
             active_to = datetime.date(*map(int, active_to.split('-')))
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
@@ -390,6 +567,10 @@ class ContractDetailsLostKey(CommonDetails):
             self.contract.save()
             self.next_check = None
         self.save()
+        DeployAddress.objects.filter(
+            network=self.contract.network,
+            locked_by=self.contract.id
+        ).update(locked_by=None)
 
     @check_transaction
     def triggered(self, message):
@@ -397,22 +578,77 @@ class ContractDetailsLostKey(CommonDetails):
         self.next_check = None
         self.save()
         heirs = Heir.objects.filter(contract=self.contract)
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         for heir in heirs:
             if heir.email:
                 send_mail(
                     email_messages.heir_subject,
                     email_messages.heir_message.format(
                         user_address=heir.address,
-                        tx=message['transactionHash']
+                        link_tx=link.format(tx=message['transactionHash'])
                     ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
                 )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                email_messages.carry_out_subject,
+                email_messages.carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
 
     def get_gaslimit(self):
         Cg = 1476117
         CBg = 28031
         return Cg + len(self.contract.heir_set.all()) * CBg + 3000 + 80000
+
+    @blocking
+    @postponable
+    def deploy(self):
+        return super().deploy()
+
+    @blocking
+    def i_am_alive(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('imAvailable', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        par_int.eth_sendRawTransaction('0x' + signed_data)
+
+    @blocking
+    def cancel(self, message):
+        tr = abi.ContractTranslator(self.eth_contract.abi)
+        par_int = ParInt()
+        address = self.contract.network.deployaddress_set.all()[0].address
+        nonce = int(par_int.parity_nextNonce(address), 16)
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': address,
+                'data': binascii.hexlify(
+                    tr.encode_function_call('cancel', [])
+                ).decode(),
+                'nonce': nonce,
+                'dest': self.eth_contract.address,
+                'gaslimit': 600000,
+            }).content.decode())
+        print('response', response)
+        signed_data = response['result']
+        par_int.eth_sendRawTransaction('0x' + signed_data)
 
 
 @contract_details('Deferred payment contract')
@@ -423,6 +659,12 @@ class ContractDetailsDelayedPayment(CommonDetails):
     recepient_address = models.CharField(max_length=50)
     recepient_email = models.CharField(max_length=200, null=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.date < now:
+            raise ValidationError({'result': 1}, code=400)
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -439,15 +681,25 @@ class ContractDetailsDelayedPayment(CommonDetails):
         pass
 
     def triggered(self, message):
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         if self.recepient_email:
             send_mail(
                 email_messages.heir_subject,
                 email_messages.heir_message.format(
                     user_address=self.recepient_address,
-                    tx=message['transactionHash']
+                    link_tx=link.format(tx=message['transactionHash'])
                 ),
                 DEFAULT_FROM_EMAIL,
                 [self.recepient_email]
+            )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                email_messages.carry_out_subject,
+                email_messages.carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
             )
     
     def get_arguments(self, *args, **kwargs):
@@ -460,6 +712,11 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     def get_gaslimit(self):
         return 1700000
+
+    @blocking
+    @postponable
+    def deploy(self):
+        return super().deploy()
 
 
 @contract_details('Pizza')
@@ -511,6 +768,10 @@ class ContractDetailsPizza(CommonDetails):
     def msg_deployed(self, message):
         super().msg_deployed(message)
 
+    @blocking
+    @postponable
+    def deploy(self):
+        return super().deploy()
 
 
 @contract_details('MyWish ICO')
@@ -543,11 +804,22 @@ class ContractDetailsICO(CommonDetails):
     min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
     max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.start_date < now.timestamp():
+            raise ValidationError({'result': 1}, code=400)
+        token_holders = self.contract.tokenholder_set.all()
+        for th in token_holders:
+            if th.freeze_date:
+                if th.freeze_date < now.timestamp() + 600:
+                    raise ValidationError({'result': 2}, code=400)
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 10**18
+        return 5 * 10**18
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -643,7 +915,7 @@ class ContractDetailsICO(CommonDetails):
         if os.system("/bin/bash -c 'cd {dest} && ./test-crowdsale.sh'".format(dest=dest)):
             raise Exception('testing error')
 
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         preproc_params['constants']['D_MYWISH_ADDRESS'] = address
         preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
@@ -689,16 +961,16 @@ class ContractDetailsICO(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             return
         if self.reused_token:
             self.contract.state = 'WAITING_ACTIVATION'
             self.contract.save()
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
-            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             print('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
@@ -710,7 +982,7 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.save()
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
             par_int = ParInt()
-            nonce = int(par_int.parity_nextNonce(address), 16) 
+            nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16) 
             print('nonce', nonce)
             response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                     'source' : address,
@@ -718,6 +990,7 @@ class ContractDetailsICO(CommonDetails):
                     'nonce': nonce,
                     'dest': self.eth_contract_token.address,
                     'gaslimit': 100000,
+                    'network': sys.argv[1],
             }).content.decode())
             print('transferOwnership message signed')
             signed_data = response['result']
@@ -728,6 +1001,8 @@ class ContractDetailsICO(CommonDetails):
     def get_gaslimit(self):
         return 3200000
 
+    @blocking
+    @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
@@ -744,16 +1019,16 @@ class ContractDetailsICO(CommonDetails):
     @postponable
 #    @check_transaction
     def ownershipTransferred(self, message):
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
-                DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+                DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             print('ignored', flush=True)
             return
 
 
         if self.contract.state in ('ACTIVE', 'ENDED'):
-            DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
             return
         if self.contract.state == 'WAITING_ACTIVATION':
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -761,7 +1036,7 @@ class ContractDetailsICO(CommonDetails):
             # continue deploy: call init
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         par_int = ParInt()
-        nonce = int(par_int.parity_nextNonce(address), 16)
+        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : address,
@@ -769,6 +1044,7 @@ class ContractDetailsICO(CommonDetails):
                 'nonce': nonce,
                 'dest': self.eth_contract_crowdsale.address,
                 'gaslimit': 300000 + 50000 * self.contract.tokenholder_set.all().count(),
+                'network': sys.argv[1],
         }).content.decode())
         print('init message signed')
         signed_data = response['result']
@@ -781,13 +1057,13 @@ class ContractDetailsICO(CommonDetails):
     @postponable
     @check_transaction
     def initialized(self, message):
-        address = NETWORKS[sys.argv[1]]['address']
+        address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
 
 
 
-        DeployAddress.objects.select_for_update().filter(address=address).update(locked_by=None)
+        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
 
 
 
@@ -801,12 +1077,23 @@ class ContractDetailsICO(CommonDetails):
         if self.eth_contract_token.original_contract.contract_type == 5:
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
+        network_link = NETWORKS[self.contract.network.name]['link_address']
+        network_name = ''
+        if self.contract.network.name == 'ETHEREUM_MAINNET':
+            network_name = 'Ethereum'
+        if self.contract.network.name == 'ETHEREUM_ROPSTEN':
+            network_name = 'Ropsten (Ethereum Testnet)'
+        if self.contract.network.name == 'RSK_MAINNET':
+            network_name = 'RSK'
+        if self.contract.network.name == 'RSK_TESTNET':
+            network_name = 'RSK Testnet'
         if self.contract.user.email:
             send_mail(
                     email_messages.ico_subject,
                     email_messages.ico_text.format(
-                            token_address=self.eth_contract_token.address,
-                            crowdsale_address=self.eth_contract_crowdsale.address
+                            link1=network_link.format(address=self.eth_contract_token.address,),
+                            link2=network_link.format(address=self.eth_contract_crowdsale.address),
+                            network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -819,6 +1106,9 @@ class ContractDetailsICO(CommonDetails):
         if self.eth_contract_crowdsale.contract.state != 'ENDED':
             self.eth_contract_crowdsale.contract.state = 'ENDED'
             self.eth_contract_crowdsale.contract.save()
+
+    def check_contract(self):
+        pass
         
 
 
@@ -833,11 +1123,19 @@ class ContractDetailsToken(CommonDetails):
     future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
+    def predeploy_validate(self):
+        now = timezone.now()
+        token_holders = self.contract.tokenholder_set.all()
+        for th in token_holders:
+            if th.freeze_date:
+                if th.freeze_date < now.timestamp() + 600:
+                    raise ValidationError({'result': 1}, code=400)
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(10**18/2)
+        return int(3 * 10**18)
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -896,6 +1194,8 @@ class ContractDetailsToken(CommonDetails):
         self.eth_contract_token = eth_contract_token
         self.save()
 
+    @blocking
+    @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
 
@@ -924,6 +1224,9 @@ class ContractDetailsToken(CommonDetails):
             self.eth_contract_token.contract.state = 'ENDED'
             self.eth_contract_token.contract.save()
 
+    def check_contract(self):
+        pass
+
 
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
@@ -938,7 +1241,3 @@ class TokenHolder(models.Model):
     address = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     freeze_date = models.IntegerField(null=True)
-
-
-
-

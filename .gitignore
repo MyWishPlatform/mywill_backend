@@ -16,3 +16,6 @@ mywill_sign/
 test.py
 */*/migrations
 */*/test_addresses.json
+emails.csv
+promo_file.csv
+promo_sending.py

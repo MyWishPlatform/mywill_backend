@@ -156,13 +156,15 @@ def pizza_delivered(request):
 @api_view(http_method_names=['POST'])
 def deploy(request):
     contract = Contract.objects.get(id=request.data.get('id'))
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
 
     assert(contract.user == request.user)
     assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
-    if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
-        return Response({'result': 1}, status=400)
-    if contract.contract_type == 5 and any([th.freeze_date is not None and th.freeze_date < datetime.datetime.now().timestamp() + 5*60 for th in contract.tokenholder_set.all()]):
-        return Response({'result': 2}, status=400)
+    # if contract.contract_type == 4 and contract.get_details().start_date < datetime.datetime.now().timestamp() + 5*60:
+    #     return Response({'result': 1}, status=400)
+    # if contract.contract_type == 5 and any([th.freeze_date is not None and th.freeze_date < datetime.datetime.now().timestamp() + 5*60 for th in contract.tokenholder_set.all()]):
+    #     return Response({'result': 2}, status=400)
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     promo_str = request.data.get('promo', None)
@@ -211,6 +213,64 @@ def deploy(request):
             properties=pika.BasicProperties(type='launch'),
     )
     print('deploy request sended')
+    connection.close()
+    return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def i_am_alive(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert(contract.user == request.user)
+    assert(contract.state == 'ACTIVE')
+    assert(contract.contract_type in (0, 1))
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+
+    queue = NETWORKS[contract.network.name]['queue']
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                          exclusive=False)
+
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
+        properties=pika.BasicProperties(type='confirm_alive'),
+    )
+    connection.close()
+    return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def cancel(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert(contract.user == request.user)
+    assert(contract.contract_type in (0, 1))
+    assert(contract.state in ['ACTIVE', 'EXPIRED'])
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+
+    queue = NETWORKS[contract.network.name]['queue']
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                          exclusive=False)
+
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
+        properties=pika.BasicProperties(type='cancel'),
+    )
     connection.close()
     return Response('ok')
 
@@ -291,7 +351,7 @@ def get_contracts_for_network(net, all_contracts, now, day):
     active = contracts.filter(state__in=['ACTIVE', 'WAITING', 'WAITING_ACTIVATION'])
     now_active = active.filter(created_date__lte=now, created_date__gte=day)
     done = contracts.filter(state__in=[
-        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE']
+        'DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE', 'TRIGGERED']
     )
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['POSTPONED'])
@@ -343,7 +403,7 @@ def get_statistics(request):
         'currency_statistics': get_currency_statistics()
     }
     networks = Network.objects.all()
-    contracts = Contract.objects.all().exclude(user__in=anonimys).exclude(user__in=fb_test_users).exclude(user__email__in=test_addresses)
+    contracts = Contract.objects.all().exclude(user__in=anonimys).exclude(user__in=fb_test_users).exclude(user__email__in=test_addresses).exclude(user__email__startswith='testermc')
     for network in networks:
         answer[network.name] = get_contracts_for_network(network, contracts, now, day)
 

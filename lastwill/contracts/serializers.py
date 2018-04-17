@@ -10,13 +10,15 @@ from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.db import transaction
 from django.core.mail import send_mail
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken
+from django.utils import timezone
+from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken, BtcKey4RSK
 from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
 from lastwill.settings import ORACLIZE_PROXY, DEFAULT_FROM_EMAIL
-from exchange_API import to_wish
+from exchange_API import to_wish, convert
 from lastwill.parint import ParInt
+from lastwill.deploy.models import Network
 import email_messages
 
 
@@ -89,9 +91,21 @@ class ContractSerializer(serializers.ModelSerializer):
         finally:
             transaction.set_autocommit(True)
         if validated_data['user'].email:
+            network_name = ''
+            network = validated_data['network']
+            if network.name == 'ETHEREUM_MAINNET':
+                network_name = 'Ethereum'
+            if network.name == 'ETHEREUM_ROPSTEN':
+                network_name = 'Ropsten (Ethereum Testnet)'
+            if network.name == 'RSK_MAINNET':
+                network_name = 'RSK'
+            if network.name == 'RSK_TESTNET':
+                network_name = 'RSK Testnet'
             send_mail(
                     email_messages.create_subject,
-                    email_messages.create_message,
+                    email_messages.create_message.format(
+                        network_name=network_name
+                    ),
                     DEFAULT_FROM_EMAIL,
                     [validated_data['user'].email]
             )
@@ -100,7 +114,15 @@ class ContractSerializer(serializers.ModelSerializer):
     def to_representation(self, contract):
         res = super().to_representation(contract)
         res['contract_details'] = self.get_details_serializer(contract.contract_type)(context=self.context).to_representation(contract.get_details())
-        res['cost'] = str(int(to_wish('ETH', int(res['cost']))))
+        if contract.state != 'CREATED':
+            eth_cost = res['cost']
+        else:
+            eth_cost = Contract.get_details_model(contract.contract_type).calc_cost(res['contract_details'], contract.network)
+        res['cost'] = {
+            'ETH': str(eth_cost),
+            'WISH': str(int(to_wish('ETH', int(eth_cost)))),
+            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+        }
         return res
 
     def update(self, contract, validated_data):
@@ -140,19 +162,25 @@ class EthContractSerializer(serializers.ModelSerializer):
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsLastwill
-        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check')
+        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email', 'platform_alive', 'platform_cancel', 'last_reset')
         extra_kwargs = {
             'last_check': {'read_only': True},
             'next_check': {'read_only': True},
+            'last_reset': {'read_only': True}
         }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
-        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         if not contract_details:
-           print('*'*50, self.id)
+           print('*'*50, contract_details.id, flush=True)
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
+            btc_key = contract_details.btc_key
+            if btc_key:
+                res['btc_address'] = contract_details.btc_key.btc_address
         return res
 
     def create(self, contract, contract_details):
@@ -180,6 +208,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
 
     def validate(self, details):
         assert('user_address' in details and 'heirs' in details and 'active_to' in details and 'check_interval' in details)
+        assert(details['check_interval'] <= 315360000)
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%d %H:%M')
@@ -287,6 +316,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
+        now = timezone.now().timestamp() + 600
         if 'eth_contract_token' in details and 'id' in details['eth_contract_token'] and details['eth_contract_token']['id']:
             token_model = EthContract.objects.get(id=details['eth_contract_token']['id'])
             token_details = token_model.contract.get_details()
@@ -324,7 +354,8 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
-            assert(th['freeze_date'] is None or th['freeze_date'] > details['stop_date'])
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                raise ValidationError({'result': 2}, code=400)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
         for bonus in amount_bonuses:
@@ -395,6 +426,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         return super().create(kwargs)
           
     def validate(self, details):
+        now = timezone.now().timestamp() + 600
         assert('"' not in details['token_name'] and '\n' not in details['token_name'])
         assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
         assert(0 <= details['decimals'] <= 50)
@@ -406,16 +438,18 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
-            res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
-        else:
-            res['sold_tokens'] = 0
+        # if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
+        #     res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
+        # else:
+        #     res['sold_tokens'] = 0
         if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(contract__state='ACTIVE'):
             res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(contract__state__in=('ACTIVE','ENDED')).order_by('id')[0].contract.id
         return res
