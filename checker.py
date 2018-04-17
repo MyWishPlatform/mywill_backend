@@ -19,7 +19,10 @@ def check_all():
     print('check_all method', flush=True)
     for contract in Contract.objects.filter(contract_type__in=(0,1), state='ACTIVE'):
         details = contract.get_details()
-        if details.next_check and details.next_check <= timezone.now():
+        if details.active_to < timezone.now():
+            contract.state='EXPIRED'
+            contract.save()
+        elif details.next_check and details.next_check <= timezone.now():
             print('checking contract', contract.id, flush=True)
             # details.check_contract()
             connection = pika.BlockingConnection(pika.ConnectionParameters(

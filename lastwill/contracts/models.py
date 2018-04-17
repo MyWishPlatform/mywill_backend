@@ -384,10 +384,6 @@ class ContractDetailsLastwill(CommonDetails):
         next_check = now + datetime.timedelta(seconds=self.check_interval)
         if next_check < self.active_to:
             self.next_check = next_check
-        else:
-            self.contract.state = 'EXPIRED'
-            self.contract.save()
-            self.next_check = None
         self.save()
         DeployAddress.objects.filter(
             network=self.contract.network,

@@ -16,7 +16,7 @@ from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import SIGNER
 import lastwill.check as check
 from lastwill.settings import ORACLIZE_PROXY, DEFAULT_FROM_EMAIL
-from exchange_API import to_wish
+from exchange_API import to_wish, convert
 from lastwill.parint import ParInt
 from lastwill.deploy.models import Network
 import email_messages
@@ -114,7 +114,19 @@ class ContractSerializer(serializers.ModelSerializer):
     def to_representation(self, contract):
         res = super().to_representation(contract)
         res['contract_details'] = self.get_details_serializer(contract.contract_type)(context=self.context).to_representation(contract.get_details())
-        res['cost'] = str(int(to_wish('ETH', int(res['cost']))))
+        if contract.state != 'CREATED':
+            res['cost'] = {
+            'WISH': str(int(to_wish('ETH', int(res['cost'])))),
+            'ETH': str(res['cost']),
+            'BTC': str(int(to_wish('ETH', int(res['cost']))) * convert('WISH', 'BTC')['BTC'])
+            }
+        else:
+            update_cost = contract.get_details_model(contract.contract_type).calc_cost(contract.get_details(), contract.network)
+            res['cost'] = {
+                'WISH': str(int(to_wish('ETH', int(update_cost)))),
+                'ETH': str(update_cost),
+                'BTC': str(int(to_wish('ETH', int(update_cost))) * convert('WISH', 'BTC')['BTC'])
+            }
         return res
 
     def update(self, contract, validated_data):
