@@ -115,7 +115,7 @@ class ContractSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract)
         res['contract_details'] = self.get_details_serializer(contract.contract_type)(context=self.context).to_representation(contract.get_details())
         if contract.state != 'CREATED':
-            eth_cost = res['cost'],
+            eth_cost = res['cost']
         else:
             eth_cost = contract.get_details_model(contract.contract_type).calc_cost(contract.get_details(), contract.network)
         res['cost'] = {
