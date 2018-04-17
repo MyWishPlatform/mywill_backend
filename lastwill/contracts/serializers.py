@@ -117,7 +117,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.state != 'CREATED':
             eth_cost = res['cost']
         else:
-            eth_cost = Contract.get_details_model(contract.contract_type).calc_cost(contract.get_details(), contract.network)
+            eth_cost = Contract.get_details_model(contract.contract_type).calc_cost(res['contract_details'], contract.network)
         res['cost'] = {
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
