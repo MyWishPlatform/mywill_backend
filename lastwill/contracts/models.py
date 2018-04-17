@@ -530,6 +530,8 @@ class ContractDetailsLostKey(CommonDetails):
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
+            if 'T' in active_to:
+                active_to = active_to[:active_to.index('T')]
             active_to = datetime.date(*map(int, active_to.split('-')))
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
