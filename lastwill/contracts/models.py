@@ -14,7 +14,7 @@ from copy import deepcopy
 from time import sleep
 from ethereum import abi
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.core.mail import send_mail
 from django.apps import apps
 from django.contrib.auth.models import User
@@ -325,6 +325,7 @@ class ContractDetailsLastwill(CommonDetails):
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
     last_reset = models.DateTimeField(null=True, default=None)
+    btc_duty = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -332,7 +333,11 @@ class ContractDetailsLastwill(CommonDetails):
             raise ValidationError({'result': 1}, code=400)
 
     def contractPayment(self, message):
-        pass
+        if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
+            return
+        ContractDetailsLastwill.objects.select_for_update().filter(
+            id=self.id
+        ).update(btc_duty=F('btc_duty') + message['amount'])
 
     def get_arguments(self, *args, **kwargs):
         return [

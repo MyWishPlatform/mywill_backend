@@ -159,7 +159,7 @@ def confirm_alive(message):
 
 def contractPayment(message):
     print('contract Payment message')
-    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract = Contract.objects.get(id=message['contractId'])
     contract.get_details().contractPayment(message)
     print('contract Payment ok')
 
