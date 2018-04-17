@@ -172,6 +172,12 @@ def notified(message):
     details.save()
     print('notified ok')
 
+
+def fgwOutcome(message):
+    # complite move funds from duty
+    pass
+
+
 methods_dict = {
     'payment': payment,
     'deployed': deployed,
@@ -190,6 +196,7 @@ methods_dict = {
     'contractPayment': contractPayment,
     'notified': notified,
     'check_contract': check_contract,
+    'fgwOutcome': fgwOutcome,
 }
 
 def callback(ch, method, properties, body):
