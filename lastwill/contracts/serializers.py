@@ -115,18 +115,14 @@ class ContractSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract)
         res['contract_details'] = self.get_details_serializer(contract.contract_type)(context=self.context).to_representation(contract.get_details())
         if contract.state != 'CREATED':
-            res['cost'] = {
-            'WISH': str(int(to_wish('ETH', int(res['cost'])))),
-            'ETH': str(res['cost']),
-            'BTC': str(int(to_wish('ETH', int(res['cost']))) * convert('WISH', 'BTC')['BTC'])
-            }
+            eth_cost = res['cost'],
         else:
-            update_cost = contract.get_details_model(contract.contract_type).calc_cost(contract.get_details(), contract.network)
-            res['cost'] = {
-                'WISH': str(int(to_wish('ETH', int(update_cost)))),
-                'ETH': str(update_cost),
-                'BTC': str(int(to_wish('ETH', int(update_cost))) * convert('WISH', 'BTC')['BTC'])
-            }
+            eth_cost = contract.get_details_model(contract.contract_type).calc_cost(contract.get_details(), contract.network)
+        res['cost'] = {
+            'ETH': str(eth_cost),
+            'WISH': str(int(to_wish('ETH', int(eth_cost)))),
+            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+        }
         return res
 
     def update(self, contract, validated_data):
