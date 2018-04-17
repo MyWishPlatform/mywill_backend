@@ -251,7 +251,7 @@ def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     assert(contract.user == request.user)
     assert(contract.contract_type in (0, 1))
-    assert(contract.state == 'ACTIVE')
+    assert(contract.state in ['ACTIVE', 'EXPIRED'])
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         'localhost',
