@@ -477,6 +477,7 @@ class ContractDetailsLastwill(CommonDetails):
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
+                'network': self.contract.network.name,
             }).content.decode())
         print('response', response)
         signed_data = response['result']
@@ -498,6 +499,7 @@ class ContractDetailsLastwill(CommonDetails):
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
+                'network': self.contract.network.name,
             }).content.decode())
         signed_data = response['result']
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
@@ -632,6 +634,7 @@ class ContractDetailsLostKey(CommonDetails):
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
+                'network': self.contract.network.name,
             }).content.decode())
         print('response', response)
         signed_data = response['result']
@@ -652,6 +655,7 @@ class ContractDetailsLostKey(CommonDetails):
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
+                'network': self.contract.network.name,
             }).content.decode())
         print('response', response)
         signed_data = response['result']
