@@ -226,7 +226,7 @@ class CommonDetails(models.Model):
         }).content.decode())['result']
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
-        print('data', eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else ''), flush=True )
+        # print('data', eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else ''), flush=True )
         print('gas limit', self.get_gaslimit(), flush=True)
         print('value', self.get_value(), flush=True)
         print('network', sys.argv[1], flush=True)
