@@ -448,11 +448,11 @@ class ContractDetailsLastwill(CommonDetails):
             btc_key.save()
             self.btc_key = btc_key
             self.save()
-            network = 'main' if self.contract.network.name == 'RSK_MAINNET' else 'test'
-            r = requests.post(
-                       BITCOIN_URLS[network],
-                       json={'method': 'importaddress', 'params': [address, address, False], 'id': 1, 'jsonrpc': '1.0'}
-               )
+            # network = 'main' if self.contract.network.name == 'RSK_MAINNET' else 'test'
+            # r = requests.post(
+            #            BITCOIN_URLS[network],
+            #            json={'method': 'importaddress', 'params': [address, address, False], 'id': 1, 'jsonrpc': '1.0'}
+            #    )
         super().deploy()
 
     @blocking
