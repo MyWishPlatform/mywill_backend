@@ -224,7 +224,12 @@ class CommonDetails(models.Model):
                 'value': self.get_value(),
                 'network': sys.argv[1],
         }).content.decode())['result']
-
+        print('fields of transaction', flush=True)
+        print('source', address, flush=True)
+        # print('data', eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else ''), flush=True )
+        print('gas limit', self.get_gaslimit(), flush=True)
+        print('value', self.get_value(), flush=True)
+        print('network', sys.argv[1], flush=True)
         eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         print('eth contract tx hash ', eth_contract.tx_hash, flush=True)
         eth_contract.save()
@@ -303,6 +308,7 @@ class CommonDetails(models.Model):
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
+                'network': self.contract.network.name,
             }).content.decode())
         print('response', response)
         signed_data = response['result']
