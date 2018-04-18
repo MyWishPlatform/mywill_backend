@@ -308,6 +308,7 @@ class CommonDetails(models.Model):
                 'nonce': nonce,
                 'dest': self.eth_contract.address,
                 'gaslimit': 600000,
+                'network': self.contract.network.name,
             }).content.decode())
         print('response', response)
         signed_data = response['result']
