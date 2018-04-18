@@ -211,11 +211,11 @@ class CommonDetails(models.Model):
         eth_contract = getattr(self, eth_contract_attr_name)
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
-        print('arguments', arguments)
+        print('arguments', arguments, flush=True)
         par_int = ParInt()
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        print('nonce', nonce)
+        print('nonce', nonce, flush=True)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : address,
                 'data': eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else ''),
@@ -227,7 +227,8 @@ class CommonDetails(models.Model):
 
         eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         eth_contract.save()
-        print('transaction sent')
+        print('eth_contract.tx_hash', eth_contract.tx_hash, flush=True)
+        print('transaction sent', flush=True)
 
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
 
