@@ -174,9 +174,11 @@ def notified(message):
     print('notified ok')
 
 
-def fgwOutcome(message):
-    # complite move funds from duty
-    pass
+def fundsAdded(message):
+    print('funds Added message')
+    contract = EthContract.objects.get(id=message['contractId']).contract
+    contract.get_details().fundsAdded(message)
+    print('funds Added ok')
 
 
 methods_dict = {
@@ -197,7 +199,7 @@ methods_dict = {
     'contractPayment': contractPayment,
     'notified': notified,
     'check_contract': check_contract,
-    'fgwOutcome': fgwOutcome,
+    'fundsAdded': fundsAdded,
 }
 
 def callback(ch, method, properties, body):

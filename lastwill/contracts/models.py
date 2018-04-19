@@ -9,6 +9,7 @@ import sha3
 import datetime
 import shutil
 import sys
+import pika
 import bitcoin
 from copy import deepcopy
 from time import sleep
@@ -347,6 +348,63 @@ class ContractDetailsLastwill(CommonDetails):
         ContractDetailsLastwill.objects.select_for_update().filter(
             id=self.id
         ).update(btc_duty=F('btc_duty') + message['amount'])
+        queues = {
+            'RSK_MAINNET': 'notification-rsk-fgw',
+            'RSK_TESTNET': 'notification-rsk-testnet-fgw'
+        }
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+            'localhost',
+            5672,
+            'mywill',
+            pika.PlainCredentials('java', 'java'),
+        ))
+
+        queue = queues[self.contract.network.name]
+        channel = connection.channel()
+        channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                              exclusive=False)
+
+        channel.basic_publish(
+            exchange='',
+            routing_key=queue,
+            body=json.dumps({
+                    'status': 'COMMITTED',
+                    'contractId': self.contract.id,
+                    'amount': message['amount']
+            }),
+            properties=pika.BasicProperties(type='make_payment'),
+        )
+        connection.close()
+
+
+
+    def make_payment(self, message):
+        contract = self.contract
+        par_int = ParInt(contract.network.name)
+        wl_address = NETWORKS[contract.network.name]['whitelisted_address']
+        balance = par_int.eth_getBalance(wl_address)
+        gas_limit = 21000
+        gas_price = 10 ** 9
+        if balance < contract.get_details().btc_duty + gas_limit * gas_price:
+            send_mail(
+                'RSK',
+                'No RSK funds ' + contract.network.name,
+                DEFAULT_FROM_EMAIL,
+                [EMAIL_FOR_POSTPONED_MESSAGE]
+            )
+            return
+        nonce = int(par_int.eth_getTransactionCount(wl_address, "pending"), 16)
+
+        response = json.loads(
+            requests.post('http://{}/sign/'.format(SIGNER), json={
+                'source': wl_address,
+                'dest': contract.get_details().eth_contract.address,
+                'nonce': nonce,
+                'gaslimit': gas_limit,
+                'gas_price': gas_price,
+                'value': contract.get_details().btc_duty
+            }).content.decode())
+
 
     def get_arguments(self, *args, **kwargs):
         return [
@@ -510,6 +568,12 @@ class ContractDetailsLastwill(CommonDetails):
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         self.eth_contract.save()
 
+    def fundsAdded(self, message):
+        if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
+            return
+        ContractDetailsLastwill.objects.select_for_update().filter(
+            id=self.id
+        ).update(btc_duty=F('btc_duty') - message['amount'])
 
 
 @contract_details('Wallet contract (lost key)')
