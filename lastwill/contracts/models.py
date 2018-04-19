@@ -23,6 +23,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from lastwill.settings import ORACLIZE_PROXY, SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE, BITCOIN_URLS
 from lastwill.parint import *
 import lastwill.check as check
@@ -332,6 +333,7 @@ class ContractDetailsLastwill(CommonDetails):
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
     last_reset = models.DateTimeField(null=True, default=None)
+    last_press_imalive = models.DateTimeField(null=True, default=None)
     btc_duty = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
     def predeploy_validate(self):
@@ -464,6 +466,10 @@ class ContractDetailsLastwill(CommonDetails):
 
     @blocking
     def i_am_alive(self, message):
+        if self.last_press_imalive:
+            delta = self.last_press_imalive - timezone.now()
+            if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
+                raise PermissionDenied(3000)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
@@ -482,6 +488,7 @@ class ContractDetailsLastwill(CommonDetails):
         signed_data = response['result']
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         self.eth_contract.save()
+        self.last_press_imalive = timezone.now()
 
     @blocking
     def cancel(self, message):
