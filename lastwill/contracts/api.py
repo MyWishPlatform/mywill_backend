@@ -223,6 +223,11 @@ def i_am_alive(request):
     assert(contract.user == request.user)
     assert(contract.state == 'ACTIVE')
     assert(contract.contract_type in (0, 1))
+    details = contract.get_details()
+    if details.last_press_imalive:
+        delta = details.last_press_imalive - timezone.now()
+        if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
+            raise PermissionDenied(3000)
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         'localhost',
