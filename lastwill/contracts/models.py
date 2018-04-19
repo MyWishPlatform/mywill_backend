@@ -377,11 +377,12 @@ class ContractDetailsLastwill(CommonDetails):
         connection.close()
 
 
-
+    @blocking
     def make_payment(self, message):
         contract = self.contract
         par_int = ParInt(contract.network.name)
-        wl_address = NETWORKS[contract.network.name]['whitelisted_address']
+        # address = DeployAddress.objects.get(address=NETWORKS[sys.argv[1]]['address'])
+        wl_address = NETWORKS[sys.argv[1]]['address']
         balance = par_int.eth_getBalance(wl_address)
         gas_limit = 21000
         gas_price = 10 ** 9
@@ -527,6 +528,9 @@ class ContractDetailsLastwill(CommonDetails):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
             if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
+                DeployAddress.objects.select_for_update().filter(
+                    network__name=sys.argv[1], address=self.contract.address
+                ).update(locked_by=None)
                 raise PermissionDenied(3000)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
@@ -574,6 +578,10 @@ class ContractDetailsLastwill(CommonDetails):
         ContractDetailsLastwill.objects.select_for_update().filter(
             id=self.id
         ).update(btc_duty=F('btc_duty') - message['amount'])
+        DeployAddress.objects.select_for_update().filter(
+            network__name=sys.argv[1], address=NETWORKS[sys.argv[1]]['address']
+        ).update(locked_by=None)
+
 
 
 @contract_details('Wallet contract (lost key)')
