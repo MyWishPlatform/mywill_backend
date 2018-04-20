@@ -383,7 +383,7 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt(contract.network.name)
         # address = DeployAddress.objects.get(address=NETWORKS[sys.argv[1]]['address'])
         wl_address = NETWORKS[sys.argv[1]]['address']
-        balance = par_int.eth_getBalance(wl_address)
+        balance = int(par_int.eth_getBalance(wl_address), 16)
         gas_limit = 21000
         gas_price = 10 ** 9
         if balance < contract.get_details().btc_duty + gas_limit * gas_price:
