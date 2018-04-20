@@ -180,6 +180,12 @@ def fundsAdded(message):
     contract.get_details().fundsAdded(message)
     print('funds Added ok')
 
+def make_payment(message):
+    print('make payment message')
+    contract = Contract.objects.get(id=message['contractId']).contract
+    contract.get_details().make_payment(message)
+    print('make payment ok')
+
 
 methods_dict = {
     'payment': payment,
@@ -200,6 +206,7 @@ methods_dict = {
     'notified': notified,
     'check_contract': check_contract,
     'fundsAdded': fundsAdded,
+    'make_payment': make_payment,
 }
 
 def callback(ch, method, properties, body):
