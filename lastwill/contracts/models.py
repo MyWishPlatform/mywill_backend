@@ -535,7 +535,6 @@ class ContractDetailsLastwill(CommonDetails):
                 DeployAddress.objects.select_for_update().filter(
                     network__name=sys.argv[1], address=self.contract.address
                 ).update(locked_by=None)
-                raise PermissionDenied(3000)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
