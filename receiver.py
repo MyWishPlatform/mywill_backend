@@ -182,7 +182,7 @@ def fundsAdded(message):
 
 def make_payment(message):
     print('make payment message')
-    contract = Contract.objects.get(id=message['contractId']).contract
+    contract = Contract.objects.get(id=message['contractId'])
     contract.get_details().make_payment(message)
     print('make payment ok')
 
