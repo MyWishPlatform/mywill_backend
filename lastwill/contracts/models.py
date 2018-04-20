@@ -396,15 +396,18 @@ class ContractDetailsLastwill(CommonDetails):
             return
         nonce = int(par_int.eth_getTransactionCount(wl_address, "pending"), 16)
 
-        response = json.loads(
+        signed_data = json.loads(
             requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source': wl_address,
                 'dest': contract.get_details().eth_contract.address,
                 'nonce': nonce,
                 'gaslimit': gas_limit,
                 'gas_price': gas_price,
-                'value': contract.get_details().btc_duty
+                'value': int(contract.get_details().btc_duty)
             }).content.decode())
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+            '0x' + signed_data)
+        self.eth_contract.save()
 
 
     def get_arguments(self, *args, **kwargs):
