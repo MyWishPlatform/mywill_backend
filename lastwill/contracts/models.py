@@ -347,7 +347,7 @@ class ContractDetailsLastwill(CommonDetails):
             return
         ContractDetailsLastwill.objects.select_for_update().filter(
             id=self.id
-        ).update(btc_duty=F('btc_duty') + message['amount'])
+        ).update(btc_duty=F('btc_duty') + message['value'])
         queues = {
             'RSK_MAINNET': 'notification-rsk-fgw',
             'RSK_TESTNET': 'notification-rsk-testnet-fgw'
@@ -580,7 +580,7 @@ class ContractDetailsLastwill(CommonDetails):
             return
         ContractDetailsLastwill.objects.select_for_update().filter(
             id=self.id
-        ).update(btc_duty=F('btc_duty') - message['amount'])
+        ).update(btc_duty=F('btc_duty') - message['value'])
         DeployAddress.objects.select_for_update().filter(
             network__name=sys.argv[1], address=NETWORKS[sys.argv[1]]['address']
         ).update(locked_by=None)
