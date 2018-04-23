@@ -25,7 +25,7 @@ from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
 from lastwill.payments.functions import create_payment
 from exchange_API import to_wish
-from .models import EthContract
+from .models import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens
 
 
@@ -50,26 +50,6 @@ def check_and_aplly_promocode(promo_str, user, cost, contract_type):
         )
     return cost
 
-
-def send_in_queue(contract_id, type, queue):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
-        'mywill',
-        pika.PlainCredentials('java', 'java'),
-    ))
-
-    channel = connection.channel()
-    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
-                          exclusive=False)
-
-    channel.basic_publish(
-        exchange='',
-        routing_key=queue,
-        body=json.dumps({'status': 'COMMITTED', 'contractId': contract_id}),
-        properties=pika.BasicProperties(type=type),
-    )
-    connection.close()
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()

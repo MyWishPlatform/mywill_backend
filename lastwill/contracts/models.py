@@ -40,6 +40,49 @@ def contract_details(name):
     return w
 
 
+def send_in_queue(contract_id, type, queue):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                          exclusive=False)
+
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps({'status': 'COMMITTED', 'contractId': contract_id}),
+        properties=pika.BasicProperties(type=type),
+    )
+    connection.close()
+
+
+def send_in_signer(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
+    data = {
+        'source': address,
+        'nonce': nonce,
+        'gaslimit': gaslimit,
+        'network': network,
+    }
+    if value:
+        data['value'] = value
+    if dest:
+        data['dest'] = dest
+    if contract_data:
+        data['data'] = contract_data
+    if gas_price:
+        data['gas_price'] = gas_price
+
+    signed_data = json.loads(requests.post(
+        'http://{}/sign/'.format(SIGNER), json=data
+    ).content.decode())
+    return signed_data['result']
+
+
 class NeedRequeue(Exception):
     pass
 
@@ -232,18 +275,14 @@ class CommonDetails(models.Model):
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce, flush=True)
-        signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : address,
-                'data': eth_contract.bytecode + (
-                    binascii.hexlify(
-                        tr.encode_constructor_arguments(arguments)
-                    ).decode() if arguments else ''
-                ),
-                'nonce': nonce,
-                'gaslimit': self.get_gaslimit(),
-                'value': self.get_value(),
-                'network': sys.argv[1],
-        }).content.decode())['result']
+        data = eth_contract.bytecode + (binascii.hexlify(
+            tr.encode_constructor_arguments(arguments)
+        ).decode() if arguments else '')
+        signed_data = send_in_signer(
+            address, nonce, self.get_gaslimit(),
+            sys.argv[1], value=self.get_value(),
+            contract_data=data
+        )
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
@@ -322,19 +361,13 @@ class CommonDetails(models.Model):
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
-                    tr.encode_function_call('check', [])
-                ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-                'network': self.contract.network.name,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
+        signed_data = send_in_signer(
+            address, nonce, 600000, self.contract.network.name,
+            dest=self.eth_contract.address,
+            contract_data=binascii.hexlify(
+                tr.encode_function_call('check', [])
+            ).decode(),
+        )
         print('signed_data', signed_data)
         par_int.eth_sendRawTransaction('0x' + signed_data)
         print('check ok!')
@@ -375,29 +408,9 @@ class ContractDetailsLastwill(CommonDetails):
             'RSK_MAINNET': 'notification-rsk-fgw',
             'RSK_TESTNET': 'notification-rsk-testnet-fgw'
         }
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-        ))
 
         queue = queues[self.contract.network.name]
-        channel = connection.channel()
-        channel.queue_declare(queue=queue, durable=True, auto_delete=False,
-                              exclusive=False)
-
-        channel.basic_publish(
-            exchange='',
-            routing_key=queue,
-            body=json.dumps({
-                    'status': 'COMMITTED',
-                    'contractId': self.contract.id,
-                    'amount': message['amount']
-            }),
-            properties=pika.BasicProperties(type='make_payment'),
-        )
-        connection.close()
+        send_in_queue(self.contract.id, 'make_payment', queue)
 
     @blocking
     def make_payment(self, message):
@@ -416,17 +429,12 @@ class ContractDetailsLastwill(CommonDetails):
             )
             return
         nonce = int(par_int.eth_getTransactionCount(wl_address, "pending"), 16)
-
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': wl_address,
-                'dest': contract.get_details().eth_contract.address,
-                'nonce': nonce,
-                'gaslimit': gas_limit,
-                'gas_price': gas_price,
-                'value': int(contract.get_details().btc_duty)
-            }).content.decode())
-        signed_data = response['result']
+        signed_data = send_in_signer(
+            wl_address, nonce, gas_limit, self.contract.network.name,
+            value=int(contract.get_details().btc_duty),
+            dest=contract.get_details().eth_contract.address,
+            gas_price=gas_price
+        )
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
             '0x' + signed_data)
         self.eth_contract.save()
@@ -558,18 +566,13 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
+        signed_data = send_in_signer(
+            address, nonce, 600000, self.contract.network.name,
+            dest=self.eth_contract.address,
+            contract_data=binascii.hexlify(
                     tr.encode_function_call('imAvailable', [])
                 ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
+        )
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         self.eth_contract.save()
         self.last_press_imalive = timezone.now()
@@ -580,17 +583,13 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
+        signed_data = send_in_signer(
+            address, nonce,  600000, self.contract.network.name,
+            dest=self.eth_contract.address,
+            contract_data=binascii.hexlify(
                     tr.encode_function_call('kill', [])
                 ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-            }).content.decode())
-        signed_data = response['result']
+        )
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         self.eth_contract.save()
 
@@ -725,18 +724,13 @@ class ContractDetailsLostKey(CommonDetails):
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.parity_nextNonce(address), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
+        signed_data = send_in_signer(
+            address, nonce, 600000, self.contract.network.name,
+            dest=self.eth_contract.address,
+            contract_data=binascii.hexlify(
                     tr.encode_function_call('imAvailable', [])
                 ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
+        )
         par_int.eth_sendRawTransaction('0x' + signed_data)
 
     @blocking
@@ -745,18 +739,13 @@ class ContractDetailsLostKey(CommonDetails):
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.parity_nextNonce(address), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
+        signed_data = send_in_signer(
+            address, nonce, 600000, self.contract.network.name,
+            dest=self.eth_contract.address,
+            contract_data=binascii.hexlify(
                     tr.encode_function_call('cancel', [])
                 ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
+        )
         par_int.eth_sendRawTransaction('0x' + signed_data)
 
 
@@ -839,48 +828,6 @@ class ContractDetailsPizza(CommonDetails):
     pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0) # weis
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-
-    # def get_gaslimit(self):
-    #     return 423037 + 5000
-    #
-    # @staticmethod
-    # def calc_cost(kwargs, network):
-    #     if NETWORKS[network.name]['is_free']:
-    #         return 0
-    #     pizza_cost = int(kwargs['pizza_cost'])
-    #     pizza_cost = 1 # for testing
-    #     '''
-    #     Construct: 423037
-    #     Check: 22764
-    #     Hot pizza: 56478
-    #     Check and send: 62716
-    #     Cold pizza: 56467
-    #     '''
-    #     Cg = 423037
-    #     Ch = 22764
-    #     Hp = 56478
-    #     CaS = 62716
-    #     Cp = 56467
-    #     return pizza_cost + 2*(Cg + Ch + max(Hp,Cp) + CaS) * 20000000000
-    #
-    # def get_arguments(self, *args, **kwargs):
-    #     return [
-    #         self.user_address,
-    #         self.pizzeria_address,
-    #         binascii.unhexlify(sha3.keccak_256(int(self.code).to_bytes(32,'big') + int(self.salt).to_bytes(32,'big')).hexdigest().encode()),
-    #         int(self.timeout),
-    #     ]
-    #
-    # def get_value(self):
-    #     return int(self.pizza_cost)
-    #
-    # def msg_deployed(self, message):
-    #     super().msg_deployed(message)
-    #
-    # @blocking
-    # @postponable
-    # def deploy(self):
-    #     return super().deploy()
 
 
 @contract_details('MyWish ICO')
@@ -1115,16 +1062,14 @@ class ContractDetailsICO(CommonDetails):
             par_int = ParInt()
             nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16) 
             print('nonce', nonce)
-            response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                    'source' : address,
-                    'data': binascii.hexlify(tr.encode_function_call('transferOwnership', [self.eth_contract_crowdsale.address])).decode(),
-                    'nonce': nonce,
-                    'dest': self.eth_contract_token.address,
-                    'gaslimit': 100000,
-                    'network': sys.argv[1],
-            }).content.decode())
             print('transferOwnership message signed')
-            signed_data = response['result']
+            signed_data = send_in_signer(
+                address, nonce, 100000, sys.argv[1],
+                dest=self.eth_contract_token.address,
+                contract_data=binascii.hexlify(tr.encode_function_call(
+                    'transferOwnership', [self.eth_contract_crowdsale.address]
+                )).decode(),
+            )
             self.eth_contract_token.tx_hash = par_int.eth_sendRawTransaction('0x'+signed_data)
             self.eth_contract_token.save()
             print('transferOwnership message sended')
@@ -1169,16 +1114,15 @@ class ContractDetailsICO(CommonDetails):
         par_int = ParInt()
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
-        response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : address,
-                'data': binascii.hexlify(tr.encode_function_call('init', [])).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract_crowdsale.address,
-                'gaslimit': 100000 + 50000 * self.contract.tokenholder_set.all().count(),
-                'network': sys.argv[1],
-        }).content.decode())
         print('init message signed')
-        signed_data = response['result']
+        signed_data = send_in_signer(
+            address, nonce,
+            100000 + 50000 * self.contract.tokenholder_set.all().count(),
+            sys.argv[1], dest=self.eth_contract_crowdsale.address,
+            contract_data=binascii.hexlify(
+                tr.encode_function_call('init', [])
+            ).decode()
+        )
         self.eth_contract_crowdsale.tx_hash = par_int.eth_sendRawTransaction('0x'+signed_data)
         self.eth_contract_crowdsale.save()
         print('init message sended')
