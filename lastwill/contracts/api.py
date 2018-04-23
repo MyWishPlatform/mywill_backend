@@ -1,8 +1,7 @@
 import datetime
 import pika
 from os import path
-import binascii
-from ethereum import abi
+
 from django.utils import timezone
 from django.db.models import F
 from django.http import Http404
@@ -15,20 +14,62 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from .models import EthContract
-from .serializers import ContractSerializer, count_sold_tokens
+
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
-from exchange_API import to_wish
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.settings import SIGNER
 from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
 from lastwill.payments.functions import create_payment
+from exchange_API import to_wish
+from .models import EthContract
+from .serializers import ContractSerializer, count_sold_tokens
 
+
+def check_and_aplly_promocode(promo_str, user, cost, contract_type):
+    wish_cost = to_wish('ETH', int(cost))
+    if promo_str:
+        try:
+            discount = check_and_get_discount(
+                promo_str, contract_type, user
+            )
+        except PermissionDenied:
+           promo_str = None
+        else:
+           cost = cost - cost * discount / 100
+        promo_object = Promo.objects.get(promo_str=promo_str.upper())
+        User2Promo(user=user, promo=promo_object).save()
+        Promo.objects.select_for_update().filter(
+                promo_str=promo_str.upper()
+        ).update(
+                use_count=F('use_count') + 1,
+                referral_bonus=F('referral_bonus') + wish_cost
+        )
+    return cost
+
+
+def send_in_queue(contract_id, type, queue):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
+                          exclusive=False)
+
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps({'status': 'COMMITTED', 'contractId': contract_id}),
+        properties=pika.BasicProperties(type=type),
+    )
+    connection.close()
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
@@ -113,52 +154,6 @@ def get_token_contracts(request):
     return Response(res)
 
 
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
-@api_view(http_method_names=['POST'])
-def pizza_delivered(request):
-
-    order_id = request.data['order_id']
-    contract = Contract.objects.get(
-        contract_type=3, details_pizza__order_id=order_id
-    )
-
-    assert(contract.state == 'ACTIVE')
-
-    code = request.data['code']
-
-    if contract.get_details().code != code:
-        return Response({'result': 'bad code'})
-    print('pizza delivered')
-    tr = abi.ContractTranslator(contract.abi)
-    par_int = ParInt()
-    nonce = int(par_int.parity_nextNonce(contract.owner_address), 16)
-    print('nonce', nonce)
-
-    Hp = 56478
-    Cp = 56467
-
-    response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-            'source' : contract.owner_address,
-            'data': binascii.hexlify(
-                tr.encode_function_call(
-                    'hotPizza', [int(contract.get_details().code),
-                                 int(contract.get_details().salt)]
-                )
-            ).decode(),
-            'nonce': nonce,
-            'dest': contract.address,
-            'gaslimit': max(Hp, Cp),
-    }).content.decode())
-    print('response', response)
-    signed_data = response['result']
-    print('signed_data', signed_data)
-    par_int.eth_sendRawTransaction('0x'+signed_data)
-    print('pizza ok!')
-
-    return Response({'result': 'ok'})
-
 @api_view(http_method_names=['POST'])
 def deploy(request):
     contract = Contract.objects.get(id=request.data.get('id'))
@@ -171,56 +166,19 @@ def deploy(request):
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     promo_str = request.data.get('promo', None)
-    if promo_str:
-        try:
-            discount = check_and_get_discount(
-                promo_str, contract.contract_type, request.user
-            )
-        except PermissionDenied:
-           promo_str = None
-        else:
-           cost = cost - cost * discount / 100
+    cost = check_and_aplly_promocode(promo_str, request.user, cost, contract.contract_type)
     wish_cost = to_wish('ETH', int(cost))
+
     if not Profile.objects.select_for_update().filter(
             user=request.user, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
     create_payment(request.user.id, -wish_cost, '', 'ETH', cost, False)
 
-    if promo_str:
-        promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=request.user, promo=promo_object).save()
-        Promo.objects.select_for_update().filter(
-                promo_str=promo_str.upper()
-        ).update(
-                use_count=F('use_count') + 1,
-                referral_bonus=F('referral_bonus') + wish_cost
-        )
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
-
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-    ))
-
-
     queue = NETWORKS[contract.network.name]['queue']
-    channel = connection.channel()
-    channel.queue_declare(
-        queue=queue, durable=True, auto_delete=False, exclusive=False
-    )
-
-    channel.basic_publish(
-            exchange='',
-            routing_key=queue,
-            body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
-            properties=pika.BasicProperties(type='launch'),
-    )
-    print('deploy request sended')
-    connection.close()
+    send_in_queue(contract.id, 'launch', queue)
     return Response('ok')
 
 
@@ -235,26 +193,8 @@ def i_am_alive(request):
         delta = details.last_press_imalive - timezone.now()
         if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
             raise PermissionDenied(3000)
-
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
-        'mywill',
-        pika.PlainCredentials('java', 'java'),
-    ))
-
     queue = NETWORKS[contract.network.name]['queue']
-    channel = connection.channel()
-    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
-                          exclusive=False)
-
-    channel.basic_publish(
-        exchange='',
-        routing_key=queue,
-        body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
-        properties=pika.BasicProperties(type='confirm_alive'),
-    )
-    connection.close()
+    send_in_queue(contract.id, 'confirm_alive', queue)
     return Response('ok')
 
 
@@ -264,26 +204,8 @@ def cancel(request):
     assert(contract.user == request.user)
     assert(contract.contract_type in (0, 1))
     assert(contract.state in ['ACTIVE', 'EXPIRED'])
-
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
-        'mywill',
-        pika.PlainCredentials('java', 'java'),
-    ))
-
     queue = NETWORKS[contract.network.name]['queue']
-    channel = connection.channel()
-    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
-                          exclusive=False)
-
-    channel.basic_publish(
-        exchange='',
-        routing_key=queue,
-        body=json.dumps({'status': 'COMMITTED', 'contractId': contract.id}),
-        properties=pika.BasicProperties(type='cancel'),
-    )
-    connection.close()
+    send_in_queue(contract.id, 'cancel', queue)
     return Response('ok')
 
 
