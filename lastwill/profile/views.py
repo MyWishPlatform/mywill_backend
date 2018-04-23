@@ -1,19 +1,17 @@
-import uuid
-from django.contrib.auth import login
+import pyotp
+
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User
-from django.contrib import messages
 from django.shortcuts import redirect
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+
 from allauth.account import app_settings
 from allauth.account.models import EmailAddress
 from allauth.account.views import ConfirmEmailView
-from allauth.account.adapter import get_adapter
+
 from lastwill.contracts.models import Contract
-from lastwill.profile.models import Profile
-import pyotp
+
 
 class UserConfirmEmailView(ConfirmEmailView):
     def post(self, *args, **kwargs):
@@ -48,22 +46,6 @@ def profile_view(request):
             'is_social': request.user.profile.is_social,
     })
 
-
-'''
-@api_view(http_method_names=['POST'])
-def create_ghost(request):
-    user = User()
-    user.username = str(uuid.uuid4())
-    user.save()
-    Profile(user=user).save()
-    login(request, user)
-    return Response({
-            'username': user.username,
-            'email': "",
-            'contracts': 0,
-            'is_ghost': not bool(len(request.user.password)),
-    })
-'''
 
 @api_view(http_method_names=['POST'])
 def generate_key(request):
@@ -110,9 +92,8 @@ def resend_email(request):
     try:
         em = EmailAddress.objects.get(email=request.data['email'])
     except ObjectDoesNotExist:
-        raise PermissionDenied()
+        raise PermissionDenied(1)
     if em.verified:
-        raise PermissionDenied()
+        raise PermissionDenied(2)
     em.send_confirmation()
     return Response({"result": "ok"})
-    

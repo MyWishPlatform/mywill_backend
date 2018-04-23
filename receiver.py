@@ -1,26 +1,19 @@
 import pika
 import os
-import sys
 import traceback
 import json
-import datetime
-import sha3
-import requests
 import sys
-from pika.exceptions import ConnectionClosed
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
-from django.core.mail import send_mail
 from django.utils import timezone
-from django.contrib.auth.models import User
-from django.db.models import F
 from django.core.exceptions import ObjectDoesNotExist
 
-from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
-from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
-from lastwill.profile.models import Profile
+from lastwill.contracts.models import (
+    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
+)
+from lastwill.settings import NETWORKS
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.functions import create_payment
 from exchange_API import to_wish
@@ -28,23 +21,21 @@ from exchange_API import to_wish
 
 def payment(message):
     print('payment message', flush=True)
-#    contract = Contract.objects.get(id=message['contractId'])
-#    if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT') and message['balance'] >= contract.cost:
-#        contract.get_details().deploy()
     print('message["amount"]', message['amount'])
     value = message['amount'] if message['currency'] == 'WISH' else to_wish(
             message['currency'], message['amount']
     )
     print(value)
-    # Profile.objects.select_for_update().filter(user__id=message['userId']).update(balance=F('balance') + value)
     print('payment ok', flush=True)
     create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
+
 
 def deployed(message):
     print('deployed message received', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().msg_deployed(message)
     print('deployed ok!', flush=True)
+
 
 def killed(message):
     print('killed message', flush=True)
@@ -55,11 +46,13 @@ def killed(message):
     DeployAddress.objects.filter(network=network, locked_by=contract.id).update(locked_by=None)
     print('killed ok', flush=True)
 
+
 def checked(message):
     print('checked message', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().checked(message)
     print('checked ok', flush=True)
+
 
 def repeat_check(message):
     print('repeat check message', flush=True)
@@ -67,17 +60,20 @@ def repeat_check(message):
     contract.get_details().check_contract()
     print('repeat check ok', flush=True)
 
+
 def check_contract(message):
     print('check contract message', flush=True)
     contract = Contract.objects.get(id=message['contractId'])
     contract.get_details().check_contract()
     print('check contract ok', flush=True)
 
+
 def triggered(message):
     print('triggered message', flush=True)
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().triggered(message)
     print('triggered ok', flush=True)
+
 
 def launch(message):
     print('launch message', flush=True)
@@ -91,17 +87,17 @@ def launch(message):
     contract_details.refresh_from_db()
     print('launch ok')
 
+
 def unknown_handler(message):
     print('unknown message', message, flush=True)
 
 
 def ownershipTransferred(message):
     print('ownershipTransferred message')
-#    contract = EthContract.objects.get(id=message['contractId']).contract
-#    contract = EthContract.objects.get(id=message['contractId']).ico_details_token.all().order_by('-id').first().contract
     contract = EthContract.objects.get(id=message['crowdsaleId']).contract
     contract.get_details().ownershipTransferred(message)
     print('ownershipTransferred ok')
+
 
 def initialized(message):
     print('initialized message')
@@ -109,17 +105,20 @@ def initialized(message):
     contract.get_details().initialized(message)
     print('initialized ok')
 
+
 def finish(message):
     print('finish message')
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().finalized(message)
     print('finish ok')
 
+
 def finalized(message):
     print('finalized message')
     contract = EthContract.objects.get(id=message['contractId']).contract
     contract.get_details().finalized(message)
     print('finalized ok')
+
 
 def transactionCompleted(message):
     print('transactionCompleted')
@@ -128,13 +127,6 @@ def transactionCompleted(message):
         return
     try:
         contract = EthContract.objects.get(tx_hash=message['transactionHash']).contract
-        '''
-        contract = Contract.objects.get(id=message['lockedBy'])
-        assert((contract.contract_type not in (4,5) and message['transactionHash'] == contract.get_details().eth_contract.tx_hash) or
-                (contract.contract_type == 4 and message['transactionHash'] in (contract.get_details().eth_contract_token.tx_hash, contract.get_details().eth_contract_crowdsale.tx_hash)) or 
-                (contract.contract_type == 5 and message['transactionHash'] == contract.get_details().eth_contract_token.tx_hash)
-        )
-        '''
         contract.get_details().tx_failed(message)
     except Exception as e:
         print(e)
@@ -180,6 +172,7 @@ def fundsAdded(message):
     contract.get_details().fundsAdded(message)
     print('funds Added ok')
 
+
 def make_payment(message):
     print('make payment message')
     contract = Contract.objects.get(id=message['contractId'])
@@ -209,6 +202,7 @@ methods_dict = {
     'make_payment': make_payment,
 }
 
+
 def callback(ch, method, properties, body):
     print('received', body, properties, method, flush=True)
     try:
@@ -223,10 +217,7 @@ def callback(ch, method, properties, body):
     except Exception as e:
         print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
     else:
-#    finally:
         ch.basic_ack(delivery_tag = method.delivery_tag)
-
-
 
 
 """
@@ -255,4 +246,3 @@ print('receiver started', flush=True)
 print('listening', network, flush=True)
 
 channel.start_consuming()
-
