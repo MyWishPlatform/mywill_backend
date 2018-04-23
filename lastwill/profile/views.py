@@ -110,9 +110,9 @@ def resend_email(request):
     try:
         em = EmailAddress.objects.get(email=request.data['email'])
     except ObjectDoesNotExist:
-        raise PermissionDenied()
+        raise PermissionDenied(1)
     if em.verified:
-        raise PermissionDenied()
+        raise PermissionDenied(2)
     em.send_confirmation()
     return Response({"result": "ok"})
     
