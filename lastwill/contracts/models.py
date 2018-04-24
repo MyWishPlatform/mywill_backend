@@ -171,6 +171,7 @@ class EthContract(models.Model):
     compiler_version = models.CharField(max_length=200, null=True, default=None)
     tx_hash = models.CharField(max_length=70, null=True, default=None)
     original_contract = models.ForeignKey(Contract, null=True, default=None, related_name='orig_ethcontract')
+    arguments = JSONField(default={})
 
 
 class CommonDetails(models.Model):
@@ -214,6 +215,8 @@ class CommonDetails(models.Model):
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
+        self.arguments['arguments'] = arguments
+        self.save()
         par_int = ParInt()
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
