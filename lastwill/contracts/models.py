@@ -7,37 +7,22 @@ import datetime
 import pika
 import bitcoin
 from copy import deepcopy
-from time import sleep
 from ethereum import abi
 
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import F
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import (
-    SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR,
-    DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
-)
+from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
+from lastwill.contracts.decorators import *
 from email_messages import *
-
-
-contract_details_types = []
-
-def contract_details(name):
-    def w(c):
-        contract_details_types.append({
-                'name': name,
-                'model': c,
-        })
-        return c
-    return w
 
 
 def send_in_queue(contract_id, type, queue):
@@ -79,81 +64,6 @@ def send_in_signer(address, nonce, gaslimit, network, value=None, dest=None, con
         'http://{}/sign/'.format(SIGNER), json=data
     ).content.decode())
     return signed_data['result']
-
-
-class NeedRequeue(Exception):
-    pass
-
-
-class TxFail(Exception):
-    pass
-
-
-class AlreadyPostponed(Exception):
-    pass
-
-
-def check_transaction(f):
-    def wrapper(*args, **kwargs):
-        if not args[1].get('success', True):
-            print('message rejected because transaction failed', flush=True)
-            raise TxFail()
-        else:
-            return f(*args, **kwargs)
-    return wrapper
-
-
-def postponable(f):
-    def wrapper(*args, **kwargs):
-        contract = args[0].contract
-        if contract.state == 'POSTPONED':
-            print('message rejected because contract postponed', flush=True)
-            send_mail(
-                postponed_subject,
-                postponed_message.format(
-                    contract_id=contract.id
-                ),
-                DEFAULT_FROM_EMAIL,
-                [EMAIL_FOR_POSTPONED_MESSAGE]
-            )
-
-            raise AlreadyPostponed
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            contract.state = 'POSTPONED'
-            contract.save()
-            send_mail(
-                postponed_subject,
-                postponed_message.format(
-                    contract_id=contract.id
-                ),
-                DEFAULT_FROM_EMAIL,
-                [EMAIL_FOR_POSTPONED_MESSAGE]
-            )
-            print('contract postponed due to exception', flush=True)
-            address = NETWORKS[contract.network.name]['address']
-            DeployAddress.objects.select_for_update().filter(
-                network__name=contract.network.name,
-                address=address, locked_by=contract.id
-            ).update(locked_by=None)
-            print('queue unlocked due to exception', flush=True)
-            raise
-    return wrapper
-
-
-def blocking(f):
-    def wrapper(*args, **kwargs):
-        network_name = args[0].contract.network.name
-        address = NETWORKS[args[0].contract.network.name]['address']
-        if not DeployAddress.objects.select_for_update().filter(
-                Q(network__name=network_name) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
-        ).update(locked_by=args[0].contract.id):
-            print('address locked. sleeping 5 and requeueing the message', flush=True)
-            sleep(5)
-            raise NeedRequeue()
-        return f(*args, **kwargs)
-    return wrapper
 
 
 '''
@@ -733,7 +643,6 @@ class ContractDetailsDelayedPayment(CommonDetails):
     recepient_email = models.CharField(max_length=200, null=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
-
     def predeploy_validate(self):
         now = timezone.now()
         if self.date < now:
@@ -987,7 +896,6 @@ class ContractDetailsICO(CommonDetails):
         eth_contract_crowdsale.abi = crowdsale_json['abi']
         eth_contract_crowdsale.bytecode = crowdsale_json['bytecode'][2:]
         eth_contract_crowdsale.compiler_version = crowdsale_json['compiler']['version']
-        # eth_contract_crowdsale.source_code = crowdsale_json['source']
         with open(path.join(dest, 'build/TemplateCrowdsale.sol')) as f:
             source_code = f.read()
         eth_contract_crowdsale.source_code = source_code
@@ -1088,7 +996,6 @@ class ContractDetailsICO(CommonDetails):
                 ).update(locked_by=None)
             print('ignored', flush=True)
             return
-
         if self.contract.state in ('ACTIVE', 'ENDED'):
             DeployAddress.objects.select_for_update().filter(
                 network__name=self.contract.network.name, address=address
@@ -1126,30 +1033,19 @@ class ContractDetailsICO(CommonDetails):
         address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
-
         DeployAddress.objects.select_for_update().filter(
             network__name=self.contract.network.name, address=address
         ).update(locked_by=None)
-
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
             return
-
         self.contract.state = 'ACTIVE'
         self.contract.save()
         if self.eth_contract_token.original_contract.contract_type == 5:
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
         network_link = NETWORKS[self.contract.network.name]['link_address']
-        network_name = ''
-        if self.contract.network.name == 'ETHEREUM_MAINNET':
-            network_name = 'Ethereum'
-        if self.contract.network.name == 'ETHEREUM_ROPSTEN':
-            network_name = 'Ropsten (Ethereum Testnet)'
-        if self.contract.network.name == 'RSK_MAINNET':
-            network_name = 'RSK'
-        if self.contract.network.name == 'RSK_TESTNET':
-            network_name = 'RSK Testnet'
+        network_name = MAIL_NETWORK[self.contract.network.name]
         if self.contract.user.email:
             send_mail(
                     ico_subject,
