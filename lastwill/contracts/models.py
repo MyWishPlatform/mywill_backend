@@ -136,7 +136,8 @@ def postponable(f):
             print('contract postponed due to exception', flush=True)
             address = NETWORKS[contract.network.name]['address']
             DeployAddress.objects.select_for_update().filter(
-                network__name=sys.argv[1], address=address, locked_by=contract.id
+                network__name=contract.network.name,
+                address=address, locked_by=contract.id
             ).update(locked_by=None)
             print('queue unlocked due to exception', flush=True)
             raise
@@ -280,14 +281,14 @@ class CommonDetails(models.Model):
         ).decode() if arguments else '')
         signed_data = send_in_signer(
             address, nonce, self.get_gaslimit(),
-            sys.argv[1], value=self.get_value(),
+            self.contract.network.name, value=self.get_value(),
             contract_data=data
         )
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
         print('value', self.get_value(), flush=True)
-        print('network', sys.argv[1], flush=True)
+        print('network', self.contract.network.name, flush=True)
         eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
         eth_contract.save()
         print('eth_contract.tx_hash', eth_contract.tx_hash, flush=True)
@@ -300,14 +301,14 @@ class CommonDetails(models.Model):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         address = NETWORKS[self.contract.network.name]['address']
         network_link = NETWORKS[self.contract.network.name]['link_address']
-        network_name = ''
-        if sys.argv[1] == 'ETHEREUM_MAINNET':
+        network = self.contract.network.name,
+        if network == 'ETHEREUM_MAINNET':
             network_name = 'Ethereum'
-        if sys.argv[1] == 'ETHEREUM_ROPSTEN':
+        if network == 'ETHEREUM_ROPSTEN':
             network_name = 'Ropsten (Ethereum Testnet)'
-        if sys.argv[1] == 'RSK_MAINNET':
+        if network == 'RSK_MAINNET':
             network_name = 'RSK'
-        if sys.argv[1] == 'RSK_TESTNET':
+        if network == 'RSK_TESTNET':
             network_name = 'RSK Testnet'
         DeployAddress.objects.select_for_update().filter(
             network__name=self.contract.network.name, address=address
@@ -346,7 +347,8 @@ class CommonDetails(models.Model):
         print('contract postponed due to transaction fail', flush=True)
         address = NETWORKS[self.contract.network.name]['address']
         DeployAddress.objects.select_for_update().filter(
-            network__name=sys.argv[1], address=address, locked_by=self.contract.id
+            network__name=self.contract.network.name,
+            address=address, locked_by=self.contract.id
         ).update(locked_by=None)
         print('queue unlocked due to transaction fail', flush=True)
 
@@ -416,7 +418,7 @@ class ContractDetailsLastwill(CommonDetails):
     def make_payment(self, message):
         contract = self.contract
         par_int = ParInt(contract.network.name)
-        wl_address = NETWORKS[sys.argv[1]]['address']
+        wl_address = NETWORKS[self.contract.network.name]['address']
         balance = int(par_int.eth_getBalance(wl_address), 16)
         gas_limit = 50000
         gas_price = 10 ** 9
@@ -560,7 +562,8 @@ class ContractDetailsLastwill(CommonDetails):
             delta = self.last_press_imalive - timezone.now()
             if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
                 DeployAddress.objects.select_for_update().filter(
-                    network__name=sys.argv[1], address=self.contract.address
+                    network__name=self.contract.network.name,
+                    address=self.contract.address
                 ).update(locked_by=None)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
@@ -600,7 +603,8 @@ class ContractDetailsLastwill(CommonDetails):
             id=self.id
         ).update(btc_duty=F('btc_duty') - message['value'])
         DeployAddress.objects.select_for_update().filter(
-            network__name=sys.argv[1], address=NETWORKS[sys.argv[1]]['address']
+            network__name=self.contract.network.name,
+            address=NETWORKS[self.contract.network.name]['address']
         ).update(locked_by=None)
 
 
@@ -1041,14 +1045,18 @@ class ContractDetailsICO(CommonDetails):
         print('msg_deployed method of the ico contract')
         address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(
+                network__name=self.contract.network.name, address=address
+            ).update(locked_by=None)
             return
         if self.reused_token:
             self.contract.state = 'WAITING_ACTIVATION'
             self.contract.save()
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
-            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(
+                network__name=self.contract.network.name, address=address
+            ).update(locked_by=None)
             print('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
@@ -1064,7 +1072,7 @@ class ContractDetailsICO(CommonDetails):
             print('nonce', nonce)
             print('transferOwnership message signed')
             signed_data = send_in_signer(
-                address, nonce, 100000, sys.argv[1],
+                address, nonce, 100000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
                 contract_data=binascii.hexlify(tr.encode_function_call(
                     'transferOwnership', [self.eth_contract_crowdsale.address]
@@ -1098,13 +1106,17 @@ class ContractDetailsICO(CommonDetails):
         address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
-                DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
+                DeployAddress.objects.select_for_update().filter(
+                    network__name=self.contract.network.name, address=address
+                ).update(locked_by=None)
             print('ignored', flush=True)
             return
 
 
         if self.contract.state in ('ACTIVE', 'ENDED'):
-            DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
+            DeployAddress.objects.select_for_update().filter(
+                network__name=self.contract.network.name, address=address
+            ).update(locked_by=None)
             return
         if self.contract.state == 'WAITING_ACTIVATION':
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -1118,7 +1130,8 @@ class ContractDetailsICO(CommonDetails):
         signed_data = send_in_signer(
             address, nonce,
             100000 + 50000 * self.contract.tokenholder_set.all().count(),
-            sys.argv[1], dest=self.eth_contract_crowdsale.address,
+            self.contract.network.name,
+            dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])
             ).decode()
@@ -1137,9 +1150,9 @@ class ContractDetailsICO(CommonDetails):
             return
 
 
-
-        DeployAddress.objects.select_for_update().filter(network__name=sys.argv[1], address=address).update(locked_by=None)
-
+        DeployAddress.objects.select_for_update().filter(
+            network__name=self.contract.network.name, address=address
+        ).update(locked_by=None)
 
 
         if message['contractId'] != self.eth_contract_crowdsale.id:
