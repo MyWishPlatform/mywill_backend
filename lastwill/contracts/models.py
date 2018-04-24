@@ -23,7 +23,7 @@ from lastwill.settings import (
     DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
 )
 from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
 from email_messages import *
 
@@ -162,29 +162,34 @@ contract as user see it at site. contract as service. can contain more then one 
 
 
 class Contract(models.Model):
-    name = models.CharField(max_length=200, null=True, default=None)
     user = models.ForeignKey(User)
     network = models.ForeignKey(Network, default=1)
+
     address = models.CharField(max_length=50, null=True, default=None)
     owner_address = models.CharField(max_length=50, null=True, default=None)
     user_address = models.CharField(max_length=50, null=True, default=None)
+
+    balance = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, default=None
+    )
+    cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+
+    name = models.CharField(max_length=200, null=True, default=None)
     state = models.CharField(max_length=63, default='CREATED')
-    created_date = models.DateTimeField(auto_now=True)
+    contract_type = models.IntegerField(default=0)
+
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
     compiler_version = models.CharField(
         max_length=200, null=True, default=None
     )
+
+    created_date = models.DateTimeField(auto_now=True)
     check_interval = models.IntegerField(null=True, default=None)
     active_to = models.DateTimeField(null=True, default=None)
-    balance = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, default=None
-    )
-    cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
-    contract_type = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -218,16 +223,17 @@ real contract to deploy to ethereum
 
 class EthContract(models.Model):
     contract = models.ForeignKey(Contract, null=True, default=None)
+    original_contract = models.ForeignKey(
+        Contract, null=True, default=None, related_name='orig_ethcontract'
+    )
     address = models.CharField(max_length=50, null=True, default=None)
+    tx_hash = models.CharField(max_length=70, null=True, default=None)
+
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
     compiler_version = models.CharField(
         max_length=200, null=True, default=None
-    )
-    tx_hash = models.CharField(max_length=70, null=True, default=None)
-    original_contract = models.ForeignKey(
-        Contract, null=True, default=None, related_name='orig_ethcontract'
     )
 
 
@@ -304,14 +310,7 @@ class CommonDetails(models.Model):
         address = NETWORKS[self.contract.network.name]['address']
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name,
-        if network == 'ETHEREUM_MAINNET':
-            network_name = 'Ethereum'
-        if network == 'ETHEREUM_ROPSTEN':
-            network_name = 'Ropsten (Ethereum Testnet)'
-        if network == 'RSK_MAINNET':
-            network_name = 'RSK'
-        if network == 'RSK_TESTNET':
-            network_name = 'RSK Testnet'
+        network_name = MAIL_NETWORK[network]
         DeployAddress.objects.select_for_update().filter(
             network__name=self.contract.network.name, address=address
         ).update(locked_by=None)
@@ -723,36 +722,6 @@ class ContractDetailsLostKey(CommonDetails):
     @postponable
     def deploy(self):
         return super().deploy()
-
-    @blocking
-    def i_am_alive(self, message):
-        tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
-        address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.parity_nextNonce(address), 16)
-        signed_data = send_in_signer(
-            address, nonce, 600000, self.contract.network.name,
-            dest=self.eth_contract.address,
-            contract_data=binascii.hexlify(
-                    tr.encode_function_call('imAvailable', [])
-                ).decode(),
-        )
-        par_int.eth_sendRawTransaction('0x' + signed_data)
-
-    @blocking
-    def cancel(self, message):
-        tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
-        address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.parity_nextNonce(address), 16)
-        signed_data = send_in_signer(
-            address, nonce, 600000, self.contract.network.name,
-            dest=self.eth_contract.address,
-            contract_data=binascii.hexlify(
-                    tr.encode_function_call('cancel', [])
-                ).decode(),
-        )
-        par_int.eth_sendRawTransaction('0x' + signed_data)
 
 
 @contract_details('Deferred payment contract')
@@ -1208,7 +1177,6 @@ class ContractDetailsICO(CommonDetails):
     def check_contract(self):
         pass
         
-
 
 @contract_details('Token contract')
 class ContractDetailsToken(CommonDetails):
