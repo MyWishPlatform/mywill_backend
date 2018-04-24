@@ -251,7 +251,15 @@ rabbitmqctl add_vhost mywill
 rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
-network = sys.argv[1]
 
-rec = Receiver(network)
-rec.start_consuming()
+ethereum = Receiver('ETHEREUM_MAINNET')
+ethereum.start_consuming()
+
+ethereum = Receiver('ETHEREUM_ROPSTEN')
+ethereum.start_consuming()
+
+ethereum = Receiver('RSK_MAINNET')
+ethereum.start_consuming()
+
+ethereum = Receiver('RSK_TESTNET')
+ethereum.start_consuming()
