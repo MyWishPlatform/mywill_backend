@@ -25,7 +25,7 @@ from lastwill.settings import (
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS
 from lastwill.deploy.models import DeployAddress, Network
-import email_messages
+from email_messages import *
 
 
 contract_details_types = []
@@ -111,8 +111,8 @@ def postponable(f):
         if contract.state == 'POSTPONED':
             print('message rejected because contract postponed', flush=True)
             send_mail(
-                email_messages.postponed_subject,
-                email_messages.postponed_message.format(
+                postponed_subject,
+                postponed_message.format(
                     contract_id=contract.id
                 ),
                 DEFAULT_FROM_EMAIL,
@@ -126,8 +126,8 @@ def postponable(f):
             contract.state = 'POSTPONED'
             contract.save()
             send_mail(
-                email_messages.postponed_subject,
-                email_messages.postponed_message.format(
+                postponed_subject,
+                postponed_message.format(
                     contract_id=contract.id
                 ),
                 DEFAULT_FROM_EMAIL,
@@ -175,7 +175,9 @@ class Contract(models.Model):
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
-    compiler_version = models.CharField(max_length=200, null=True, default=None)
+    compiler_version = models.CharField(
+        max_length=200, null=True, default=None
+    )
     check_interval = models.IntegerField(null=True, default=None)
     active_to = models.DateTimeField(null=True, default=None)
     balance = models.DecimalField(
@@ -289,7 +291,9 @@ class CommonDetails(models.Model):
         print('gas limit', self.get_gaslimit(), flush=True)
         print('value', self.get_value(), flush=True)
         print('network', self.contract.network.name, flush=True)
-        eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+            '0x' + signed_data
+        )
         eth_contract.save()
         print('eth_contract.tx_hash', eth_contract.tx_hash, flush=True)
         print('transaction sent', flush=True)
@@ -320,11 +324,11 @@ class CommonDetails(models.Model):
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                    email_messages.common_subject,
-                    email_messages.common_text.format(
-                            contract_type_name=contract_details_types[self.contract.contract_type]['name'],
-                            link=network_link.format(address=eth_contract.address),
-                            network_name=network_name
+                    common_subject,
+                    common_text.format(
+                        contract_type_name=contract_details_types[self.contract.contract_type]['name'],
+                        link=network_link.format(address=eth_contract.address),
+                        network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -337,8 +341,8 @@ class CommonDetails(models.Model):
         self.contract.state = 'POSTPONED'
         self.contract.save()
         send_mail(
-            email_messages.postponed_subject,
-            email_messages.postponed_message.format(
+            postponed_subject,
+            postponed_message.format(
                 contract_id=self.contract.id
             ),
             DEFAULT_FROM_EMAIL,
@@ -515,8 +519,8 @@ class ContractDetailsLastwill(CommonDetails):
         for heir in heirs:
             if heir.email:
                 send_mail(
-                    email_messages.heir_subject,
-                    email_messages.heir_message.format(
+                    heir_subject,
+                    heir_message.format(
                             user_address=heir.address,
                             link_tx=link.format(tx=message['transactionHash'])
                     ),
@@ -527,8 +531,8 @@ class ContractDetailsLastwill(CommonDetails):
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                email_messages.carry_out_subject,
-                email_messages.carry_out_message,
+                carry_out_subject,
+                carry_out_message,
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
@@ -576,7 +580,9 @@ class ContractDetailsLastwill(CommonDetails):
                     tr.encode_function_call('imAvailable', [])
                 ).decode(),
         )
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+            '0x' + signed_data
+        )
         self.eth_contract.save()
         self.last_press_imalive = timezone.now()
 
@@ -593,7 +599,9 @@ class ContractDetailsLastwill(CommonDetails):
                     tr.encode_function_call('kill', [])
                 ).decode(),
         )
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
+        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+            '0x' + signed_data
+        )
         self.eth_contract.save()
 
     def fundsAdded(self, message):
@@ -694,8 +702,8 @@ class ContractDetailsLostKey(CommonDetails):
         for heir in heirs:
             if heir.email:
                 send_mail(
-                    email_messages.heir_subject,
-                    email_messages.heir_message.format(
+                    heir_subject,
+                    heir_message.format(
                         user_address=heir.address,
                         link_tx=link.format(tx=message['transactionHash'])
                     ),
@@ -706,8 +714,8 @@ class ContractDetailsLostKey(CommonDetails):
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                email_messages.carry_out_subject,
-                email_messages.carry_out_message,
+                carry_out_subject,
+                carry_out_message,
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
@@ -786,8 +794,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
         link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         if self.recepient_email:
             send_mail(
-                email_messages.heir_subject,
-                email_messages.heir_message.format(
+                heir_subject,
+                heir_message.format(
                     user_address=self.recepient_address,
                     link_tx=link.format(tx=message['transactionHash'])
                 ),
@@ -798,8 +806,8 @@ class ContractDetailsDelayedPayment(CommonDetails):
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                email_messages.carry_out_subject,
-                email_messages.carry_out_message,
+                carry_out_subject,
+                carry_out_message,
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
@@ -825,7 +833,9 @@ class ContractDetailsDelayedPayment(CommonDetails):
 class ContractDetailsPizza(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/Pizza.sol'
     user_address = models.CharField(max_length=50)
-    pizzeria_address = models.CharField(max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a')
+    pizzeria_address = models.CharField(
+        max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a'
+    )
     timeout = models.IntegerField(default=60*60)
     code = models.IntegerField()
     salt = models.CharField(max_length=len(str(2**256)))
@@ -1003,7 +1013,9 @@ class ContractDetailsICO(CommonDetails):
         preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)):
+        if os.system(
+                "/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)
+        ):
             raise Exception('compiler error while deploying')
 
         eth_contract_crowdsale = EthContract()
@@ -1078,7 +1090,9 @@ class ContractDetailsICO(CommonDetails):
                     'transferOwnership', [self.eth_contract_crowdsale.address]
                 )).decode(),
             )
-            self.eth_contract_token.tx_hash = par_int.eth_sendRawTransaction('0x'+signed_data)
+            self.eth_contract_token.tx_hash = par_int.eth_sendRawTransaction(
+                '0x'+signed_data
+            )
             self.eth_contract_token.save()
             print('transferOwnership message sended')
 
@@ -1112,7 +1126,6 @@ class ContractDetailsICO(CommonDetails):
             print('ignored', flush=True)
             return
 
-
         if self.contract.state in ('ACTIVE', 'ENDED'):
             DeployAddress.objects.select_for_update().filter(
                 network__name=self.contract.network.name, address=address
@@ -1136,7 +1149,9 @@ class ContractDetailsICO(CommonDetails):
                 tr.encode_function_call('init', [])
             ).decode()
         )
-        self.eth_contract_crowdsale.tx_hash = par_int.eth_sendRawTransaction('0x'+signed_data)
+        self.eth_contract_crowdsale.tx_hash = par_int.eth_sendRawTransaction(
+            '0x'+signed_data
+        )
         self.eth_contract_crowdsale.save()
         print('init message sended')
 
@@ -1149,16 +1164,13 @@ class ContractDetailsICO(CommonDetails):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
 
-
         DeployAddress.objects.select_for_update().filter(
             network__name=self.contract.network.name, address=address
         ).update(locked_by=None)
 
-
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
             return
-
 
         self.contract.state = 'ACTIVE'
         self.contract.save()
@@ -1177,8 +1189,8 @@ class ContractDetailsICO(CommonDetails):
             network_name = 'RSK Testnet'
         if self.contract.user.email:
             send_mail(
-                    email_messages.ico_subject,
-                    email_messages.ico_text.format(
+                    ico_subject,
+                    ico_text.format(
                             link1=network_link.format(
                                 address=self.eth_contract_token.address,
                             ),
@@ -1263,9 +1275,17 @@ class ContractDetailsToken(CommonDetails):
 		    "D_PAUSE_TOKENS": False,
 
 		    "D_PREMINT_COUNT": len(token_holders),
-		    "D_PREMINT_ADDRESSES": ','.join(map(lambda th: 'address(%s)'%th.address, token_holders)),
-		    "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
-		    "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%(th.freeze_date if th.freeze_date else 0), token_holders)),
+		    "D_PREMINT_ADDRESSES": ','.join(map(
+                lambda th: 'address(%s)'%th.address, token_holders
+            )),
+		    "D_PREMINT_AMOUNTS": ','.join(map(
+                lambda th: 'uint(%s)'%th.amount, token_holders
+            )),
+		    "D_PREMINT_FREEZES": ','.join(map(
+                lambda th: 'uint64(%s)'%(
+                    th.freeze_date if th.freeze_date else 0
+                ), token_holders
+            )),
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -1310,7 +1330,9 @@ class ContractDetailsToken(CommonDetails):
         return res
 
     def ownershipTransferred(self, message):
-        if self.eth_contract_token.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
+        if self.eth_contract_token.original_contract.state not in (
+                'UNDER_CROWDSALE', 'ENDED'
+        ):
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
 
@@ -1318,7 +1340,9 @@ class ContractDetailsToken(CommonDetails):
         if self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'
             self.eth_contract_token.original_contract.save()
-        if self.eth_contract_token.original_contract.id != self.eth_contract_token.contract.id and self.eth_contract_token.contract.state != 'ENDED':
+        if (self.eth_contract_token.original_contract.id !=
+                self.eth_contract_token.contract.id and
+                    self.eth_contract_token.contract.state != 'ENDED'):
             self.eth_contract_token.contract.state = 'ENDED'
             self.eth_contract_token.contract.save()
 
@@ -1337,5 +1361,7 @@ class TokenHolder(models.Model):
     contract = models.ForeignKey(Contract)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
-    amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
     freeze_date = models.IntegerField(null=True)
