@@ -1,5 +1,4 @@
 import datetime
-import pika
 from os import path
 
 from django.utils import timezone
