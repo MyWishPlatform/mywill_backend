@@ -22,7 +22,7 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email
-from lastwill.contracts.api import (ContractViewSet, get_cost, get_code, test_comp,
+from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_contract_types, deploy,
                                     get_token_contracts, ICOtokensView, get_statistics,
                                     i_am_alive, cancel)
@@ -47,7 +47,6 @@ urlpatterns = [
     url(r'^api/rest-auth/registration/', include('rest_auth.registration.urls')),
     url(r'^/email-verification-sent/$', index, name='account_email_verification_sent'),
     url(r'^api/profile/', profile_view),
-    url(r'^api/get_cost/', get_cost),
     url(r'^api/balance/', balance),
     url(r'^auth/', login),
     url(r'^api/get_code/', get_code),

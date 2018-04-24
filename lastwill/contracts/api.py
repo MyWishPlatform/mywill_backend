@@ -73,16 +73,6 @@ class ContractViewSet(ModelViewSet):
 
 
 @api_view()
-def get_cost(request):
-    contract_type = int(request.query_params['contract_type'])
-    network = Network.objects.get(id=request.query_params['network_id'])
-    result = Contract.get_details_model(
-        contract_type
-    ).calc_cost(request.query_params, network)
-    return Response({'result': str(int(to_wish('ETH', result)))})
-
-
-@api_view()
 def get_code(request):
     with open(path.join(CONTRACTS_DIR, Contract.get_details_model(
             int(request.query_params['contract_type'])
