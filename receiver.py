@@ -240,6 +240,7 @@ methods_dict = {
     'make_payment': Receiver.make_payment,
 }
 
+
 def unknown_handler(message):
         print('unknown message', message, flush=True)
 

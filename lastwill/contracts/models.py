@@ -47,11 +47,9 @@ def send_in_queue(contract_id, type, queue):
         'mywill',
         pika.PlainCredentials('java', 'java'),
     ))
-
     channel = connection.channel()
     channel.queue_declare(queue=queue, durable=True, auto_delete=False,
                           exclusive=False)
-
     channel.basic_publish(
         exchange='',
         routing_key=queue,
@@ -224,7 +222,9 @@ class EthContract(models.Model):
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
-    compiler_version = models.CharField(max_length=200, null=True, default=None)
+    compiler_version = models.CharField(
+        max_length=200, null=True, default=None
+    )
     tx_hash = models.CharField(max_length=70, null=True, default=None)
     original_contract = models.ForeignKey(
         Contract, null=True, default=None, related_name='orig_ethcontract'
@@ -297,9 +297,7 @@ class CommonDetails(models.Model):
         eth_contract.save()
         print('eth_contract.tx_hash', eth_contract.tx_hash, flush=True)
         print('transaction sent', flush=True)
-
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-
         self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
@@ -414,7 +412,6 @@ class ContractDetailsLastwill(CommonDetails):
             'RSK_MAINNET': 'notification-rsk-fgw',
             'RSK_TESTNET': 'notification-rsk-testnet-fgw'
         }
-
         queue = queues[self.contract.network.name]
         send_in_queue(self.contract.id, 'make_payment', queue)
 
@@ -451,8 +448,8 @@ class ContractDetailsLastwill(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            False if self.contract.network.name in ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
-#            ORACLIZE_PROXY,
+            False if self.contract.network.name in
+                     ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
         ]
    
     @staticmethod
@@ -531,10 +528,8 @@ class ContractDetailsLastwill(CommonDetails):
         self.contract.save()
         if self.contract.user.email:
             send_mail(
-                carry_out_subject,
-                carry_out_message,
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
+                carry_out_subject, carry_out_message,
+                DEFAULT_FROM_EMAIL, [self.contract.user.email]
             )
 
     def get_gaslimit(self):
@@ -625,7 +620,6 @@ class ContractDetailsLostKey(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-
 
     def predeploy_validate(self):
         now = timezone.now()

@@ -55,10 +55,9 @@ class ContractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contract
-        fields = ('id', 'user', 'owner_address',
-                'state', 'created_date',
-                'balance', 'cost', 'name',
-                'contract_type', 'contract_details', 'network',
+        fields = (
+            'id', 'user', 'owner_address', 'state', 'created_date', 'balance',
+            'cost', 'name', 'contract_type', 'contract_details', 'network',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -171,7 +170,10 @@ class ContractSerializer(serializers.ModelSerializer):
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
-        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version')
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version',
+        )
 
 
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
@@ -263,7 +265,9 @@ class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
 class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsDelayedPayment
-        fields = ('user_address', 'date', 'recepient_address', 'recepient_email')
+        fields = (
+            'user_address', 'date', 'recepient_address', 'recepient_email'
+        )
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
