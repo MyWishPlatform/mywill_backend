@@ -156,7 +156,7 @@ class ContractSerializer(serializers.ModelSerializer):
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
-        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version')
+        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version', 'arguments')
 
 
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
