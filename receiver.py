@@ -268,5 +268,13 @@ rsk_thread = threading.Thread(target=rsk.start_consuming)
 rsk_thread.start()
 
 rsk_test = Receiver('RSK_TESTNET')
-rsk_test_thread = threading.Thread(target=rsk.start_consuming)
+rsk_test_thread = threading.Thread(target=rsk_test.start_consuming)
 rsk_test_thread.start()
+
+gw = Receiver('RSK_MAINNET_FOR_GATEWAY')
+gw_thread = threading.Thread(target=gw.start_consuming)
+gw_thread.start()
+
+gw_test = Receiver('RSK_TESTNET_FOR_GATEWAY')
+gw_test_thread = threading.Thread(target=gw_test.start_consuming)
+gw_test_thread.start()
