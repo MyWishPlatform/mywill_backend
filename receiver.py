@@ -1,6 +1,7 @@
 import pika
 import os
 import traceback
+import threading
 import json
 import sys
 from types import FunctionType
@@ -245,7 +246,6 @@ def unknown_handler(message):
         print('unknown message', message, flush=True)
 
 
-
 """
 rabbitmqctl add_user java java
 rabbitmqctl add_vhost mywill
@@ -254,13 +254,19 @@ rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 
 
 ethereum = Receiver('ETHEREUM_MAINNET')
-ethereum.start_consuming()
+ethereum_thread = threading.Thread(target=ethereum.start_consuming)
+ethereum_thread.start()
 
-ethereum = Receiver('ETHEREUM_ROPSTEN')
-ethereum.start_consuming()
+ethereum_ropsten = Receiver('ETHEREUM_ROPSTEN')
+ethereum_ropsten_thread = threading.Thread(
+    target=ethereum_ropsten.start_consuming
+)
+ethereum_ropsten_thread.start()
 
-ethereum = Receiver('RSK_MAINNET')
-ethereum.start_consuming()
+rsk = Receiver('RSK_MAINNET')
+rsk_thread = threading.Thread(target=rsk.start_consuming)
+rsk_thread.start()
 
-ethereum = Receiver('RSK_TESTNET')
-ethereum.start_consuming()
+rsk_test = Receiver('RSK_TESTNET')
+rsk_test_thread = threading.Thread(target=rsk.start_consuming)
+rsk_test_thread.start()
