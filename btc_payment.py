@@ -14,7 +14,7 @@ from exchange_API import to_wish
 from lastwill.payments.models import BTCAccount
 from exchange_API import to_wish
 from lastwill.profile.models import Profile
-from lastwill.payments.functions import create_payment
+from lastwill.payments.api import create_payment
 
 sleep(10)
 
