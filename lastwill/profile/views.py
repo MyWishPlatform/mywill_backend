@@ -113,6 +113,6 @@ def resend_email(request):
         raise PermissionDenied(1)
     if em.verified:
         raise PermissionDenied(2)
-    em.send_confirmation()
+    em.send_confirmation(request=request)
     return Response({"result": "ok"})
     
