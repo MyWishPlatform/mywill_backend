@@ -413,3 +413,25 @@ def get_statistics(request):
         answer[network.name] = get_contracts_for_network(network, contracts, now, day)
 
     return JsonResponse(answer)
+
+@api_view(http_method_names=['GET'])
+def get_statistics_lending(request):
+    now = datetime.datetime.now()
+    day = datetime.datetime.combine(
+        datetime.datetime.now().today(), datetime.time(0, 0)
+    )
+    users = User.objects.all().exclude(
+        email='', password='', last_name='', first_name=''
+    )
+    new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
+    contracts = Contract.objects.all()
+    new_contracts = contracts.filter(
+        created_date__lte=now, created_date__gte=day
+    )
+    answer = {
+        'contracts': len(contracts),
+        'new_contracts': len(new_contracts),
+        'users': len(users),
+        'new_users': len(new_users)
+    }
+    return JsonResponse(answer)
