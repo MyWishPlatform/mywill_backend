@@ -190,30 +190,6 @@ class Receiver():
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    def start_consuming(self):
-
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-            heartbeat_interval=0,
-        ))
-
-        channel = connection.channel()
-        channel.queue_declare(
-            queue=NETWORKS[self.network]['queue'],
-            durable=True,
-            auto_delete=False,
-            exclusive=False
-        )
-        channel.basic_consume(self.callback, queue=NETWORKS[self.network]['queue'])
-
-        print('receiver started', flush=True)
-        print('listening', self.network, flush=True)
-
-        channel.start_consuming()
-
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
@@ -252,29 +228,26 @@ rabbitmqctl add_vhost mywill
 rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+    'localhost',
+    5672,
+    'mywill',
+    pika.PlainCredentials('java', 'java'),
+    heartbeat_interval=0,
+))
 
-ethereum = Receiver('ETHEREUM_MAINNET')
-ethereum_thread = threading.Thread(target=ethereum.start_consuming)
-ethereum_thread.start()
+channel = connection.channel()
 
-ethereum_ropsten = Receiver('ETHEREUM_ROPSTEN')
-ethereum_ropsten_thread = threading.Thread(
-    target=ethereum_ropsten.start_consuming
-)
-ethereum_ropsten_thread.start()
+nets = NETWORKS.keys()
+for net in nets:
+    rec = Receiver(net)
+    channel.queue_declare(
+        queue=NETWORKS[net]['queue'],
+        durable=True,
+        auto_delete=False,
+        exclusive=False
+    )
+    channel.basic_consume(rec.callback, queue=NETWORKS[net]['queue'])
 
-rsk = Receiver('RSK_MAINNET')
-rsk_thread = threading.Thread(target=rsk.start_consuming)
-rsk_thread.start()
-
-rsk_test = Receiver('RSK_TESTNET')
-rsk_test_thread = threading.Thread(target=rsk_test.start_consuming)
-rsk_test_thread.start()
-
-gw = Receiver('RSK_MAINNET_FOR_GATEWAY')
-gw_thread = threading.Thread(target=gw.start_consuming)
-gw_thread.start()
-
-gw_test = Receiver('RSK_TESTNET_FOR_GATEWAY')
-gw_test_thread = threading.Thread(target=gw_test.start_consuming)
-gw_test_thread.start()
+print('receiver started', flush=True)
+channel.start_consuming()
