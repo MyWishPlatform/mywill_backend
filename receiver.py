@@ -22,7 +22,7 @@ from lastwill.contracts.models import Contract, EthContract, TxFail, NeedRequeue
 from lastwill.settings import DEFAULT_FROM_EMAIL, NETWORKS
 from lastwill.profile.models import Profile
 from lastwill.deploy.models import DeployAddress
-from lastwill.payments.functions import create_payment
+from lastwill.payments.api import create_payment
 from exchange_API import to_wish
 
 
