@@ -169,6 +169,7 @@ class EthContract(models.Model):
     compiler_version = models.CharField(max_length=200, null=True, default=None)
     tx_hash = models.CharField(max_length=70, null=True, default=None)
     original_contract = models.ForeignKey(Contract, null=True, default=None, related_name='orig_ethcontract')
+    constructor_arguments = models.TextField()
 
 
 class CommonDetails(models.Model):
@@ -215,6 +216,9 @@ class CommonDetails(models.Model):
         par_int = ParInt()
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        eth_contract.constructor_arguments = binascii.hexlify(
+            tr.encode_constructor_arguments(arguments)
+        ).decode() if arguments else ''
         print('nonce', nonce, flush=True)
         signed_data = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
                 'source' : address,
@@ -1198,9 +1202,11 @@ class ContractDetailsToken(CommonDetails):
         eth_contract_token.abi = token_json['abi']
         eth_contract_token.bytecode = token_json['bytecode'][2:]
         eth_contract_token.compiler_version = token_json['compiler']['version']
-        eth_contract_token.source_code = token_json['source']
         eth_contract_token.contract = self.contract
         eth_contract_token.original_contract = self.contract
+        with open(path.join(dest, 'build/MainToken.sol')) as f:
+            source_code = f.read()
+        eth_contract_token.source_code = source_code
         eth_contract_token.save()
         self.eth_contract_token = eth_contract_token
         self.save()
