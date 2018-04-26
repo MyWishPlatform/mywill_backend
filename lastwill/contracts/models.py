@@ -215,7 +215,7 @@ class CommonDetails(models.Model):
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
-        self.constructor_arguments = binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode()
+        self.eth_contract.constructor_arguments = binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode()
         self.save()
         par_int = ParInt()
         address = NETWORKS[self.contract.network.name]['address']
