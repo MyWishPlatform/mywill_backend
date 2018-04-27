@@ -28,7 +28,7 @@ from .models import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens
 
 
-def check_and_aplly_promocode(promo_str, user, cost, contract_type):
+def check_and_apply_promocode(promo_str, user, cost, contract_type):
     wish_cost = to_wish('ETH', int(cost))
     if promo_str:
         try:
@@ -135,7 +135,7 @@ def deploy(request):
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     promo_str = request.data.get('promo', None)
-    cost = check_and_aplly_promocode(promo_str, request.user, cost, contract.contract_type)
+    cost = check_and_apply_promocode(promo_str, request.user, cost, contract.contract_type)
     wish_cost = to_wish('ETH', int(cost))
 
     if not Profile.objects.select_for_update().filter(

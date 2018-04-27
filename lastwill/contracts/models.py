@@ -25,6 +25,19 @@ from lastwill.contracts.decorators import *
 from email_messages import *
 
 
+def take_off_blocking(network, contract_id=None, address=None):
+    if not address:
+        address = NETWORKS[network]['address']
+    if not contract_id:
+        DeployAddress.objects.select_for_update().filter(
+            network__name=network, address=address
+        ).update(locked_by=None)
+    else:
+        DeployAddress.objects.select_for_update().filter(
+            network__name=network, address=address, locked_by=contract_id
+        ).update(locked_by=None)
+
+
 def send_in_queue(contract_id, type, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         'localhost',
@@ -217,13 +230,10 @@ class CommonDetails(models.Model):
         self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        address = NETWORKS[self.contract.network.name]['address']
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name,
         network_name = MAIL_NETWORK[network]
-        DeployAddress.objects.select_for_update().filter(
-            network__name=self.contract.network.name, address=address
-        ).update(locked_by=None)
+        take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
         eth_contract.save()
@@ -256,11 +266,7 @@ class CommonDetails(models.Model):
             [EMAIL_FOR_POSTPONED_MESSAGE]
         )
         print('contract postponed due to transaction fail', flush=True)
-        address = NETWORKS[self.contract.network.name]['address']
-        DeployAddress.objects.select_for_update().filter(
-            network__name=self.contract.network.name,
-            address=address, locked_by=self.contract.id
-        ).update(locked_by=None)
+        take_off_blocking(self.contract.network.name, self.contract.id)
         print('queue unlocked due to transaction fail', flush=True)
 
     def predeploy_validate(self):
@@ -410,10 +416,7 @@ class ContractDetailsLastwill(CommonDetails):
         else:
             self.next_check = None
         self.save()
-        DeployAddress.objects.filter(
-            network=self.contract.network,
-            locked_by=self.contract.id
-        ).update(locked_by=None)
+        take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
     def triggered(self, message):
@@ -469,10 +472,9 @@ class ContractDetailsLastwill(CommonDetails):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
             if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
-                DeployAddress.objects.select_for_update().filter(
-                    network__name=self.contract.network.name,
-                    address=self.contract.address
-                ).update(locked_by=None)
+                take_off_blocking(
+                    self.contract.network.name, address=self.contract.address
+                )
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
@@ -514,10 +516,7 @@ class ContractDetailsLastwill(CommonDetails):
         ContractDetailsLastwill.objects.select_for_update().filter(
             id=self.id
         ).update(btc_duty=F('btc_duty') - message['value'])
-        DeployAddress.objects.select_for_update().filter(
-            network__name=self.contract.network.name,
-            address=NETWORKS[self.contract.network.name]['address']
-        ).update(locked_by=None)
+        take_off_blocking(self.contract.network.name)
 
 
 @contract_details('Wallet contract (lost key)')
@@ -590,10 +589,7 @@ class ContractDetailsLostKey(CommonDetails):
             self.contract.save()
             self.next_check = None
         self.save()
-        DeployAddress.objects.filter(
-            network=self.contract.network,
-            locked_by=self.contract.id
-        ).update(locked_by=None)
+        take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
     def triggered(self, message):
@@ -928,18 +924,14 @@ class ContractDetailsICO(CommonDetails):
         print('msg_deployed method of the ico contract')
         address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            DeployAddress.objects.select_for_update().filter(
-                network__name=self.contract.network.name, address=address
-            ).update(locked_by=None)
+            take_off_blocking(self.contract.network.name)
             return
         if self.reused_token:
             self.contract.state = 'WAITING_ACTIVATION'
             self.contract.save()
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
-            DeployAddress.objects.select_for_update().filter(
-                network__name=self.contract.network.name, address=address
-            ).update(locked_by=None)
+            take_off_blocking(self.contract.network.name)
             print('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
@@ -991,15 +983,11 @@ class ContractDetailsICO(CommonDetails):
         address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
-                DeployAddress.objects.select_for_update().filter(
-                    network__name=self.contract.network.name, address=address
-                ).update(locked_by=None)
+                take_off_blocking(self.contract.network.name)
             print('ignored', flush=True)
             return
         if self.contract.state in ('ACTIVE', 'ENDED'):
-            DeployAddress.objects.select_for_update().filter(
-                network__name=self.contract.network.name, address=address
-            ).update(locked_by=None)
+            take_off_blocking(self.contract.network.name)
             return
         if self.contract.state == 'WAITING_ACTIVATION':
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -1030,12 +1018,9 @@ class ContractDetailsICO(CommonDetails):
     @postponable
     @check_transaction
     def initialized(self, message):
-        address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
-        DeployAddress.objects.select_for_update().filter(
-            network__name=self.contract.network.name, address=address
-        ).update(locked_by=None)
+        take_off_blocking(self.contract.network.name)
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
             return
