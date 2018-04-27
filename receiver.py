@@ -171,19 +171,10 @@ class Receiver():
     def callback(self, ch, method, properties, body):
 
         print('received', body, properties, method, flush=True)
-        receiver_methods = methods(Receiver)
         try:
             message = json.loads(body.decode())
             if message.get('status', '') == 'COMMITTED':
-                if properties.type in receiver_methods:
-                    all_methods = methods(Receiver)
-                    if properties.type in all_methods:
-                        eval('self.' + str(properties.type) + '(message)')
-                    else:
-                        unknown_handler(message)
-                    # methods_dict.get(properties.type, unknown_handler)(message)
-                else:
-                    unknown_handler(message)
+                getattr(self, properties.type, self.unknown_handler)(message)
         except (TxFail, AlreadyPostponed):
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except NeedRequeue:
@@ -194,6 +185,9 @@ class Receiver():
                   flush=True)
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    def unknown_handler(message):
+        print('unknown message', message, flush=True)
 
 
 def methods(cls):
@@ -221,10 +215,6 @@ methods_dict = {
     'fundsAdded': Receiver.fundsAdded,
     'make_payment': Receiver.make_payment,
 }
-
-
-def unknown_handler(message):
-        print('unknown message', message, flush=True)
 
 
 """
