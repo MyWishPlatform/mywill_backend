@@ -176,7 +176,12 @@ class Receiver():
             message = json.loads(body.decode())
             if message.get('status', '') == 'COMMITTED':
                 if properties.type in receiver_methods:
-                    methods_dict.get(properties.type, unknown_handler)(message)
+                    all_methods = methods(Receiver)
+                    if properties.type in all_methods:
+                        eval('self.' + str(properties.type) + '(message)')
+                    else:
+                        unknown_handler(message)
+                    # methods_dict.get(properties.type, unknown_handler)(message)
                 else:
                     unknown_handler(message)
         except (TxFail, AlreadyPostponed):
