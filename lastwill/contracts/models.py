@@ -235,7 +235,7 @@ class CommonDetails(models.Model):
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         network_link = NETWORKS[self.contract.network.name]['link_address']
-        network = self.contract.network.name,
+        network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
