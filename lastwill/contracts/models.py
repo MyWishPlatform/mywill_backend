@@ -204,7 +204,7 @@ class CommonDetails(models.Model):
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
-        self.eth_contract.constructor_arguments = binascii.hexlify(
+        eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
         par_int = ParInt()
