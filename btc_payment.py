@@ -9,11 +9,12 @@ django.setup()
 from django.contrib.auth.models import User
 
 from lastwill.payments.models import BTCAccount
-from lastwill.payments.functions import create_payment
+<<<<<<< HEAD
 from exchange_API import to_wish
 
 
-sleep(10)
+
+
 
 while 1:
     for user in User.objects.exclude(

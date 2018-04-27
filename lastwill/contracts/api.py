@@ -22,7 +22,7 @@ from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
-from lastwill.payments.functions import create_payment
+from lastwill.payments.api import create_payment
 from exchange_API import to_wish
 from .models import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens
@@ -332,4 +332,26 @@ def get_statistics(request):
             network, contracts, now, day
         )
 
+    return JsonResponse(answer)
+
+@api_view(http_method_names=['GET'])
+def get_statistics_lending(request):
+    now = datetime.datetime.now()
+    day = datetime.datetime.combine(
+        datetime.datetime.now().today(), datetime.time(0, 0)
+    )
+    users = User.objects.all().exclude(
+        email='', password='', last_name='', first_name=''
+    )
+    new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
+    contracts = Contract.objects.all()
+    new_contracts = contracts.filter(
+        created_date__lte=now, created_date__gte=day
+    )
+    answer = {
+        'contracts': len(contracts),
+        'new_contracts': len(new_contracts),
+        'users': len(users),
+        'new_users': len(new_users)
+    }
     return JsonResponse(answer)

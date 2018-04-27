@@ -17,7 +17,7 @@ from lastwill.contracts.models import (
 )
 from lastwill.settings import NETWORKS
 from lastwill.deploy.models import DeployAddress
-from lastwill.payments.functions import create_payment
+from lastwill.payments.api import create_payment
 from exchange_API import to_wish
 
 
