@@ -1,30 +1,30 @@
-from ethereum import abi
-import binascii
-import datetime
 import time
 import pika
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
+
 from django.utils import timezone
 from django.core.mail import send_mail
-from lastwill.contracts.models import Contract, blocking
+
+from lastwill.contracts.models import Contract
 from lastwill.parint import *
-from lastwill.settings import SIGNER, DEFAULT_FROM_EMAIL
+from lastwill.settings import DEFAULT_FROM_EMAIL
 import email_messages
 
 
 def check_all():
     print('check_all method', flush=True)
-    for contract in Contract.objects.filter(contract_type__in=(0,1), state='ACTIVE'):
+    for contract in Contract.objects.filter(
+            contract_type__in=(0,1), state='ACTIVE'
+    ):
         details = contract.get_details()
         if details.active_to < timezone.now():
             contract.state='EXPIRED'
             contract.save()
         elif details.next_check and details.next_check <= timezone.now():
             print('checking contract', contract.id, flush=True)
-            # details.check_contract()
             connection = pika.BlockingConnection(pika.ConnectionParameters(
                 'localhost',
                 5672,
@@ -47,7 +47,6 @@ def check_all():
             print('send check contract')
             connection.close()
         send_reminders(contract)
-       # carry_out_lastwillcontract(contract)
     print('checked all', flush=True)
 
 
@@ -89,4 +88,3 @@ if __name__ == '__main__':
         check_all()
         time.sleep(60 * 60 * 24)
         # time.sleep(60 * 10)
-
