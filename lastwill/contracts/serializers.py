@@ -172,7 +172,7 @@ class EthContractSerializer(serializers.ModelSerializer):
         model = EthContract
         fields = (
             'id', 'address', 'source_code', 'abi',
-            'bytecode', 'compiler_version',
+            'bytecode', 'compiler_version', 'constructor_arguments'
         )
 
 
