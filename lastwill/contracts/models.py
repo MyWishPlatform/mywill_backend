@@ -125,6 +125,25 @@ def create_ethcontract_in_compile(abi, bytecode, cv, contract, source_code):
     return eth_contract_token
 
 
+def add_real_params(params, admin_address, address, wallet_address):
+    params['constants']['D_CONTRACTS_OWNER'] = admin_address
+    params['constants']['D_MYWISH_ADDRESS'] = address
+    params['constants']['D_COLD_WALLET'] = wallet_address
+    return params
+
+
+def create_directory(details):
+    details.temp_directory = str(uuid.uuid4())
+    print(details.temp_directory, flush=True)
+    sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
+    dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
+    os.mkdir(dest)
+    os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
+    preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
+    os.unlink(preproc_config)
+    return dest, preproc_config
+
+
 def test_crowdsale_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
@@ -137,7 +156,10 @@ def test_crowdsale_params(config, params, dest):
 
 
 def test_token_params(config, params, dest):
-    pass
+    with open(config, 'w') as f:
+        f.write(json.dumps(params))
+    if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+        raise Exception('compiler error while deploying')
 
 
 def take_off_blocking(network, contract_id=None, address=None):
@@ -905,14 +927,7 @@ class ContractDetailsICO(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        self.temp_directory = str(uuid.uuid4())
-        print(self.temp_directory, flush=True)
-        sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
-        dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
-        os.mkdir(dest)
-        os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
-        preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
-        os.unlink(preproc_config)
+        dest, preproc_config = create_directory(self)
         token_holders = self.contract.tokenholder_set.all()
         amount_bonuses = add_amount_bonuses(self)
         time_bonuses = add_time_bonuses(self)
@@ -932,9 +947,10 @@ class ContractDetailsICO(CommonDetails):
 
         test_crowdsale_params(preproc_config, preproc_params, dest)
         address = NETWORKS[self.contract.network.name]['address']
-        preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
-        preproc_params['constants']['D_MYWISH_ADDRESS'] = address
-        preproc_params['constants']['D_COLD_WALLET'] = self.cold_wallet_address
+        preproc_params = add_real_params(
+            preproc_params, self.admin_address,
+            address, self.cold_wallet_address
+        )
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system(
@@ -952,7 +968,7 @@ class ContractDetailsICO(CommonDetails):
         if not self.reused_token:
             with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
                 token_json = json.loads(f.read())
-            with open (path.join(dest, 'build/MainToken.sol')) as f:
+            with open(path.join(dest, 'build/MainToken.sol')) as f:
                 source_code = f.read()
             self.eth_contract_token = create_ethcontract_in_compile(
                 token_json['abi'], token_json['bytecode'][2:],
@@ -1142,14 +1158,7 @@ class ContractDetailsToken(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        self.temp_directory = str(uuid.uuid4())
-        print(self.temp_directory, flush=True)
-        sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
-        dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
-        os.mkdir(dest)
-        os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
-        preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
-        os.unlink(preproc_config)
+        dest, preproc_config = create_directory(self)
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
         preproc_params['constants'] = add_token_params(
