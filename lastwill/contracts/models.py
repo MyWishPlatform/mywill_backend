@@ -25,6 +25,60 @@ from lastwill.contracts.decorators import *
 from email_messages import *
 
 
+def add_token_params(params, details, token_holders, pause, cont_mint):
+    params["D_ERC"] = details.token_type
+    params["D_NAME"] =  details.token_name
+    params["D_SYMBOL"] = details.token_short_name
+    params["D_DECIMALS"] = details.decimals
+    params["D_CONTINUE_MINTING"] = cont_mint
+    params["D_CONTRACTS_OWNER"] = "0x8ffff2c69f000c790809f6b8f9abfcbaab46b322"
+    params["D_PAUSE_TOKENS"] = pause
+    params["D_PREMINT_COUNT"] = len(token_holders)
+    params["D_PREMINT_ADDRESSES"] = ','.join(map(
+        lambda th: 'address(%s)' % th.address, token_holders
+    ))
+    params["D_PREMINT_AMOUNTS"] = ','.join(map(
+        lambda th: 'uint(%s)' % th.amount, token_holders
+    ))
+    params["D_PREMINT_FREEZES"] = ','.join(map(
+        lambda th: 'uint64(%s)' % (
+            th.freeze_date if th.freeze_date else 0
+        ), token_holders
+    ))
+    return params
+
+
+def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
+    params["D_START_TIME"] = details.start_date
+    params["D_END_TIME"] = details.stop_date
+    params["D_SOFT_CAP_WEI"] = str(details.soft_cap)
+    params["D_HARD_CAP_WEI"] = str(details.hard_cap)
+    params["D_RATE"] = int(details.rate)
+    params["D_COLD_WALLET"] = '0x9b37d7b266a41ef130c4625850c8484cf928000d'
+    params["D_CONTRACTS_OWNER"] = '0x8ffff2c69f000c790809f6b8f9abfcbaab46b322'
+    params["D_AUTO_FINALISE"] = details.platform_as_admin
+    params["D_BONUS_TOKENS"] = "true" if time_bonuses or amount_bonuses else "false"
+    params["D_WEI_RAISED_AND_TIME_BONUS_COUNT"] = len(time_bonuses)
+    params["D_WEI_RAISED_STARTS_BOUNDARIES"] = ','.join(
+        map(lambda b: 'uint(%s)' % b['min_amount'], time_bonuses))
+    params["D_WEI_RAISED_ENDS_BOUNDARIES"] = ','.join(
+        map(lambda b: 'uint(%s)' % b['max_amount'], time_bonuses))
+    params["D_TIME_STARTS_BOUNDARIES"] = ','.join(
+        map(lambda b: 'uint64(%s)' % b['min_time'], time_bonuses))
+    params["D_TIME_ENDS_BOUNDARIES"] = ','.join(
+        map(lambda b: 'uint64(%s)' % b['max_time'], time_bonuses))
+    params["D_WEI_RAISED_AND_TIME_MILLIRATES"] = ','.join(
+        map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])), time_bonuses))
+    params["D_WEI_AMOUNT_BONUS_COUNT"] = len(amount_bonuses)
+    params["D_WEI_AMOUNT_BOUNDARIES"] = ','.join(
+        map(lambda b: 'uint(%s)' % b['max_amount'], reversed(amount_bonuses)))
+    params["D_WEI_AMOUNT_MILLIRATES"] = ','.join(
+        map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])),
+            reversed(amount_bonuses)))
+    params["D_MYWISH_ADDRESS"] = '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd'
+    return params
+
+
 def take_off_blocking(network, contract_id=None, address=None):
     if not address:
         address = NETWORKS[network]['address']
@@ -57,7 +111,7 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
-def send_in_signer(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
+def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
     data = {
         'source': address,
         'nonce': nonce,
@@ -214,7 +268,7 @@ class CommonDetails(models.Model):
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')
-        signed_data = send_in_signer(
+        signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
             self.contract.network.name, value=self.get_value(),
             contract_data=data
@@ -284,7 +338,7 @@ class CommonDetails(models.Model):
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
-        signed_data = send_in_signer(
+        signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
@@ -351,7 +405,7 @@ class ContractDetailsLastwill(CommonDetails):
             )
             return
         nonce = int(par_int.eth_getTransactionCount(wl_address, "pending"), 16)
-        signed_data = send_in_signer(
+        signed_data = sign_transaction(
             wl_address, nonce, gas_limit, self.contract.network.name,
             value=int(contract.get_details().btc_duty),
             dest=contract.get_details().eth_contract.address,
@@ -483,7 +537,7 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        signed_data = send_in_signer(
+        signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
@@ -502,7 +556,7 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt()
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        signed_data = send_in_signer(
+        signed_data = sign_transaction(
             address, nonce,  600000, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
@@ -827,46 +881,16 @@ class ContractDetailsICO(CommonDetails):
             if bonus.get('min_amount', None) is None:
                 bonus['min_amount'] = 0
                 bonus['max_amount'] = self.hard_cap
+        preproc_params = {'constants': {}}
+        preproc_params['constants'] = add_token_params(
+            preproc_params['constants'], self, token_holders,
+            not self.is_transferable_at_once,
+            self.continue_minting
+        )
+        preproc_params['constants'] = add_crowdsale_params(
+            preproc_params['constants'], self, time_bonuses, amount_bonuses
+        )
 
-
-        preproc_params = {"constants": {
-                    "D_START_TIME": self.start_date,
-                    "D_END_TIME": self.stop_date,
-                    "D_SOFT_CAP_WEI": str(self.soft_cap),
-                    "D_HARD_CAP_WEI": str(self.hard_cap),
-                    "D_RATE": int(self.rate),
-                    "D_NAME": self.token_name,
-                    "D_SYMBOL": self.token_short_name,
-                    "D_DECIMALS": int(self.decimals),
-                    "D_COLD_WALLET": '0x9b37d7b266a41ef130c4625850c8484cf928000d',
-                    "D_CONTRACTS_OWNER": '0x8ffff2c69f000c790809f6b8f9abfcbaab46b322',
-
-                    "D_AUTO_FINALISE": self.platform_as_admin,
-                    "D_PAUSE_TOKENS": not self.is_transferable_at_once,
-
-                    "D_PREMINT_COUNT": len(token_holders),
-                    
-                    "D_PREMINT_ADDRESSES": ','.join(map(lambda th: 'address(%s)'%th.address, token_holders)),
-                    "D_PREMINT_AMOUNTS": ','.join(map(lambda th: 'uint(%s)'%th.amount, token_holders)),
-                    "D_PREMINT_FREEZES": ','.join(map(lambda th: 'uint64(%s)'%(th.freeze_date if th.freeze_date else 0), token_holders)),
-
-                    "D_BONUS_TOKENS": "true" if time_bonuses or amount_bonuses else "false",
-
-                    "D_WEI_RAISED_AND_TIME_BONUS_COUNT": len(time_bonuses),
-                    "D_WEI_RAISED_STARTS_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['min_amount'], time_bonuses)),
-                    "D_WEI_RAISED_ENDS_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], time_bonuses)),
-                    "D_TIME_STARTS_BOUNDARIES": ','.join(map(lambda b: 'uint64(%s)'%b['min_time'], time_bonuses)),
-                    "D_TIME_ENDS_BOUNDARIES": ','.join(map(lambda b: 'uint64(%s)'%b['max_time'], time_bonuses)),
-                    "D_WEI_RAISED_AND_TIME_MILLIRATES": ','.join(map(lambda b: 'uint(%s)'%(int(10*b['bonus'])), time_bonuses)),
-
-                    "D_WEI_AMOUNT_BONUS_COUNT": len(amount_bonuses),
-                    "D_WEI_AMOUNT_BOUNDARIES": ','.join(map(lambda b: 'uint(%s)'%b['max_amount'], reversed(amount_bonuses))),
-                    "D_WEI_AMOUNT_MILLIRATES": ','.join(map(lambda b: 'uint(%s)'%(int(10*b['bonus'])), reversed(amount_bonuses))),
-
-                    "D_CONTINUE_MINTING": self.continue_minting,
-                    "D_MYWISH_ADDRESS": '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd',
-                    "D_ERC": self.token_type,
-        }}
         if self.min_wei:
             preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(int(self.min_wei))
         if self.max_wei:
@@ -950,7 +974,7 @@ class ContractDetailsICO(CommonDetails):
             nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16) 
             print('nonce', nonce)
             print('transferOwnership message signed')
-            signed_data = send_in_signer(
+            signed_data = sign_transaction(
                 address, nonce, 100000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
                 contract_data=binascii.hexlify(tr.encode_function_call(
@@ -1002,7 +1026,7 @@ class ContractDetailsICO(CommonDetails):
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         print('init message signed')
-        signed_data = send_in_signer(
+        signed_data = sign_transaction(
             address, nonce,
             100000 + 50000 * self.contract.tokenholder_set.all().count(),
             self.contract.network.name,
@@ -1111,29 +1135,11 @@ class ContractDetailsToken(CommonDetails):
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
         token_holders = self.contract.tokenholder_set.all()
-        preproc_params = {"constants": {
-		    "D_ONLY_TOKEN": True,
-		    "D_ERC": self.token_type,
-		    "D_NAME": self.token_name,
-		    "D_SYMBOL": self.token_short_name,
-		    "D_DECIMALS": self.decimals,
-		    "D_CONTINUE_MINTING": self.future_minting,
-		    "D_CONTRACTS_OWNER": "0x8ffff2c69f000c790809f6b8f9abfcbaab46b322",
-		    "D_PAUSE_TOKENS": False,
-
-		    "D_PREMINT_COUNT": len(token_holders),
-		    "D_PREMINT_ADDRESSES": ','.join(map(
-                lambda th: 'address(%s)'%th.address, token_holders
-            )),
-		    "D_PREMINT_AMOUNTS": ','.join(map(
-                lambda th: 'uint(%s)'%th.amount, token_holders
-            )),
-		    "D_PREMINT_FREEZES": ','.join(map(
-                lambda th: 'uint64(%s)'%(
-                    th.freeze_date if th.freeze_date else 0
-                ), token_holders
-            )),
-        }}
+        preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
+        preproc_params['constants'] = add_token_params(
+            preproc_params['constants'], self, token_holders,
+            False, self.future_minting
+        )
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):

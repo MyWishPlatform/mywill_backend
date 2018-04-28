@@ -194,29 +194,6 @@ def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
 
 
-methods_dict = {
-    'payment': Receiver.payment,
-    'deployed': Receiver.deployed,
-    'killed': Receiver.killed,
-    'checked': Receiver.checked,
-    'repeatCheck': Receiver.repeat_check,
-    'triggered': Receiver.triggered,
-    'launch': Receiver.launch,
-    'initialized': Receiver.initialized,
-    'ownershipTransferred': Receiver.ownershipTransferred,
-    'finalized': Receiver.finalized,
-    'finish': Receiver.finish,
-    'transactionCompleted': Receiver.transactionCompleted,
-    'confirm_alive': Receiver.confirm_alive,
-    'cancel': Receiver.cancel,
-    'contractPayment': Receiver.contractPayment,
-    'notified': Receiver.notified,
-    'check_contract': Receiver.check_contract,
-    'fundsAdded': Receiver.fundsAdded,
-    'make_payment': Receiver.make_payment,
-}
-
-
 """
 rabbitmqctl add_user java java
 rabbitmqctl add_vhost mywill
