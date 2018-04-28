@@ -141,6 +141,7 @@ def create_directory(details):
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
     preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
     os.unlink(preproc_config)
+    details.save()
     return dest, preproc_config
 
 
