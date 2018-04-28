@@ -79,6 +79,67 @@ def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
     return params
 
 
+def add_amount_bonuses(details):
+    amount_bonuses = []
+    if details.amount_bonuses:
+        curr_min_amount = 0
+        for bonus in details.amount_bonuses:
+            amount_bonuses.append({
+                'max_amount': bonus['min_amount'],
+                'bonus': bonus['bonus']
+            })
+            if int(bonus[
+                       'min_amount']) > curr_min_amount:  # fill gap with zero
+                amount_bonuses.append({
+                    'max_amount': bonus['max_amount'],
+                    'bonus': 0
+                })
+            curr_min_amount = int(bonus['max_amount'])
+    return amount_bonuses
+
+
+def add_time_bonuses(details):
+    time_bonuses = deepcopy(details.time_bonuses)
+    for bonus in time_bonuses:
+        if bonus.get('min_time', None) is None:
+            bonus['min_time'] = details.start_date
+            bonus['max_time'] = details.stop_date - 5
+        else:
+            if int(bonus['max_time']) > int(details.stop_date) - 5:
+                bonus['max_time'] = int(details.stop_date) - 5
+        if bonus.get('min_amount', None) is None:
+            bonus['min_amount'] = 0
+            bonus['max_amount'] = details.hard_cap
+    return time_bonuses
+
+
+def create_ethcontract_in_compile(abi, bytecode, cv, contract, source_code):
+    eth_contract_token = EthContract()
+    eth_contract_token.abi = abi
+    eth_contract_token.bytecode = bytecode
+    eth_contract_token.compiler_version = cv
+    eth_contract_token.contract = contract
+    eth_contract_token.original_contract = contract
+    eth_contract_token.source_code = source_code
+    eth_contract_token.save()
+    return eth_contract_token
+
+
+def test_crowdsale_params(config, params, dest):
+    with open(config, 'w') as f:
+        f.write(json.dumps(params))
+    if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(
+            dest=dest)):
+        raise Exception('compiler error while testing')
+    if os.system("/bin/bash -c 'cd {dest} && ./test-crowdsale.sh'".format(
+            dest=dest)):
+        raise Exception('testing error')
+
+
+def test_token_params(config, params, dest):
+    pass
+
+
 def take_off_blocking(network, contract_id=None, address=None):
     if not address:
         address = NETWORKS[network]['address']
@@ -853,34 +914,8 @@ class ContractDetailsICO(CommonDetails):
         preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
         os.unlink(preproc_config)
         token_holders = self.contract.tokenholder_set.all()
-
-        amount_bonuses = []
-        if self.amount_bonuses:
-            curr_min_amount = 0
-            for bonus in self.amount_bonuses:
-                amount_bonuses.append({
-                         'max_amount': bonus['min_amount'],
-                         'bonus': bonus['bonus']
-                })
-                if int(bonus['min_amount']) > curr_min_amount: # fill gap with zero
-                    amount_bonuses.append({
-                             'max_amount': bonus['max_amount'],
-                             'bonus': 0
-                    })
-                curr_min_amount = int(bonus['max_amount'])
-
-
-        time_bonuses = deepcopy(self.time_bonuses)
-        for bonus in time_bonuses:
-            if bonus.get('min_time', None) is None:
-                bonus['min_time'] = self.start_date
-                bonus['max_time'] = self.stop_date - 5
-            else:
-                if int(bonus['max_time']) > int(self.stop_date) - 5:
-                    bonus['max_time'] = int(self.stop_date) - 5
-            if bonus.get('min_amount', None) is None:
-                bonus['min_amount'] = 0
-                bonus['max_amount'] = self.hard_cap
+        amount_bonuses = add_amount_bonuses(self)
+        time_bonuses = add_time_bonuses(self)
         preproc_params = {'constants': {}}
         preproc_params['constants'] = add_token_params(
             preproc_params['constants'], self, token_holders,
@@ -890,19 +925,12 @@ class ContractDetailsICO(CommonDetails):
         preproc_params['constants'] = add_crowdsale_params(
             preproc_params['constants'], self, time_bonuses, amount_bonuses
         )
-
         if self.min_wei:
             preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(int(self.min_wei))
         if self.max_wei:
             preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(int(self.max_wei))
 
-        with open(preproc_config, 'w') as f:
-            f.write(json.dumps(preproc_params))
-        if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)):
-            raise Exception('compiler error while testing')
-        if os.system("/bin/bash -c 'cd {dest} && ./test-crowdsale.sh'".format(dest=dest)):
-            raise Exception('testing error')
-
+        test_crowdsale_params(preproc_config, preproc_params, dest)
         address = NETWORKS[self.contract.network.name]['address']
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         preproc_params['constants']['D_MYWISH_ADDRESS'] = address
@@ -913,35 +941,23 @@ class ContractDetailsICO(CommonDetails):
                 "/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)
         ):
             raise Exception('compiler error while deploying')
-
-        eth_contract_crowdsale = EthContract()
         with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json')) as f:
             crowdsale_json = json.loads(f.read())
-        eth_contract_crowdsale.abi = crowdsale_json['abi']
-        eth_contract_crowdsale.bytecode = crowdsale_json['bytecode'][2:]
-        eth_contract_crowdsale.compiler_version = crowdsale_json['compiler']['version']
         with open(path.join(dest, 'build/TemplateCrowdsale.sol')) as f:
             source_code = f.read()
-        eth_contract_crowdsale.source_code = source_code
-        eth_contract_crowdsale.contract = self.contract
-        eth_contract_crowdsale.original_contract = self.contract
-        eth_contract_crowdsale.save()
-        self.eth_contract_crowdsale = eth_contract_crowdsale
+        self.eth_contract_crowdsale = create_ethcontract_in_compile(
+            crowdsale_json['abi'], crowdsale_json['bytecode'][2:],
+            crowdsale_json['compiler']['version'], self.contract, source_code
+        )
         if not self.reused_token:
-            eth_contract_token = EthContract()
             with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
                 token_json = json.loads(f.read())
-            eth_contract_token.abi = token_json['abi']
-            eth_contract_token.bytecode = token_json['bytecode'][2:]
-            eth_contract_token.compiler_version = token_json['compiler']['version']
-            # eth_contract_token.source_code = token_json['source']
             with open (path.join(dest, 'build/MainToken.sol')) as f:
                 source_code = f.read()
-            eth_contract_token.source_code = source_code
-            eth_contract_token.contract = self.contract
-            eth_contract_token.original_contract = self.contract
-            eth_contract_token.save()
-            self.eth_contract_token = eth_contract_token
+            self.eth_contract_token = create_ethcontract_in_compile(
+                token_json['abi'], token_json['bytecode'][2:],
+                token_json['compiler']['version'], self.contract, source_code
+            )
         self.save()
 #        shutil.rmtree(dest)
 
@@ -1140,31 +1156,21 @@ class ContractDetailsToken(CommonDetails):
             preproc_params['constants'], self, token_holders,
             False, self.future_minting
         )
-        with open(preproc_config, 'w') as f:
-            f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
-            raise Exception('compiler error while testing')
-        if os.system('cd {dest} && ./test-token.sh'.format(dest=dest)):
-            raise Exception('testing error')
+        test_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
-        eth_contract_token = EthContract()
         with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
             token_json = json.loads(f.read())
-        eth_contract_token.abi = token_json['abi']
-        eth_contract_token.bytecode = token_json['bytecode'][2:]
-        eth_contract_token.compiler_version = token_json['compiler']['version']
-        eth_contract_token.contract = self.contract
-        eth_contract_token.original_contract = self.contract
         with open(path.join(dest, 'build/MainToken.sol')) as f:
             source_code = f.read()
-        eth_contract_token.source_code = source_code
-        eth_contract_token.save()
-        self.eth_contract_token = eth_contract_token
+        self.eth_contract_token = create_ethcontract_in_compile(
+            token_json['abi'], token_json['bytecode'][2:],
+            token_json['compiler']['version'], self.contract, source_code
+        )
         self.save()
 
     @blocking
