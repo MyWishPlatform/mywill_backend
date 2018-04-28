@@ -135,7 +135,9 @@ def deploy(request):
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
     promo_str = request.data.get('promo', None)
-    cost = check_and_apply_promocode(promo_str, request.user, cost, contract.contract_type)
+    cost = check_and_apply_promocode(
+        promo_str, request.user, cost, contract.contract_type
+    )
     wish_cost = to_wish('ETH', int(cost))
 
     if not Profile.objects.select_for_update().filter(
@@ -256,7 +258,10 @@ def get_contracts_for_network(net, all_contracts, now, day):
     )
     now_active = active.filter(created_date__lte=now, created_date__gte=day)
     done = contracts.filter(
-        state__in=['DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE', 'TRIGGERED']
+        state__in=[
+            'DONE', 'CANCELLED', 'ENDED', 'EXPIRED',
+            'UNDER_CROWDSALE', 'TRIGGERED', 'KILLED'
+        ]
     )
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['POSTPONED'])
@@ -280,7 +285,9 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'now_launch': len(now_in_progress)
         }
     for num, ctype in enumerate(contract_details_types):
-        answer['contract_type_'+str(num)] = contracts.filter(contract_type=num).count()
+        answer['contract_type_'+str(num)] = contracts.filter(
+            contract_type=num
+        ).count()
         answer['contract_type_'+str(num)+'_new'] = contracts.filter(
             contract_type=num
         ).filter(created_date__lte=now, created_date__gte=day).count()
@@ -292,7 +299,9 @@ def get_contracts_for_network(net, all_contracts, now, day):
 def get_statistics(request):
 
     now = datetime.datetime.now()
-    day = datetime.datetime.combine(datetime.datetime.now().today(), datetime.time(0, 0))
+    day = datetime.datetime.combine(
+        datetime.datetime.now().today(), datetime.time(0, 0)
+    )
 
     users = User.objects.all().exclude(
         email='', password='', last_name='', first_name=''
