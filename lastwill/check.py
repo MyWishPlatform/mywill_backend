@@ -1,5 +1,4 @@
 import re
-from django.core.validators import validate_email
 from rest_framework.serializers import ValidationError
 
 def die(message):

@@ -1,24 +1,25 @@
-import requests
 import datetime
-import json
-import random
 import binascii
 from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from django.apps import apps
+
 from django.db import transaction
 from django.core.mail import send_mail
 from django.utils import timezone
-from .models import Contract, Heir, ContractDetailsLastwill, ContractDetailsDelayedPayment, ContractDetailsLostKey, ContractDetailsPizza, contract_details_types, EthContract, ContractDetailsICO, TokenHolder, ContractDetailsToken, BtcKey4RSK
 from rest_framework.exceptions import PermissionDenied
-from lastwill.settings import SIGNER
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 import lastwill.check as check
-from lastwill.settings import ORACLIZE_PROXY, DEFAULT_FROM_EMAIL
-from exchange_API import to_wish, convert
+from lastwill.settings import DEFAULT_FROM_EMAIL
 from lastwill.parint import ParInt
-from lastwill.deploy.models import Network
+from .models import (
+    Contract, Heir, ContractDetailsLastwill,
+    ContractDetailsDelayedPayment, ContractDetailsLostKey,
+    ContractDetailsPizza, EthContract, ContractDetailsICO,
+    TokenHolder, ContractDetailsToken
+)
+from exchange_API import to_wish, convert
 import email_messages
 
 
@@ -54,10 +55,9 @@ class ContractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contract
-        fields = ('id', 'user', 'owner_address',
-                'state', 'created_date',
-                'balance', 'cost', 'name',
-                'contract_type', 'contract_details', 'network',
+        fields = (
+            'id', 'user', 'owner_address', 'state', 'created_date', 'balance',
+            'cost', 'name', 'contract_type', 'contract_details', 'network',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -75,10 +75,14 @@ class ContractSerializer(serializers.ModelSerializer):
             validated_data['state'] = 'CREATED'
 
         contract_type = validated_data['contract_type']
-        details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
+        details_serializer = self.get_details_serializer(
+            contract_type
+        )(context=self.context)
         contract_details = validated_data.pop('contract_details')
         details_serializer.validate(contract_details)
-        validated_data['cost'] = Contract.get_details_model(contract_type).calc_cost(contract_details, validated_data['network'])
+        validated_data['cost'] = Contract.get_details_model(
+            contract_type
+        ).calc_cost(contract_details, validated_data['network'])
         transaction.set_autocommit(False)
         try:
             contract = super().create(validated_data)
@@ -113,11 +117,15 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract):
         res = super().to_representation(contract)
-        res['contract_details'] = self.get_details_serializer(contract.contract_type)(context=self.context).to_representation(contract.get_details())
+        res['contract_details'] = self.get_details_serializer(
+            contract.contract_type
+        )(context=self.context).to_representation(contract.get_details())
         if contract.state != 'CREATED':
             eth_cost = res['cost']
         else:
-            eth_cost = Contract.get_details_model(contract.contract_type).calc_cost(res['contract_details'], contract.network)
+            eth_cost = Contract.get_details_model(
+                contract.contract_type
+            ).calc_cost(res['contract_details'], contract.network)
         res['cost'] = {
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
@@ -135,10 +143,16 @@ class ContractSerializer(serializers.ModelSerializer):
         contract_type = contract.contract_type
         contract_details = validated_data.pop('contract_details', None)
         if contract_details:
-            details_serializer = self.get_details_serializer(contract_type)(context=self.context) 
+            details_serializer = self.get_details_serializer(
+                contract_type
+            )(context=self.context)
             details_serializer.validate(contract_details)
-            validated_data['cost'] = contract.get_details_model(contract_type).calc_cost(contract_details, validated_data['network'])
-            details_serializer.update(contract, contract.get_details(), contract_details)
+            validated_data['cost'] = contract.get_details_model(
+                contract_type
+            ).calc_cost(contract_details, validated_data['network'])
+            details_serializer.update(
+                contract, contract.get_details(), contract_details
+            )
 
         return super().update(contract, validated_data)
 
@@ -156,17 +170,25 @@ class ContractSerializer(serializers.ModelSerializer):
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
-        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version', 'constructor_arguments')
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
 
 
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsLastwill
-        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check', 'email', 'platform_alive', 'platform_cancel', 'last_reset')
+        fields = (
+            'user_address', 'active_to', 'check_interval',
+            'last_check', 'next_check', 'email', 'platform_alive',
+            'platform_cancel', 'last_reset', 'last_press_imalive'
+        )
         extra_kwargs = {
             'last_check': {'read_only': True},
             'next_check': {'read_only': True},
-            'last_reset': {'read_only': True}
+            'last_reset': {'read_only': True},
+            'last_press_imalive': {'read_only': True}
         }
 
     def to_representation(self, contract_details):
@@ -181,6 +203,8 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
             btc_key = contract_details.btc_key
             if btc_key:
                 res['btc_address'] = contract_details.btc_key.btc_address
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
         return res
 
     def create(self, contract, contract_details):
@@ -211,7 +235,9 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         assert(details['check_interval'] <= 315360000)
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
-        details['active_to'] = datetime.datetime.strptime(details['active_to'], '%Y-%m-%d %H:%M')
+        details['active_to'] = datetime.datetime.strptime(
+            details['active_to'], '%Y-%m-%d %H:%M'
+        )
         for heir_json in details['heirs']:
             heir_json.get('email', None) and check.is_email(heir_json['email'])
             check.is_address(heir_json['address'])
@@ -225,7 +251,13 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
 class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
     class Meta:
         model = ContractDetailsLostKey
-        fields = ('user_address', 'active_to', 'check_interval', 'last_check', 'next_check')
+        fields = (
+            'user_address',
+            'active_to',
+            'check_interval',
+            'last_check',
+            'next_check'
+        )
         extra_kwargs = {
             'last_check': {'read_only': True},
             'next_check': {'read_only': True},
@@ -235,7 +267,9 @@ class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
 class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsDelayedPayment
-        fields = ('user_address', 'date', 'recepient_address', 'recepient_email')
+        fields = (
+            'user_address', 'date', 'recepient_address', 'recepient_email'
+        )
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
@@ -257,45 +291,29 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
         return res
 
 class ContractDetailsPizzaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsPizza
-        fields = ('user_address', 'pizzeria_address', 'pizza_cost', 'timeout', 'order_id', 'code')
+        fields = (
+            'user_address', 'pizzeria_address',
+            'pizza_cost', 'timeout', 'order_id', 'code'
+        )
         read_only_fields = ('pizzeria_address', 'timeout', 'code')
 
-    def create(self, contract, contract_details):
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        kwargs['code'] = random.randrange(9999)
-        kwargs['salt'] = random.randrange(2**256)
-        kwargs['pizza_cost'] = 1 # for testing
-        return super().create(kwargs)
-
-    def update(self, contract, details, contract_details):
-        kwargs = contract_details_copy()
-        kwargs['contract'] = contract
-        kwargs['pizza_cost'] = 1 # for testing
-        return super().update(details, kwargs)
-
-    def validate(self, details):
-        assert('user_address' in details and 'pizza_cost' in details)
-        check.is_address(details['user_address'])
-        return details
-
-    def to_representation(self, contract_details):
-        tes = super().to_representation(contract_details)
-        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-        return res
 
 class ContractDetailsICOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsICO
         fields = (
-                'soft_cap', 'hard_cap', 'token_name', 'token_short_name', 'is_transferable_at_once',
-                'start_date', 'stop_date', 'decimals', 'rate', 'admin_address', 'platform_as_admin',
-                'time_bonuses', 'amount_bonuses', 'continue_minting', 'cold_wallet_address', 'reused_token',
+                'soft_cap', 'hard_cap', 'token_name', 'token_short_name',
+                'is_transferable_at_once','start_date', 'stop_date',
+                'decimals', 'rate', 'admin_address', 'platform_as_admin',
+                'time_bonuses', 'amount_bonuses', 'continue_minting',
+                'cold_wallet_address', 'reused_token',
                 'token_type', 'min_wei', 'max_wei',
         )
 
@@ -382,10 +400,9 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
-#        if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
-#            res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
-#        else:
-#            res['sold_tokens'] = 0
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+            res['eth_contract_crowdsale']['source_code'] = ''
         return res
 
     def update(self, contract, details, contract_details): 
@@ -411,7 +428,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsToken
         fields = (
-                'token_name', 'token_short_name', 'decimals', 'admin_address', 'token_type', 'future_minting',
+                'token_name', 'token_short_name', 'decimals',
+                'admin_address', 'token_type', 'future_minting',
         )
 
     def create(self, contract, contract_details):
@@ -446,12 +464,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        # if contract_details.eth_contract_token is not None and contract_details.eth_contract_token.address is not None:
-        #     res['sold_tokens'] = count_sold_tokens(contract_details.eth_contract_token.address)
-        # else:
-        #     res['sold_tokens'] = 0
         if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(contract__state='ACTIVE'):
             res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(contract__state__in=('ACTIVE','ENDED')).order_by('id')[0].contract.id
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
         return res
 
     def update(self, contract, details, contract_details):

@@ -1,5 +1,3 @@
-from django.core.mail import send_mail
-
 from lastwill.contracts.models import *
 from lastwill.parint import *
 from lastwill.settings import *
@@ -7,7 +5,9 @@ from lastwill.settings import *
 
 def move_funds(network):
     assert (network in ['RSK_MAINNET', 'RSK_TESTNET'])
-    details = ContractDetailsLastwill.objects.filter(btc_duty__gt=0).order_by('btc_duty')
+    details = ContractDetailsLastwill.objects.filter(
+        btc_duty__gt=0
+    ).order_by('btc_duty')
     if not details:
         return
     contract = details.first().contract
@@ -26,7 +26,7 @@ def move_funds(network):
         return
     nonce = int(par_int.eth_getTransactionCount(wl_address, "pending"), 16)
 
-    response = json.loads(
+    json.loads(
         requests.post('http://{}/sign/'.format(SIGNER), json={
             'source': wl_address,
             'dest': contract.get_details().eth_contract.address,
