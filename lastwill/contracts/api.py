@@ -306,7 +306,7 @@ def get_statistics(request):
     users = User.objects.all().exclude(
         email='', password='', last_name='', first_name=''
     ).exclude(email__startswith='testermc')
-    anonimys = User.objects.filter(
+    anonymous = User.objects.filter(
         email='', password='', last_name='', first_name=''
     )
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
@@ -328,7 +328,7 @@ def get_statistics(request):
     }
     networks = Network.objects.all()
     contracts = Contract.objects.all().exclude(
-        user__in=anonimys
+        user__in=anonymous
     ).exclude(
         user__in=fb_test_users
     ).exclude(
@@ -344,7 +344,7 @@ def get_statistics(request):
     return JsonResponse(answer)
 
 @api_view(http_method_names=['GET'])
-def get_statistics_lending(request):
+def get_statistics_landing(request):
     now = datetime.datetime.now()
     day = datetime.datetime.combine(
         datetime.datetime.now().today(), datetime.time(0, 0)
