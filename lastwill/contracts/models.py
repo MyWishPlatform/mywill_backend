@@ -336,6 +336,7 @@ class CommonDetails(models.Model):
     def deploy(self, eth_contract_attr_name='eth_contract'):
         if self.contract.state == 'ACTIVE':
             print('launch message ignored because already deployed', flush=True)
+            take_off_blocking(self.contract.network.name)
             return
         self.compile(eth_contract_attr_name)
         eth_contract = getattr(self, eth_contract_attr_name)
@@ -345,7 +346,7 @@ class CommonDetails(models.Model):
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
-        par_int = ParInt()
+        par_int = ParInt(self.contract.network.name)
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         eth_contract.constructor_arguments = binascii.hexlify(
@@ -364,16 +365,10 @@ class CommonDetails(models.Model):
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
         print('value', self.get_value(), flush=True)
-<<<<<<< HEAD
-        print('network', sys.argv[1], flush=True)
-        eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
-        print('eth contract tx hash ', eth_contract.tx_hash, flush=True)
-=======
         print('network', self.contract.network.name, flush=True)
         eth_contract.tx_hash = par_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
->>>>>>> refactoring
         eth_contract.save()
         print('transaction sent', flush=True)
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -426,7 +421,7 @@ class CommonDetails(models.Model):
     def check_contract(self):
         print('checking', self.contract.name)
         tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
+        par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
@@ -626,7 +621,7 @@ class ContractDetailsLastwill(CommonDetails):
                     self.contract.network.name, address=self.contract.address
                 )
         tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
+        par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         signed_data = sign_transaction(
@@ -635,28 +630,17 @@ class ContractDetailsLastwill(CommonDetails):
             contract_data=binascii.hexlify(
                     tr.encode_function_call('imAvailable', [])
                 ).decode(),
-<<<<<<< HEAD
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-                'network': self.contract.network.name,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
-=======
         )
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
->>>>>>> refactoring
         self.eth_contract.save()
         self.last_press_imalive = timezone.now()
 
     @blocking
     def cancel(self, message):
         tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
+        par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         signed_data = sign_transaction(
@@ -665,20 +649,10 @@ class ContractDetailsLastwill(CommonDetails):
             contract_data=binascii.hexlify(
                     tr.encode_function_call('kill', [])
                 ).decode(),
-<<<<<<< HEAD
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-                'network': self.contract.network.name,
-            }).content.decode())
-        signed_data = response['result']
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction('0x' + signed_data)
-=======
         )
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
->>>>>>> refactoring
         self.eth_contract.save()
 
     def fundsAdded(self, message):
@@ -799,52 +773,6 @@ class ContractDetailsLostKey(CommonDetails):
     @postponable
     def deploy(self):
         return super().deploy()
-
-<<<<<<< HEAD
-    @blocking
-    def i_am_alive(self, message):
-        tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
-        address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.parity_nextNonce(address), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
-                    tr.encode_function_call('imAvailable', [])
-                ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-                'network': self.contract.network.name,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
-        par_int.eth_sendRawTransaction('0x' + signed_data)
-
-    @blocking
-    def cancel(self, message):
-        tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt()
-        address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.parity_nextNonce(address), 16)
-        response = json.loads(
-            requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source': address,
-                'data': binascii.hexlify(
-                    tr.encode_function_call('cancel', [])
-                ).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract.address,
-                'gaslimit': 600000,
-                'network': self.contract.network.name,
-            }).content.decode())
-        print('response', response)
-        signed_data = response['result']
-        par_int.eth_sendRawTransaction('0x' + signed_data)
-
-=======
->>>>>>> refactoring
 
 @contract_details('Deferred payment contract')
 class ContractDetailsDelayedPayment(CommonDetails):
@@ -1077,7 +1005,7 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
-            par_int = ParInt()
+            par_int = ParInt(self.contract.network.name)
             nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16) 
             print('nonce', nonce)
             print('transferOwnership message signed')
@@ -1129,20 +1057,9 @@ class ContractDetailsICO(CommonDetails):
             self.contract.save()
             # continue deploy: call init
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
-        par_int = ParInt()
+        par_int = ParInt(self.contract.network.name)
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
-<<<<<<< HEAD
-        response = json.loads(requests.post('http://{}/sign/'.format(SIGNER), json={
-                'source' : address,
-                'data': binascii.hexlify(tr.encode_function_call('init', [])).decode(),
-                'nonce': nonce,
-                'dest': self.eth_contract_crowdsale.address,
-                'gaslimit': 300000 + 50000 * self.contract.tokenholder_set.all().count(),
-                'network': sys.argv[1],
-        }).content.decode())
-=======
->>>>>>> refactoring
         print('init message signed')
         signed_data = sign_transaction(
             address, nonce,
@@ -1260,25 +1177,12 @@ class ContractDetailsToken(CommonDetails):
 
         with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
             token_json = json.loads(f.read())
-<<<<<<< HEAD
-        eth_contract_token.abi = token_json['abi']
-        eth_contract_token.bytecode = token_json['bytecode'][2:]
-        eth_contract_token.compiler_version = token_json['compiler']['version']
-        eth_contract_token.contract = self.contract
-        eth_contract_token.original_contract = self.contract
-        with open(path.join(dest, 'build/MainToken.sol')) as f:
-            source_code = f.read()
-        eth_contract_token.source_code = source_code
-        eth_contract_token.save()
-        self.eth_contract_token = eth_contract_token
-=======
         with open(path.join(dest, 'build/MainToken.sol')) as f:
             source_code = f.read()
         self.eth_contract_token = create_ethcontract_in_compile(
             token_json['abi'], token_json['bytecode'][2:],
             token_json['compiler']['version'], self.contract, source_code
         )
->>>>>>> refactoring
         self.save()
 
     @blocking
