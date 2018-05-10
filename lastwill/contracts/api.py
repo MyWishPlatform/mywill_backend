@@ -161,11 +161,13 @@ def i_am_alive(request):
     assert(contract.contract_type in (0, 1))
     details = contract.get_details()
     if details.last_press_imalive:
-        delta = details.last_press_imalive - timezone.now()
-        if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
+        delta = timezone.now() - details.last_press_imalive
+        if delta.days < 1:
             raise PermissionDenied(3000)
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'confirm_alive', queue)
+    details.last_press_imalive = timezone.now()
+    details.save()
     return Response('ok')
 
 
