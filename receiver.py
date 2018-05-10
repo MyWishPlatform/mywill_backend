@@ -186,7 +186,7 @@ class Receiver():
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    def unknown_handler(message):
+    def unknown_handler(self, message):
         print('unknown message', message, flush=True)
 
 
