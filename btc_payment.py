@@ -9,11 +9,10 @@ django.setup()
 from django.contrib.auth.models import User
 
 from lastwill.payments.models import BTCAccount
-<<<<<<< HEAD
 from exchange_API import to_wish
 
 
-
+sleep(10)
 
 
 while 1:
