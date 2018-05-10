@@ -1063,7 +1063,7 @@ class ContractDetailsICO(CommonDetails):
         print('init message signed')
         signed_data = sign_transaction(
             address, nonce,
-            100000 + 50000 * self.contract.tokenholder_set.all().count(),
+            100000 + 60000 * self.contract.tokenholder_set.all().count(),
             self.contract.network.name,
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
