@@ -152,7 +152,6 @@ class Receiver():
         contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
         details.last_reset = timezone.now()
-        details.last_press_imalive = timezone.now()
         details.save()
         print('notified ok')
 
