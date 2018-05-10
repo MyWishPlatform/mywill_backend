@@ -351,9 +351,30 @@ def get_statistics_landing(request):
     )
     users = User.objects.all().exclude(
         email='', password='', last_name='', first_name=''
+    ).exclude(email__startswith='testermc')
+    anonymous = User.objects.filter(
+        email='', password='', last_name='', first_name=''
     )
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
-    contracts = Contract.objects.all()
+
+    try:
+        test_info = json.load(open(
+            path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')
+        ))
+        test_addresses = test_info['addresses']
+        persons = test_info['persons']
+        fb_test_users = get_users(persons)
+    except(FileNotFoundError, IOError):
+        test_addresses = []
+        fb_test_users = []
+
+    contracts = Contract.objects.all().exclude(user__in=anonymous).exclude(
+        user__in=fb_test_users
+    ).exclude(
+        user__email__in=test_addresses
+    ).exclude(
+        user__email__startswith='testermc'
+    )
     new_contracts = contracts.filter(
         created_date__lte=now, created_date__gte=day
     )
