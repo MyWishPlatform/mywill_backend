@@ -1,4 +1,5 @@
 import requests
+import bitcoin
 import json
 import pyotp
 
@@ -22,7 +23,11 @@ def init_profile(user, is_social=False):
         user=user, internal_address=internal_address, is_social=is_social
     ).save()
     with transaction.atomic():
-        btc_account = BTCAccount.objects.filter(user__isnull=True).first()
+        # btc_account = BTCAccount.objects.filter(user__isnull=True).first()
+        root_public_key = ''
+        btc_string = root_public_key + str(user.id)
+        address = bitcoin.privkey_to_address(btc_string)
+        btc_account = BTCAccount(address=address)
         btc_account.user = user
         btc_account.save()
 
