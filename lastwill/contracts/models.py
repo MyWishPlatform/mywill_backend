@@ -16,7 +16,18 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+
 from neo.SmartContract.Contract import Contract as neo_contract
+from neo.Core.TX.TransactionAttribute import TransactionAttribute, TransactionAttributeUsage
+from neo.Prompt.Commands.LoadSmartContract import LoadContract, GatherContractDetails, generate_deploy_script
+from neo.Wallets.Wallet import Wallet
+from neo.Prompt.Utils import parse_param
+from neo.SmartContract.ContractParameterContext import ContractParametersContext
+from neo.Core.FunctionCode import FunctionCode
+from neo.Core.TX.InvocationTransaction import InvocationTransaction
+from neo.Core.State.ContractState import ContractPropertyState
+from neocore.Fixed8 import Fixed8
+
 
 from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
@@ -24,6 +35,47 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+
+
+def test_invoke(script, wallet, outputs, from_addr, min_fee=Fixed8.FromDecimal(.0001)):
+
+    from_addr = wallet.ToScriptHash(from_addr)
+    tx = InvocationTransaction()
+    tx.outputs = outputs
+    tx.inputs = []
+    tx.Version = 1
+    tx.scripts = []
+    tx.Script = binascii.unhexlify(script)
+
+    if len(outputs) < 1:
+        contract = wallet.GetDefaultContract()
+        tx.Attributes = [TransactionAttribute(usage=TransactionAttributeUsage.Script, data=Crypto.ToScriptHash(contract.Script, unhex=False).Data)]
+
+    wallet_tx = wallet.MakeTransaction(tx=tx, from_addr=from_addr)
+
+    if wallet_tx:
+        context = ContractParametersContext(wallet_tx)
+        wallet.Sign(context)
+        if context.Completed:
+            wallet_tx.scripts = context.GetScripts()
+        tx_gas = Fixed8.Zero()
+        wallet_tx.Gas = tx_gas
+        wallet_tx.outputs = outputs
+        wallet_tx.Attributes = []
+    print('tx ', wallet_tx)
+    return wallet_tx, min_fee, []
+
+
+def InvokeContract(wallet, tx, fee=Fixed8.Zero(), from_addr=None):
+
+    from_addr = wallet.ToScriptHash(from_addr)
+    wallet_tx = wallet.MakeTransaction(tx=tx, fee=fee, use_standard=True, from_addr=from_addr)
+    if wallet_tx:
+        context = ContractParametersContext(wallet_tx)
+        wallet.Sign(context)
+        if context.Completed:
+            wallet_tx.scripts = context.GetScripts()
+    return wallet_tx
 
 
 def add_token_params(params, details, token_holders, pause, cont_mint):
@@ -1279,3 +1331,60 @@ class ContractDetailsNeo(CommonDetails):
             price += 400
         price += 200
         return price
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.active_to < now:
+            raise ValidationError({'result': 1}, code=400)
+
+    def compile(self):
+        if os.system("/bin/bash -c 'cd && ./neo-ico-contracts/2_compile.sh'"):
+            raise Exception('compiler error while deploying')
+
+    @blocking
+    @postponable
+    def deploy(self, wallet, address_from, path, return_type,
+                        needs_storage=True, needs_dynamic_invoke=False):
+
+        params = parse_param('0710', ignore_int=True, prefer_hex=False)
+        contract_properties = 0
+        if needs_storage:
+            contract_properties += ContractPropertyState.HasStorage
+        if needs_dynamic_invoke:
+            contract_properties += ContractPropertyState.HasDynamicInvoke
+
+        with open(path, 'rb') as f:
+            content = f.read()
+            try:
+                content = binascii.unhexlify(content)
+            except Exception as e:
+                pass
+            script = content
+
+        if script is not None:
+            try:
+                plist = bytearray(binascii.unhexlify(params))
+            except Exception as e:
+                plist = bytearray(b'\x10')
+            function_code = FunctionCode(script=script,
+                                         param_list=bytearray(plist),
+                                         return_type=return_type,
+                                         contract_properties=contract_properties)
+        print('function code ', function_code)
+        contract_script = generate_deploy_script(function_code.Script,
+                                                 return_type=bytearray(b''),
+                                                 parameter_list=bytearray(b''))
+        tx, fee, results = test_invoke(contract_script, wallet, [],
+                                       from_addr=address_from)
+        if tx is not None and results is not None:
+            result = InvokeContract(wallet, tx, Fixed8.Zero(),
+                                    from_addr=address_from)
+            print('result', result)
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        res = super().msg_deployed(message, 'eth_contract_token')
+        self.contract.state = 'ENDED'
+        self.contract.save()
+        return res
