@@ -1338,15 +1338,15 @@ class ContractDetailsNeo(CommonDetails):
             raise ValidationError({'result': 1}, code=400)
 
     def compile(self):
-        if os.system("/bin/bash -c 'cd && ./neo-ico-contracts/2_compile.sh'"):
+        if os.system("/bin/bash -c ./neo-ico-contracts/2_compile.sh'"):
             raise Exception('compiler error while deploying')
 
     @blocking
     @postponable
-    def deploy(self, wallet, address_from, path, return_type,
+    def deploy(self, wallet, address_from, path, token_name, return_type,
                         needs_storage=True, needs_dynamic_invoke=False):
 
-        params = parse_param('0710', ignore_int=True, prefer_hex=False)
+        params = parse_param(token_name, ignore_int=True, prefer_hex=False)
         contract_properties = 0
         if needs_storage:
             contract_properties += ContractPropertyState.HasStorage
