@@ -16,6 +16,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+from neo.SmartContract.Contract import Contract as neo_contract
 
 from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
@@ -1262,10 +1263,10 @@ class ContractDetailsNeo(CommonDetails):
 
     user = models.ForeignKey(User, null=True, default=None)
     active_to = models.DateTimeField()
-    neo_contract = models.ForeignKey(NeoContract, null=True, default=None)
+    contract = models.ForeignKey(NeoContract, null=True, default=None)
     temp_directory = models.CharField(max_length=36)
     public_key_hash = models.CharField(max_length=70)
     script = models.CharField(max_length=700)
     parameter_list = JSONField(default={})
-
+    neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
 

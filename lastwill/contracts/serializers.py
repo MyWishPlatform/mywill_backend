@@ -17,7 +17,7 @@ from .models import (
     Contract, Heir, ContractDetailsLastwill,
     ContractDetailsDelayedPayment, ContractDetailsLostKey,
     ContractDetailsPizza, EthContract, ContractDetailsICO,
-    TokenHolder, ContractDetailsToken
+    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo
 )
 from exchange_API import to_wish, convert
 import email_messages
@@ -482,3 +482,9 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         kwargs.pop('eth_contract_token', None)
         return super().update(details, kwargs)
+
+
+class NeoContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NeoContract
+        fields = ('id', 'public_key_hash', 'script', 'parameter_list')
