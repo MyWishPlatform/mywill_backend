@@ -1269,4 +1269,13 @@ class ContractDetailsNeo(CommonDetails):
     script = models.CharField(max_length=700)
     parameter_list = JSONField(default={})
     neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
+    storage_area = models.BooleanField(default=False)
 
+    def calc_cost(self, network):
+        price = 0
+        if NETWORKS[network.name]['is_free']:
+            return price
+        if self.storage_area:
+            price += 400
+        price += 200
+        return price
