@@ -1238,3 +1238,34 @@ class TokenHolder(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     freeze_date = models.IntegerField(null=True)
+
+
+class NeoContract(EthContract):
+    contract = models.ForeignKey(Contract, null=True, default=None)
+    original_contract = models.ForeignKey(
+        Contract, null=True, default=None, related_name='orig_ethcontract'
+    )
+    address = models.CharField(max_length=50, null=True, default=None)
+    tx_hash = models.CharField(max_length=70, null=True, default=None)
+
+    source_code = models.TextField()
+    bytecode = models.TextField()
+    abi = JSONField(default={})
+    compiler_version = models.CharField(
+        max_length=200, null=True, default=None
+    )
+    constructor_arguments = models.TextField()
+
+
+@contract_details('NEO contract')
+class ContractDetailsNeo(CommonDetails):
+
+    user = models.ForeignKey(User, null=True, default=None)
+    active_to = models.DateTimeField()
+    neo_contract = models.ForeignKey(NeoContract, null=True, default=None)
+    temp_directory = models.CharField(max_length=36)
+    public_key_hash = models.CharField(max_length=70)
+    script = models.CharField(max_length=700)
+    parameter_list = JSONField(default={})
+
+
