@@ -1304,7 +1304,7 @@ class ContractDetailsNeo(CommonDetails):
     contract = models.ForeignKey(NeoContract, null=True, default=None)
     temp_directory = models.CharField(max_length=36, default='')
     parameter_list = JSONField(default={})
-    neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
+    # neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
     storage_area = models.BooleanField(default=False)
     name = models.CharField(max_length='50')
     symbol = models.CharField(max_length=10)
