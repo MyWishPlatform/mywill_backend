@@ -494,23 +494,26 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsNeo
         fields = (
-            'public_key_hash', 'script', 'parameter_list', 'active_to'
+            'name', 'decimals', 'symbol', 'admin_address'
         )
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         if not contract_details:
            print('*'*50, contract_details.id, flush=True)
-        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        # res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
-    def create(self, contract, contract_details):
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        return super().create(kwargs)
-
-    def update(self, contract, details, contract_details):
-        pass
+    # def create(self, contract, contract_details):
+    #     kwargs = contract_details.copy()
+    #     kwargs['contract'] = contract
+    #     return super().create(kwargs)
+    #
+    # def update(self, contract, details, contract_details):
+    #     kwargs = contract_details.copy()
+    #     kwargs['contract'] = contract
+    #     return super().update(details, kwargs)
 
     def validate(self, details):
-        pass
+        assert(details['decimals'] >= 0 and details['decimals'] <= 255)
+        assert(len(details['symbol']) < 5)
