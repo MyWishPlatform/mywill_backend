@@ -1306,7 +1306,7 @@ class ContractDetailsNeo(CommonDetails):
     parameter_list = JSONField(default={})
     # neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
     storage_area = models.BooleanField(default=False)
-    name = models.CharField(max_length='50')
+    name = models.CharField(max_length=50)
     symbol = models.CharField(max_length=10)
     decimals = models.IntegerField()
     admin_address = models.CharField(max_length=70)
