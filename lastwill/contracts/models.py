@@ -1364,12 +1364,15 @@ class ContractDetailsNeo(CommonDetails):
         if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
             raise Exception('compiler error while deploying')
 
-        with open(path.join(dest, 'build/NEP5.Contract/NEP5.Contract.abi')) as f:
+        with open(path.join(dest, 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.abi.json')) as f:
+            token_json = json.loads(f.read())
+        with open(path.join(dest, 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.avm'), mode='rb') as f:
             bytecode = f.read()
-        with open(path.join(dest, 'build/NEP5.Contract/NEP5.Contract.avm')) as f:
+        with open(path.join(dest, 'NEP5.Contract/Nep5Token.cs')) as f:
             source_code = f.read()
         neo_contract = NeoContract()
-        neo_contract.abi = bytecode[2:]
+        neo_contract.abi = token_json
+        neo_contract.bytecode = binascii.unhexlify(bytecode)
         neo_contract.source_code = source_code
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
