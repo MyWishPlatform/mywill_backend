@@ -506,11 +506,23 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         return res
 
     def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().create(kwargs)
     
     def update(self, contract, details, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
