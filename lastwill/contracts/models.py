@@ -1372,7 +1372,7 @@ class ContractDetailsNeo(CommonDetails):
             source_code = f.read()
         neo_contract = NeoContract()
         neo_contract.abi = token_json
-        neo_contract.bytecode = binascii.unhexlify(bytecode)
+        neo_contract.bytecode = binascii.hexlify(bytecode)
         neo_contract.source_code = source_code
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
