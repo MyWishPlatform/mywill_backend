@@ -1345,6 +1345,7 @@ class ContractDetailsNeo(CommonDetails):
             "D_NAME": self.token_name,
             "D_SYMBOL": self.token_short_name,
             "D_DECIMALS": self.decimals,
+            "D_PREMINT_COUNT": 0,
         }}
         test_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_OWNER'] = self.admin_address
