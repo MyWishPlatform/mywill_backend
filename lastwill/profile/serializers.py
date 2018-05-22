@@ -1,9 +1,6 @@
-import requests
-import bitcoin
 from bip32utils import BIP32Key
 from bip32utils import BIP32_HARDEN
 from eth_keys import keys
-import json
 import pyotp
 
 from django.db import transaction
@@ -15,7 +12,7 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile
-from lastwill.settings import SIGNER, ROOT_PUBLIC_KEY
+from lastwill.settings import ROOT_PUBLIC_KEY
 from lastwill.payments.models import BTCAccount
 
 
