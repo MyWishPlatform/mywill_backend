@@ -22,7 +22,7 @@ class memoize_timeout:
 
 @memoize_timeout(10*60)
 def convert(fsym, tsyms):
-    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC'}
+    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO'}
     assert(fsym in allowed and not (set(tsyms.split(',')) - allowed))
     print(fsym, tsyms)
     return json.loads(requests.get(
