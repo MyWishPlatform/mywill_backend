@@ -223,7 +223,6 @@ def test_neo_token_params(config, params, dest):
         raise Exception('compiler error while deploying')
 
 
-
 def take_off_blocking(network, contract_id=None, address=None):
     if not address:
         address = NETWORKS[network]['address']

@@ -538,5 +538,5 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         assert(details['decimals'] >= 0 and details['decimals'] <= 255)
         assert(
             len(details['token_short_name']) > 0 and
-            len(details['token_short_name']) < 8
+            len(details['token_short_name']) <= 8
         )
