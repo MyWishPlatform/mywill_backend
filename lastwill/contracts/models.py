@@ -212,7 +212,7 @@ def test_crowdsale_params(config, params, dest):
 def test_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+    if os.system('/bin/bash -c cd {dest} && ./compile-token.sh'.format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
@@ -1344,7 +1344,10 @@ class ContractDetailsNeo(CommonDetails):
             "D_SYMBOL": self.token_short_name,
             "D_DECIMALS": self.decimals,
             "D_PREMINT_COUNT": 0,
+            "D_OWNER": "APyEx5f4Zm4oCHwFWiSTaph1fPBxZacYVR",
         }}
+        if os.system('/bin/bash -c cd {dest} && ./2_compile.sh'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
         test_neo_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_OWNER'] = self.admin_address
