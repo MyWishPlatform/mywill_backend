@@ -1310,6 +1310,7 @@ class ContractDetailsNeo(CommonDetails):
     token_short_name = models.CharField(max_length=10)
     decimals = models.IntegerField()
     admin_address = models.CharField(max_length=70)
+    future_minting = models.BooleanField(default=False)
 
     def calc_cost(self, network):
         price = 0
@@ -1326,8 +1327,36 @@ class ContractDetailsNeo(CommonDetails):
             raise ValidationError({'result': 1}, code=400)
 
     def compile(self):
-        if os.system("/bin/bash -c ./neo-ico-contracts/2_compile.sh'"):
-            raise Exception('compiler error while deploying')
+        # if os.system("/bin/bash -c ./neo-ico-contracts/2_compile.sh'"):
+        #     raise Exception('compiler error while deploying')
+        print('standalone token contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        dest, preproc_config = create_directory(self)
+        token_holders = self.contract.tokenholder_set.all()
+        preproc_params = {"constants": {}}
+        # preproc_params['constants'] = add_token_params(
+        #     preproc_params['constants'], self, token_holders,
+        #     False, self.future_minting
+        # )
+        # test_token_params(preproc_config, preproc_params, dest)
+        # preproc_params['constants']['D_OWNER'] = self.admin_address
+        # with open(preproc_config, 'w') as f:
+        #     f.write(json.dumps(preproc_params))
+        # if os.system('cd {dest} && ./2_compile.sh'.format(dest=dest)):
+        #     raise Exception('compiler error while deploying')
+        #
+        # with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
+        #     token_json = json.loads(f.read())
+        # with open(path.join(dest, 'build/MainToken.sol')) as f:
+        #     source_code = f.read()
+        # self.eth_contract_token = create_ethcontract_in_compile(
+        #     token_json['abi'], token_json['bytecode'][2:],
+        #     token_json['compiler']['version'], self.contract, source_code
+        # )
+        # self.save()
+
 
     @blocking
     @postponable
