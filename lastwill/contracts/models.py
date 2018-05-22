@@ -1308,7 +1308,6 @@ class NeoContract(EthContract):
 @contract_details('NEO contract')
 class ContractDetailsNeo(CommonDetails):
 
-    user = models.ForeignKey(User, null=True, default=None)
     temp_directory = models.CharField(max_length=36, default='')
     parameter_list = JSONField(default={})
     neo_contract = models.ForeignKey(NeoContract, null=True, default=None)
@@ -1347,6 +1346,7 @@ class ContractDetailsNeo(CommonDetails):
             "D_DECIMALS": self.decimals,
             "D_PREMINT_COUNT": 0,
         }}
+        print('dest', dest, flush=True)
         test_neo_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
