@@ -219,7 +219,7 @@ def test_token_params(config, params, dest):
 def test_neo_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system('cd {dest} && ./3_test.sh'.format(dest=dest)):
+    if os.system('/bin/bash -c cd {dest} && ./3_test.sh'.format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
@@ -1350,7 +1350,7 @@ class ContractDetailsNeo(CommonDetails):
         preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && ./2_compile.sh'.format(dest=dest)):
+        if os.system('/bin/bash -c cd {dest} && ./2_compile.sh'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/NEP5.Contract/NEP5.Contract.abi')) as f:
