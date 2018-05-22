@@ -1347,7 +1347,7 @@ class ContractDetailsNeo(CommonDetails):
             "D_DECIMALS": self.decimals,
             "D_PREMINT_COUNT": 0,
         }}
-        test_token_params(preproc_config, preproc_params, dest)
+        test_neo_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
