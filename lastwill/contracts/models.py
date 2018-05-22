@@ -1346,10 +1346,12 @@ class ContractDetailsNeo(CommonDetails):
             "D_PREMINT_COUNT": 0,
             "D_OWNER": "APyEx5f4Zm4oCHwFWiSTaph1fPBxZacYVR",
         }}
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
         if os.system('/bin/bash -c cd {dest} && ./2_compile.sh'.format(dest=dest)):
             raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
-        test_neo_token_params(preproc_config, preproc_params, dest)
+        # test_neo_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
