@@ -164,6 +164,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsPizzaSerializer,
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
+            ContractDetailsNeoSerializer,
         ][contract_type]
 
 
@@ -504,15 +505,15 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         # res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
-    # def create(self, contract, contract_details):
-    #     kwargs = contract_details.copy()
-    #     kwargs['contract'] = contract
-    #     return super().create(kwargs)
-    #
-    # def update(self, contract, details, contract_details):
-    #     kwargs = contract_details.copy()
-    #     kwargs['contract'] = contract
-    #     return super().update(details, kwargs)
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+    
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
 
     def validate(self, details):
         assert(details['decimals'] >= 0 and details['decimals'] <= 255)

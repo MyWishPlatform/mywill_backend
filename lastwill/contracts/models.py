@@ -1301,7 +1301,6 @@ class NeoContract(EthContract):
 class ContractDetailsNeo(CommonDetails):
 
     user = models.ForeignKey(User, null=True, default=None)
-    contract = models.ForeignKey(NeoContract, null=True, default=None)
     temp_directory = models.CharField(max_length=36, default='')
     parameter_list = JSONField(default={})
     # neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
@@ -1312,14 +1311,13 @@ class ContractDetailsNeo(CommonDetails):
     admin_address = models.CharField(max_length=70)
     future_minting = models.BooleanField(default=False)
 
-    def calc_cost(self, network):
-        price = 0
+    @staticmethod
+    def calc_cost(details, network):
         if NETWORKS[network.name]['is_free']:
-            return price
-        if self.storage_area:
-            price += 400
-        price += 200
-        return price
+            return 0
+        if details.get('storage_area', False):
+            return 600
+        return 200
 
     def predeploy_validate(self):
         now = timezone.now()
