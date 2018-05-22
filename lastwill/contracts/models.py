@@ -1343,19 +1343,25 @@ class ContractDetailsNeo(CommonDetails):
             "D_NAME": self.token_name,
             "D_SYMBOL": self.token_short_name,
             "D_DECIMALS": self.decimals,
-            "D_PREMINT_COUNT": 0,
+            "D_PREMINT_COUNT": 3,
+            "D_PREMINT_ADDRESS_0": "AJzoeKrj7RHMwSrPQDPdv61ciVEYpmhkjk",
+            "D_PREMINT_AMOUNT_0": "1000000",
+            "D_PREMINT_ADDRESS_1": "AK6B6VsUAnMZU8WFzLpF3YKsRuprpBdTy5",
+            "D_PREMINT_AMOUNT_1": "2000000",
+            "D_PREMINT_ADDRESS_2": "ANVKVRED2KHspqn1fXxqV65aaewD15qx45",
+            "D_PREMINT_AMOUNT_2": "3000000",
             "D_OWNER": "APyEx5f4Zm4oCHwFWiSTaph1fPBxZacYVR",
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('/bin/bash -c cd {dest} && ./2_compile.sh'.format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
             raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
         # test_neo_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('/bin/bash -c cd {dest} && ./2_compile.sh'.format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/NEP5.Contract/NEP5.Contract.abi')) as f:
