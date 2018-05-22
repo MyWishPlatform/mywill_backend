@@ -9,6 +9,7 @@ django.setup()
 from django.contrib.auth.models import User
 
 from lastwill.payments.models import BTCAccount
+from lastwill.payments.api import create_payment
 from exchange_API import to_wish
 
 

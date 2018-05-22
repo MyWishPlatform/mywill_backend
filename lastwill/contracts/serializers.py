@@ -524,6 +524,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         return super().create(kwargs)
     
     def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address']
