@@ -185,10 +185,10 @@ def add_real_params(params, admin_address, address, wallet_address):
     return params
 
 
-def create_directory(details):
+def create_directory(details, sour_path='lastwill/ico-crowdsale/*'):
     details.temp_directory = str(uuid.uuid4())
     print(details.temp_directory, flush=True)
-    sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
+    sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
     os.mkdir(dest)
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
@@ -1337,7 +1337,7 @@ class ContractDetailsNeo(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(self)
+        dest, preproc_config = create_directory(self, 'lastwill/neo-ico-contracts/*')
         # token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {
             "D_NAME": self.token_name,
