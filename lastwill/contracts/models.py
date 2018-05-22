@@ -17,7 +17,7 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from neo.SmartContract.Contract import Contract as neo_contract
+# from neo.SmartContract.Contract import Contract as neo_contract
 from neo.Core.TX.TransactionAttribute import TransactionAttribute, TransactionAttributeUsage
 from neo.Prompt.Commands.LoadSmartContract import LoadContract, GatherContractDetails, generate_deploy_script
 from neo.Wallets.Wallet import Wallet
@@ -80,7 +80,7 @@ def InvokeContract(wallet, tx, fee=Fixed8.Zero(), from_addr=None):
 
 def add_token_params(params, details, token_holders, pause, cont_mint):
     params["D_ERC"] = details.token_type
-    params["D_NAME"] =  details.token_name
+    params["D_NAME"] = details.token_name
     params["D_SYMBOL"] = details.token_short_name
     params["D_DECIMALS"] = details.decimals
     params["D_CONTINUE_MINTING"] = cont_mint
@@ -214,6 +214,14 @@ def test_token_params(config, params, dest):
         f.write(json.dumps(params))
     if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
         raise Exception('compiler error while deploying')
+
+
+def test_neo_token_params(config, params, dest):
+    with open(config, 'w') as f:
+        f.write(json.dumps(params))
+    if os.system('cd {dest} && ./3_test.sh'.format(dest=dest)):
+        raise Exception('compiler error while deploying')
+
 
 
 def take_off_blocking(network, contract_id=None, address=None):
@@ -1303,7 +1311,7 @@ class ContractDetailsNeo(CommonDetails):
     user = models.ForeignKey(User, null=True, default=None)
     temp_directory = models.CharField(max_length=36, default='')
     parameter_list = JSONField(default={})
-    # neo_original_contract = models.ForeignKey(neo_contract, null=True, default=None)
+    neo_contract = models.ForeignKey(NeoContract, null=True, default=None)
     storage_area = models.BooleanField(default=False)
     token_name = models.CharField(max_length=50)
     token_short_name = models.CharField(max_length=10)
@@ -1332,28 +1340,31 @@ class ContractDetailsNeo(CommonDetails):
             print('already compiled')
             return
         dest, preproc_config = create_directory(self)
-        token_holders = self.contract.tokenholder_set.all()
-        preproc_params = {"constants": {}}
-        # preproc_params['constants'] = add_token_params(
-        #     preproc_params['constants'], self, token_holders,
-        #     False, self.future_minting
-        # )
-        # test_token_params(preproc_config, preproc_params, dest)
-        # preproc_params['constants']['D_OWNER'] = self.admin_address
-        # with open(preproc_config, 'w') as f:
-        #     f.write(json.dumps(preproc_params))
-        # if os.system('cd {dest} && ./2_compile.sh'.format(dest=dest)):
-        #     raise Exception('compiler error while deploying')
-        #
-        # with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
-        #     token_json = json.loads(f.read())
-        # with open(path.join(dest, 'build/MainToken.sol')) as f:
-        #     source_code = f.read()
-        # self.eth_contract_token = create_ethcontract_in_compile(
-        #     token_json['abi'], token_json['bytecode'][2:],
-        #     token_json['compiler']['version'], self.contract, source_code
-        # )
-        # self.save()
+        # token_holders = self.contract.tokenholder_set.all()
+        preproc_params = {"constants": {
+            "D_NAME": self.token_name,
+            "D_SYMBOL": self.token_short_name,
+            "D_DECIMALS": self.decimals,
+        }}
+        test_token_params(preproc_config, preproc_params, dest)
+        preproc_params['constants']['D_OWNER'] = self.admin_address
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && ./2_compile.sh'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
+        with open(path.join(dest, 'build/NEP5.Contract/NEP5.Contract.abi')) as f:
+            bytecode = f.read()
+        with open(path.join(dest, 'build/NEP5.Contract/NEP5.Contract.avm')) as f:
+            source_code = f.read()
+        neo_contract = NeoContract()
+        neo_contract.abi = bytecode[2:]
+        neo_contract.source_code = source_code
+        neo_contract.contract = self.contract
+        neo_contract.original_contract = self.contract
+        neo_contract.save()
+        self.neo_contract = neo_contract
+        self.save()
 
 
     @blocking
