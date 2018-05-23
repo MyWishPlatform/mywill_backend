@@ -1346,8 +1346,8 @@ class ContractDetailsNeo(CommonDetails):
             "D_PREMINT_COUNT": len(token_holders)
         }}
         for ind, th in enumerate(token_holders):
-            preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = th.address
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = th.amount
+            preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(th.amount)
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
