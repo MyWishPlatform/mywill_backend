@@ -1343,7 +1343,8 @@ class ContractDetailsNeo(CommonDetails):
             "D_NAME": self.token_name,
             "D_SYMBOL": self.token_short_name,
             "D_DECIMALS": self.decimals,
-            "D_PREMINT_COUNT": len(token_holders)
+            "D_PREMINT_COUNT": len(token_holders),
+            "D_OWNER": "APyEx5f4Zm4oCHwFWiSTaph1fPBxZacYVR"
         }}
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
