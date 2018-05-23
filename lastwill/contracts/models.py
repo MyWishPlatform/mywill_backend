@@ -1344,7 +1344,7 @@ class ContractDetailsNeo(CommonDetails):
             "D_SYMBOL": self.token_short_name,
             "D_DECIMALS": self.decimals,
             "D_PREMINT_COUNT": len(token_holders),
-            "D_OWNER": "APyEx5f4Zm4oCHwFWiSTaph1fPBxZacYVR"
+            "D_OWNER": self.admin_address
         }}
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
@@ -1356,11 +1356,11 @@ class ContractDetailsNeo(CommonDetails):
             raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
         test_neo_token_params(preproc_config, preproc_params, dest)
-        preproc_params['constants']['D_OWNER'] = self.admin_address
+        # preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
-            raise Exception('compiler error while deploying')
+        # if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
+        #     raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.abi.json')) as f:
             token_json = json.loads(f.read())
