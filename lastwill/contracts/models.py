@@ -1359,6 +1359,7 @@ class ContractDetailsNeo(CommonDetails):
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
+        print('from address', from_addr)
         details = {
             'name': 'WISH',
             'description': 'NEO smart contract',
@@ -1383,7 +1384,7 @@ class ContractDetailsNeo(CommonDetails):
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
         tx = sign_neo_transaction(tx, binary_tx)
-        print('after sign', tx.ToJson())
+        print('after sign', tx.ToJson()['txid'])
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
         tx.Serialize(writer)
