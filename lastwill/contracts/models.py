@@ -281,6 +281,16 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     return signed_data['result']
 
 
+def sign_neo_transaction(tx, binary_tx):
+    scripts = requests.post('http://{}/neo_sign/'.format(SIGNER),
+                            json={'binary_tx': binary_tx}).json()
+    tx.scripts = [Witness(
+        x['invocation'].encode(),
+        x['verification'].encode(),
+    ) for x in scripts]
+    return tx
+
+
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
 '''
@@ -1415,12 +1425,7 @@ class ContractDetailsNeo(CommonDetails):
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
 
-        scripts = requests.post('http://127.0.0.1:5000/neo_sign/',
-                                json={'binary_tx': binary_tx}).json()
-        tx.scripts = [Witness(
-            x['invocation'].encode(),
-            x['verification'].encode(),
-        ) for x in scripts]
+        tx = sign_neo_transaction(tx, binary_tx)
 
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
@@ -1429,18 +1434,8 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
 
         # return
-
-        response = requests.post('http://127.0.0.1:20332', json={
-            'jsonrpc': '2.0',
-            'id': 1,
-            'method': 'sendrawtransaction',
-            'params': [
-                signed_tx.decode(),
-            ]
-        }).json()
-
+        neo_int.sendrawtransaction(signed_tx.decode())
         print('contract hash:', contract_hash)
-        print(response)
         return
 
     @postponable
