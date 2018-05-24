@@ -40,7 +40,7 @@ class ParInt:
                 temp = requests.post(
                         'http://{}:{}/'.format(self.addr, self.port),
                         json=arguments,
-                        headers = {'Content-Type': 'application/json'}
+                        headers={'Content-Type': 'application/json'}
                 )
             except requests.exceptions.ConnectionError as e:
                 raise ParConnectExc()
