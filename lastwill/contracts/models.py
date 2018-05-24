@@ -1340,9 +1340,7 @@ class ContractDetailsNeo(CommonDetails):
         return 200
 
     def predeploy_validate(self):
-        now = timezone.now()
-        if self.active_to < now:
-            raise ValidationError({'result': 1}, code=400)
+        pass
 
     def compile(self):
 
@@ -1402,11 +1400,11 @@ class ContractDetailsNeo(CommonDetails):
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
         details = {
-            'name':'n',
-            'description':'test',
-            'email':'e',
-            'version':'v',
-            'author':'a'
+            'name': 'WISH',
+            'description': 'NEO smart contract',
+            'email': 'support@mywish.io',
+            'version': 'v',
+            'author': 'MyWish'
         }
         param_list = [{'params': {
                 'from_addr': from_addr,
@@ -1434,9 +1432,9 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
 
         # return
-        neo_int.sendrawtransaction(signed_tx.decode())
+        result = neo_int.sendrawtransaction(signed_tx.decode())
         print('contract hash:', contract_hash)
-        return
+        print('result of send raw transaction: ', result)
 
     @postponable
     @check_transaction
