@@ -1394,20 +1394,36 @@ class ContractDetailsNeo(CommonDetails):
         result = neo_int.sendrawtransaction(signed_tx.decode())
         print('contract hash:', contract_hash)
         print('result of send raw transaction: ', result)
+        self.neo_contract.address = contract_hash
+        self.neo_contract.save()
 
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        # param_list = {'params': [{
-        #     'from_addr': from_addr,
-        #     'bin': bytecode,
-        #     'needs_storage': True,
-        #     'needs_dynamic_invoke': False,
-        #     'contract_params': contract_params,
-        #     'return_type': return_type,
-        #     'details': details,
-        # }]}
-        # response = neo_int.mw_construct_deploy_tx(param_list)
-        # binary_tx = response['tx']
-        # contract_hash = response['hash']
+        neo_int = NeoInt(self.contract.network.name)
+        from_addr = NETWORKS[self.contract.network.name]['address']
+        param_list = {
+            'from_addr': from_addr,
+            'contract_params': [
+                {'type': str(ContractParameterType.String), 'value': 'init'},
+                {'type': str(ContractParameterType.Array), 'value': []}
+            ],
+            'addr': self.neo_contract.address,
+        }
+
+        response = neo_int.mw_construct_invoke_tx(param_list)
+
+        binary_tx = response['tx']
+
+        tx = ContractTransaction.DeserializeFromBufer(
+            binascii.unhexlify(binary_tx))
+        tx = sign_neo_transaction(tx, binary_tx)
+        print('after sign', tx.ToJson()['txid'])
+        ms = StreamManager.GetStream()
+        writer = BinaryWriter(ms)
+        tx.Serialize(writer)
+        ms.flush()
+        signed_tx = ms.ToArray()
+
+        result = neo_int.sendrawtransaction(signed_tx.decode())
         return
