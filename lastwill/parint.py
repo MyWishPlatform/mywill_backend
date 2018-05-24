@@ -49,3 +49,7 @@ class ParInt:
                 raise ParErrorExc(result['error']['message'])
             return result['result']
         return f
+
+
+class NeoInt(ParInt):
+    pass

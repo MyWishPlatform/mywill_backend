@@ -1387,13 +1387,10 @@ class ContractDetailsNeo(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, from_addr, contract_params, return_type, details):
+    def deploy(self, from_addr, details, contract_params='0710',return_type='05'):
         bytecode = self.neo_contract.bytecode
-        response = requests.post('http://127.0.0.1:20332', json={
-            'jsonrpc': '2.0',
-            'id': 1,
-            'method': 'mw_construct_deploy_tx',
-            'params': {
+        neo_int = NeoInt(self.contract.network.name)
+        param_list = [{'params': {
                 'from_addr': from_addr,
                 'bin': bytecode,
                 'needs_storage': True,
@@ -1401,13 +1398,11 @@ class ContractDetailsNeo(CommonDetails):
                 'contract_params': contract_params,
                 'return_type': return_type,
                 'details': details,
-            }}).json()
-        if 'error' in response:
-            print(response['error']['message'], flush=True)
-            return
+            }}]
+        response = neo_int.mw_construct_deploy_tx(param_list)
 
-        binary_tx = response['result']['tx']
-        contract_hash = response['result']['hash']
+        binary_tx = response['tx']
+        contract_hash = response['hash']
 
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
