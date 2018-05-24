@@ -1366,7 +1366,7 @@ class ContractDetailsNeo(CommonDetails):
             'version': 'v',
             'author': 'MyWish'
         }
-        param_list = {'params': [{
+        param_list = [{
                 'from_addr': from_addr,
                 'bin': bytecode,
                 'needs_storage': True,
@@ -1374,7 +1374,7 @@ class ContractDetailsNeo(CommonDetails):
                 'contract_params': contract_params,
                 'return_type': return_type,
                 'details': details,
-            }]}
+            }]
         response = neo_int.mw_construct_deploy_tx(param_list)
         binary_tx = response['tx']
         contract_hash = response['hash']
