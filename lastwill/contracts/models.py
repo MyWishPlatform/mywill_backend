@@ -1426,4 +1426,5 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
 
         result = neo_int.sendrawtransaction(signed_tx.decode())
+        print('result of send raw transaction: ', result)
         return
