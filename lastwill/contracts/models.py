@@ -1387,9 +1387,17 @@ class ContractDetailsNeo(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, from_addr, details, contract_params='0710',return_type='05'):
+    def deploy(self, contract_params='0710',return_type='05'):
+        from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
+        details = {
+            'name':'n',
+            'description':'test',
+            'email':'e',
+            'version':'v',
+            'author':'a'
+        }
         param_list = [{'params': {
                 'from_addr': from_addr,
                 'bin': bytecode,
