@@ -20,6 +20,7 @@ from rest_framework.exceptions import ValidationError
 # from neo.SmartContract.Contract import Contract as neo_contract
 from neo.Core.TX.Transaction import ContractTransaction
 from neocore.IO.BinaryWriter import BinaryWriter
+from neo.SmartContract.ContractParameterType import ContractParameterType
 from neo.IO.MemoryStream import StreamManager
 from neo.Core.Witness import Witness
 from neo.Core.TX.TransactionAttribute import TransactionAttribute, TransactionAttributeUsage
@@ -39,47 +40,6 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
 from lastwill.contracts.decorators import *
 from email_messages import *
-
-
-def test_invoke(script, wallet, outputs, from_addr, min_fee=Fixed8.FromDecimal(.0001)):
-
-    from_addr = wallet.ToScriptHash(from_addr)
-    tx = InvocationTransaction()
-    tx.outputs = outputs
-    tx.inputs = []
-    tx.Version = 1
-    tx.scripts = []
-    tx.Script = binascii.unhexlify(script)
-
-    if len(outputs) < 1:
-        contract = wallet.GetDefaultContract()
-        tx.Attributes = [TransactionAttribute(usage=TransactionAttributeUsage.Script, data=Crypto.ToScriptHash(contract.Script, unhex=False).Data)]
-
-    wallet_tx = wallet.MakeTransaction(tx=tx, from_addr=from_addr)
-
-    if wallet_tx:
-        context = ContractParametersContext(wallet_tx)
-        wallet.Sign(context)
-        if context.Completed:
-            wallet_tx.scripts = context.GetScripts()
-        tx_gas = Fixed8.Zero()
-        wallet_tx.Gas = tx_gas
-        wallet_tx.outputs = outputs
-        wallet_tx.Attributes = []
-    print('tx ', wallet_tx)
-    return wallet_tx, min_fee, []
-
-
-def InvokeContract(wallet, tx, fee=Fixed8.Zero(), from_addr=None):
-
-    from_addr = wallet.ToScriptHash(from_addr)
-    wallet_tx = wallet.MakeTransaction(tx=tx, fee=fee, use_standard=True, from_addr=from_addr)
-    if wallet_tx:
-        context = ContractParametersContext(wallet_tx)
-        wallet.Sign(context)
-        if context.Completed:
-            wallet_tx.scripts = context.GetScripts()
-    return wallet_tx
 
 
 def add_token_params(params, details, token_holders, pause, cont_mint):
@@ -1406,7 +1366,7 @@ class ContractDetailsNeo(CommonDetails):
             'version': 'v',
             'author': 'MyWish'
         }
-        param_list = [{'params': {
+        param_list = {'params': [{
                 'from_addr': from_addr,
                 'bin': bytecode,
                 'needs_storage': True,
@@ -1414,7 +1374,7 @@ class ContractDetailsNeo(CommonDetails):
                 'contract_params': contract_params,
                 'return_type': return_type,
                 'details': details,
-            }}]
+            }]}
         response = neo_int.mw_construct_deploy_tx(param_list)
         binary_tx = response['tx']
         contract_hash = response['hash']
@@ -1436,7 +1396,16 @@ class ContractDetailsNeo(CommonDetails):
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        res = super().msg_deployed(message)
-        self.contract.state = 'ENDED'
-        self.contract.save()
-        return res
+        # param_list = {'params': [{
+        #     'from_addr': from_addr,
+        #     'bin': bytecode,
+        #     'needs_storage': True,
+        #     'needs_dynamic_invoke': False,
+        #     'contract_params': contract_params,
+        #     'return_type': return_type,
+        #     'details': details,
+        # }]}
+        # response = neo_int.mw_construct_deploy_tx(param_list)
+        # binary_tx = response['tx']
+        # contract_hash = response['hash']
+        return
