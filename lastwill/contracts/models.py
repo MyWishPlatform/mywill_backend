@@ -1376,14 +1376,14 @@ class ContractDetailsNeo(CommonDetails):
                 'details': details,
             }
         response = neo_int.mw_construct_deploy_tx(param_list)
-        print('response', response, flush=True)
+        print('response', response['hash'], flush=True)
         binary_tx = response['tx']
         contract_hash = response['hash']
 
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
         tx = sign_neo_transaction(tx, binary_tx)
-        print('after sign', tx)
+        print('after sign', tx.ToJson())
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
         tx.Serialize(writer)
