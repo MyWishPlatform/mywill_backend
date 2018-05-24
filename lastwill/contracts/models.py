@@ -1360,6 +1360,7 @@ class ContractDetailsNeo(CommonDetails):
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
             preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(th.amount)
+            preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date)
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
