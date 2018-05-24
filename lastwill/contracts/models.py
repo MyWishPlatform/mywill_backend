@@ -1343,7 +1343,6 @@ class ContractDetailsNeo(CommonDetails):
         pass
 
     def compile(self):
-
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
@@ -1393,10 +1392,10 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract = neo_contract
         self.save()
 
-
     @blocking
     @postponable
     def deploy(self, contract_params='0710',return_type='05'):
+        self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
@@ -1417,13 +1416,11 @@ class ContractDetailsNeo(CommonDetails):
                 'details': details,
             }}]
         response = neo_int.mw_construct_deploy_tx(param_list)
-
         binary_tx = response['tx']
         contract_hash = response['hash']
 
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
-
         tx = sign_neo_transaction(tx, binary_tx)
 
         ms = StreamManager.GetStream()
@@ -1432,7 +1429,6 @@ class ContractDetailsNeo(CommonDetails):
         ms.flush()
         signed_tx = ms.ToArray()
 
-        # return
         result = neo_int.sendrawtransaction(signed_tx.decode())
         print('contract hash:', contract_hash)
         print('result of send raw transaction: ', result)
