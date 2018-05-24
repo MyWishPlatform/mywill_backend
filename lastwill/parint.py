@@ -46,7 +46,10 @@ class ParInt:
                 raise ParConnectExc()
             result = json.loads(temp.content.decode())
             if result.get('error'):
-                raise ParErrorExc(result['error']['message'])
+                if 'message' in result['error']:
+                    raise ParErrorExc(result['error']['message'])
+                else:
+                    raise ParErrorExc(result['error'])
             return result['result']
         return f
 
