@@ -18,6 +18,10 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 # from neo.SmartContract.Contract import Contract as neo_contract
+from neo.Core.TX.Transaction import ContractTransaction
+from neocore.IO.BinaryWriter import BinaryWriter
+from neo.IO.MemoryStream import StreamManager
+from neo.Core.Witness import Witness
 from neo.Core.TX.TransactionAttribute import TransactionAttribute, TransactionAttributeUsage
 from neo.Prompt.Commands.LoadSmartContract import LoadContract, GatherContractDetails, generate_deploy_script
 from neo.Wallets.Wallet import Wallet
@@ -1331,8 +1335,7 @@ class ContractDetailsNeo(CommonDetails):
             raise ValidationError({'result': 1}, code=400)
 
     def compile(self):
-        # if os.system("/bin/bash -c ./neo-ico-contracts/2_compile.sh'"):
-        #     raise Exception('compiler error while deploying')
+
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
@@ -1356,15 +1359,18 @@ class ContractDetailsNeo(CommonDetails):
             raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
         test_neo_token_params(preproc_config, preproc_params, dest)
-        # preproc_params['constants']['D_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        # if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
-        #     raise Exception('compiler error while deploying')
 
-        with open(path.join(dest, 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.abi.json')) as f:
+        with open(path.join(
+                dest,
+                'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.abi.json'
+        )) as f:
             token_json = json.loads(f.read())
-        with open(path.join(dest, 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.avm'), mode='rb') as f:
+        with open(path.join(
+                dest,
+                'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.avm'
+        ), mode='rb') as f:
             bytecode = f.read()
         with open(path.join(dest, 'NEP5.Contract/Nep5Token.cs')) as f:
             source_code = f.read()
@@ -1381,43 +1387,58 @@ class ContractDetailsNeo(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, wallet, address_from, path, token_name, return_type,
-                        needs_storage=True, needs_dynamic_invoke=False):
+    def deploy(self, from_addr, contract_params, return_type, details):
+        bytecode = self.neo_contract.bytecode
+        response = requests.post('http://127.0.0.1:20332', json={
+            'jsonrpc': '2.0',
+            'id': 1,
+            'method': 'mw_construct_deploy_tx',
+            'params': {
+                'from_addr': from_addr,
+                'bin': bytecode,
+                'needs_storage': True,
+                'needs_dynamic_invoke': False,
+                'contract_params': contract_params,
+                'return_type': return_type,
+                'details': details,
+            }}).json()
+        if 'error' in response:
+            print(response['error']['message'], flush=True)
+            return
 
-        params = parse_param(token_name, ignore_int=True, prefer_hex=False)
-        contract_properties = 0
-        if needs_storage:
-            contract_properties += ContractPropertyState.HasStorage
-        if needs_dynamic_invoke:
-            contract_properties += ContractPropertyState.HasDynamicInvoke
+        binary_tx = response['result']['tx']
+        contract_hash = response['result']['hash']
 
-        with open(path, 'rb') as f:
-            content = f.read()
-            try:
-                content = binascii.unhexlify(content)
-            except Exception as e:
-                pass
-            script = content
+        tx = ContractTransaction.DeserializeFromBufer(
+            binascii.unhexlify(binary_tx))
 
-        if script is not None:
-            try:
-                plist = bytearray(binascii.unhexlify(params))
-            except Exception as e:
-                plist = bytearray(b'\x10')
-            function_code = FunctionCode(script=script,
-                                         param_list=bytearray(plist),
-                                         return_type=return_type,
-                                         contract_properties=contract_properties)
-        print('function code ', function_code)
-        contract_script = generate_deploy_script(function_code.Script,
-                                                 return_type=bytearray(b''),
-                                                 parameter_list=bytearray(b''))
-        tx, fee, results = test_invoke(contract_script, wallet, [],
-                                       from_addr=address_from)
-        if tx is not None and results is not None:
-            result = InvokeContract(wallet, tx, Fixed8.Zero(),
-                                    from_addr=address_from)
-            print('result', result)
+        scripts = requests.post('http://127.0.0.1:5000/neo_sign/',
+                                json={'binary_tx': binary_tx}).json()
+        tx.scripts = [Witness(
+            x['invocation'].encode(),
+            x['verification'].encode(),
+        ) for x in scripts]
+
+        ms = StreamManager.GetStream()
+        writer = BinaryWriter(ms)
+        tx.Serialize(writer)
+        ms.flush()
+        signed_tx = ms.ToArray()
+
+        # return
+
+        response = requests.post('http://127.0.0.1:20332', json={
+            'jsonrpc': '2.0',
+            'id': 1,
+            'method': 'sendrawtransaction',
+            'params': [
+                signed_tx.decode(),
+            ]
+        }).json()
+
+        print('contract hash:', contract_hash)
+        print(response)
+        return
 
     @postponable
     @check_transaction
