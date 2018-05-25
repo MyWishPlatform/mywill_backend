@@ -1394,6 +1394,8 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
 
         result = neo_int.sendrawtransaction(signed_tx.decode())
+        if not result:
+            raise TxFail()
         print('contract hash:', contract_hash)
         print('result of send raw transaction: ', result)
         self.neo_contract.address = contract_hash
@@ -1429,6 +1431,8 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
 
         result = neo_int.sendrawtransaction(signed_tx.decode())
+        if not result:
+            raise TxFail()
         print('result of send raw transaction: ', result)
         self.contract.state='ACTIVE'
         self.contract.save()
