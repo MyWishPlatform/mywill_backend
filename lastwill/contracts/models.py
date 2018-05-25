@@ -1428,4 +1428,6 @@ class ContractDetailsNeo(CommonDetails):
 
         result = neo_int.sendrawtransaction(signed_tx.decode())
         print('result of send raw transaction: ', result)
+        self.contract.state='ACTIVE'
+        self.contract.save()
         return
