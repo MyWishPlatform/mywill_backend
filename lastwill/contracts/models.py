@@ -241,9 +241,11 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     return signed_data['result']
 
 
-def sign_neo_transaction(tx, binary_tx):
-    scripts = requests.post('http://{}/neo_sign/'.format(SIGNER),
-                            json={'binary_tx': binary_tx}).json()
+def sign_neo_transaction(tx, binary_tx, address):
+    scripts = requests.post(
+        'http://{}/neo_sign/'.format(SIGNER),
+        json={'binary_tx': binary_tx, 'address': address}
+    ).json()
     tx.scripts = [Witness(
         x['invocation'].encode(),
         x['verification'].encode(),
@@ -1383,7 +1385,7 @@ class ContractDetailsNeo(CommonDetails):
 
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
-        tx = sign_neo_transaction(tx, binary_tx)
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'])
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
@@ -1418,7 +1420,7 @@ class ContractDetailsNeo(CommonDetails):
 
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx))
-        tx = sign_neo_transaction(tx, binary_tx)
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'])
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
