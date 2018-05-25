@@ -1344,7 +1344,7 @@ class ContractDetailsNeo(CommonDetails):
             source_code = f.read()
         neo_contract = NeoContract()
         neo_contract.abi = token_json
-        neo_contract.bytecode = binascii.hexlify(bytecode)
+        neo_contract.bytecode = binascii.hexlify(bytecode).decode()
         neo_contract.source_code = source_code
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
@@ -1375,7 +1375,9 @@ class ContractDetailsNeo(CommonDetails):
                 'contract_params': contract_params,
                 'return_type': return_type,
                 'details': details,
-            }
+        }
+        for x in param_list.values():
+            print(x, type(x))
         response = neo_int.mw_construct_deploy_tx(param_list)
         print('response', response['hash'], flush=True)
         binary_tx = response['tx']
@@ -1424,7 +1426,7 @@ class ContractDetailsNeo(CommonDetails):
         tx.Serialize(writer)
         ms.flush()
         signed_tx = ms.ToArray()
-
+        print('signed_tx', signed_tx)
         result = neo_int.sendrawtransaction(signed_tx.decode())
         print('result of send raw transaction: ', result)
         return
