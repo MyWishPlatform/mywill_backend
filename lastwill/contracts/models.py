@@ -1319,7 +1319,7 @@ class ContractDetailsNeo(CommonDetails):
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
             preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(th.amount)
-            preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date)
+            # preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date)
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -1395,6 +1395,7 @@ class ContractDetailsNeo(CommonDetails):
         print('contract hash:', contract_hash)
         print('result of send raw transaction: ', result)
         self.neo_contract.address = contract_hash
+        self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
 
     @postponable
