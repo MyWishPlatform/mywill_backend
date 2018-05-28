@@ -1346,7 +1346,7 @@ class ContractDetailsNeo(CommonDetails):
             source_code = f.read()
         neo_contract = NeoContract()
         neo_contract.abi = token_json
-        neo_contract.bytecode = binascii.hexlify(bytecode)
+        neo_contract.bytecode = binascii.hexlify(bytecode).decode()
         neo_contract.source_code = source_code
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
@@ -1377,27 +1377,31 @@ class ContractDetailsNeo(CommonDetails):
                 'contract_params': contract_params,
                 'return_type': return_type,
                 'details': details,
-            }
+        }
         response = neo_int.mw_construct_deploy_tx(param_list)
-        print('response', response['hash'], flush=True)
+        print('construct response', response, flush=True)
         binary_tx = response['tx']
         contract_hash = response['hash']
 
         tx = ContractTransaction.DeserializeFromBufer(
-            binascii.unhexlify(binary_tx))
-        tx = sign_neo_transaction(tx, binary_tx, from_addr)
-        print('after sign', tx.ToJson()['txid'])
+            binascii.unhexlify(binary_tx)
+        )
+        tx = sign_neo_transaction(tx, binary_tx)
+        print('after sign', tx.ToJson()['txid'], flush=True)
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
         tx.Serialize(writer)
         ms.flush()
         signed_tx = ms.ToArray()
-
+        print('full tx:', flush=True)
+        print(signed_tx, flush=True)
+        
         result = neo_int.sendrawtransaction(signed_tx.decode())
         if not result:
             raise TxFail()
         print('contract hash:', contract_hash)
         print('result of send raw transaction: ', result)
+
         self.neo_contract.address = contract_hash
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
@@ -1429,11 +1433,24 @@ class ContractDetailsNeo(CommonDetails):
         tx.Serialize(writer)
         ms.flush()
         signed_tx = ms.ToArray()
-
+        print('signed_tx', signed_tx)
         result = neo_int.sendrawtransaction(signed_tx.decode())
         if not result:
             raise TxFail()
         print('result of send raw transaction: ', result)
+
+        assert(result)
         self.contract.state='ACTIVE'
         self.contract.save()
         return
+
+    @postponable
+    @check_transaction
+    def initialized(self, message):
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
+
+        take_off_blocking(self.contract.network.name)
+
+        self.contract.state = 'ACTIVE'
+        self.contract.save()

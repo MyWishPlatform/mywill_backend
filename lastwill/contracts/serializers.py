@@ -500,6 +500,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
+        res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
             token_holder_serializer.to_representation(th)
