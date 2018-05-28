@@ -509,6 +509,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract)
         if res['neo_contract_token']['address']:
+            res['neo_contract_token']['script_hash'] = res['neo_contract_token']['address']
             res['neo_contract_token']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_token']['address']))
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
