@@ -176,7 +176,7 @@ def test_crowdsale_params(config, params, dest):
 def test_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system('/bin/bash -c cd {dest} && ./compile-token.sh'.format(dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} && ./compile-token.sh'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
