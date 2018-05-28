@@ -20,6 +20,7 @@ from .models import (
     TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo
 )
 from exchange_API import to_wish, convert
+from lastwill.consts import MAIL_NETWORK
 import email_messages
 
 
@@ -105,6 +106,11 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'RSK'
             if network.name == 'RSK_TESTNET':
                 network_name = 'RSK Testnet'
+            if network.name == 'NEO_MAINNET':
+                network_name = 'NEO'
+            if network.name == 'NEO_TESTNET':
+                network_name = 'NEO Testnet'
+
             send_mail(
                     email_messages.create_subject,
                     email_messages.create_message.format(
