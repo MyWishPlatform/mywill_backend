@@ -21,7 +21,8 @@ from .models import (
 )
 from exchange_API import to_wish, convert
 import email_messages
-
+from neocore.Cryptography.Crypto import Crypto
+from neocore.UInt160 import UInt160
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
@@ -501,13 +502,15 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract)
+        if res['neo_contract_token']['address']:
+            res['neo_contract_token']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_token']['address']))
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
             token_holder_serializer.to_representation(th)
             for th in
             contract_details.contract.tokenholder_set.order_by(
                         'id').all()
-            ]
+        ]
         if not contract_details:
            print('*'*50, contract_details.id, flush=True)
         # res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
