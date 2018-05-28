@@ -1376,26 +1376,28 @@ class ContractDetailsNeo(CommonDetails):
                 'return_type': return_type,
                 'details': details,
         }
-        for x in param_list.values():
-            print(x, type(x))
         response = neo_int.mw_construct_deploy_tx(param_list)
-        print('response', response['hash'], flush=True)
+        print('construct response', response, flush=True)
         binary_tx = response['tx']
         contract_hash = response['hash']
 
         tx = ContractTransaction.DeserializeFromBufer(
-            binascii.unhexlify(binary_tx))
+            binascii.unhexlify(binary_tx)
+        )
         tx = sign_neo_transaction(tx, binary_tx)
-        print('after sign', tx.ToJson()['txid'])
+        print('after sign', tx.ToJson()['txid'], flush=True)
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
         tx.Serialize(writer)
         ms.flush()
         signed_tx = ms.ToArray()
-
+        print('full tx:', flush=True)
+        print(signed_tx, flush=True)
+        
         result = neo_int.sendrawtransaction(signed_tx.decode())
-        print('contract hash:', contract_hash)
-        print('result of send raw transaction: ', result)
+        print('contract hash:', contract_hash, flush=True)
+        print('result of send raw transaction: ', result, flush=True)
+        assert(result)
         self.neo_contract.address = contract_hash
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
@@ -1430,4 +1432,16 @@ class ContractDetailsNeo(CommonDetails):
         print('signed_tx', signed_tx)
         result = neo_int.sendrawtransaction(signed_tx.decode())
         print('result of send raw transaction: ', result)
+        assert(result)
         return
+
+    @postponable
+    @check_transaction
+    def initialized(self, message):
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
+
+        take_off_blocking(self.contract.network.name)
+
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
