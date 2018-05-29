@@ -17,11 +17,13 @@ from .models import (
     Contract, Heir, ContractDetailsLastwill,
     ContractDetailsDelayedPayment, ContractDetailsLostKey,
     ContractDetailsPizza, EthContract, ContractDetailsICO,
-    TokenHolder, ContractDetailsToken
+    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo
 )
 from exchange_API import to_wish, convert
+from lastwill.consts import MAIL_NETWORK
 import email_messages
-
+from neocore.Cryptography.Crypto import Crypto
+from neocore.UInt160 import UInt160
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
@@ -105,6 +107,11 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'RSK'
             if network.name == 'RSK_TESTNET':
                 network_name = 'RSK Testnet'
+            if network.name == 'NEO_MAINNET':
+                network_name = 'NEO'
+            if network.name == 'NEO_TESTNET':
+                network_name = 'NEO Testnet'
+
             send_mail(
                     email_messages.create_subject,
                     email_messages.create_message.format(
@@ -164,6 +171,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsPizzaSerializer,
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
+            ContractDetailsNeoSerializer,
         ][contract_type]
 
 
@@ -482,3 +490,64 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         kwargs.pop('eth_contract_token', None)
         return super().update(details, kwargs)
+
+
+class NeoContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NeoContract
+        fields = ('id', 'address')
+
+
+class ContractDetailsNeoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsNeo
+        fields = (
+            'token_name', 'decimals', 'token_short_name', 'admin_address', 'future_minting',
+        )
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract)
+        if res['neo_contract_token']['address']:
+            res['neo_contract_token']['script_hash'] = res['neo_contract_token']['address']
+            res['neo_contract_token']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_token']['address']))
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th)
+            for th in
+            contract_details.contract.tokenholder_set.order_by(
+                        'id').all()
+        ]
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        # res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        return res
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+    
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        assert(details['decimals'] >= 0 and details['decimals'] <= 8)
+        assert(len(details['token_short_name']) > 0)
+        assert(len(details['token_short_name']) <= 8)
+

@@ -17,6 +17,26 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+# from neo.SmartContract.Contract import Contract as neo_contract
+from neo.Core.TX.Transaction import ContractTransaction
+from neocore.IO.BinaryWriter import BinaryWriter
+from neo.SmartContract.ContractParameterType import ContractParameterType
+from neo.IO.MemoryStream import StreamManager
+from neo.Core.Witness import Witness
+from neo.Core.TX.TransactionAttribute import TransactionAttribute, TransactionAttributeUsage
+from neo.Prompt.Commands.LoadSmartContract import LoadContract, GatherContractDetails, generate_deploy_script
+from neo.Wallets.Wallet import Wallet
+from neo.Prompt.Utils import parse_param
+from neo.SmartContract.ContractParameterContext import ContractParametersContext
+from neo.Core.FunctionCode import FunctionCode
+from neo.Core.TX.InvocationTransaction import InvocationTransaction
+from neo.Core.State.ContractState import ContractPropertyState
+from neocore.Fixed8 import Fixed8
+
+from neocore.Cryptography.Crypto import Crypto
+from neocore.UInt160 import UInt160
+
+
 from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
@@ -27,7 +47,7 @@ from email_messages import *
 
 def add_token_params(params, details, token_holders, pause, cont_mint):
     params["D_ERC"] = details.token_type
-    params["D_NAME"] =  details.token_name
+    params["D_NAME"] = details.token_name
     params["D_SYMBOL"] = details.token_short_name
     params["D_DECIMALS"] = details.decimals
     params["D_CONTINUE_MINTING"] = cont_mint
@@ -132,10 +152,10 @@ def add_real_params(params, admin_address, address, wallet_address):
     return params
 
 
-def create_directory(details):
+def create_directory(details, sour_path='lastwill/ico-crowdsale/*'):
     details.temp_directory = str(uuid.uuid4())
     print(details.temp_directory, flush=True)
-    sour = path.join(CONTRACTS_DIR, 'lastwill/ico-crowdsale/*')
+    sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
     os.mkdir(dest)
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
@@ -159,7 +179,14 @@ def test_crowdsale_params(config, params, dest):
 def test_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} && ./compile-token.sh'".format(dest=dest)):
+        raise Exception('compiler error while deploying')
+
+
+def test_neo_token_params(config, params, dest):
+    with open(config, 'w') as f:
+        f.write(json.dumps(params))
+    if os.system("/bin/bash -c 'cd {dest} && ./3_test.sh'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
@@ -215,6 +242,18 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         'http://{}/sign/'.format(SIGNER), json=data
     ).content.decode())
     return signed_data['result']
+
+
+def sign_neo_transaction(tx, binary_tx, address):
+    scripts = requests.post(
+        'http://{}/neo_sign/'.format(SIGNER),
+        json={'binary_tx': binary_tx, 'address': address}
+    ).json()
+    tx.scripts = [Witness(
+        x['invocation'].encode(),
+        x['verification'].encode(),
+    ) for x in scripts]
+    return tx
 
 
 '''
@@ -1238,3 +1277,200 @@ class TokenHolder(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     freeze_date = models.IntegerField(null=True)
+
+
+class NeoContract(EthContract):
+    pass
+
+
+@contract_details('NEO contract')
+class ContractDetailsNeo(CommonDetails):
+
+    temp_directory = models.CharField(max_length=36, default='')
+    parameter_list = JSONField(default={})
+    neo_contract = models.ForeignKey(NeoContract, null=True, default=None)
+    storage_area = models.BooleanField(default=False)
+    token_name = models.CharField(max_length=50)
+    token_short_name = models.CharField(max_length=10)
+    decimals = models.IntegerField()
+    admin_address = models.CharField(max_length=70)
+    future_minting = models.BooleanField(default=False)
+
+    @staticmethod
+    def calc_cost(details, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        if details.get('storage_area', False):
+            return 600
+        return 200
+
+    def predeploy_validate(self):
+        pass
+
+    def compile(self):
+        print('standalone token contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        dest, preproc_config = create_directory(self, 'lastwill/neo-ico-contracts/*')
+        token_holders = self.contract.tokenholder_set.all()
+        preproc_params = {"constants": {
+            "D_NAME": self.token_name,
+            "D_SYMBOL": self.token_short_name,
+            "D_DECIMALS": self.decimals,
+            "D_PREMINT_COUNT": len(token_holders),
+            "D_OWNER": self.admin_address,
+            "D_CONTINUE_MINTING": self.future_minting
+        }}
+        for ind, th in enumerate(token_holders):
+            preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(th.amount)
+            preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
+
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
+            raise Exception('compiler error while deploying')
+        print('dest', dest, flush=True)
+        test_neo_token_params(preproc_config, preproc_params, dest)
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+
+        with open(path.join(
+                dest,
+                'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.abi.json'
+        )) as f:
+            token_json = json.loads(f.read())
+        with open(path.join(
+                dest,
+                'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.avm'
+        ), mode='rb') as f:
+            bytecode = f.read()
+        with open(path.join(dest, 'NEP5.Contract/Nep5Token.cs')) as f:
+            source_code = f.read()
+        neo_contract = NeoContract()
+        neo_contract.abi = token_json
+        neo_contract.bytecode = binascii.hexlify(bytecode).decode()
+        neo_contract.source_code = source_code
+        neo_contract.contract = self.contract
+        neo_contract.original_contract = self.contract
+        neo_contract.save()
+        self.neo_contract = neo_contract
+        self.save()
+
+    @blocking
+    @postponable
+    def deploy(self, contract_params='0710', return_type='05'):
+        self.compile()
+        from_addr = NETWORKS[self.contract.network.name]['address']
+        bytecode = self.neo_contract.bytecode
+        neo_int = NeoInt(self.contract.network.name)
+        print('from address', from_addr)
+        details = {
+            'name': 'WISH',
+            'description': 'NEO smart contract',
+            'email': 'support@mywish.io',
+            'version': '1',
+            'author': 'MyWish'
+        }
+        param_list = {
+                'from_addr': from_addr,
+                'bin': bytecode,
+                'needs_storage': True,
+                'needs_dynamic_invoke': False,
+                'contract_params': contract_params,
+                'return_type': return_type,
+                'details': details,
+        }
+        response = neo_int.mw_construct_deploy_tx(param_list)
+        print('construct response', response, flush=True)
+        binary_tx = response['tx']
+        contract_hash = response['hash']
+
+        tx = ContractTransaction.DeserializeFromBufer(
+            binascii.unhexlify(binary_tx)
+        )
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
+        print('after sign', tx.ToJson()['txid'], flush=True)
+        ms = StreamManager.GetStream()
+        writer = BinaryWriter(ms)
+        tx.Serialize(writer)
+        ms.flush()
+        signed_tx = ms.ToArray()
+        print('full tx:', flush=True)
+        print(signed_tx, flush=True)
+        
+        result = neo_int.sendrawtransaction(signed_tx.decode())
+        print(result, flush=True)
+        if not result:
+            raise TxFail()
+        print('contract hash:', contract_hash)
+        print('result of send raw transaction: ', result)
+
+        self.neo_contract.address = contract_hash
+        self.neo_contract.tx_hash = tx.ToJson()['txid']
+        self.neo_contract.save()
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        neo_int = NeoInt(self.contract.network.name)
+        from_addr = NETWORKS[self.contract.network.name]['address']
+        param_list = {
+            'from_addr': from_addr,
+            'contract_params': [
+                {'type': str(ContractParameterType.String), 'value': 'init'},
+                {'type': str(ContractParameterType.Array), 'value': []}
+            ],
+            'addr': self.neo_contract.address,
+        }
+
+        response = neo_int.mw_construct_invoke_tx(param_list)
+
+        binary_tx = response['tx']
+
+        tx = ContractTransaction.DeserializeFromBufer(
+            binascii.unhexlify(binary_tx)
+        )
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
+        print('after sign', tx.ToJson()['txid'])
+        ms = StreamManager.GetStream()
+        writer = BinaryWriter(ms)
+        tx.Serialize(writer)
+        ms.flush()
+        signed_tx = ms.ToArray()
+        print('signed_tx', signed_tx)
+        result = neo_int.sendrawtransaction(signed_tx.decode())
+        print(result, flush=True)
+        if not result:
+            raise TxFail()
+        print('result of send raw transaction: ', result)
+
+        assert(result)
+        self.contract.save()
+        return
+
+    @postponable
+    @check_transaction
+    def initialized(self, message):
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
+
+        take_off_blocking(self.contract.network.name)
+
+        self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.save()
+
+        if self.contract.user.email:
+            send_mail(
+                    common_subject,
+                    neo_token_text.format(
+                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract.address)),
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
+            )
+
+    def finalized(self, message):
+        self.contract.state = 'ENDED'
+        self.contract.save()
