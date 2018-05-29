@@ -284,7 +284,8 @@ class Contract(models.Model):
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
-        test_logger.info('class Contract, method save, args: ' + args)
+        str_args = ','.join([str(x) for x in args])
+        test_logger.info('class Contract, method save, args: ' + str_args)
         if self.id:
             kwargs['update_fields'] = list(
                     {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
@@ -335,6 +336,7 @@ class CommonDetails(models.Model):
     contract = models.ForeignKey(Contract)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
+        test_logger.info('class details, method compile')
         print('compiling', flush=True)
         sol_path = self.sol_path
         if getattr(self, eth_contract_attr_name):
@@ -364,6 +366,7 @@ class CommonDetails(models.Model):
         self.save()
 
     def deploy(self, eth_contract_attr_name='eth_contract'):
+        test_logger.info('deploy:')
         if self.contract.state == 'ACTIVE':
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
@@ -373,6 +376,8 @@ class CommonDetails(models.Model):
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
+        str_args = ','.join([str(x) for x in arguments])
+        test_logger.info('class details, method deploy, args: '+ str_args)
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
@@ -382,6 +387,7 @@ class CommonDetails(models.Model):
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
+        test_logger.info('nonce %d' %nonce)
         print('nonce', nonce, flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
