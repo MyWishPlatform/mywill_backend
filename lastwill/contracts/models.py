@@ -33,6 +33,9 @@ from neo.Core.TX.InvocationTransaction import InvocationTransaction
 from neo.Core.State.ContractState import ContractPropertyState
 from neocore.Fixed8 import Fixed8
 
+from neocore.Cryptography.Crypto import Crypto
+from neocore.UInt160 import UInt160
+
 
 from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
@@ -1367,7 +1370,7 @@ class ContractDetailsNeo(CommonDetails):
             'name': 'WISH',
             'description': 'NEO smart contract',
             'email': 'support@mywish.io',
-            'version': 'v',
+            'version': '1',
             'author': 'MyWish'
         }
         param_list = {
@@ -1387,7 +1390,7 @@ class ContractDetailsNeo(CommonDetails):
         tx = ContractTransaction.DeserializeFromBufer(
             binascii.unhexlify(binary_tx)
         )
-        tx = sign_neo_transaction(tx, binary_tx)
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'], flush=True)
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
@@ -1398,6 +1401,7 @@ class ContractDetailsNeo(CommonDetails):
         print(signed_tx, flush=True)
         
         result = neo_int.sendrawtransaction(signed_tx.decode())
+        print(result, flush=True)
         if not result:
             raise TxFail()
         print('contract hash:', contract_hash)
@@ -1426,7 +1430,8 @@ class ContractDetailsNeo(CommonDetails):
         binary_tx = response['tx']
 
         tx = ContractTransaction.DeserializeFromBufer(
-            binascii.unhexlify(binary_tx))
+            binascii.unhexlify(binary_tx)
+        )
         tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'])
         ms = StreamManager.GetStream()
@@ -1436,12 +1441,12 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
         print('signed_tx', signed_tx)
         result = neo_int.sendrawtransaction(signed_tx.decode())
+        print(result, flush=True)
         if not result:
             raise TxFail()
         print('result of send raw transaction: ', result)
 
         assert(result)
-        self.contract.state='ACTIVE'
         self.contract.save()
         return
 
@@ -1453,5 +1458,19 @@ class ContractDetailsNeo(CommonDetails):
 
         take_off_blocking(self.contract.network.name)
 
-        self.contract.state = 'ACTIVE'
+        self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.save()
+
+        if self.contract.user.email:
+            send_mail(
+                    common_subject,
+                    neo_token_text.format(
+                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract.address)),
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
+            )
+
+    def finalized(self, message):
+        self.contract.state = 'ENDED'
         self.contract.save()

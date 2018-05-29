@@ -502,7 +502,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsNeo
         fields = (
-            'token_name', 'decimals', 'token_short_name', 'admin_address'
+            'token_name', 'decimals', 'token_short_name', 'admin_address', 'future_minting',
         )
 
     def to_representation(self, contract_details):
@@ -547,8 +547,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert(details['decimals'] >= 0 and details['decimals'] <= 255)
-        assert(
-            len(details['token_short_name']) > 0 and
-            len(details['token_short_name']) <= 8
-        )
+        assert(details['decimals'] >= 0 and details['decimals'] <= 8)
+        assert(len(details['token_short_name']) > 0)
+        assert(len(details['token_short_name']) <= 8)
+

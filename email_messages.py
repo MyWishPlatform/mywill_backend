@@ -64,3 +64,14 @@ If you have any questions please contact support@mywish.io
 Best wishes,
 MyWish Team
 """
+
+neo_token_text = '''Hello,
+
+We are happy to inform you that your contract was successfully created and deployed to NEO Test network.
+Token contract address: {addr}
+
+Please contact support@mywish.io if you have any questions.
+
+Best wishes,
+MyWish Team.
+'''
