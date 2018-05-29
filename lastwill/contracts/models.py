@@ -17,22 +17,11 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-# from neo.SmartContract.Contract import Contract as neo_contract
 from neo.Core.TX.Transaction import ContractTransaction
 from neocore.IO.BinaryWriter import BinaryWriter
 from neo.SmartContract.ContractParameterType import ContractParameterType
 from neo.IO.MemoryStream import StreamManager
 from neo.Core.Witness import Witness
-from neo.Core.TX.TransactionAttribute import TransactionAttribute, TransactionAttributeUsage
-from neo.Prompt.Commands.LoadSmartContract import LoadContract, GatherContractDetails, generate_deploy_script
-from neo.Wallets.Wallet import Wallet
-from neo.Prompt.Utils import parse_param
-from neo.SmartContract.ContractParameterContext import ContractParametersContext
-from neo.Core.FunctionCode import FunctionCode
-from neo.Core.TX.InvocationTransaction import InvocationTransaction
-from neo.Core.State.ContractState import ContractPropertyState
-from neocore.Fixed8 import Fixed8
-
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
