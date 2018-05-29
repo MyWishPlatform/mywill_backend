@@ -27,6 +27,7 @@ from neocore.UInt160 import UInt160
 
 
 from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
+from lastwill.settings import test_logger
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
@@ -283,6 +284,7 @@ class Contract(models.Model):
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
+        test_logger.info('class Contract, method save, args: ' + args)
         if self.id:
             kwargs['update_fields'] = list(
                     {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
