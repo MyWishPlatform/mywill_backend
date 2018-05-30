@@ -923,7 +923,7 @@ class ContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 5 * 10**18
+        return int(2.49 * 10**18)
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -1063,7 +1063,7 @@ class ContractDetailsICO(CommonDetails):
         print('init message signed')
         signed_data = sign_transaction(
             address, nonce,
-            100000 + 60000 * self.contract.tokenholder_set.all().count(),
+            100000 + 80000 * self.contract.tokenholder_set.all().count(),
             self.contract.network.name,
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
@@ -1151,7 +1151,7 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(3 * 10**18)
+        return int(0.99 * 10**18)
 
     def get_arguments(self, eth_contract_attr_name):
         return []
