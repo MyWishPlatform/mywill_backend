@@ -3,6 +3,8 @@ MAIL_NETWORK = {
     'ETHEREUM_MAINNET': 'Ethereum',
     'ETHEREUM_ROPSTEN': 'Ropsten (Ethereum Testnet)',
     'RSK_MAINNET': 'RSK',
-    'RSK_TESTNET': 'RSK Testnet'
+    'RSK_TESTNET': 'RSK Testnet',
+    'NEO_TESTNET': 'NEO Test Net',
+    'NEO_MAINNET': 'NEO'
 }
 
