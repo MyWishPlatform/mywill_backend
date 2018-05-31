@@ -11,8 +11,6 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
-import logging
-import logstash
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -214,11 +212,11 @@ LOGGING = {
     'level': 'DEBUG',
     'class': 'logstash.LogstashHandler',
     'host': 'localhost',
-    'port': 5959, # Default value: 5959
-    'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-    'message_type': 'logstash', # 'type' field in logstash message. Default value: 'logstash'.
-    'fqdn': False, # Fully qualified domain name. Default value: false.
-    'tags': ['tag1', 'tag2'], # list of tags. Default: None.
+    'port': 5045,
+    'version': 1,
+    'message_type': 'logstash',
+    'fqdn': False,
+    'tags': ['tag1', 'tag2'],
     },
     },
     'loggers': {
@@ -230,9 +228,6 @@ LOGGING = {
     },
 }
 
-test_logger = logging.getLogger('python3-logstash-logger')
-test_logger.setLevel(logging.INFO)
-test_logger.addHandler(logstash.AMQPLogstashHandler(host='localhost', version=1))
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
