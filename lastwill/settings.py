@@ -207,6 +207,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 LOGGING = {
+    'version': 1,
     'handlers': {
     'logstash': {
     'level': 'DEBUG',
@@ -227,6 +228,7 @@ LOGGING = {
     },
     },
 }
+
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 
