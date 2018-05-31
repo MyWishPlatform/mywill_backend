@@ -368,6 +368,7 @@ class CommonDetails(models.Model):
     def deploy(self, eth_contract_attr_name='eth_contract'):
         test_logger.info('deploy:')
         if self.contract.state == 'ACTIVE':
+            test_logger.error('launch message ignored because already deployed')
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
             return
@@ -377,7 +378,7 @@ class CommonDetails(models.Model):
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
         str_args = ','.join([str(x) for x in arguments])
-        test_logger.info('class details, method deploy, args: '+ str_args)
+        test_logger.info('class details, method deploy, args: %s' %str_args)
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
@@ -397,6 +398,10 @@ class CommonDetails(models.Model):
             self.contract.network.name, value=self.get_value(),
             contract_data=data
         )
+        test_logger.info('source address %s' %address)
+        test_logger.info('gas limit %d' %self.get_gaslimit())
+        test_logger.info('value %d' %self.get_value())
+        test_logger.info('network %s' %self.contract.network.name)
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
@@ -407,6 +412,7 @@ class CommonDetails(models.Model):
         )
         eth_contract.save()
         print('transaction sent', flush=True)
+        test_logger.info('transaction sent')
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
@@ -449,6 +455,7 @@ class CommonDetails(models.Model):
         print('contract postponed due to transaction fail', flush=True)
         take_off_blocking(self.contract.network.name, self.contract.id)
         print('queue unlocked due to transaction fail', flush=True)
+        test_logger.error('contract postponed due to transaction fail')
 
     def predeploy_validate(self):
         pass

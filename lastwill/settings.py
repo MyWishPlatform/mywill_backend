@@ -208,23 +208,23 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LOGGING = {
     'handlers': {
-    'logstash': {
-    'level': 'DEBUG',
-    'class': 'logstash.LogstashHandler',
-    'host': 'localhost',
-    'port': 5045,
-    'version': 1,
-    'message_type': 'logstash',
-    'fqdn': False,
-    'tags': ['tag1', 'tag2'],
-    },
+        'logstash': {
+        'level': 'DEBUG',
+        'class': 'logstash.LogstashHandler',
+        'host': 'localhost',
+        'port': 5045,
+        'version': 1,
+        'message_type': 'logstash',
+        'fqdn': False,
+        'tags': ['tag1', 'tag2'],
+        },
     },
     'loggers': {
-    'django.request': {
-    'handlers': ['logstash'],
-    'level': 'DEBUG',
-    'propagate': True,
-    },
+        'django.request': {
+        'handlers': ['logstash'],
+        'level': 'DEBUG',
+        'propagate': True,
+        },
     },
 }
 
