@@ -212,7 +212,7 @@ LOGGING = {
         'logstash': {
         'level': 'DEBUG',
         'class': 'logstash.LogstashHandler',
-        'host': 'localhost',
+        'host': 'kibana.mywish.io',
         'port': 5045,
         'version': 1,
         'message_type': 'logstash',
