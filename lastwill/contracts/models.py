@@ -546,7 +546,7 @@ class ContractDetailsLastwill(CommonDetails):
         now = datetime.datetime.now()
         cost = cls.calc_cost({
             'check_interval': 0,
-            'heirs': 0,
+            'heirs': [],
             'active_to': now
         }, network)
         return cost
@@ -732,7 +732,7 @@ class ContractDetailsLostKey(CommonDetails):
         now = datetime.datetime.now()
         cost = cls.calc_cost({
             'check_interval': 0,
-            'heirs': 0,
+            'heirs':[],
             'active_to': now
         }, network)
         return cost
