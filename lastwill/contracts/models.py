@@ -554,7 +554,18 @@ class ContractDetailsLastwill(CommonDetails):
             False if self.contract.network.name in
                      ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
         ]
-   
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        now = datetime.datetime.now()
+        cost = cls.calc_cost({
+            'check_interval': 1,
+            'heirs': [],
+            'active_to': now
+        }, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -730,6 +741,16 @@ class ContractDetailsLostKey(CommonDetails):
             self.check_interval,
         ]   
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        now = datetime.datetime.now()
+        cost = cls.calc_cost({
+            'check_interval': 1,
+            'heirs':[],
+            'active_to': now
+        }, network)
+        return cost
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -831,6 +852,12 @@ class ContractDetailsDelayedPayment(CommonDetails):
         if self.date < now:
             raise ValidationError({'result': 1}, code=400)
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -898,6 +925,9 @@ class ContractDetailsPizza(CommonDetails):
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
+    @classmethod
+    def min_cost(cls):
+        return 0
 
 @contract_details('MyWish ICO')
 class ContractDetailsICO(CommonDetails):
@@ -925,6 +955,7 @@ class ContractDetailsICO(CommonDetails):
     amount_bonuses = JSONField(null=True, default=None)
     continue_minting = models.BooleanField(default=False)
     cold_wallet_address = models.CharField(max_length=50, default='')
+    allow_change_dates = models.BooleanField(default=False)
 
     eth_contract_token = models.ForeignKey(
         EthContract,
@@ -962,11 +993,17 @@ class ContractDetailsICO(CommonDetails):
                 if th.freeze_date < now.timestamp() + 600:
                     raise ValidationError({'result': 2}, code=400)
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 5 * 10**18
+        return int(2.49 * 10**18)
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -1106,7 +1143,7 @@ class ContractDetailsICO(CommonDetails):
         print('init message signed')
         signed_data = sign_transaction(
             address, nonce,
-            100000 + 60000 * self.contract.tokenholder_set.all().count(),
+            100000 + 80000 * self.contract.tokenholder_set.all().count(),
             self.contract.network.name,
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
@@ -1190,11 +1227,17 @@ class ContractDetailsToken(CommonDetails):
                 if th.freeze_date < now.timestamp() + 600:
                     raise ValidationError({'result': 1}, code=400)
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(3 * 10**18)
+        return int(0.99 * 10**18)
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -1299,6 +1342,12 @@ class ContractDetailsNeo(CommonDetails):
     decimals = models.IntegerField()
     admin_address = models.CharField(max_length=70)
     future_minting = models.BooleanField(default=False)
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='NEO_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
 
     @staticmethod
     def calc_cost(details, network):
