@@ -393,6 +393,6 @@ def get_statistics_landing(request):
 def get_cost_all_contracts(request):
     answer = {}
     for contract in contract_details_types:
-        answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH']
+        answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH'] / 10 ** 18
         # answer[contract['name']] = contract['model'].min_cost()
     return JsonResponse(answer)
