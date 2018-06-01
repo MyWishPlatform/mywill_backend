@@ -144,6 +144,7 @@ def add_real_params(params, admin_address, address, wallet_address):
 
 def create_directory(details, sour_path='lastwill/ico-crowdsale/*'):
     details.temp_directory = str(uuid.uuid4())
+    test_logger.info('temp directory = %s' % details.temp_directory)
     print(details.temp_directory, flush=True)
     sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
@@ -452,10 +453,11 @@ class CommonDetails(models.Model):
             DEFAULT_FROM_EMAIL,
             [EMAIL_FOR_POSTPONED_MESSAGE]
         )
+        test_logger.error('contract postponed due to transaction fail')
         print('contract postponed due to transaction fail', flush=True)
         take_off_blocking(self.contract.network.name, self.contract.id)
         print('queue unlocked due to transaction fail', flush=True)
-        test_logger.error('contract postponed due to transaction fail')
+        test_logger.error('queue unlocked due to transaction fail')
 
     def predeploy_validate(self):
         pass
@@ -463,11 +465,13 @@ class CommonDetails(models.Model):
     @blocking
     def check_contract(self):
         print('checking', self.contract.name)
+        test_logger.info('checking id %d' %self.id)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
+        test_logger.info()
         signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
