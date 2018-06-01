@@ -27,6 +27,7 @@ from neocore.UInt160 import UInt160
 
 
 from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
+from lastwill.settings import test_logger
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
@@ -143,6 +144,7 @@ def add_real_params(params, admin_address, address, wallet_address):
 
 def create_directory(details, sour_path='lastwill/ico-crowdsale/*'):
     details.temp_directory = str(uuid.uuid4())
+    test_logger.info('temp directory = %s' % details.temp_directory)
     print(details.temp_directory, flush=True)
     sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
@@ -283,6 +285,8 @@ class Contract(models.Model):
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
+        str_args = ','.join([str(x) for x in args])
+        test_logger.info('class Contract, method save, args: ' + str_args)
         if self.id:
             kwargs['update_fields'] = list(
                     {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
@@ -333,6 +337,7 @@ class CommonDetails(models.Model):
     contract = models.ForeignKey(Contract)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
+        test_logger.info('class details, method compile')
         print('compiling', flush=True)
         sol_path = self.sol_path
         if getattr(self, eth_contract_attr_name):
@@ -362,7 +367,9 @@ class CommonDetails(models.Model):
         self.save()
 
     def deploy(self, eth_contract_attr_name='eth_contract'):
+        test_logger.info('deploy:')
         if self.contract.state == 'ACTIVE':
+            test_logger.error('launch message ignored because already deployed')
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
             return
@@ -371,6 +378,8 @@ class CommonDetails(models.Model):
         tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
+        str_args = ','.join([str(x) for x in arguments])
+        test_logger.info('class details, method deploy, args: %s' %str_args)
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
@@ -380,6 +389,7 @@ class CommonDetails(models.Model):
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
+        test_logger.info('nonce %d' %nonce)
         print('nonce', nonce, flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
@@ -389,6 +399,10 @@ class CommonDetails(models.Model):
             self.contract.network.name, value=self.get_value(),
             contract_data=data
         )
+        test_logger.info('source address %s' %address)
+        test_logger.info('gas limit %d' %self.get_gaslimit())
+        test_logger.info('value %d' %self.get_value())
+        test_logger.info('network %s' %self.contract.network.name)
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
@@ -399,6 +413,7 @@ class CommonDetails(models.Model):
         )
         eth_contract.save()
         print('transaction sent', flush=True)
+        test_logger.info('transaction sent')
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
@@ -438,9 +453,11 @@ class CommonDetails(models.Model):
             DEFAULT_FROM_EMAIL,
             [EMAIL_FOR_POSTPONED_MESSAGE]
         )
+        test_logger.error('contract postponed due to transaction fail')
         print('contract postponed due to transaction fail', flush=True)
         take_off_blocking(self.contract.network.name, self.contract.id)
         print('queue unlocked due to transaction fail', flush=True)
+        test_logger.error('queue unlocked due to transaction fail')
 
     def predeploy_validate(self):
         pass
@@ -448,11 +465,13 @@ class CommonDetails(models.Model):
     @blocking
     def check_contract(self):
         print('checking', self.contract.name)
+        test_logger.info('checking id %d' %self.id)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
+        test_logger.info()
         signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
