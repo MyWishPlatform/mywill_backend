@@ -539,7 +539,18 @@ class ContractDetailsLastwill(CommonDetails):
             False if self.contract.network.name in
                      ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
         ]
-   
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        now = datetime.datetime.now()
+        cost = cls.calc_cost({
+            'check_interval': 0,
+            'heirs': 0,
+            'active_to': now
+        }, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -715,6 +726,16 @@ class ContractDetailsLostKey(CommonDetails):
             self.check_interval,
         ]   
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        now = datetime.datetime.now()
+        cost = cls.calc_cost({
+            'check_interval': 0,
+            'heirs': 0,
+            'active_to': now
+        }, network)
+        return cost
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -815,6 +836,12 @@ class ContractDetailsDelayedPayment(CommonDetails):
         now = timezone.now()
         if self.date < now:
             raise ValidationError({'result': 1}, code=400)
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -946,6 +973,12 @@ class ContractDetailsICO(CommonDetails):
             if th.freeze_date:
                 if th.freeze_date < now.timestamp() + 600:
                     raise ValidationError({'result': 2}, code=400)
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -1175,6 +1208,12 @@ class ContractDetailsToken(CommonDetails):
                 if th.freeze_date < now.timestamp() + 600:
                     raise ValidationError({'result': 1}, code=400)
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -1284,6 +1323,12 @@ class ContractDetailsNeo(CommonDetails):
     decimals = models.IntegerField()
     admin_address = models.CharField(max_length=70)
     future_minting = models.BooleanField(default=False)
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='NEO_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
 
     @staticmethod
     def calc_cost(details, network):

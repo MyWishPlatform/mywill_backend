@@ -25,7 +25,8 @@ from lastwill.profile.views import profile_view, generate_key, enable_2fa, disab
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_contract_types, deploy,
                                     get_token_contracts, ICOtokensView, get_statistics,
-                                    i_am_alive, cancel, get_statistics_landing)
+                                    i_am_alive, cancel, get_statistics_landing,
+                                    get_cost_all_contracts)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -70,6 +71,7 @@ urlpatterns = [
     url(r'^api/get_statistics_landing/$', get_statistics_landing),
     url(r'^api/i_am_alive/', i_am_alive),
     url(r'^api/cancel/', cancel),
+    url(r'^api/get_all_costs/$', get_cost_all_contracts),
 
 ]
 

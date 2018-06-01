@@ -387,3 +387,11 @@ def get_statistics_landing(request):
         'new_users': len(new_users)
     }
     return JsonResponse(answer)
+
+
+@api_view(http_method_names=['GET'])
+def get_cost_all_contracts(request):
+    answer = {}
+    for contract in contract_details_types:
+        answer[contract['name']] = contract['model'].min_cost()
+    return JsonResponse(answer)
