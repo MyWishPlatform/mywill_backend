@@ -910,6 +910,9 @@ class ContractDetailsPizza(CommonDetails):
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
+    @classmethod
+    def min_cost(cls):
+        pass
 
 @contract_details('MyWish ICO')
 class ContractDetailsICO(CommonDetails):
