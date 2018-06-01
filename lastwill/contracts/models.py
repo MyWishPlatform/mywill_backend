@@ -912,7 +912,7 @@ class ContractDetailsPizza(CommonDetails):
 
     @classmethod
     def min_cost(cls):
-        pass
+        return 0
 
 @contract_details('MyWish ICO')
 class ContractDetailsICO(CommonDetails):

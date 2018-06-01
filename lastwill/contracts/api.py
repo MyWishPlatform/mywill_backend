@@ -23,7 +23,7 @@ from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.models import contract_details_types, Contract
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-from exchange_API import to_wish
+from exchange_API import to_wish, convert
 from .models import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens
 
@@ -393,5 +393,6 @@ def get_statistics_landing(request):
 def get_cost_all_contracts(request):
     answer = {}
     for contract in contract_details_types:
-        answer[contract['name']] = contract['model'].min_cost()
+        answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH']
+        # answer[contract['name']] = contract['model'].min_cost()
     return JsonResponse(answer)
