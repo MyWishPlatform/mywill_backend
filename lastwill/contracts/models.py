@@ -545,7 +545,7 @@ class ContractDetailsLastwill(CommonDetails):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
         now = datetime.datetime.now()
         cost = cls.calc_cost({
-            'check_interval': 0,
+            'check_interval': 1,
             'heirs': [],
             'active_to': now
         }, network)
@@ -731,7 +731,7 @@ class ContractDetailsLostKey(CommonDetails):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
         now = datetime.datetime.now()
         cost = cls.calc_cost({
-            'check_interval': 0,
+            'check_interval': 1,
             'heirs':[],
             'active_to': now
         }, network)
