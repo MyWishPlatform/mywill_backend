@@ -44,6 +44,7 @@ def profile_view(request):
             'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None),
             'use_totp': request.user.profile.use_totp,
             'is_social': request.user.profile.is_social,
+            'lang': request.user.profile.lang,
     })
 
 
@@ -96,4 +97,13 @@ def resend_email(request):
     if em.verified:
         raise PermissionDenied(2)
     em.send_confirmation(request=request)
+    return Response({"result": "ok"})
+
+@api_view(http_method_names=['POST'])
+def set_lang(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    user.profile.lang = request.data['lang']
+    user.profile.save()
     return Response({"result": "ok"})

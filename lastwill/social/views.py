@@ -27,7 +27,7 @@ class ProfileAndTotpSocialLoginView(SocialLoginView):
             p = self.user.profile
         except ObjectDoesNotExist:
             self.user.username = str(self.user.id)
-            init_profile(self.user, is_social=True)
+            init_profile(self.user, is_social=True, lang=self.context['request'].COOKIES.get('lang', 'en'))
             self.user.save()
         if self.user.profile.use_totp:
             totp = self.serializer.validated_data.get('totp', None)

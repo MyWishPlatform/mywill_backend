@@ -21,7 +21,7 @@ from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
-from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email
+from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_contract_types, deploy,
                                     get_token_contracts, ICOtokensView, get_statistics,
@@ -72,6 +72,7 @@ urlpatterns = [
     url(r'^api/i_am_alive/', i_am_alive),
     url(r'^api/cancel/', cancel),
     url(r'^api/get_all_costs/$', get_cost_all_contracts),
+    url(r'^api/set_lang/$', set_lang),
 
 ]
 
