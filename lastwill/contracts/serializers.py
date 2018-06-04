@@ -605,6 +605,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
         assert(details['stop_date'] >= details['start_date'] + 5*60)
+        details['hard_cap'] = int(details['hard_cap'])
         assert(details['hard_cap'] >= 0)
 
     def to_representation(self, contract_details):
