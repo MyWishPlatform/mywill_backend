@@ -1587,13 +1587,6 @@ class ContractDetailsNeoICO(CommonDetails):
     decimals = models.IntegerField()
     temp_directory = models.CharField(max_length=36)
 
-    neo_contract_token = models.ForeignKey(
-        NeoContract,
-        null=True,
-        default=None,
-        related_name='neo_ico_details_token',
-        on_delete=models.SET_NULL
-    )
     neo_contract_crowdsale = models.ForeignKey(
         NeoContract,
         null=True,
@@ -1669,5 +1662,75 @@ class ContractDetailsNeoICO(CommonDetails):
         self.neo_contract = neo_contract
         self.save()
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='NEO_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
 
+    @staticmethod
+    def calc_cost(details, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        if details.get('storage_area', False):
+            return 600
+        return 200
+
+    def predeploy_validate(self):
+        pass
+
+    def deploy(self, contract_params='0710', return_type='05'):
+        self.compile()
+        from_addr = NETWORKS[self.contract.network.name]['address']
+        bytecode = self.neo_contract_crowdsale.bytecode
+        neo_int = NeoInt(self.contract.network.name)
+        print('from address', from_addr)
+        test_logger.info('from address %s' % from_addr)
+        details = {
+            'name': 'WISH',
+            'description': 'NEO smart contract',
+            'email': 'support@mywish.io',
+            'version': '1',
+            'author': 'MyWish'
+        }
+        param_list = {
+            'from_addr': from_addr,
+            'bin': bytecode,
+            'needs_storage': True,
+            'needs_dynamic_invoke': False,
+            'contract_params': contract_params,
+            'return_type': return_type,
+            'details': details,
+        }
+        response = neo_int.mw_construct_deploy_tx(param_list)
+        print('construct response', response, flush=True)
+        binary_tx = response['tx']
+        contract_hash = response['hash']
+
+        tx = ContractTransaction.DeserializeFromBufer(
+            binascii.unhexlify(binary_tx)
+        )
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
+        print('after sign', tx.ToJson()['txid'], flush=True)
+        test_logger.info('after sign %s' % tx.ToJson()['txid'])
+        ms = StreamManager.GetStream()
+        writer = BinaryWriter(ms)
+        tx.Serialize(writer)
+        ms.flush()
+        signed_tx = ms.ToArray()
+        print('full tx:', flush=True)
+        print(signed_tx, flush=True)
+
+        result = neo_int.sendrawtransaction(signed_tx.decode())
+        print(result, flush=True)
+        if not result:
+            raise TxFail()
+        print('contract hash:', contract_hash)
+        test_logger.info('contract hash: %s' % contract_hash)
+        print('result of send raw transaction: ', result)
+        test_logger.info('result of send raw transaction: %s' % result)
+
+        self.neo_contract_crowdsale.address = contract_hash
+        self.neo_contract_crowdsale.tx_hash = tx.ToJson()['txid']
+        self.neo_contract_crowdsale.save()
 
