@@ -3,12 +3,14 @@ from django.db.models import F
 
 from lastwill.payments.models import InternalPayment
 from lastwill.profile.models import Profile
+from lastwill.settings import test_logger
 
 
 def create_payment(uid, value, tx, currency, amount, update=True):
     if value == 0.0:
         return
     print('create payment')
+    test_logger.info('create payment %d' %value)
     user = User.objects.get(id=uid)
 
     if update:

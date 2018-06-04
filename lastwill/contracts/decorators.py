@@ -4,7 +4,8 @@ from django.db.models import Q
 from django.core.mail import send_mail
 
 from lastwill.deploy.models import DeployAddress
-from lastwill.settings import DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE, NETWORKS
+from lastwill.settings import DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
+from lastwill.settings import test_logger, NETWORKS
 from email_messages import *
 
 
@@ -36,6 +37,7 @@ def check_transaction(f):
     def wrapper(*args, **kwargs):
         if not args[1].get('success', True):
             print('message rejected because transaction failed', flush=True)
+            test_logger.error('transaction failed')
             raise TxFail()
         else:
             return f(*args, **kwargs)
@@ -46,6 +48,7 @@ def postponable(f):
     def wrapper(*args, **kwargs):
         contract = args[0].contract
         if contract.state == 'POSTPONED':
+            test_logger.error('contract postponed')
             print('message rejected because contract postponed', flush=True)
             send_mail(
                 postponed_subject,
@@ -71,12 +74,14 @@ def postponable(f):
                 [EMAIL_FOR_POSTPONED_MESSAGE]
             )
             print('contract postponed due to exception', flush=True)
+            test_logger.error('contract postponed due to exception')
             address = NETWORKS[contract.network.name]['address']
             DeployAddress.objects.select_for_update().filter(
                 network__name=contract.network.name,
                 address=address, locked_by=contract.id
             ).update(locked_by=None)
             print('queue unlocked due to exception', flush=True)
+            test_logger.error('queue unlocked due to exception')
             raise
     return wrapper
 

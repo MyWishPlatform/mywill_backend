@@ -14,7 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR, test_logger
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
@@ -163,6 +163,7 @@ def i_am_alive(request):
     if details.last_press_imalive:
         delta = timezone.now() - details.last_press_imalive
         if delta.days < 1:
+            test_logger.error('i am alive error')
             raise PermissionDenied(3000)
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'confirm_alive', queue)
@@ -302,7 +303,8 @@ def get_statistics(request):
 
     now = datetime.datetime.now()
     day = datetime.datetime.combine(
-        datetime.datetime.now().today(), datetime.time(0, 0)
+        datetime.datetime.now().today(),
+        datetime.time(0, 0)
     )
 
     users = User.objects.all().exclude(
@@ -349,7 +351,8 @@ def get_statistics(request):
 def get_statistics_landing(request):
     now = datetime.datetime.now()
     day = datetime.datetime.combine(
-        datetime.datetime.now().today(), datetime.time(0, 0)
+        datetime.datetime.now().today(),
+        datetime.time(0, 0)
     )
     users = User.objects.all().exclude(
         email='', password='', last_name='', first_name=''
