@@ -15,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
 )
-from lastwill.settings import NETWORKS
+from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish
@@ -33,15 +33,18 @@ class Receiver():
     def payment(self, message):
         print('payment message', flush=True)
         print('message["amount"]', message['amount'])
+        test_logger.info('RECEIVER: payment message with value %d' %message['amount'])
         value = message['amount'] if message['currency'] == 'WISH' else to_wish(
                 message['currency'], message['amount']
         )
         print(value)
         print('payment ok', flush=True)
+        test_logger.info('RECEIVER: payment ok with value %d' %value)
         create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
 
     def deployed(self, message):
         print('deployed message received', flush=True)
+        test_logger.info()
         contract = EthContract.objects.get(id=message['contractId']).contract
         contract.get_details().msg_deployed(message)
         print('deployed ok!', flush=True)

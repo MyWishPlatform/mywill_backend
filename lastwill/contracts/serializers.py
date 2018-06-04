@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models import (
     Contract, Heir, ContractDetailsLastwill,
@@ -91,6 +91,7 @@ class ContractSerializer(serializers.ModelSerializer):
             details_serializer.create(contract, contract_details)
         except:
             transaction.rollback()
+            test_logger.error('Contract Serializer create except')
             raise
         else:
             transaction.commit()
@@ -381,6 +382,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             check.is_address(th['address'])
             assert(th['amount'] > 0)
             if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in ICO serializer')
                 raise ValidationError({'result': 2}, code=400)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
@@ -465,6 +467,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             check.is_address(th['address'])
             assert(th['amount'] > 0)
             if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):

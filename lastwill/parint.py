@@ -2,7 +2,7 @@
 import json
 import requests
 import sys
-from lastwill.settings import NETWORKS
+from lastwill.settings import NETWORKS, test_logger
 
 class ParConnectExc(Exception):
     def __init__(self, *args):
@@ -23,9 +23,11 @@ class ParInt:
             else:
                 network = 'ETHEREUM_MAINNET'
         print('network', network, type(network))
+        test_logger.info('par int get network %s ' %network)
         self.addr = NETWORKS[network]['host']
         self.port = NETWORKS[network]['port']
         print('parity interface', self.addr, self.port, flush=True)
+        test_logger.info('parity interface %d %d' %(self.addr, self.port))
 
 
     def __getattr__(self, method):
