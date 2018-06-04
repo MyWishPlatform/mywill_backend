@@ -606,12 +606,6 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             raise ValidationError({'result': 1}, code=400)
         assert(details['stop_date'] >= details['start_date'] + 5*60)
         assert(details['hard_cap'] >= 0)
-        for th in details['token_holders']:
-            check.is_address(th['address'])
-            assert(th['amount'] > 0)
-            if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in ICO serializer')
-                raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
