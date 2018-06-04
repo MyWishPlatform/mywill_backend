@@ -1636,7 +1636,7 @@ class ContractDetailsNeoICO(CommonDetails):
             raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
         test_logger.info('dest %s' %dest)
-        test_neo_token_params(preproc_config, preproc_params, dest)
+        test_neo_ico_params(preproc_config, preproc_params, dest)
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
 
