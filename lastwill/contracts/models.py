@@ -1622,11 +1622,12 @@ class ContractDetailsNeoICO(CommonDetails):
         }}
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(
-                [int(x) for x in int(th.amount).to_bytes(
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = [
+                int(x) for x in int(th.amount).to_bytes(
                     math.ceil(math.log(int(th.amount), 256)
-                              ), 'little')]
-            )
+                              ), 'little')
+            ]
+
             preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
 
         with open(preproc_config, 'w') as f:
