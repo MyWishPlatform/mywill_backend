@@ -1658,7 +1658,7 @@ class ContractDetailsNeoICO(CommonDetails):
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
         neo_contract.save()
-        self.neo_contract = neo_contract
+        self.neo_contract_crowdsale = neo_contract
         self.save()
 
     @classmethod
