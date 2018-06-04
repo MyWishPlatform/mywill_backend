@@ -27,7 +27,7 @@ class ParInt:
         self.addr = NETWORKS[network]['host']
         self.port = NETWORKS[network]['port']
         print('parity interface', self.addr, self.port, flush=True)
-        test_logger.info('parity interface %d %d' %(self.addr, self.port))
+        test_logger.info('parity interface %s %s' %(str(self.addr), str(self.port)))
 
 
     def __getattr__(self, method):
