@@ -612,11 +612,9 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
-        res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract_token)
         res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(contract_details.neo_contract_crowdsale)
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
-            res['neo_contract_token']['source_code'] = ''
             res['neo_contract_crowdsale']['source_code'] = ''
         return res
 
@@ -631,7 +629,6 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        kwargs.pop('neo_contract_token', None)
         kwargs.pop('beo_contract_crowdsale', None)
 
         if token_id:
