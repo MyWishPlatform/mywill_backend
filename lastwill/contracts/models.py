@@ -5,6 +5,7 @@ import uuid
 import binascii
 import datetime
 import pika
+import math
 import bitcoin
 from copy import deepcopy
 from ethereum import abi
@@ -142,7 +143,7 @@ def add_real_params(params, admin_address, address, wallet_address):
     return params
 
 
-def create_directory(details, sour_path='lastwill/ico-crowdsale/*'):
+def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name='c-preprocessor-config.json'):
     details.temp_directory = str(uuid.uuid4())
     test_logger.info('temp directory = %s' % details.temp_directory)
     print(details.temp_directory, flush=True)
@@ -150,7 +151,7 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*'):
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
     os.mkdir(dest)
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
-    preproc_config = os.path.join(dest, 'c-preprocessor-config.json')
+    preproc_config = os.path.join(dest, config_name)
     os.unlink(preproc_config)
     details.save()
     return dest, preproc_config
@@ -177,7 +178,14 @@ def test_token_params(config, params, dest):
 def test_neo_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system("/bin/bash -c 'cd {dest} && ./3_test.sh'".format(dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} && ./3_test_token.sh'".format(dest=dest)):
+        raise Exception('compiler error while deploying')
+
+
+def test_neo_ico_params(config, params, dest):
+    with open(config, 'w') as f:
+        f.write(json.dumps(params))
+    if os.system("/bin/bash -c 'cd {dest} && ./3_test_crowdsale.sh'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
@@ -1386,7 +1394,9 @@ class ContractDetailsNeo(CommonDetails):
             print('already compiled')
             test_logger.error('already compiled id %d' %self.id)
             return
-        dest, preproc_config = create_directory(self, 'lastwill/neo-ico-contracts/*')
+        dest, preproc_config = create_directory(
+            self, 'lastwill/neo-ico-contracts/*', 'token-config.json'
+        )
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {
             "D_NAME": self.token_name,
@@ -1398,12 +1408,16 @@ class ContractDetailsNeo(CommonDetails):
         }}
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(th.amount)
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(
+                [int(x) for x in th.amount.to_bytes(
+                    math.ceil(math.log(th.amount, 256)
+                              ), 'little')]
+            )
             preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system("/bin/bash -c 'cd {dest} && ./2_compile.sh'".format(dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./2_compile_token.sh'".format(dest=dest)):
             raise Exception('compiler error while deploying')
         print('dest', dest, flush=True)
         test_logger.info('dest %s' %dest)
@@ -1553,3 +1567,112 @@ class ContractDetailsNeo(CommonDetails):
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
+
+
+@contract_details('MyWish ICO')
+class ContractDetailsNeoICO(CommonDetails):
+    sol_path = 'lastwill/contracts/contracts/ICO.sol'
+
+    hard_cap = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    token_name = models.CharField(max_length=512)
+    token_short_name = models.CharField(max_length=64)
+    admin_address = models.CharField(max_length=50)
+    is_transferable_at_once = models.BooleanField(default=False)
+    start_date = models.IntegerField()
+    stop_date = models.IntegerField()
+    rate = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    decimals = models.IntegerField()
+    platform_as_admin = models.BooleanField(default=False)
+    temp_directory = models.CharField(max_length=36)
+
+    continue_minting = models.BooleanField(default=False)
+    cold_wallet_address = models.CharField(max_length=50, default='')
+
+    neo_contract_token = models.ForeignKey(
+        NeoContract,
+        null=True,
+        default=None,
+        related_name='neo_ico_details_token',
+        on_delete=models.SET_NULL
+    )
+    neo_contract_crowdsale = models.ForeignKey(
+        NeoContract,
+        null=True,
+        default=None,
+        related_name='neo_ico_details_crowdsale',
+        on_delete=models.SET_NULL
+    )
+
+    reused_token = models.BooleanField(default=False)
+    token_type = models.CharField(max_length=32, default='ERC20')
+
+    def compile(self):
+        print('standalone token contract compile')
+        test_logger.info('standalone token contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            test_logger.error('already compiled id %d' %self.id)
+            return
+        dest, preproc_config = create_directory(
+            self, 'lastwill/neo-ico-contracts/*', 'crowdsale-config.json'
+        )
+        token_holders = self.contract.tokenholder_set.all()
+        preproc_params = {"constants": {
+            "D_NAME": self.token_name,
+            "D_SYMBOL": self.token_short_name,
+            "D_DECIMALS": self.decimals,
+            "D_PREMINT_COUNT": len(token_holders),
+            "D_OWNER": self.admin_address,
+            "D_CONTINUE_MINTING": self.future_minting,
+            "D_START_TIME": self.start_date,
+            "D_END_TIME": self.stop_date,
+            "D_RATE": self.rate,
+            "D_HARD_CAP_NEO": self.hard_cap
+        }}
+        for ind, th in enumerate(token_holders):
+            preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = str(
+                [int(x) for x in th.amount.to_bytes(
+                    math.ceil(math.log(th.amount, 256)
+                              ), 'little')]
+            )
+            preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
+
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system("/bin/bash -c 'cd {dest} && ./2_compile_crowdsale.sh'".format(dest=dest)):
+            raise Exception('compiler error while deploying')
+        print('dest', dest, flush=True)
+        test_logger.info('dest %s' %dest)
+        test_neo_token_params(preproc_config, preproc_params, dest)
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+
+        with open(path.join(
+                dest,
+                'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.abi.json'
+        )) as f:
+            token_json = json.loads(f.read())
+        with open(path.join(
+                dest,
+                'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.avm'
+        ), mode='rb') as f:
+            bytecode = f.read()
+        with open(path.join(dest, 'Crowdsale.Contract/Crowdsale.cs')) as f:
+            source_code = f.read()
+        neo_contract = NeoContract()
+        neo_contract.abi = token_json
+        neo_contract.bytecode = binascii.hexlify(bytecode).decode()
+        neo_contract.source_code = source_code
+        neo_contract.contract = self.contract
+        neo_contract.original_contract = self.contract
+        neo_contract.save()
+        self.neo_contract = neo_contract
+        self.save()
+
+
+
