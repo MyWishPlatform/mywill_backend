@@ -564,7 +564,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         fields = (
                 'hard_cap', 'token_name', 'token_short_name',
                 'start_date', 'stop_date', 'decimals', 'rate',
-                'admin_address', 'token_type'
+                'admin_address'
         )
 
     def create(self, contract, contract_details):
