@@ -602,7 +602,6 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         assert('admin_address' in details)
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
-        check.is_address(details['admin_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
         assert(details['stop_date'] >= details['start_date'] + 5*60)
