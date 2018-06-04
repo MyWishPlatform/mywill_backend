@@ -599,10 +599,6 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
             assert('"' not in details['token_name'] and '\n' not in details['token_name'])
             assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
             assert(0 <= details['decimals'] <= 50)
-            details['reused_token'] = False
-            assert(details.get('token_type', 'ERC20') in ('ERC20, ERC223'))
-        for k in ('hard_cap', 'soft_cap'):
-            details[k] = int(details[k])
         assert('admin_address' in details and 'token_holders' in details)
         assert(len(details['token_holders']) <= 5)
         for th in details['token_holders']:
@@ -613,8 +609,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
         assert(details['stop_date'] >= details['start_date'] + 5*60)
-        assert(details['hard_cap'] >= details['soft_cap'])
-        assert(details['soft_cap'] >= 0)
+        assert(details['hard_cap'] >= 0)
         for th in details['token_holders']:
             check.is_address(th['address'])
             assert(th['amount'] > 0)
