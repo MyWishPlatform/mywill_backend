@@ -1614,7 +1614,6 @@ class ContractDetailsNeoICO(CommonDetails):
             "D_DECIMALS": self.decimals,
             "D_PREMINT_COUNT": len(token_holders),
             "D_OWNER": self.admin_address,
-            "D_CONTINUE_MINTING": self.future_minting,
             "D_START_TIME": self.start_date,
             "D_END_TIME": self.stop_date,
             "D_RATE": self.rate,
