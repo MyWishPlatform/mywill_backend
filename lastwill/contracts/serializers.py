@@ -623,7 +623,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
-            th_json['address'] = th_json['address'].lower()
+            th_json['address'] = th_json['address']
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
