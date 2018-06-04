@@ -579,7 +579,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         res = super().create(kwargs)
         if token_id:
-            res.neo_contract_token_id = token_id
+            res.neo_contract_crowdsale_id = token_id
             res.save()
         return res
 
@@ -622,5 +622,5 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         kwargs.pop('neo_contract_crowdsale', None)
 
         if token_id:
-            details.neo_contract_token_id = token_id
+            details.neo_contract_crowdsale_id = token_id
         return super().update(details, kwargs)
