@@ -1612,13 +1612,13 @@ class ContractDetailsNeoICO(CommonDetails):
         preproc_params = {"constants": {
             "D_NAME": self.token_name,
             "D_SYMBOL": self.token_short_name,
-            "D_DECIMALS": self.decimals,
+            "D_DECIMALS": int(self.decimals),
             "D_PREMINT_COUNT": len(token_holders),
             "D_OWNER": self.admin_address,
             "D_START_TIME": self.start_date,
             "D_END_TIME": self.stop_date,
-            "D_RATE": self.rate,
-            "D_HARD_CAP_NEO": self.hard_cap
+            "D_RATE": int(self.rate),
+            "D_HARD_CAP_NEO": str(self.hard_cap)
         }}
         for ind, th in enumerate(token_holders):
             preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
