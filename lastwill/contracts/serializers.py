@@ -175,7 +175,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
             ContractDetailsNeoSerializer,
-            ContractDetailsNeoICO
+            ContractDetailsNeoICOSerializer
         ][contract_type]
 
 
@@ -558,7 +558,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         assert(len(details['token_short_name']) <= 8)
 
 
-class ContractDetailsNeoSerializer(serializers.ModelSerializer):
+class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsNeoICO
         fields = (
