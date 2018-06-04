@@ -584,21 +584,9 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        now = timezone.now().timestamp() + 600
-        if 'neo_contract_token' in details and 'id' in details['neo_contract_token'] and details['neo_contract_token']['id']:
-            token_model = EthContract.objects.get(id=details['neo_contract_token']['id'])
-            token_details = token_model.contract.get_details()
-            details.pop('neo_contract_token')
-            details['token_name'] = token_details.token_name
-            details['token_short_name'] = token_details.token_short_name
-            details['decimals'] = token_details.decimals
-            details['reused_token'] = True
-            details['token_id'] = token_model.id
-            details['token_type'] = token_details.token_type
-        else:
-            assert('"' not in details['token_name'] and '\n' not in details['token_name'])
-            assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
-            assert(0 <= details['decimals'] <= 50)
+        assert('"' not in details['token_name'] and '\n' not in details['token_name'])
+        assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
+        assert(0 <= details['decimals'] <= 50)
         assert('admin_address' in details)
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
@@ -611,7 +599,9 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()
+        ]
         res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(contract_details.neo_contract_crowdsale)
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
@@ -629,7 +619,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        kwargs.pop('beo_contract_crowdsale', None)
+        kwargs.pop('neo_contract_crowdsale', None)
 
         if token_id:
             details.neo_contract_token_id = token_id
