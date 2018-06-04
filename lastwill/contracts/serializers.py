@@ -600,9 +600,6 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
             assert(0 <= details['decimals'] <= 50)
         assert('admin_address' in details)
-        assert(len(details['token_holders']) <= 5)
-        for th in details['token_holders']:
-            th['amount'] = int(th['amount'])
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
         check.is_address(details['admin_address'])
