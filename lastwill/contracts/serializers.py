@@ -17,13 +17,15 @@ from .models import (
     Contract, Heir, ContractDetailsLastwill,
     ContractDetailsDelayedPayment, ContractDetailsLostKey,
     ContractDetailsPizza, EthContract, ContractDetailsICO,
-    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo
+    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo,
+    ContractDetailsNeoICO
 )
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
+
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
@@ -173,6 +175,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
             ContractDetailsNeoSerializer,
+            ContractDetailsNeoICO
         ][contract_type]
 
 
@@ -554,3 +557,97 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         assert(len(details['token_short_name']) > 0)
         assert(len(details['token_short_name']) <= 8)
 
+
+class ContractDetailsNeoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsNeoICO
+        fields = (
+                'hard_cap', 'token_name', 'token_short_name',
+                'start_date', 'stop_date', 'decimals', 'rate',
+                'admin_address', 'token_type'
+        )
+
+    def create(self, contract, contract_details):
+        token_id = contract_details.pop('token_id', None)
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        if token_id:
+            res.neo_contract_token_id = token_id
+            res.save()
+        return res
+
+    def validate(self, details):
+        now = timezone.now().timestamp() + 600
+        if 'neo_contract_token' in details and 'id' in details['neo_contract_token'] and details['neo_contract_token']['id']:
+            token_model = EthContract.objects.get(id=details['neo_contract_token']['id'])
+            token_details = token_model.contract.get_details()
+            details.pop('neo_contract_token')
+            details['token_name'] = token_details.token_name
+            details['token_short_name'] = token_details.token_short_name
+            details['decimals'] = token_details.decimals
+            details['reused_token'] = True
+            details['token_id'] = token_model.id
+            details['token_type'] = token_details.token_type
+        else:
+            assert('"' not in details['token_name'] and '\n' not in details['token_name'])
+            assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
+            assert(0 <= details['decimals'] <= 50)
+            details['reused_token'] = False
+            assert(details.get('token_type', 'ERC20') in ('ERC20, ERC223'))
+        for k in ('hard_cap', 'soft_cap'):
+            details[k] = int(details[k])
+        assert('admin_address' in details and 'token_holders' in details)
+        assert(len(details['token_holders']) <= 5)
+        for th in details['token_holders']:
+            th['amount'] = int(th['amount'])
+        assert(len(details['token_name']) and len(details['token_short_name']))
+        assert(1 <= details['rate'] <= 10**12)
+        check.is_address(details['admin_address'])
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+            raise ValidationError({'result': 1}, code=400)
+        assert(details['stop_date'] >= details['start_date'] + 5*60)
+        assert(details['hard_cap'] >= details['soft_cap'])
+        assert(details['soft_cap'] >= 0)
+        for th in details['token_holders']:
+            check.is_address(th['address'])
+            assert(th['amount'] > 0)
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in ICO serializer')
+                raise ValidationError({'result': 2}, code=400)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract_token)
+        res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(contract_details.neo_contract_crowdsale)
+        res['rate'] = int(res['rate'])
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['neo_contract_token']['source_code'] = ''
+            res['neo_contract_crowdsale']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        token_id = contract_details.pop('token_id', None)
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('neo_contract_token', None)
+        kwargs.pop('beo_contract_crowdsale', None)
+
+        if token_id:
+            details.neo_contract_token_id = token_id
+        return super().update(details, kwargs)

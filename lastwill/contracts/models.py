@@ -1579,18 +1579,13 @@ class ContractDetailsNeoICO(CommonDetails):
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
-    is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
     rate = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     decimals = models.IntegerField()
-    platform_as_admin = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
-
-    continue_minting = models.BooleanField(default=False)
-    cold_wallet_address = models.CharField(max_length=50, default='')
 
     neo_contract_token = models.ForeignKey(
         NeoContract,
