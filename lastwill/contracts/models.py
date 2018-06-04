@@ -1596,7 +1596,6 @@ class ContractDetailsNeoICO(CommonDetails):
     )
 
     reused_token = models.BooleanField(default=False)
-    token_type = models.CharField(max_length=32, default='ERC20')
 
     def compile(self):
         print('standalone token contract compile')
