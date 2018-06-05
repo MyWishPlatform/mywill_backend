@@ -1629,6 +1629,7 @@ class ContractDetailsNeoICO(CommonDetails):
                 )
             ]
             preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)].append(0)
+            print('premint amount is', preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)], flush=True)
             preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
 
         with open(preproc_config, 'w') as f:
