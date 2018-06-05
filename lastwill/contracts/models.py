@@ -1652,14 +1652,14 @@ class ContractDetailsNeoICO(CommonDetails):
             bytecode = f.read()
         with open(path.join(dest, 'Crowdsale.Contract/Crowdsale.cs')) as f:
             source_code = f.read()
-        neo_contract = NeoContract()
-        neo_contract.abi = token_json
-        neo_contract.bytecode = binascii.hexlify(bytecode).decode()
-        neo_contract.source_code = source_code
-        neo_contract.contract = self.contract
-        neo_contract.original_contract = self.contract
-        neo_contract.save()
-        self.neo_contract_crowdsale = neo_contract
+        neo_contract_crowdsale = NeoContract()
+        neo_contract_crowdsale.abi = token_json
+        neo_contract_crowdsale.bytecode = binascii.hexlify(bytecode).decode()
+        neo_contract_crowdsale.source_code = source_code
+        neo_contract_crowdsale.contract = self.contract
+        neo_contract_crowdsale.original_contract = self.contract
+        neo_contract_crowdsale.save()
+        self.neo_contract_crowdsale = neo_contract_crowdsale
         self.save()
 
     @classmethod
