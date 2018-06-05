@@ -1732,3 +1732,66 @@ class ContractDetailsNeoICO(CommonDetails):
         self.neo_contract_crowdsale.tx_hash = tx.ToJson()['txid']
         self.neo_contract_crowdsale.save()
 
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        neo_int = NeoInt(self.contract.network.name)
+        from_addr = NETWORKS[self.contract.network.name]['address']
+        param_list = {
+            'from_addr': from_addr,
+            'contract_params': [
+                {'type': str(ContractParameterType.String), 'value': 'init'},
+                {'type': str(ContractParameterType.Array), 'value': []}
+            ],
+            'addr': self.neo_contract_crowdsale.address,
+        }
+
+        response = neo_int.mw_construct_invoke_tx(param_list)
+
+        binary_tx = response['tx']
+
+        tx = ContractTransaction.DeserializeFromBufer(
+            binascii.unhexlify(binary_tx)
+        )
+        tx = sign_neo_transaction(tx, binary_tx, from_addr)
+        print('after sign', tx.ToJson()['txid'])
+        ms = StreamManager.GetStream()
+        writer = BinaryWriter(ms)
+        tx.Serialize(writer)
+        ms.flush()
+        signed_tx = ms.ToArray()
+        print('signed_tx', signed_tx)
+        result = neo_int.sendrawtransaction(signed_tx.decode())
+        print(result, flush=True)
+        if not result:
+            raise TxFail()
+        print('result of send raw transaction: ', result)
+
+        assert(result)
+        self.contract.save()
+        return
+
+    @postponable
+    @check_transaction
+    def initialized(self, message):
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            return
+
+        take_off_blocking(self.contract.network.name)
+
+        self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.save()
+
+        if self.contract.user.email:
+            send_mail(
+                    common_subject,
+                    neo_token_text.format(
+                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract.address)),
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
+            )
+
+    def finalized(self, message):
+        self.contract.state = 'ENDED'
+        self.contract.save()
