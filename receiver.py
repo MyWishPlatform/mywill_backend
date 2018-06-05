@@ -44,7 +44,6 @@ class Receiver():
 
     def deployed(self, message):
         print('deployed message received', flush=True)
-        test_logger.info()
         contract = EthContract.objects.get(id=message['contractId']).contract
         contract.get_details().msg_deployed(message)
         print('deployed ok!', flush=True)
