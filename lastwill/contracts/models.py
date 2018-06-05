@@ -1413,6 +1413,7 @@ class ContractDetailsNeo(CommonDetails):
                     math.floor(math.log(int(th.amount) or 1, 256)) + 1, 'little'
                 )
             ]
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)].append(0)
             preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
 
         with open(preproc_config, 'w') as f:
@@ -1626,6 +1627,7 @@ class ContractDetailsNeoICO(CommonDetails):
                     math.floor(math.log(int(th.amount) or 1, 256)) + 1, 'little'
                 )
             ]
+            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)].append(0)
             preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
 
         with open(preproc_config, 'w') as f:
