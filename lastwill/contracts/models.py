@@ -1779,14 +1779,14 @@ class ContractDetailsNeoICO(CommonDetails):
 
         take_off_blocking(self.contract.network.name)
 
-        self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.state = 'ENDED'
         self.contract.save()
 
         if self.contract.user.email:
             send_mail(
                     common_subject,
                     neo_token_text.format(
-                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract.address)),
+                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract_crowdsale.address)),
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
