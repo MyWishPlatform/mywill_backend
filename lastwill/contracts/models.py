@@ -1444,7 +1444,7 @@ class ContractDetailsNeo(CommonDetails):
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
         neo_contract.save()
-        self.neo_contract = neo_contract
+        self.neo_contract_crowdsale = neo_contract
         self.save()
 
     @blocking
@@ -1452,7 +1452,7 @@ class ContractDetailsNeo(CommonDetails):
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
-        bytecode = self.neo_contract.bytecode
+        bytecode = self.neo_contract_crowdsale.bytecode
         neo_int = NeoInt(self.contract.network.name)
         print('from address', from_addr)
         test_logger.info('from address %s' %from_addr)
