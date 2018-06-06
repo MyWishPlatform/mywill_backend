@@ -30,7 +30,7 @@ def logging(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
-            test_logger.error('RECEIVER ' + str(f) + e)
+            test_logger.error('RECEIVER ' + str(f))
     return wrapper
 
 
