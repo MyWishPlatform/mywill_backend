@@ -16,11 +16,11 @@ from lastwill.settings import SIGNER, ROOT_PUBLIC_KEY
 from lastwill.payments.models import BTCAccount
 
 
-def init_profile(user, is_social=False):
+def init_profile(user, is_social=False, lang='en'):
     response = requests.post('http://{}/get_key/'.format(SIGNER)).content
     internal_address = json.loads(response.decode())['addr']
     Profile(
-        user=user, internal_address=internal_address, is_social=is_social
+        user=user, internal_address=internal_address, is_social=is_social, lang=lang,
     ).save()
     with transaction.atomic():
         btc_account = BTCAccount.objects.filter(user__isnull=True).first()
@@ -31,8 +31,8 @@ def init_profile(user, is_social=False):
 class UserRegisterSerializer(RegisterSerializer):
     def save(self, request):
         user = super().save(request)
-        init_profile(user)
-        return user        
+        init_profile(user, lang=request.COOKIES.get('lang', 'en'))
+        return user
 
 
 class UserLoginSerializer2FA(LoginSerializer):
