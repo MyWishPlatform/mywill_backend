@@ -44,6 +44,7 @@ def profile_view(request):
             'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None),
             'use_totp': request.user.profile.use_totp,
             'is_social': request.user.profile.is_social,
+            'id': request.user.id,
     })
 
 

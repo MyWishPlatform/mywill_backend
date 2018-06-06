@@ -12,7 +12,7 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile
-from lastwill.settings import SIGNER, ROOT_PUBLIC_KEY
+from lastwill.settings import SIGNER
 from lastwill.payments.models import BTCAccount
 
 
