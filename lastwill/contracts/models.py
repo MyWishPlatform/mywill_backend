@@ -753,7 +753,10 @@ class ContractDetailsLostKey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-        ]   
+        ]
+
+    def fundsAdded(self, message):
+        pass
 
     @classmethod
     def min_cost(cls):
@@ -877,6 +880,9 @@ class ContractDetailsDelayedPayment(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         return 25000000000000000
+
+    def fundsAdded(self, message):
+        pass
 
     @postponable
     @check_transaction
