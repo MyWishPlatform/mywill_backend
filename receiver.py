@@ -43,7 +43,7 @@ class Receiver():
         else:
             self.network = network
 
-    @logging
+    # @logging
     def payment(self, message):
         print('payment message', flush=True)
         print('message["amount"]', message['amount'])
@@ -56,7 +56,7 @@ class Receiver():
         test_logger.info('RECEIVER: payment ok with value %d' %value)
         create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
 
-    @logging
+    # @logging
     def deployed(self, message):
         print('deployed message received', flush=True)
         test_logger.info('RECEIVER: deployed message')
@@ -65,7 +65,7 @@ class Receiver():
         print('deployed ok!', flush=True)
         test_logger.info('RECEIVER: deployed ok')
 
-    @logging
+    # @logging
     def killed(self, message):
         print('killed message', flush=True)
         test_logger.info('RECEIVER: killed message')
@@ -77,7 +77,7 @@ class Receiver():
         print('killed ok', flush=True)
         test_logger.info('RECEIVER: killed ok')
 
-    @logging
+    # @logging
     def checked(self, message):
         print('checked message', flush=True)
         test_logger.info('RECEIVER: checked message')
@@ -86,7 +86,7 @@ class Receiver():
         print('checked ok', flush=True)
         test_logger.info('RECEIVER: checked ok')
 
-    @logging
+    # @logging
     def repeat_check(self, message):
         print('repeat check message', flush=True)
         test_logger.info('RECEIVER: repeat check message')
@@ -95,7 +95,7 @@ class Receiver():
         print('repeat check ok', flush=True)
         test_logger.info('RECEIVER: repeat check ok')
 
-    @logging
+    # @logging
     def check_contract(self, message):
         print('check contract message', flush=True)
         test_logger.info('RECEIVER: check contract message')
@@ -104,7 +104,7 @@ class Receiver():
         print('check contract ok', flush=True)
         test_logger.info('RECEIVER: check contract ok')
 
-    @logging
+    # @logging
     def triggered(self, message):
         print('triggered message', flush=True)
         test_logger.info('RECEIVER: triggered message')
@@ -113,7 +113,7 @@ class Receiver():
         print('triggered ok', flush=True)
         test_logger.info('RECEIVER: triggered ok')
 
-    @logging
+    # @logging
     def launch(self, message):
         print('launch message', flush=True)
         test_logger.info('RECEIVER: launch message')
@@ -129,7 +129,7 @@ class Receiver():
         print('launch ok')
         test_logger.info('RECEIVER: launch ok')
 
-    @logging
+    # @logging
     def ownershipTransferred(self, message):
         print('ownershipTransferred message')
         test_logger.info('RECEIVER: ownershipTransferred message')
@@ -138,7 +138,7 @@ class Receiver():
         print('ownershipTransferred ok')
         test_logger.info('RECEIVER: ownershipTransferred ok')
 
-    @logging
+    # @logging
     def initialized(self, message):
         print('initialized message')
         test_logger.info('RECEIVER: initialized message')
@@ -147,7 +147,7 @@ class Receiver():
         print('initialized ok')
         test_logger.info('RECEIVER: in initialized ok')
 
-    @logging
+    # @logging
     def finish(self, message):
         print('finish message')
         test_logger.info('RECEIVER: finish message')
@@ -156,7 +156,7 @@ class Receiver():
         print('finish ok')
         test_logger.info('RECEIVER: finish ok')
 
-    @logging
+    # @logging
     def finalized(self, message):
         print('finalized message')
         test_logger.info('RECEIVER: finalized message')
@@ -165,7 +165,7 @@ class Receiver():
         print('finalized ok')
         test_logger.info('RECEIVER: finalized ok')
 
-    @logging
+    # @logging
     def transactionCompleted(self, message):
         print('transactionCompleted')
         test_logger.info('RECEIVER: transactionCompleted')
@@ -184,7 +184,7 @@ class Receiver():
         print('transactionCompleted ok')
         test_logger.info('RECEIVER: transactionCOmpleted ok')
 
-    @logging
+    # @logging
     def cancel(self, message):
         print('cancel message')
         test_logger.info('RECEIVER: cancel message')
@@ -193,7 +193,7 @@ class Receiver():
         print('cancel ok')
         test_logger.info('RECEIVER: cancel ok')
 
-    @logging
+    # @logging
     def confirm_alive(self, message):
         print('confirm_alive message')
         test_logger.info('RECEIVER: confirm alive message')
@@ -202,7 +202,7 @@ class Receiver():
         print('confirm_alive ok')
         test_logger.info('RECEIVER: confirm alive ok')
 
-    @logging
+    # @logging
     def contractPayment(self, message):
         print('contract Payment message')
         test_logger.info('RECEIVER: contract payment message')
@@ -211,7 +211,7 @@ class Receiver():
         print('contract Payment ok')
         test_logger.info('RECEIVER: contract payment ok')
 
-    @logging
+    # @logging
     def notified(self, message):
         print('notified message')
         test_logger.info('RECEIVER: notified message')
@@ -222,7 +222,7 @@ class Receiver():
         print('notified ok')
         test_logger.info('RECEIVER: notified ok')
 
-    @logging
+    # @logging
     def fundsAdded(self, message):
         print('funds Added message')
         test_logger.info('RECEIVER: funds added message')
@@ -231,7 +231,7 @@ class Receiver():
         print('funds Added ok')
         test_logger.info('RECEIVER: funds added ok')
 
-    @logging
+    # @logging
     def make_payment(self, message):
         print('make payment message')
         test_logger.info('RECEIVER: make payment message')
@@ -240,7 +240,7 @@ class Receiver():
         print('make payment ok')
         test_logger.info('RECEIVER: make payment ok')
 
-    @logging
+    # @logging
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')
         test_logger.info(str(body))
@@ -263,7 +263,7 @@ class Receiver():
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    @logging
+    # @logging
     def unknown_handler(self, message):
         print('unknown message', message, flush=True)
         test_logger.error('RECEIVER: unknown message')
