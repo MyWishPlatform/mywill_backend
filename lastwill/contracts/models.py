@@ -60,6 +60,8 @@ def add_token_params(params, details, token_holders, pause, cont_mint):
 
 
 def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
+    params["D_CAN_CHANGE_START_TIME"] = details.allow_change_dates
+    params["D_CAN_CHANGE_END_TIME"] = details.allow_change_dates
     params["D_START_TIME"] = details.start_date
     params["D_END_TIME"] = details.stop_date
     params["D_SOFT_CAP_WEI"] = str(details.soft_cap)
