@@ -126,6 +126,7 @@ def add_time_bonuses(details):
     return time_bonuses
 
 
+@logging
 def create_ethcontract_in_compile(abi, bytecode, cv, contract, source_code):
     eth_contract_token = EthContract()
     eth_contract_token.abi = abi
@@ -145,6 +146,7 @@ def add_real_params(params, admin_address, address, wallet_address):
     return params
 
 
+@logging
 def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name='c-preprocessor-config.json'):
     details.temp_directory = str(uuid.uuid4())
     test_logger.info('temp directory = %s' % details.temp_directory)
@@ -159,6 +161,7 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
     return dest, preproc_config
 
 
+@logging
 def test_crowdsale_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
@@ -170,6 +173,7 @@ def test_crowdsale_params(config, params, dest):
         raise Exception('testing error')
 
 
+@logging
 def test_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
@@ -177,13 +181,14 @@ def test_token_params(config, params, dest):
         raise Exception('compiler error while deploying')
 
 
+@logging
 def test_neo_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
     if os.system("/bin/bash -c 'cd {dest} && ./3_test_token.sh'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
-
+@logging
 def test_neo_ico_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
@@ -191,6 +196,7 @@ def test_neo_ico_params(config, params, dest):
         raise Exception('compiler error while deploying')
 
 
+@logging
 def take_off_blocking(network, contract_id=None, address=None):
     if not address:
         address = NETWORKS[network]['address']
@@ -204,6 +210,7 @@ def take_off_blocking(network, contract_id=None, address=None):
         ).update(locked_by=None)
 
 
+@logging
 def send_in_queue(contract_id, type, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         'localhost',
@@ -223,6 +230,7 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
+@logging
 def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
     data = {
         'source': address,
@@ -245,6 +253,7 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     return signed_data['result']
 
 
+@logging
 def sign_neo_transaction(tx, binary_tx, address):
     scripts = requests.post(
         'http://{}/neo_sign/'.format(SIGNER),
@@ -292,6 +301,7 @@ class Contract(models.Model):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
 
+    @logging
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
@@ -305,6 +315,7 @@ class Contract(models.Model):
             )
         return super().save(*args, **kwargs)
 
+    @logging
     def get_details(self):
         return getattr(self, self.get_details_model(
             self.contract_type
@@ -346,6 +357,7 @@ class CommonDetails(models.Model):
         abstract = True
     contract = models.ForeignKey(Contract)
 
+    @logging
     def compile(self, eth_contract_attr_name='eth_contract'):
         test_logger.info('class details, method compile')
         print('compiling', flush=True)
@@ -376,6 +388,7 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
+    @logging
     def deploy(self, eth_contract_attr_name='eth_contract'):
         test_logger.info('deploy:')
         if self.contract.state == 'ACTIVE':
@@ -427,6 +440,7 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+    @logging
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
@@ -452,6 +466,7 @@ class CommonDetails(models.Model):
     def get_value(self): 
         return 0
 
+    @logging
     def tx_failed(self, message):
         self.contract.state = 'POSTPONED'
         self.contract.save()
@@ -473,6 +488,7 @@ class CommonDetails(models.Model):
         pass
 
     @blocking
+    @logging
     def check_contract(self):
         print('checking', self.contract.name)
         test_logger.info('checking id %d' %self.id)
@@ -521,6 +537,7 @@ class ContractDetailsLastwill(CommonDetails):
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
 
+    @logging
     def contractPayment(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
@@ -535,6 +552,7 @@ class ContractDetailsLastwill(CommonDetails):
         send_in_queue(self.contract.id, 'make_payment', queue)
 
     @blocking
+    @logging
     def make_payment(self, message):
         contract = self.contract
         par_int = ParInt(contract.network.name)
@@ -561,6 +579,7 @@ class ContractDetailsLastwill(CommonDetails):
             '0x' + signed_data)
         self.eth_contract.save()
 
+    @logging
     def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
@@ -583,6 +602,7 @@ class ContractDetailsLastwill(CommonDetails):
         return cost
 
     @staticmethod
+    @logging
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
@@ -616,12 +636,14 @@ class ContractDetailsLastwill(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
     @check_transaction
+    @logging
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -634,6 +656,7 @@ class ContractDetailsLastwill(CommonDetails):
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
+    @logging
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -666,6 +689,7 @@ class ContractDetailsLastwill(CommonDetails):
 
     @blocking
     @postponable
+    @logging
     def deploy(self):
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
             priv = os.urandom(32)
@@ -683,6 +707,7 @@ class ContractDetailsLastwill(CommonDetails):
         super().deploy()
 
     @blocking
+    @logging
     def i_am_alive(self, message):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
@@ -708,6 +733,7 @@ class ContractDetailsLastwill(CommonDetails):
         self.last_press_imalive = timezone.now()
 
     @blocking
+    @logging
     def cancel(self, message):
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt(self.contract.network.name)
@@ -725,6 +751,7 @@ class ContractDetailsLastwill(CommonDetails):
         )
         self.eth_contract.save()
 
+    @logging
     def fundsAdded(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
@@ -772,6 +799,7 @@ class ContractDetailsLostKey(CommonDetails):
         return cost
 
     @staticmethod
+    @logging
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
@@ -800,12 +828,14 @@ class ContractDetailsLostKey(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
     @check_transaction
+    @logging
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -820,6 +850,7 @@ class ContractDetailsLostKey(CommonDetails):
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
+    @logging
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -854,6 +885,7 @@ class ContractDetailsLostKey(CommonDetails):
 
     @blocking
     @postponable
+    @logging
     def deploy(self):
         return super().deploy()
 
@@ -888,12 +920,14 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
 
     def checked(self, message):
         pass
 
+    @logging
     def triggered(self, message):
         link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         if self.recepient_email:
@@ -929,6 +963,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @blocking
     @postponable
+    @logging
     def deploy(self):
         return super().deploy()
 
@@ -1027,6 +1062,7 @@ class ContractDetailsICO(CommonDetails):
             return 0
         return int(2.49 * 10**18)
 
+    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
         test_logger.info('ico contract compile id=%d' %self.id)
@@ -1087,6 +1123,7 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
         test_logger.info('msg_deployed method of the ico contract')
@@ -1136,6 +1173,7 @@ class ContractDetailsICO(CommonDetails):
 
     @blocking
     @postponable
+    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
@@ -1151,6 +1189,7 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
 #    @check_transaction
+    @logging
     def ownershipTransferred(self, message):
         address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
@@ -1193,6 +1232,7 @@ class ContractDetailsICO(CommonDetails):
     # crowdsale
     @postponable
     @check_transaction
+    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
@@ -1224,6 +1264,7 @@ class ContractDetailsICO(CommonDetails):
                     [self.contract.user.email]
             )
 
+    @logging
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'
@@ -1276,6 +1317,7 @@ class ContractDetailsToken(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
+    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
         test_logger.info('standalone token contract compile')
@@ -1309,6 +1351,7 @@ class ContractDetailsToken(CommonDetails):
 
     @blocking
     @postponable
+    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
 
@@ -1317,6 +1360,7 @@ class ContractDetailsToken(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         res = super().msg_deployed(message, 'eth_contract_token')
         if not self.future_minting:
@@ -1324,6 +1368,7 @@ class ContractDetailsToken(CommonDetails):
             self.contract.save()
         return res
 
+    @logging
     def ownershipTransferred(self, message):
         if self.eth_contract_token.original_contract.state not in (
                 'UNDER_CROWDSALE', 'ENDED'
@@ -1331,6 +1376,7 @@ class ContractDetailsToken(CommonDetails):
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
 
+    @logging
     def finalized(self, message):
         if self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'
@@ -1396,6 +1442,7 @@ class ContractDetailsNeo(CommonDetails):
     def predeploy_validate(self):
         pass
 
+    @logging
     def compile(self):
         print('standalone token contract compile')
         test_logger.info('standalone token contract compile')
@@ -1459,6 +1506,7 @@ class ContractDetailsNeo(CommonDetails):
 
     @blocking
     @postponable
+    @logging
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -1516,6 +1564,7 @@ class ContractDetailsNeo(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         neo_int = NeoInt(self.contract.network.name)
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -1555,6 +1604,7 @@ class ContractDetailsNeo(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
@@ -1574,6 +1624,7 @@ class ContractDetailsNeo(CommonDetails):
                     [self.contract.user.email]
             )
 
+    @logging
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
@@ -1607,6 +1658,7 @@ class ContractDetailsNeoICO(CommonDetails):
 
     reused_token = models.BooleanField(default=False)
 
+    @logging
     def compile(self):
         print('standalone token contract compile')
         test_logger.info('standalone token contract compile')
@@ -1689,6 +1741,7 @@ class ContractDetailsNeoICO(CommonDetails):
     def predeploy_validate(self):
         pass
 
+    @logging
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -1746,6 +1799,7 @@ class ContractDetailsNeoICO(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def msg_deployed(self, message):
         neo_int = NeoInt(self.contract.network.name)
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -1785,6 +1839,7 @@ class ContractDetailsNeoICO(CommonDetails):
 
     @postponable
     @check_transaction
+    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
@@ -1804,6 +1859,7 @@ class ContractDetailsNeoICO(CommonDetails):
                     [self.contract.user.email]
             )
 
+    @logging
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()

@@ -1,3 +1,4 @@
+import sys, traceback
 from time import sleep
 
 from django.db.models import Q
@@ -97,4 +98,21 @@ def blocking(f):
             sleep(5)
             raise NeedRequeue()
         return f(*args, **kwargs)
+    return wrapper
+
+
+def logging(f):
+    def wrapper(*args, **kwargs):
+        info1 = ','.join([str(ar) for ar in args])
+        info2 = ','.join([str(ar) for ar in kwargs])
+        str_info = 'RECEIVER ' + str(f) + info1 + info2
+        test_logger.info(str_info)
+        try:
+            return f(*args, **kwargs)
+        except IndexError:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            trace_back = ' '. join(
+                traceback.format_exception(exc_type, exc_value,exc_traceback)
+            )
+            test_logger.error('RECEIVER ' + str(f) + str(exc_value) + trace_back)
     return wrapper
