@@ -1844,7 +1844,7 @@ class ContractDetailsNeoICO(CommonDetails):
 
         take_off_blocking(self.contract.network.name)
 
-        self.contract.state = 'ENDED'
+        self.contract.state = 'ACTIVE'
         self.contract.save()
 
         if self.contract.user.email:
