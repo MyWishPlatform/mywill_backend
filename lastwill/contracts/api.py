@@ -407,7 +407,7 @@ def neo_crowdsale_finalize(request):
     assert(contract.contract_type == 7)
     assert(contract.state == 'ACTIVE')
     neo_details = contract.get_details()
-    now = timezone.now()
+    now = datetime.datetime.now().timestamp()
     if neo_details.stop_date <= now:
         contract.state = 'ENDED'
         contract.save()
