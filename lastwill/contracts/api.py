@@ -399,3 +399,16 @@ def get_cost_all_contracts(request):
         # answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH'] / 10 ** 18
         answer[i] = contract['model'].min_cost() / 10 ** 18
     return JsonResponse(answer)
+
+@api_view(http_method_names=['POST'])
+def neo_crowdsale_finalize(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert(contract.user == request.user)
+    assert(contract.contract_type == 7)
+    assert(contract.state == 'ACTIVE')
+    neo_details = contract.get_details()
+    now = timezone.now()
+    if neo_details.stop_date <= now:
+        contract.state = 'ENDED'
+        contract.save()
+    return Response('ok')
