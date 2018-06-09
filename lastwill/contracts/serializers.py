@@ -553,7 +553,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert(details['decimals'] >= 0 and details['decimals'] <= 8)
+        assert(details['decimals'] >= 0 and details['decimals'] <= 9)
         assert(len(details['token_short_name']) > 0)
         assert(len(details['token_short_name']) <= 8)
 
@@ -586,7 +586,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
     def validate(self, details):
         assert('"' not in details['token_name'] and '\n' not in details['token_name'])
         assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
-        assert(0 <= details['decimals'] <= 50)
+        assert(0 <= details['decimals'] <= 9)
         assert('admin_address' in details)
         assert(len(details['token_name']) and len(details['token_short_name']))
         assert(1 <= details['rate'] <= 10**12)
@@ -594,7 +594,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             raise ValidationError({'result': 1}, code=400)
         assert(details['stop_date'] >= details['start_date'] + 5*60)
         details['hard_cap'] = int(details['hard_cap'])
-        assert(details['hard_cap'] >= 0)
+        assert(details['hard_cap'] >= 10)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
