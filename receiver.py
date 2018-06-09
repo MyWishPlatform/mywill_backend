@@ -240,6 +240,14 @@ class Receiver():
         print('make payment ok')
         test_logger.info('RECEIVER: make payment ok')
 
+    def timesChanged(self, message):
+        print('time changed message')
+        test_logger.info('RECEIVER: time changed message')
+        contract = EthContract.objects.get(id=message['contractId'])
+        contract.get_details().timesChanged(message)
+        print('time changed ok')
+        test_logger.info('RECEIVER: time changed ok')
+
     # @logging
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')
