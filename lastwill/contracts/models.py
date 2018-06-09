@@ -1556,9 +1556,9 @@ class ContractDetailsNeo(CommonDetails):
         print('result of send raw transaction: ', result)
         test_logger.info('result of send raw transaction: %s' %result)
 
-        self.neo_contract.address = contract_hash
-        self.neo_contract.tx_hash = tx.ToJson()['txid']
-        self.neo_contract.save()
+        self.neo_contract_crowdsale.address = contract_hash
+        self.neo_contract_crowdsale.tx_hash = tx.ToJson()['txid']
+        self.neo_contract_crowdsale.save()
 
     @postponable
     @check_transaction
@@ -1844,7 +1844,7 @@ class ContractDetailsNeoICO(CommonDetails):
 
         take_off_blocking(self.contract.network.name)
 
-        self.contract.state = 'ENDED'
+        self.contract.state = 'ACTIVE'
         self.contract.save()
 
         if self.contract.user.email:
