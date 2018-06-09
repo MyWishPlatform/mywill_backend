@@ -1275,6 +1275,14 @@ class ContractDetailsICO(CommonDetails):
 
     def check_contract(self):
         pass
+
+    @logging
+    def timesChanged(self, message):
+        if 'startTime' in message:
+            self.start_date = message['startTime']
+        if 'endTime' in message:
+            self.stop_date = message['endTime']
+        self.save()
         
 
 @contract_details('Token contract')
