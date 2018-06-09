@@ -105,7 +105,7 @@ def logging(f):
     def wrapper(*args, **kwargs):
         info1 = ','.join([str(ar) for ar in args])
         info2 = ','.join([str(ar) for ar in kwargs])
-        str_info = 'RECEIVER ' + str(f) + info1 + info2
+        str_info = 'CONTRACT LOGGING ' + str(f.__qualname__) + info1 + info2
         test_logger.info(str_info)
         try:
             return f(*args, **kwargs)
@@ -114,5 +114,6 @@ def logging(f):
             trace_back = ' '. join(
                 traceback.format_exception(exc_type, exc_value,exc_traceback)
             )
-            test_logger.error('RECEIVER ' + str(f) + str(exc_value) + trace_back)
+            test_logger.error('CONTRACT LOGGING ' + str(f.__qualname__) + str(exc_value) + trace_back)
+            raise
     return wrapper
