@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, test_logger
 from lastwill.permissions import IsOwner, IsStaff
@@ -411,4 +412,5 @@ def neo_crowdsale_finalize(request):
     if neo_details.stop_date <= now:
         contract.state = 'ENDED'
         contract.save()
-    return Response('ok')
+        return JsonResponse({'result': 2})
+    raise ValidationError({'result': 2}, code=403)
