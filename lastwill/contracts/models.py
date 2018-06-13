@@ -71,6 +71,7 @@ def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
     params["D_CONTRACTS_OWNER"] = '0x8ffff2c69f000c790809f6b8f9abfcbaab46b322'
     params["D_AUTO_FINALISE"] = details.platform_as_admin
     params["D_BONUS_TOKENS"] = "true" if time_bonuses or amount_bonuses else "false"
+    params["D_CAN_CHANGE_START_TIME"] = "false" if time_bonuses else "true"
     params["D_WEI_RAISED_AND_TIME_BONUS_COUNT"] = len(time_bonuses)
     params["D_WEI_RAISED_STARTS_BOUNDARIES"] = ','.join(
         map(lambda b: 'uint(%s)' % b['min_amount'], time_bonuses))

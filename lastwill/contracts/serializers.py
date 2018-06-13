@@ -603,6 +603,10 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()
         ]
         res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(contract_details.neo_contract_crowdsale)
+        if res['neo_contract_crowdsale']['address']:
+            res['neo_contract_crowdsale']['script_hash'] = res['neo_contract_crowdsale']['address']
+            res['neo_contract_crowdsale']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_crowdsale']['address']))
+
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['neo_contract_crowdsale']['source_code'] = ''

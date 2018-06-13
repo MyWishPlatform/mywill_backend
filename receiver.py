@@ -243,7 +243,7 @@ class Receiver():
     def timesChanged(self, message):
         print('time changed message')
         test_logger.info('RECEIVER: time changed message')
-        contract = EthContract.objects.get(id=message['contractId'])
+        contract = EthContract.objects.get(id=message['contractId']).contract
         contract.get_details().timesChanged(message)
         print('time changed ok')
         test_logger.info('RECEIVER: time changed ok')
