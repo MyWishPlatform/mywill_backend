@@ -1,6 +1,6 @@
-import requests
-import bitcoin
-import json
+from bip32utils import BIP32Key
+from bip32utils import BIP32_HARDEN
+from eth_keys import keys
 import pyotp
 
 from django.db import transaction
@@ -12,20 +12,23 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile
-from lastwill.settings import SIGNER, ROOT_PUBLIC_KEY
+from lastwill.settings import ROOT_PUBLIC_KEY
 from lastwill.payments.models import BTCAccount
 
 
-def init_profile(user, is_social=False, lang='en'):
-    response = requests.post('http://{}/get_key/'.format(SIGNER)).content
-    internal_address = json.loads(response.decode())['addr']
-    Profile(
-        user=user, internal_address=internal_address, is_social=is_social, lang=lang,
-    ).save()
+def init_profile(user, is_social=False):
+
     with transaction.atomic():
-        btc_account = BTCAccount.objects.filter(user__isnull=True).first()
+        key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
+        btc_address = key.ChildKey(user.id + BIP32_HARDEN).Address()
+
+        btc_account = BTCAccount(address=btc_address)
         btc_account.user = user
         btc_account.save()
+        eth_address = keys.PublicKey(key.ChildKey(user.id + BIP32_HARDEN).K.to_string()).to_checksum_address()
+        Profile(
+            user=user, internal_address=eth_address, is_social=is_social
+        ).save()
 
 
 class UserRegisterSerializer(RegisterSerializer):
