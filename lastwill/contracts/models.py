@@ -1745,7 +1745,9 @@ class ContractDetailsNeoICO(CommonDetails):
         return 200
 
     def predeploy_validate(self):
-        pass
+        now = timezone.now()
+        if self.start_date < now.timestamp():
+            raise ValidationError({'result': 1}, code=400)
 
     @logging
     def deploy(self, contract_params='0710', return_type='05'):
