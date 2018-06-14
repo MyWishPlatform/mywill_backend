@@ -13,8 +13,9 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR, test_logger
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
@@ -163,6 +164,7 @@ def i_am_alive(request):
     if details.last_press_imalive:
         delta = timezone.now() - details.last_press_imalive
         if delta.days < 1:
+            test_logger.error('i am alive error')
             raise PermissionDenied(3000)
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'confirm_alive', queue)
@@ -302,7 +304,8 @@ def get_statistics(request):
 
     now = datetime.datetime.now()
     day = datetime.datetime.combine(
-        datetime.datetime.now().today(), datetime.time(0, 0)
+        datetime.datetime.now().today(),
+        datetime.time(0, 0)
     )
 
     users = User.objects.all().exclude(
@@ -349,7 +352,8 @@ def get_statistics(request):
 def get_statistics_landing(request):
     now = datetime.datetime.now()
     day = datetime.datetime.combine(
-        datetime.datetime.now().today(), datetime.time(0, 0)
+        datetime.datetime.now().today(),
+        datetime.time(0, 0)
     )
     users = User.objects.all().exclude(
         email='', password='', last_name='', first_name=''
@@ -396,3 +400,17 @@ def get_cost_all_contracts(request):
         # answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH'] / 10 ** 18
         answer[i] = contract['model'].min_cost() / 10 ** 18
     return JsonResponse(answer)
+
+@api_view(http_method_names=['POST'])
+def neo_crowdsale_finalize(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert(contract.user == request.user)
+    assert(contract.contract_type == 7)
+    assert(contract.state == 'ACTIVE')
+    neo_details = contract.get_details()
+    now = datetime.datetime.now().timestamp()
+    if neo_details.stop_date <= now:
+        contract.state = 'ENDED'
+        contract.save()
+        return JsonResponse({'result': 2})
+    raise ValidationError({'result': 2}, code=403)

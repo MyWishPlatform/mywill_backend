@@ -11,19 +11,21 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models import (
     Contract, Heir, ContractDetailsLastwill,
     ContractDetailsDelayedPayment, ContractDetailsLostKey,
     ContractDetailsPizza, EthContract, ContractDetailsICO,
-    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo
+    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo,
+    ContractDetailsNeoICO
 )
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
+
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
@@ -91,6 +93,7 @@ class ContractSerializer(serializers.ModelSerializer):
             details_serializer.create(contract, contract_details)
         except:
             transaction.rollback()
+            test_logger.error('Contract Serializer create except')
             raise
         else:
             transaction.commit()
@@ -172,6 +175,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
             ContractDetailsNeoSerializer,
+            ContractDetailsNeoICOSerializer
         ][contract_type]
 
 
@@ -381,6 +385,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             check.is_address(th['address'])
             assert(th['amount'] > 0)
             if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in ICO serializer')
                 raise ValidationError({'result': 2}, code=400)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
@@ -465,6 +470,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             check.is_address(th['address'])
             assert(th['amount'] > 0)
             if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):
@@ -547,7 +553,78 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert(details['decimals'] >= 0 and details['decimals'] <= 8)
+        assert(details['decimals'] >= 0 and details['decimals'] <= 9)
         assert(len(details['token_short_name']) > 0)
         assert(len(details['token_short_name']) <= 8)
 
+
+class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsNeoICO
+        fields = (
+                'hard_cap', 'token_name', 'token_short_name',
+                'start_date', 'stop_date', 'decimals', 'rate',
+                'admin_address'
+        )
+
+    def create(self, contract, contract_details):
+        token_id = contract_details.pop('token_id', None)
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        if token_id:
+            res.neo_contract_crowdsale_id = token_id
+            res.save()
+        return res
+
+    def validate(self, details):
+        assert('"' not in details['token_name'] and '\n' not in details['token_name'])
+        assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
+        assert(0 <= details['decimals'] <= 9)
+        assert('admin_address' in details)
+        assert(len(details['token_name']) and len(details['token_short_name']))
+        assert(1 <= details['rate'] <= 10**12)
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+            raise ValidationError({'result': 1}, code=400)
+        assert(details['stop_date'] >= details['start_date'] + 5*60)
+        details['hard_cap'] = int(details['hard_cap'])
+        assert(details['hard_cap'] >= 10)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()
+        ]
+        res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(contract_details.neo_contract_crowdsale)
+        if res['neo_contract_crowdsale']['address']:
+            res['neo_contract_crowdsale']['script_hash'] = res['neo_contract_crowdsale']['address']
+            res['neo_contract_crowdsale']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_crowdsale']['address']))
+
+        res['rate'] = int(res['rate'])
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['neo_contract_crowdsale']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        token_id = contract_details.pop('token_id', None)
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('neo_contract_crowdsale', None)
+
+        if token_id:
+            details.neo_contract_crowdsale_id = token_id
+        return super().update(details, kwargs)
