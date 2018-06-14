@@ -16,19 +16,18 @@ from lastwill.settings import ROOT_PUBLIC_KEY
 from lastwill.payments.models import BTCAccount
 
 
-def init_profile(user, is_social=False):
+def init_profile(user, is_social=False, lang='en'):
 
-    with transaction.atomic():
-        key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
-        btc_address = key.ChildKey(user.id + BIP32_HARDEN).Address()
+    key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
+    btc_address = key.ChildKey(user.id).Address()
 
-        btc_account = BTCAccount(address=btc_address)
-        btc_account.user = user
-        btc_account.save()
-        eth_address = keys.PublicKey(key.ChildKey(user.id + BIP32_HARDEN).K.to_string()).to_checksum_address()
-        Profile(
-            user=user, internal_address=eth_address, is_social=is_social
-        ).save()
+    btc_account = BTCAccount(address=btc_address)
+    btc_account.user = user
+    btc_account.save()
+    eth_address = keys.PublicKey(key.ChildKey(user.id).K.to_string()).to_checksum_address()
+    Profile(
+        user=user, internal_address=eth_address, is_social=is_social, lang=lang
+    ).save()
 
 
 class UserRegisterSerializer(RegisterSerializer):
