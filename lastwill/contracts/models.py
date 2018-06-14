@@ -1570,6 +1570,7 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
 
+    @blocking
     @postponable
     @check_transaction
     @logging
@@ -1751,6 +1752,8 @@ class ContractDetailsNeoICO(CommonDetails):
         if self.start_date < now.timestamp():
             raise ValidationError({'result': 1}, code=400)
 
+    @blocking
+    @postponable
     @logging
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
@@ -1807,6 +1810,7 @@ class ContractDetailsNeoICO(CommonDetails):
         self.neo_contract_crowdsale.tx_hash = tx.ToJson()['txid']
         self.neo_contract_crowdsale.save()
 
+    @blocking
     @postponable
     @check_transaction
     @logging
