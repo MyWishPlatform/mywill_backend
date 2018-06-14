@@ -365,8 +365,8 @@ class CommonDetails(models.Model):
         if getattr(self, eth_contract_attr_name):
             getattr(self, eth_contract_attr_name).delete()
         sol_path = path.join(CONTRACTS_DIR, sol_path)
-        with open(sol_path) as f:
-            source = f.read()
+        with open(sol_path, 'rb') as f:
+            source = f.read().decode('utf-8-sig')
         directory = path.dirname(sol_path)
         result = json.loads(Popen(
                 SOLC.format(directory).split(),
@@ -1100,19 +1100,19 @@ class ContractDetailsICO(CommonDetails):
                 "/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)
         ):
             raise Exception('compiler error while deploying')
-        with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json')) as f:
-            crowdsale_json = json.loads(f.read())
-        with open(path.join(dest, 'build/TemplateCrowdsale.sol')) as f:
-            source_code = f.read()
+        with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json'), 'rb') as f:
+            crowdsale_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'build/TemplateCrowdsale.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
         self.eth_contract_crowdsale = create_ethcontract_in_compile(
             crowdsale_json['abi'], crowdsale_json['bytecode'][2:],
             crowdsale_json['compiler']['version'], self.contract, source_code
         )
         if not self.reused_token:
-            with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
-                token_json = json.loads(f.read())
-            with open(path.join(dest, 'build/MainToken.sol')) as f:
-                source_code = f.read()
+            with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
+                token_json = json.loads(f.read().decode('utf-8-sig'))
+            with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
+                source_code = f.read().decode('utf-8-sig')
             self.eth_contract_token = create_ethcontract_in_compile(
                 token_json['abi'], token_json['bytecode'][2:],
                 token_json['compiler']['version'], self.contract, source_code
@@ -1347,10 +1347,10 @@ class ContractDetailsToken(CommonDetails):
         if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
-        with open(path.join(dest, 'build/contracts/MainToken.json')) as f:
-            token_json = json.loads(f.read())
-        with open(path.join(dest, 'build/MainToken.sol')) as f:
-            source_code = f.read()
+        with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
+            token_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
         self.eth_contract_token = create_ethcontract_in_compile(
             token_json['abi'], token_json['bytecode'][2:],
             token_json['compiler']['version'], self.contract, source_code
@@ -1493,15 +1493,15 @@ class ContractDetailsNeo(CommonDetails):
         with open(path.join(
                 dest,
                 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.abi.json'
-        )) as f:
-            token_json = json.loads(f.read())
+        ), 'rb') as f:
+            token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(
                 dest,
                 'NEP5.Contract/bin/Release/netcoreapp2.0/publish/NEP5.Contract.avm'
         ), mode='rb') as f:
             bytecode = f.read()
-        with open(path.join(dest, 'NEP5.Contract/Nep5Token.cs')) as f:
-            source_code = f.read()
+        with open(path.join(dest, 'NEP5.Contract/Nep5Token.cs'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
         neo_contract = NeoContract()
         neo_contract.abi = token_json
         neo_contract.bytecode = binascii.hexlify(bytecode).decode()
@@ -1615,7 +1615,7 @@ class ContractDetailsNeo(CommonDetails):
     @check_transaction
     @logging
     def initialized(self, message):
-        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+        if self.contract.state  not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
             return
 
         take_off_blocking(self.contract.network.name)
