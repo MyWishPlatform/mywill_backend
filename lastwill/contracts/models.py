@@ -1714,14 +1714,14 @@ class ContractDetailsNeoICO(CommonDetails):
         with open(path.join(
                 dest,
                 'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.abi.json'
-        )) as f:
+        ), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(
                 dest,
                 'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.avm'
         ), mode='rb') as f:
             bytecode = f.read()
-        with open(path.join(dest, 'Crowdsale.Contract/Crowdsale.cs')) as f:
+        with open(path.join(dest, 'Crowdsale.Contract/Crowdsale.cs'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         neo_contract_crowdsale = NeoContract()
         neo_contract_crowdsale.abi = token_json
