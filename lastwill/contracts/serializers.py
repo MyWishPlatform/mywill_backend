@@ -327,6 +327,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
                 'time_bonuses', 'amount_bonuses', 'continue_minting',
                 'cold_wallet_address', 'reused_token',
                 'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
+                'whitelist'
         )
 
     def create(self, contract, contract_details):
