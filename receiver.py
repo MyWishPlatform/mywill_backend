@@ -47,8 +47,9 @@ class Receiver(threading.Thread):
         self.que = que
 
     def run(self):
+        print('receiver start ', self.network)
         while 1:
-            self.callback(*que.get())
+            self.callback(*self.que.get())
 
     # @logging
     def payment(self, message):
@@ -309,13 +310,13 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(
     heartbeat_interval=0,
 ))
 
-self.channel = connection.channel()
+channel = connection.channel()
 
 nets = NETWORKS.keys()
 ques = dict()
 for net in nets:
     channel.queue_declare(
-            queue = NETWORKS[self.network]['queue'],
+            queue = NETWORKS[net]['queue'],
             durable = True,
             auto_delete = False,
             exclusive = False
@@ -325,7 +326,7 @@ for net in nets:
             queue=NETWORKS[net]['queue']
     )
     ques[net] = Queue()
-    rec = Receiver(net, que)
+    rec = Receiver(net, ques[net])
     rec.start()
 
 
