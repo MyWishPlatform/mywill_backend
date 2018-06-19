@@ -1,3 +1,4 @@
+from queue import Queue
 import pika
 import os
 import traceback
@@ -36,34 +37,18 @@ def logging(f):
 
 class Receiver(threading.Thread):
 
-    def __init__(self, network=None):
+    def __init__(self, network=None, que=None):
         super().__init__()
         if network is None:
             if len(sys.argv) > 1 and sys.argv[1] in NETWORKS:
                 self.network = sys.argv[1]
         else:
             self.network = network
+        self.que = que
 
     def run(self):
-        print('run  receiver for', self.network, flush=True)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-            heartbeat_interval=0,
-        ))
-
-        self.channel = connection.channel()
-        self.channel.queue_declare(
-                queue = NETWORKS[self.network]['queue'],
-                durable = True,
-                auto_delete = False,
-                exclusive = False
-                )
-        self.channel.basic_consume(self.callback,
-                                        queue=NETWORKS[net]['queue'])
-        self.channel.start_consuming()
+        while 1:
+            self.callback(que.get())
 
     # @logging
     def payment(self, message):
@@ -309,28 +294,39 @@ rabbitmqctl add_vhost mywill
 rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
-# connection = pika.BlockingConnection(pika.ConnectionParameters(
-#     'localhost',
-#     5672,
-#     'mywill',
-#     pika.PlainCredentials('java', 'java'),
-#     heartbeat_interval=0,
-# ))
-#
-# channel = connection.channel()
+
+
+def handler(message):
+    ques[message['network']].put(message)
+
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+    'localhost',
+    5672,
+    'mywill',
+    pika.PlainCredentials('java', 'java'),
+    heartbeat_interval=0,
+))
+
+self.channel = connection.channel()
 
 nets = NETWORKS.keys()
+ques = dict()
 for net in nets:
-    rec = Receiver(net)
+    channel.queue_declare(
+            queue = NETWORKS[self.network]['queue'],
+            durable = True,
+            auto_delete = False,
+            exclusive = False
+    )
+    channel.basic_consume(
+            handler,
+            queue=NETWORKS[net]['queue']
+    )
+    ques[net] = Queue()
+    rec = Receiver(net, que)
     rec.start()
-#     channel.queue_declare(
-#         queue=NETWORKS[net]['queue'],
-#         durable=True,
-#         auto_delete=False,
-#         exclusive=False
-#     )
-#     channel.basic_consume(rec.callback, queue=NETWORKS[net]['queue'])
-#
-# test_logger.info('RECEIVER: receiver started')
-# print('receiver started', flush=True)
-# channel.start_consuming()
+
+
+
+channel.start_consuming()
