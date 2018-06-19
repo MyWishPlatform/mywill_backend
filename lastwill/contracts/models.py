@@ -1013,6 +1013,7 @@ class ContractDetailsICO(CommonDetails):
     continue_minting = models.BooleanField(default=False)
     cold_wallet_address = models.CharField(max_length=50, default='')
     allow_change_dates = models.BooleanField(default=False)
+    whitelist = models.BooleanField(default=False)
 
     eth_contract_token = models.ForeignKey(
         EthContract,
