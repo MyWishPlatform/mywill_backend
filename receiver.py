@@ -48,7 +48,7 @@ class Receiver(threading.Thread):
 
     def run(self):
         while 1:
-            self.callback(que.get())
+            self.callback(*que.get())
 
     # @logging
     def payment(self, message):
@@ -296,8 +296,9 @@ rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 
 
 
-def handler(message):
-    ques[message['network']].put(message)
+def handler(ch, method, properties, body):
+    message = json.loads(body.decode())
+    ques[message['network']].put((ch, method, properties, body))
 
 
 connection = pika.BlockingConnection(pika.ConnectionParameters(
