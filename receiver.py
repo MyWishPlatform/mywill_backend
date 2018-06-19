@@ -37,19 +37,39 @@ def logging(f):
 
 class Receiver(threading.Thread):
 
-    def __init__(self, network=None, que=None):
+    def __init__(self, network=None):
         super().__init__()
         if network is None:
             if len(sys.argv) > 1 and sys.argv[1] in NETWORKS:
                 self.network = sys.argv[1]
         else:
             self.network = network
-        self.que = que
 
     def run(self):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+            'localhost',
+            5672,
+            'mywill',
+            pika.PlainCredentials('java', 'java'),
+            heartbeat_interval=0,
+        ))
+
+        channel = connection.channel()
+
+        channel.queue_declare(
+                queue = NETWORKS[self.network]['queue'],
+                durable = True,
+                auto_delete = False,
+                exclusive = False
+        )
+        channel.basic_consume(
+                self.callback,
+                queue=NETWORKS[self.network]['queue']
+        )
+
         print('receiver start ', self.network)
-        while 1:
-            self.callback(*self.que.get())
+        channel.start_consuming()
+
 
     # @logging
     def payment(self, message):
@@ -297,38 +317,11 @@ rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 
 
 
-def handler(ch, method, properties, body):
-    message = json.loads(body.decode())
-    ques[message['network']].put((ch, method, properties, body))
-
-
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-    'localhost',
-    5672,
-    'mywill',
-    pika.PlainCredentials('java', 'java'),
-    heartbeat_interval=0,
-))
-
-channel = connection.channel()
 
 nets = NETWORKS.keys()
-ques = dict()
 for net in nets:
-    channel.queue_declare(
-            queue = NETWORKS[net]['queue'],
-            durable = True,
-            auto_delete = False,
-            exclusive = False
-    )
-    channel.basic_consume(
-            handler,
-            queue=NETWORKS[net]['queue']
-    )
-    ques[net] = Queue()
-    rec = Receiver(net, ques[net])
+    rec = Receiver(net)
     rec.start()
 
 
 
-channel.start_consuming()

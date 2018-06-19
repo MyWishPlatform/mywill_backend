@@ -89,6 +89,7 @@ def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
         map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])),
             reversed(amount_bonuses)))
     params["D_MYWISH_ADDRESS"] = '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd'
+    params["D_WHITELIST_ENABLED"] = details.whitelist
     return params
 
 
