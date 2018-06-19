@@ -1503,7 +1503,7 @@ class ContractDetailsNeo(CommonDetails):
             ]
             while len(amount) < 33:
                 amount.append(0)
-            preproc_params["constants"]["D_PREMINT_AMOUNTS"] = amount
+            preproc_params["constants"]["D_PREMINT_AMOUNTS"].append(amount)
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
