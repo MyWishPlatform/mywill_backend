@@ -8,6 +8,7 @@ import pika
 import math
 import bitcoin
 from copy import deepcopy
+from base58 import b58decode
 from ethereum import abi
 
 from django.db import models
@@ -18,8 +19,11 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from neo.Settings import settings
 from neo.Core.TX.Transaction import ContractTransaction
+from neocore.Cryptography.Crypto import Crypto
 from neocore.IO.BinaryWriter import BinaryWriter
+from neocore.UInt160 import UInt160
 from neo.SmartContract.ContractParameterType import ContractParameterType
 from neo.IO.MemoryStream import StreamManager
 from neo.Core.Witness import Witness
@@ -34,6 +38,20 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+
+
+def address_to_scripthash(address):
+
+    data = b58decode(address)
+    if len(data) != 25:
+        raise ValueError('Not correct Address, wrong length.')
+    if data[0] != settings.ADDRESS_VERSION:
+        raise ValueError('Not correct Coin Version')
+
+    checksum = Crypto.Default().Hash256(data[:21])[:4]
+    if checksum != data[21:]:
+        raise Exception('Address format error')
+    return UInt160(data=data[1:21]).ToBytes()
 
 
 def add_token_params(params, details, token_holders, pause, cont_mint):
@@ -1469,17 +1487,22 @@ class ContractDetailsNeo(CommonDetails):
             "D_DECIMALS": self.decimals,
             "D_PREMINT_COUNT": len(token_holders),
             "D_OWNER": self.admin_address,
-            "D_CONTINUE_MINTING": self.future_minting
+            "D_CONTINUE_MINTING": self.future_minting,
+            "D_PREMINT_SCRIPT_HASHES" : [],
+            "D_PREMINT_AMOUNTS": []
         }}
-        for ind, th in enumerate(token_holders):
-            preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = [
+        for th in token_holders:
+            preproc_params["constants"]["D_PREMINT_SCRIPT_HASHES"].append(
+                [ord(x) for x in binascii.unhexlify(address_to_scripthash(th.address))]
+            )
+            amount = [
                 int(x) for x in int(th.amount).to_bytes(
                     math.floor(math.log(int(th.amount) or 1, 256)) + 1, 'little'
                 )
             ]
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)].append(0)
-            preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
+            while len(amount) < 33:
+                amount.append(0)
+            preproc_params["constants"]["D_PREMINT_AMOUNTS"] = amount
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
