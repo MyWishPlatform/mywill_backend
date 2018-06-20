@@ -1898,3 +1898,49 @@ class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_lenght=50)
     active = models.BooleanField(default=True)
+
+
+class AirdropAddress(models.Model):
+    contract = models.ForeignKey(Contract, null=True)
+    address = models.CharField(max_lenght=50)
+    active = models.BooleanField(default=True)
+    state = models.CharField(max_lenght=10, default='added')
+
+
+class ContractDetailsAirdrop(CommonDetails):
+
+    contract = models.ForeignKey(Contract, null=True)
+    admin_address = models.CharField(max_lenght=50)
+    token_address = models.CharField(max_lenght=50)
+
+    @logging
+    def get_arguments(self, *args, **kwargs):
+        return [
+            self.admin_address,
+            self.token_address,
+            [h.address for h in self.contract.airdropaddress_set.all()]
+        ]
+
+    def compile(self):
+        dest = '/home/contract/lastwill/airdrop-contract/'
+        with open(path.join(dest, 'build/contracts/AirDrop.json'), 'rb') as f:
+            airdrop_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'contracts/AirDrop.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        self.eth_contract_token = create_ethcontract_in_compile(
+            airdrop_json['abi'], airdrop_json['bytecode'][2:],
+            airdrop_json['compiler']['version'], self.contract, source_code
+        )
+        self.save()
+
+    @blocking
+    @postponable
+    @logging
+    def deploy(self):
+        return super().deploy()
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return 2 * 10**18
