@@ -18,7 +18,7 @@ from .models import (
     ContractDetailsDelayedPayment, ContractDetailsLostKey,
     ContractDetailsPizza, EthContract, ContractDetailsICO,
     TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo,
-    ContractDetailsNeoICO
+    ContractDetailsNeoICO, WhitelistAddress
 )
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
@@ -186,6 +186,12 @@ class EthContractSerializer(serializers.ModelSerializer):
             'id', 'address', 'source_code', 'abi',
             'bytecode', 'compiler_version', 'constructor_arguments'
         )
+
+
+class WhitelistAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WhitelistAddress
+        fields = ('contract', 'address')
 
 
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
