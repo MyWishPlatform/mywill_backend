@@ -216,20 +216,6 @@ def test_neo_ico_params(config, params, dest):
 
 
 @logging
-def take_off_blocking(network, contract_id=None, address=None):
-    if not address:
-        address = NETWORKS[network]['address']
-    if not contract_id:
-        DeployAddress.objects.select_for_update().filter(
-            network__name=network, address=address
-        ).update(locked_by=None)
-    else:
-        DeployAddress.objects.select_for_update().filter(
-            network__name=network, address=address, locked_by=contract_id
-        ).update(locked_by=None)
-
-
-@logging
 def send_in_queue(contract_id, type, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         'localhost',

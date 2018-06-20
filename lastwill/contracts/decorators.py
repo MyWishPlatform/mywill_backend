@@ -59,7 +59,7 @@ def postponable(f):
                 DEFAULT_FROM_EMAIL,
                 [EMAIL_FOR_POSTPONED_MESSAGE]
             )
-
+            take_off_blocking(contract.network.name)
             raise AlreadyPostponed
         try:
             return f(*args, **kwargs)
@@ -77,10 +77,9 @@ def postponable(f):
             print('contract postponed due to exception', flush=True)
             test_logger.error('contract postponed due to exception')
             address = NETWORKS[contract.network.name]['address']
-            DeployAddress.objects.select_for_update().filter(
-                network__name=contract.network.name,
-                address=address, locked_by=contract.id
-            ).update(locked_by=None)
+            take_off_blocking(
+                contract.network.name, contract_id=contract.id, address=address
+            )
             print('queue unlocked due to exception', flush=True)
             test_logger.error('queue unlocked due to exception')
             raise
@@ -117,3 +116,17 @@ def logging(f):
             test_logger.error('CONTRACT LOGGING ' + str(f.__qualname__) + str(exc_value) + trace_back)
             raise
     return wrapper
+
+
+@logging
+def take_off_blocking(network, contract_id=None, address=None):
+    if not address:
+        address = NETWORKS[network]['address']
+    if not contract_id:
+        DeployAddress.objects.select_for_update().filter(
+            network__name=network, address=address
+        ).update(locked_by=None)
+    else:
+        DeployAddress.objects.select_for_update().filter(
+            network__name=network, address=address, locked_by=contract_id
+        ).update(locked_by=None)
