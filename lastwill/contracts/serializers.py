@@ -18,7 +18,7 @@ from .models import (
     ContractDetailsDelayedPayment, ContractDetailsLostKey,
     ContractDetailsPizza, EthContract, ContractDetailsICO,
     TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo,
-    ContractDetailsNeoICO, WhitelistAddress
+    ContractDetailsNeoICO, WhitelistAddress, ContractDetailsAirdrop, AirdropAddress
 )
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
@@ -635,3 +635,34 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         if token_id:
             details.neo_contract_crowdsale_id = token_id
         return super().update(details, kwargs)
+
+
+class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsAirdrop
+        fields = ('admin_address', 'token_address')
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        assert('admin_address' in details)
+        assert('token_address' in details)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        return res
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+class AirdropAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AirdropAddress
+        fields = ('address')
