@@ -337,12 +337,7 @@ rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
 
-
-
 nets = NETWORKS.keys()
 for net in nets:
     rec = Receiver(net)
     rec.start()
-
-
-

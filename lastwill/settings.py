@@ -167,9 +167,9 @@ ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
-REST_FRAMEWORK = { 
+REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': None, # return all objects if no limit specified
+    'PAGE_SIZE': 100
 }
 
 SIGNER='127.0.0.1:5000'

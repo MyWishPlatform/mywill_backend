@@ -59,7 +59,7 @@ def postponable(f):
                 DEFAULT_FROM_EMAIL,
                 [EMAIL_FOR_POSTPONED_MESSAGE]
             )
-            take_off_blocking(contract.network.name)
+            take_off_blocking(contract.network.name, contract_id=contract.id)
             raise AlreadyPostponed
         try:
             return f(*args, **kwargs)
