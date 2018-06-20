@@ -312,13 +312,18 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         address = message['address']
         w, _ = WhitelistAddress.objects.get_or_create(contract=contract, address=address)
+        w.active = True
+        w.save()
 
     def whitelistRemoved(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
         address = message['address']
-        w = WhitelistAddress.objects.get(contract=contract, address=address)
-        w.active = False
-        w.save()
+        try:
+            w = WhitelistAddress.objects.get(contract=contract, address=address)
+            w.active = False
+            w.save()
+        except:
+            pass
 
 
 def methods(cls):

@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.views.generic import View
 from django.contrib.auth.models import User
 from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
@@ -26,7 +27,7 @@ from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from .models import EthContract, send_in_queue
-from .serializers import ContractSerializer, count_sold_tokens
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type):
@@ -416,10 +417,18 @@ def neo_crowdsale_finalize(request):
     raise ValidationError({'result': 2}, code=403)
 
 
-@api_view(http_method_names=['GET'])
-def get_contract_whitelist(request):
-    contract = Contract.objects.get(id=request.data.get('id'))
-    assert (contract.user == request.user)
-    assert (contract.contract_type == 4)
-    whitelist = WhitelistAddress.objects.filter(contract=contract, active=True)
-    return whitelist
+class WhitelistAddressViewSet(viewsets.ModelViewSet):
+    queryset = WhitelistAddress.objects.all()
+    serializer_class = WhitelistAddressSerializer
+
+    def get_queryset(self):
+        result = self.queryset
+        contract_id = self.request.query_params.get('contract', None)
+        if not contract_id:
+            raise ValidationError()
+        contract = Contract.objects.get(id=contract_id)
+        if contract.user != self.request.user:
+            raise ValidationError({'result': 2}, code=403)
+        else:
+            result = result.filter(contract__id=contract)
+            return result
