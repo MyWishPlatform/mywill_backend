@@ -175,7 +175,8 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
             ContractDetailsNeoSerializer,
-            ContractDetailsNeoICOSerializer
+            ContractDetailsNeoICOSerializer,
+            ContractDetailsAirdrop
         ][contract_type]
 
 
@@ -665,4 +666,4 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
 class AirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirdropAddress
-        fields = ('address')
+        fields = ('address',)
