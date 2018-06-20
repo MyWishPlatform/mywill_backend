@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import (
-    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed
+    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed, WhitelistAddress
 )
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
@@ -307,6 +307,18 @@ class Receiver(threading.Thread):
     def unknown_handler(self, message):
         print('unknown message', message, flush=True)
         test_logger.error('RECEIVER: unknown message')
+
+    def whitelistAdded(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        address = message['address']
+        w, _ = WhitelistAddress.objects.get_or_create(contract=contract, address=address)
+
+    def whitelistRemoved(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        address = message['address']
+        w = WhitelistAddress.objects.get(contract=contract, address=address)
+        w.active = False
+        w.save()
 
 
 def methods(cls):

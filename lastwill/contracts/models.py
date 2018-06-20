@@ -1897,4 +1897,4 @@ class ContractDetailsNeoICO(CommonDetails):
 class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_lenght=50)
-    status = models.CharField(max_lenght=10, default='added')
+    active = models.BooleanField(default=True)

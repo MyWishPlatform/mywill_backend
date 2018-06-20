@@ -191,7 +191,7 @@ class EthContractSerializer(serializers.ModelSerializer):
 class WhitelistAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhitelistAddress
-        fields = ('contract', 'address')
+        fields = ('contract', 'address', 'active')
 
 
 class ContractDetailsLastwillSerializer(serializers.ModelSerializer):

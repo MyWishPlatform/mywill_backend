@@ -21,7 +21,7 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import contract_details_types, Contract
+from lastwill.contracts.models import contract_details_types, Contract, WhitelistAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -414,3 +414,12 @@ def neo_crowdsale_finalize(request):
         contract.save()
         return JsonResponse({'result': 2})
     raise ValidationError({'result': 2}, code=403)
+
+
+@api_view(http_method_names=['GET'])
+def get_contract_whitelist(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    assert (contract.user == request.user)
+    assert (contract.contract_type == 4)
+    whitelist = WhitelistAddress.objects.filter(contract=contract, active=True)
+    return whitelist
