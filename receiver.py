@@ -67,7 +67,7 @@ class Receiver(threading.Thread):
                 queue=NETWORKS[self.network]['queue']
         )
 
-        print('receiver start ', self.network)
+        print('receiver start ', self.network, flush=True)
         channel.start_consuming()
 
 
@@ -153,7 +153,11 @@ class Receiver(threading.Thread):
             print('no contract, ignoging')
             test_logger.error('RECEIVER: no contract')
             return
-        contract_details.refresh_from_db()
+        try:
+            contract_details.refresh_from_db()
+        except:
+            import time
+            time.sleep(0.5)
         print('launch ok')
         test_logger.info('RECEIVER: launch ok')
 
