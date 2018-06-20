@@ -1489,7 +1489,7 @@ class ContractDetailsNeo(CommonDetails):
             "D_PREMINT_COUNT": len(token_holders),
             "D_OWNER": self.admin_address,
             "D_CONTINUE_MINTING": self.future_minting,
-            "D_PREMINT_SCRIPT_HASHES" : [],
+            "D_PREMINT_SCRIPT_HASHES": [],
             "D_PREMINT_AMOUNTS": []
         }}
         for th in token_holders:
@@ -1713,18 +1713,22 @@ class ContractDetailsNeoICO(CommonDetails):
             "D_START_TIME": self.start_date,
             "D_END_TIME": self.stop_date,
             "D_RATE": int(self.rate),
-            "D_HARD_CAP_NEO": str(self.hard_cap)
+            "D_HARD_CAP_NEO": str(self.hard_cap),
+            "D_PREMINT_SCRIPT_HASHES": [],
+            "D_PREMINT_AMOUNTS": []
         }}
-        for ind, th in enumerate(token_holders):
-            preproc_params["constants"]["D_PREMINT_ADDRESS_" + str(ind)] = str(th.address)
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)] = [
+        for th in token_holders:
+            preproc_params["constants"]["D_PREMINT_SCRIPT_HASHES"].append(
+                list(binascii.unhexlify(address_to_scripthash(th.address)))
+            )
+            amount = [
                 int(x) for x in int(th.amount).to_bytes(
                     math.floor(math.log(int(th.amount) or 1, 256)) + 1, 'little'
                 )
             ]
-            preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)].append(0)
-            print('premint amount is', preproc_params["constants"]["D_PREMINT_AMOUNT_" + str(ind)], flush=True)
-            preproc_params["constants"]["D_PREMINT_FREEZE_" + str(ind)] = str(th.freeze_date) if th.freeze_date else 0
+            while len(amount) < 33:
+                amount.append(0)
+            preproc_params["constants"]["D_PREMINT_AMOUNTS"].append(amount)
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))

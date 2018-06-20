@@ -109,7 +109,7 @@ def logging(f):
         test_logger.info(str_info)
         try:
             return f(*args, **kwargs)
-        except IndexError:
+        except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             trace_back = ' '. join(
                 traceback.format_exception(exc_type, exc_value,exc_traceback)
