@@ -176,7 +176,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsTokenSerializer,
             ContractDetailsNeoSerializer,
             ContractDetailsNeoICOSerializer,
-            ContractDetailsAirdrop
+            ContractDetailsAirdropSerializer
         ][contract_type]
 
 

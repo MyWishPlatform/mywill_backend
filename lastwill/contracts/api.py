@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, BasePermission, SAFE_METHODS
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
@@ -417,9 +417,16 @@ def neo_crowdsale_finalize(request):
     raise ValidationError({'result': 2}, code=403)
 
 
+class ReadOnly(BasePermission):
+
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS
+
+
 class WhitelistAddressViewSet(viewsets.ModelViewSet):
     queryset = WhitelistAddress.objects.all()
     serializer_class = WhitelistAddressSerializer
+    permission_classes = (ReadOnly,)
 
     def get_queryset(self):
         result = self.queryset

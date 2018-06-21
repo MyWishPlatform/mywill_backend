@@ -300,7 +300,7 @@ class Contract(models.Model):
         max_length=200, null=True, default=None
     )
 
-    created_date = models.DateTimeField(auto_now=True)
+    created_date = models.DateTimeField(auto_now=True, editable=False)
     check_interval = models.IntegerField(null=True, default=None)
     active_to = models.DateTimeField(null=True, default=None)
     last_check = models.DateTimeField(null=True, default=None)
@@ -1917,8 +1917,7 @@ class ContractDetailsAirdrop(CommonDetails):
     def get_arguments(self, *args, **kwargs):
         return [
             self.admin_address,
-            self.token_address,
-            [h.address for h in self.contract.airdropaddress_set.all()]
+            self.token_address
         ]
 
     def compile(self):
