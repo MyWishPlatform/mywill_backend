@@ -11,7 +11,8 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied, BasePermission, SAFE_METHODS
+from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied, SAFE_METHODS
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
