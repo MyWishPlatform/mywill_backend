@@ -361,6 +361,7 @@ class CommonDetails(models.Model):
     class Meta:
         abstract = True
     contract = models.ForeignKey(Contract)
+    lgr =[]
 
     @logging
     def compile(self, eth_contract_attr_name='eth_contract'):
@@ -1896,22 +1897,22 @@ class ContractDetailsNeoICO(CommonDetails):
 
 class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
-    address = models.CharField(max_lenght=50)
+    address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
 
 
 class AirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
-    address = models.CharField(max_lenght=50)
+    address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
-    state = models.CharField(max_lenght=10, default='added')
+    state = models.CharField(max_length=10, default='added')
 
 
 class ContractDetailsAirdrop(CommonDetails):
 
     contract = models.ForeignKey(Contract, null=True)
-    admin_address = models.CharField(max_lenght=50)
-    token_address = models.CharField(max_lenght=50)
+    admin_address = models.CharField(max_length=50)
+    token_address = models.CharField(max_length=50)
 
     @logging
     def get_arguments(self, *args, **kwargs):
