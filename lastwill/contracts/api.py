@@ -438,7 +438,7 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
         else:
-            result = result.filter(contract__id=contract, active=True)
+            result = result.filter(contract=contract, active=True)
             return result
 
 
@@ -455,5 +455,5 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
         else:
-            result = result.filter(contract__id=contract, active=True)
+            result = result.filter(contract=contract, active=True)
             return result
