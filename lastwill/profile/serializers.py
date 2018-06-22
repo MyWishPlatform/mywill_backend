@@ -1,3 +1,5 @@
+import requests
+
 from bip32utils import BIP32Key
 from bip32utils import BIP32_HARDEN
 from eth_keys import keys
@@ -28,6 +30,14 @@ def init_profile(user, is_social=False, lang='en'):
     Profile(
         user=user, internal_address=eth_address, is_social=is_social, lang=lang
     ).save()
+    requests.post(
+        'http://user:password@127.0.0.1:8332/',
+        json={
+            'method': 'importaddress',
+            'params': [btc_address, btc_address, False],
+            'id': 1, 'jsonrpc': '1.0'
+        }
+    )
 
 
 class UserRegisterSerializer(RegisterSerializer):
