@@ -35,6 +35,8 @@ from lastwill.promo.api import get_discount
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
 router.register(r'sentences', SentenceViewSet)
+router.register(r'airdrop_addresses', AirdropAddressViewSet)
+router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 
 urlpatterns = [
     url(r'^reset', index),
@@ -75,8 +77,6 @@ urlpatterns = [
     url(r'^api/get_all_costs/$', get_cost_all_contracts),
     url(r'^api/set_lang/$', set_lang),
     url(r'^api/neo_ico_finalize/$', neo_crowdsale_finalize),
-    url(r'^api/whitelist_addresses/', WhitelistAddressViewSet.as_view()),
-    url(r'^api/airdrop_addresses/', AirdropAddressViewSet.as_view())
 
 ]
 
