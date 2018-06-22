@@ -26,7 +26,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_contract_types, deploy,
                                     get_token_contracts, ICOtokensView, get_statistics,
                                     i_am_alive, cancel, get_statistics_landing,
-                                    get_cost_all_contracts, neo_crowdsale_finalize)
+                                    get_cost_all_contracts, neo_crowdsale_finalize,
+                                    AirdropAddressViewSet, WhitelistAddressViewSet)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -73,7 +74,9 @@ urlpatterns = [
     url(r'^api/cancel/', cancel),
     url(r'^api/get_all_costs/$', get_cost_all_contracts),
     url(r'^api/set_lang/$', set_lang),
-    url(r'^api/neo_ico_finalize/$', neo_crowdsale_finalize)
+    url(r'^api/neo_ico_finalize/$', neo_crowdsale_finalize),
+    url(r'^api/whitelist_addresses/$', WhitelistAddressViewSet),
+    url(r'^api/airdrop_addresses/$', AirdropAddressViewSet)
 
 ]
 
