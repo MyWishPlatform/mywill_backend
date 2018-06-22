@@ -794,7 +794,6 @@ class ContractDetailsLostKey(CommonDetails):
         return cost
 
     @staticmethod
-    @logging
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
