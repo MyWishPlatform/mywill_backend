@@ -424,6 +424,7 @@ class ReadOnly(BasePermission):
         return request.method in SAFE_METHODS
 
 
+@api_view(http_method_names=['GET'])
 class WhitelistAddressViewSet(viewsets.ModelViewSet):
     queryset = WhitelistAddress.objects.all()
     serializer_class = WhitelistAddressSerializer
@@ -442,6 +443,7 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
             return result
 
 
+@api_view(http_method_names=['GET', 'POST'])
 class AirdropAddressViewSet(viewsets.ModelViewSet):
     queryset = AirdropAddress.objects.all()
     serializer_class = AirdropAddressSerializer
