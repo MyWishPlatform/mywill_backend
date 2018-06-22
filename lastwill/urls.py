@@ -75,8 +75,8 @@ urlpatterns = [
     url(r'^api/get_all_costs/$', get_cost_all_contracts),
     url(r'^api/set_lang/$', set_lang),
     url(r'^api/neo_ico_finalize/$', neo_crowdsale_finalize),
-    url(r'^api/whitelist_addresses/$', WhitelistAddressViewSet),
-    url(r'^api/airdrop_addresses/$', AirdropAddressViewSet)
+    url(r'^api/whitelist_addresses/', WhitelistAddressViewSet),
+    url(r'^api/airdrop_addresses/', AirdropAddressViewSet)
 
 ]
 
