@@ -291,7 +291,7 @@ class Contract(models.Model):
         max_length=200, null=True, default=None
     )
 
-    created_date = models.DateTimeField(auto_now=True, editable=False)
+    created_date = models.DateTimeField(auto_now=True)
     check_interval = models.IntegerField(null=True, default=None)
     active_to = models.DateTimeField(null=True, default=None)
     last_check = models.DateTimeField(null=True, default=None)
