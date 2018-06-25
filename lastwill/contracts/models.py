@@ -1896,6 +1896,9 @@ class AirdropAddress(models.Model):
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
 
 
 class ContractDetailsAirdrop(CommonDetails):
@@ -1903,6 +1906,7 @@ class ContractDetailsAirdrop(CommonDetails):
     contract = models.ForeignKey(Contract, null=True)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
+    decimals = models.BooleanField(default=False)
 
     @logging
     def get_arguments(self, *args, **kwargs):
