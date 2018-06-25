@@ -125,7 +125,6 @@ def logging(f):
     return wrapper
 
 
-@logging
 def take_off_blocking(network, contract_id=None, address=None):
     if not address:
         address = NETWORKS[network]['address']

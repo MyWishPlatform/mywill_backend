@@ -431,7 +431,6 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    @logging
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.lgr.append('msg deployd for contract %d' %self.contract.id)
         network_link = NETWORKS[self.contract.network.name]['link_address']
