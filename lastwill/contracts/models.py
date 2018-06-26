@@ -181,12 +181,12 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
 def test_crowdsale_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system("/bin/bash -c 'cd {dest} && yarn scripts/compile-crowdsale.sh'".format(
+    if os.system("/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
                 dest=dest)):
     # if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(
     #         dest=dest)):
         raise Exception('compiler error while testing')
-    if os.system("/bin/bash -c 'cd {dest} &&  yarn scripts/test-crowdsale.sh'".format(
+    if os.system("/bin/bash -c 'cd {dest} &&  yarn test-crowdsale'".format(
             dest=dest)):
     # if os.system("/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(
     #         dest=dest)):
@@ -197,7 +197,7 @@ def test_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
     # if os.system("/bin/bash -c 'cd {dest} && ./compile-token.sh'".format(dest=dest)):
-    if os.system("/bin/bash -c 'cd {dest} && yarn scripts/compile-token.sh'".format(dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} && yarn compile-token'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
@@ -1099,7 +1099,7 @@ class ContractDetailsICO(CommonDetails):
             f.write(json.dumps(preproc_params))
         if os.system(
                 # "/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)
-                "/bin/bash -c 'cd {dest} && yarn scripts/compile-crowdsale.sh'".format(dest=dest)
+                "/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(dest=dest)
 
         ):
             raise Exception('compiler error while deploying')
@@ -1349,7 +1349,7 @@ class ContractDetailsToken(CommonDetails):
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
-        if os.system('cd {dest} && yarn scripts/compile-token.sh'.format(dest=dest)):
+        if os.system('cd {dest} && yarn compile-token'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
