@@ -668,18 +668,6 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
         ]
         return res
 
-    def update(self, contract, details, contract_details):
-        contract.airdropaddress_set.all().delete()
-        airdrop_addresses = contract_details.pop('airdrop_addresses')
-        for aa_json in airdrop_addresses:
-            aa_json['address'] = aa_json['address'].lower()
-            kwargs = aa_json.copy()
-            kwargs['contract'] = contract
-            AirdropAddress(**kwargs).save()
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        return super().update(details, kwargs)
-
 
 class AirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
