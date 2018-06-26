@@ -14,7 +14,7 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile
-from lastwill.settings import ROOT_PUBLIC_KEY
+from lastwill.settings import ROOT_PUBLIC_KEY, BITCOIN_URLS
 from lastwill.payments.models import BTCAccount
 
 
@@ -31,7 +31,7 @@ def init_profile(user, is_social=False, lang='en'):
         user=user, internal_address=eth_address, is_social=is_social, lang=lang
     ).save()
     requests.post(
-        'http://user:password@127.0.0.1:8332/',
+        BITCOIN_URLS['main'],
         json={
             'method': 'importaddress',
             'params': [btc_address, btc_address, False],
