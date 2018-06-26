@@ -641,7 +641,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = ('admin_address', 'token_address', 'decimals')
 
     def create(self, contract, contract_details):
         airdrop_addresses = contract_details.pop('airdrop_addresses')
