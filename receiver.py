@@ -14,25 +14,13 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import (
-    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed, WhitelistAddress
+    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
+    WhitelistAddress, AirdropAddress
 )
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish
-
-
-def logging(f):
-    def wrapper(*args, **kwargs):
-        info1 = ','.join([str(ar) for ar in args])
-        info2 = ','.join([str(ar) for ar in kwargs])
-        str_info = 'RECEIVER ' + str(f) + info1 + info2
-        test_logger.info(str_info)
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            test_logger.error('RECEIVER ' + str(f))
-    return wrapper
 
 
 class Receiver(threading.Thread):
@@ -70,8 +58,6 @@ class Receiver(threading.Thread):
         print('receiver start ', self.network, flush=True)
         channel.start_consuming()
 
-
-    # @logging
     def payment(self, message):
         print('payment message', flush=True)
         print('message["amount"]', message['amount'])
@@ -84,7 +70,6 @@ class Receiver(threading.Thread):
         test_logger.info('RECEIVER: payment ok with value %d' %value)
         create_payment(message['userId'], value, message['transactionHash'], message['currency'], message['amount'])
 
-    # @logging
     def deployed(self, message):
         print('deployed message received', flush=True)
         test_logger.info('RECEIVER: deployed message')
@@ -93,7 +78,6 @@ class Receiver(threading.Thread):
         print('deployed ok!', flush=True)
         test_logger.info('RECEIVER: deployed ok')
 
-    # @logging
     def killed(self, message):
         print('killed message', flush=True)
         test_logger.info('RECEIVER: killed message')
@@ -105,7 +89,6 @@ class Receiver(threading.Thread):
         print('killed ok', flush=True)
         test_logger.info('RECEIVER: killed ok')
 
-    # @logging
     def checked(self, message):
         print('checked message', flush=True)
         test_logger.info('RECEIVER: checked message')
@@ -114,7 +97,6 @@ class Receiver(threading.Thread):
         print('checked ok', flush=True)
         test_logger.info('RECEIVER: checked ok')
 
-    # @logging
     def repeat_check(self, message):
         print('repeat check message', flush=True)
         test_logger.info('RECEIVER: repeat check message')
@@ -123,7 +105,6 @@ class Receiver(threading.Thread):
         print('repeat check ok', flush=True)
         test_logger.info('RECEIVER: repeat check ok')
 
-    # @logging
     def check_contract(self, message):
         print('check contract message', flush=True)
         test_logger.info('RECEIVER: check contract message')
@@ -132,7 +113,6 @@ class Receiver(threading.Thread):
         print('check contract ok', flush=True)
         test_logger.info('RECEIVER: check contract ok')
 
-    # @logging
     def triggered(self, message):
         print('triggered message', flush=True)
         test_logger.info('RECEIVER: triggered message')
@@ -141,7 +121,6 @@ class Receiver(threading.Thread):
         print('triggered ok', flush=True)
         test_logger.info('RECEIVER: triggered ok')
 
-    # @logging
     def launch(self, message):
         print('launch message', flush=True)
         test_logger.info('RECEIVER: launch message')
@@ -161,7 +140,6 @@ class Receiver(threading.Thread):
         print('launch ok')
         test_logger.info('RECEIVER: launch ok')
 
-    # @logging
     def ownershipTransferred(self, message):
         print('ownershipTransferred message')
         test_logger.info('RECEIVER: ownershipTransferred message')
@@ -170,7 +148,6 @@ class Receiver(threading.Thread):
         print('ownershipTransferred ok')
         test_logger.info('RECEIVER: ownershipTransferred ok')
 
-    # @logging
     def initialized(self, message):
         print('initialized message')
         test_logger.info('RECEIVER: initialized message')
@@ -179,7 +156,6 @@ class Receiver(threading.Thread):
         print('initialized ok')
         test_logger.info('RECEIVER: in initialized ok')
 
-    # @logging
     def finish(self, message):
         print('finish message')
         test_logger.info('RECEIVER: finish message')
@@ -188,7 +164,6 @@ class Receiver(threading.Thread):
         print('finish ok')
         test_logger.info('RECEIVER: finish ok')
 
-    # @logging
     def finalized(self, message):
         print('finalized message')
         test_logger.info('RECEIVER: finalized message')
@@ -197,7 +172,6 @@ class Receiver(threading.Thread):
         print('finalized ok')
         test_logger.info('RECEIVER: finalized ok')
 
-    # @logging
     def transactionCompleted(self, message):
         print('transactionCompleted')
         test_logger.info('RECEIVER: transactionCompleted')
@@ -216,7 +190,6 @@ class Receiver(threading.Thread):
         print('transactionCompleted ok')
         test_logger.info('RECEIVER: transactionCOmpleted ok')
 
-    # @logging
     def cancel(self, message):
         print('cancel message')
         test_logger.info('RECEIVER: cancel message')
@@ -225,7 +198,6 @@ class Receiver(threading.Thread):
         print('cancel ok')
         test_logger.info('RECEIVER: cancel ok')
 
-    # @logging
     def confirm_alive(self, message):
         print('confirm_alive message')
         test_logger.info('RECEIVER: confirm alive message')
@@ -234,7 +206,6 @@ class Receiver(threading.Thread):
         print('confirm_alive ok')
         test_logger.info('RECEIVER: confirm alive ok')
 
-    # @logging
     def contractPayment(self, message):
         print('contract Payment message')
         test_logger.info('RECEIVER: contract payment message')
@@ -243,7 +214,6 @@ class Receiver(threading.Thread):
         print('contract Payment ok')
         test_logger.info('RECEIVER: contract payment ok')
 
-    # @logging
     def notified(self, message):
         print('notified message')
         test_logger.info('RECEIVER: notified message')
@@ -254,7 +224,6 @@ class Receiver(threading.Thread):
         print('notified ok')
         test_logger.info('RECEIVER: notified ok')
 
-    # @logging
     def fundsAdded(self, message):
         print('funds Added message')
         test_logger.info('RECEIVER: funds added message')
@@ -263,7 +232,6 @@ class Receiver(threading.Thread):
         print('funds Added ok')
         test_logger.info('RECEIVER: funds added ok')
 
-    # @logging
     def make_payment(self, message):
         print('make payment message')
         test_logger.info('RECEIVER: make payment message')
@@ -280,7 +248,24 @@ class Receiver(threading.Thread):
         print('time changed ok')
         test_logger.info('RECEIVER: time changed ok')
 
-    # @logging
+    def tokens_sended(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        address = message['address']
+        airdrop_address = AirdropAddress.objects.filter(
+            contract=contract, address=address, state='added'
+        ).first()
+        airdrop_address.state = 'progress'
+        airdrop_address.save()
+
+    def tokens_sended_commited(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        address = message['address']
+        airdrop_address = AirdropAddress.objects.filter(
+            contract=contract, address=address, state='progress'
+        ).first()
+        airdrop_address.state = 'commited'
+        airdrop_address.save()
+
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')
         test_logger.info(str(body))
@@ -303,7 +288,6 @@ class Receiver(threading.Thread):
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    # @logging
     def unknown_handler(self, message):
         print('unknown message', message, flush=True)
         test_logger.error('RECEIVER: unknown message')
