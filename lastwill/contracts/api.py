@@ -440,20 +440,3 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
         else:
             result = result.filter(contract=contract, active=True)
             return result
-
-
-class AirdropAddressViewSet(viewsets.ModelViewSet):
-    queryset = AirdropAddress.objects.all()
-    serializer_class = AirdropAddressSerializer
-
-    def get_queryset(self):
-        result = self.queryset
-        contract_id = self.request.query_params.get('contract', None)
-        if not contract_id:
-            raise ValidationError()
-        contract = Contract.objects.get(id=contract_id)
-        if contract.user != self.request.user:
-            raise ValidationError({'result': 2}, code=403)
-        else:
-            result = result.filter(contract=contract, active=True)
-            return result
