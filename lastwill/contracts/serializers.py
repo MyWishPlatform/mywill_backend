@@ -684,4 +684,4 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
 class AirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirdropAddress
-        fields = ('address',)
+        fields = ('address', 'amount')
