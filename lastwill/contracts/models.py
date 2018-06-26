@@ -1613,6 +1613,8 @@ class ContractDetailsNeo(CommonDetails):
         self.lgr.append('result of send raw transaction: ', result)
         assert(result)
         self.contract.save()
+        self.neo_contract.tx_hash = tx.ToJson()['txid']
+        self.neo_contract.save()
         return
 
     @postponable
@@ -1852,9 +1854,10 @@ class ContractDetailsNeoICO(CommonDetails):
         if not result:
             raise TxFail()
         print('result of send raw transaction: ', result)
-
         assert(result)
         self.contract.save()
+        self.neo_contract.tx_hash = tx.ToJson()['txid']
+        self.neo_contract.save()
         return
 
     @postponable
