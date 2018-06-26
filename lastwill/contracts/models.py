@@ -193,6 +193,7 @@ def test_token_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
     if os.system("/bin/bash -c 'cd {dest} && ./compile-token.sh'".format(dest=dest)):
+    # if os.system("/bin/bash -c 'cd {dest} && yarn compile-token.sh'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
 
@@ -1904,6 +1905,7 @@ class AirdropAddress(models.Model):
     )
 
 
+@contract_details('Airdrop')
 class ContractDetailsAirdrop(CommonDetails):
 
     contract = models.ForeignKey(Contract, null=True)
