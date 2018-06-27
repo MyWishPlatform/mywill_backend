@@ -14,12 +14,15 @@ import lastwill.check as check
 from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models import (
-    Contract, Heir, ContractDetailsLastwill,
-    ContractDetailsDelayedPayment, ContractDetailsLostKey,
-    ContractDetailsPizza, EthContract, ContractDetailsICO,
-    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo,
-    ContractDetailsNeoICO, WhitelistAddress, ContractDetailsAirdrop, AirdropAddress
+    Contract, Heir, ContractDetailsPizza, EthContract,
+    TokenHolder,  WhitelistAddress
 )
+from .neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
+from .ico import ContractDetailsToken, ContractDetailsICO
+from .airdrop import ContractDetailsAirdrop, AirdropAddress
+from .lastwill import ContractDetailsLastwill
+from .lostkey import ContractDetailsLostKey
+from .deffered import ContractDetailsDelayedPayment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
@@ -641,9 +644,15 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = ('admin_address', 'token_address', 'decimals')
 
     def create(self, contract, contract_details):
+        airdrop_addresses = contract_details.pop('airdrop_addresses')
+        for aa_json in airdrop_addresses:
+            aa_json['address'] = aa_json['address'].lower()
+            kwargs = aa_json.copy()
+            kwargs['contract'] = contract
+            AirdropAddress(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         res = super().create(kwargs)
@@ -655,15 +664,15 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
+        airdrop_address_serializer = AirdropAddressSerializer()
+        res['airdrop_addresses'] = [
+            airdrop_address_serializer.to_representation(aa) for aa in
+            contract_details.contract.airdropaddress_set.order_by('id').all()
+        ]
         return res
-
-    def update(self, contract, details, contract_details):
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        return super().update(details, kwargs)
 
 
 class AirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirdropAddress
-        fields = ('address',)
+        fields = ('address', 'amount')

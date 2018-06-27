@@ -17,18 +17,18 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, test_logger
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import contract_details_types, Contract, WhitelistAddress, AirdropAddress
+from lastwill.contracts.models import contract_details_types, Contract, WhitelistAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-from exchange_API import to_wish, convert
+from exchange_API import to_wish
 from .models import EthContract, send_in_queue
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type):
@@ -428,23 +428,6 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
     queryset = WhitelistAddress.objects.all()
     serializer_class = WhitelistAddressSerializer
     permission_classes = (ReadOnly,)
-
-    def get_queryset(self):
-        result = self.queryset
-        contract_id = self.request.query_params.get('contract', None)
-        if not contract_id:
-            raise ValidationError()
-        contract = Contract.objects.get(id=contract_id)
-        if contract.user != self.request.user:
-            raise ValidationError({'result': 2}, code=403)
-        else:
-            result = result.filter(contract=contract, active=True)
-            return result
-
-
-class AirdropAddressViewSet(viewsets.ModelViewSet):
-    queryset = AirdropAddress.objects.all()
-    serializer_class = AirdropAddressSerializer
 
     def get_queryset(self):
         result = self.queryset
