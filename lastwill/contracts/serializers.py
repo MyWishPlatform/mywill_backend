@@ -174,7 +174,6 @@ class ContractSerializer(serializers.ModelSerializer):
             ContractDetailsLastwillSerializer,
             ContractDetailsLostKeySerializer,
             ContractDetailsDelayedPaymentSerializer,
-            ContractDetailsPizzaSerializer,
             ContractDetailsICOSerializer, 
             ContractDetailsTokenSerializer,
             ContractDetailsNeoSerializer,
