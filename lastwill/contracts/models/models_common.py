@@ -24,6 +24,7 @@ from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.deploy.models import DeployAddress, Network
 from lastwill.contracts.decorators import *
+from lastwill.contracts.models.detail_types import contract_details_types
 from email_messages import *
 
 
