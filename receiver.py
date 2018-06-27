@@ -252,18 +252,12 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         address = message['address']
         airdrop_address = AirdropAddress.objects.filter(
-            contract=contract, address=address, state='added'
+            contract=contract, address=address
         ).first()
-        airdrop_address.state = 'progress'
-        airdrop_address.save()
-
-    def tokens_sended_commited(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        address = message['address']
-        airdrop_address = AirdropAddress.objects.filter(
-            contract=contract, address=address, state='progress'
-        ).first()
-        airdrop_address.state = 'commited'
+        if message['status'] == 'COMMITED':
+            airdrop_address.state = 'commited'
+        else:
+            airdrop_address.state = 'progress'
         airdrop_address.save()
 
     def callback(self, ch, method, properties, body):
@@ -274,7 +268,7 @@ class Receiver(threading.Thread):
         print('received', body, properties, method, flush=True)
         try:
             message = json.loads(body.decode())
-            if message.get('status', '') == 'COMMITTED':
+            if message.get('status', '') in ('COMMITTED', 'PENDING'):
                 getattr(self, properties.type, self.unknown_handler)(message)
         except (TxFail, AlreadyPostponed):
             ch.basic_ack(delivery_tag=method.delivery_tag)
