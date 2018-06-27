@@ -14,12 +14,15 @@ import lastwill.check as check
 from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models import (
-    Contract, Heir, ContractDetailsLastwill,
-    ContractDetailsDelayedPayment, ContractDetailsLostKey,
-    ContractDetailsPizza, EthContract, ContractDetailsICO,
-    TokenHolder, ContractDetailsToken, NeoContract, ContractDetailsNeo,
-    ContractDetailsNeoICO, WhitelistAddress, ContractDetailsAirdrop, AirdropAddress
+    Contract, Heir, ContractDetailsPizza, EthContract,
+    TokenHolder,  WhitelistAddress
 )
+from .neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
+from .ico import ContractDetailsToken, ContractDetailsICO
+from .airdrop import ContractDetailsAirdrop, AirdropAddress
+from .lastwill import ContractDetailsLastwill
+from .lostkey import ContractDetailsLostKey
+from .deffered import ContractDetailsDelayedPayment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
