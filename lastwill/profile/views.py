@@ -11,6 +11,7 @@ from allauth.account.models import EmailAddress
 from allauth.account.views import ConfirmEmailView
 
 from lastwill.contracts.models import Contract
+from lastwill.profile.helpers import valid_totp
 
 
 class UserConfirmEmailView(ConfirmEmailView):
@@ -70,7 +71,7 @@ def enable_2fa(request):
     if user.is_anonymous:
         raise PermissionDenied()
     assert(user.profile.totp_key)
-    if pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
+    if not valid_totp(user, request.data['totp']):
         raise PermissionDenied()
     user.profile.use_totp = True
     user.profile.save()
@@ -82,7 +83,7 @@ def disable_2fa(request):
     user = request.user
     if user.is_anonymous:
         raise PermissionDenied()
-    if user.profile.use_totp and pyotp.TOTP(user.profile.totp_key).now() != request.data['totp']:
+    if not user.profile.use_totp or not valid_totp(user, request.data['totp']):
         raise PermissionDenied()
     user.profile.use_totp = False
     user.profile.save()
