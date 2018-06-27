@@ -170,17 +170,16 @@ class ContractSerializer(serializers.ModelSerializer):
         return super().update(contract, validated_data)
 
     def get_details_serializer(self, contract_type):
-        return [
-            ContractDetailsLastwillSerializer,
-            ContractDetailsLostKeySerializer,
-            ContractDetailsDelayedPaymentSerializer,
-            None,
-            ContractDetailsICOSerializer, 
-            ContractDetailsTokenSerializer,
-            ContractDetailsNeoSerializer,
-            ContractDetailsNeoICOSerializer,
-            ContractDetailsAirdropSerializer
-        ][contract_type]
+        return {
+            0: ContractDetailsLastwillSerializer,
+            1: ContractDetailsLostKeySerializer,
+            2: ContractDetailsDelayedPaymentSerializer,
+            4: ContractDetailsICOSerializer,
+            5: ContractDetailsTokenSerializer,
+            6: ContractDetailsNeoSerializer,
+            7: ContractDetailsNeoICOSerializer,
+            8: ContractDetailsAirdropSerializer
+        }[contract_type]
 
 
 class EthContractSerializer(serializers.ModelSerializer):
