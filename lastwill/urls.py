@@ -23,9 +23,9 @@ from rest_framework.routers import DefaultRouter
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
-                                    get_contract_types, deploy,
-                                    get_token_contracts, ICOtokensView, get_statistics,
-                                    i_am_alive, cancel, get_statistics_landing,
+                                    deploy, get_token_contracts,
+                                    ICOtokensView, get_statistics, i_am_alive,
+                                    cancel, get_statistics_landing,
                                     get_cost_all_contracts, neo_crowdsale_finalize,
                                     WhitelistAddressViewSet)
 from lastwill.other.api import SentenceViewSet
@@ -54,7 +54,6 @@ urlpatterns = [
     url(r'^auth/', login),
     url(r'^api/get_code/', get_code),
     url(r'^api/test_comp/', test_comp),
-    url(r'^api/get_contract_types', get_contract_types),
     url(r'^api/eth2rub/', eth2rub),
     url(r'^api/exc_rate/', exc_rate),
     url(r'^api/deploy/', deploy),

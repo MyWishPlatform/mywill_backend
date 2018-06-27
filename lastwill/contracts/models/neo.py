@@ -18,7 +18,7 @@ class NeoContract(EthContract):
     pass
 
 
-@contract_details('NEO contract')
+@contract_details('NEO contract', 6)
 class ContractDetailsNeo(CommonDetails):
 
     temp_directory = models.CharField(max_length=36, default='')
@@ -246,7 +246,7 @@ class ContractDetailsNeo(CommonDetails):
         self.contract.save()
 
 
-@contract_details('MyWish ICO')
+@contract_details('MyWish NEO ICO', 7)
 class ContractDetailsNeoICO(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/ICO.sol'
 

@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.models.models_common import *
 
 
-@contract_details('Will contract')
+@contract_details('Will contract', 0)
 class ContractDetailsLastwill(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/LastWillNotify.sol'
 

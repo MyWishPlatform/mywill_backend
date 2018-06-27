@@ -13,7 +13,7 @@ class AirdropAddress(models.Model):
     )
 
 
-@contract_details('Airdrop')
+@contract_details('Airdrop', 8)
 class ContractDetailsAirdrop(CommonDetails):
 
     contract = models.ForeignKey(Contract, null=True)

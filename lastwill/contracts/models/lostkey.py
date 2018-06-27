@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.models.models_common import *
 
 
-@contract_details('Wallet contract (lost key)')
+@contract_details('Wallet contract (lost key)', 1)
 class ContractDetailsLostKey(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/LastWillParityWallet.sol'
     user_address = models.CharField(max_length=50, null=True, default=None)

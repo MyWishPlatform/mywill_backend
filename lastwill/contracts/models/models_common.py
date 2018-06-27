@@ -488,21 +488,6 @@ class CommonDetails(models.Model):
         print('check ok!')
 
 
-@contract_details('Pizza')
-class ContractDetailsPizza(CommonDetails):
-    sol_path = 'lastwill/contracts/contracts/Pizza.sol'
-    user_address = models.CharField(max_length=50)
-    pizzeria_address = models.CharField(
-        max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a'
-    )
-    timeout = models.IntegerField(default=60*60)
-    code = models.IntegerField()
-    salt = models.CharField(max_length=len(str(2**256)))
-    pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0) # weis
-    order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-
-
 class Heir(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)

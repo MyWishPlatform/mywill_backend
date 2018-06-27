@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.models.models_common import *
 
 
-@contract_details('Deferred payment contract')
+@contract_details('Deferred payment contract', 2)
 class ContractDetailsDelayedPayment(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/DelayedPayment.sol'
     date = models.DateTimeField()

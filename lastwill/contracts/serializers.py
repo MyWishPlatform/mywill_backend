@@ -14,7 +14,7 @@ import lastwill.check as check
 from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models.models_common import (
-    Contract, Heir, ContractDetailsPizza, EthContract,
+    Contract, Heir, EthContract,
     TokenHolder,  WhitelistAddress
 )
 from .models.neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
@@ -316,15 +316,6 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
         return res
-
-class ContractDetailsPizzaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContractDetailsPizza
-        fields = (
-            'user_address', 'pizzeria_address',
-            'pizza_cost', 'timeout', 'order_id', 'code'
-        )
-        read_only_fields = ('pizzeria_address', 'timeout', 'code')
 
 
 class ContractDetailsICOSerializer(serializers.ModelSerializer):

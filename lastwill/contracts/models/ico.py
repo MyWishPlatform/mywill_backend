@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.models.models_common import *
 
 
-@contract_details('MyWish ICO')
+@contract_details('MyWish ICO', 4)
 class ContractDetailsICO(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/ICO.sol'
 
@@ -317,7 +317,7 @@ class ContractDetailsICO(CommonDetails):
         self.save()
 
 
-@contract_details('Token contract')
+@contract_details('Token contract', 5)
 class ContractDetailsToken(CommonDetails):
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)

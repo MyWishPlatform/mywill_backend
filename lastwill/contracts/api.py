@@ -82,9 +82,6 @@ def get_code(request):
     ).sol_path)) as f:
         return Response({'result': f.read()})
 
-@api_view()
-def get_contract_types(request):
-    return Response({x: contract_details_types[x]['name'] for x in range(len(contract_details_types))})
 
 @api_view()
 def test_comp(request):
