@@ -248,7 +248,7 @@ class Receiver(threading.Thread):
         print('time changed ok')
         test_logger.info('RECEIVER: time changed ok')
 
-    def tokens_sended(self, message):
+    def airdropAddresses(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
         address = message['address']
         airdrop_address = AirdropAddress.objects.filter(
@@ -268,7 +268,7 @@ class Receiver(threading.Thread):
         print('received', body, properties, method, flush=True)
         try:
             message = json.loads(body.decode())
-            if message.get('status', '') in ('COMMITTED', 'PENDING'):
+            if message.get('status', '') == 'COMMITTED' or message.get('status', '') == 'PENDING' and properties.type == 'airdropAddresses':
                 getattr(self, properties.type, self.unknown_handler)(message)
         except (TxFail, AlreadyPostponed):
             ch.basic_ack(delivery_tag=method.delivery_tag)
