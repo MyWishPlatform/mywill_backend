@@ -15,7 +15,7 @@ from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models import (
     Contract, Heir, EthContract, ContractDetailsDelayedPayment,
-    TokenHolder,  WhitelistAddress, ContractDetailsLastwill,
+    TokenHolder,  WhitelistAddress, ContractDetailsLastwill, NeoContract,
     ContractDetailsLostKey, ContractDetailsAirdrop, ContractDetailsNeoICO,
     ContractDetailsICO, ContractDetailsNeo, ContractDetailsToken, AirdropAddress
 )
