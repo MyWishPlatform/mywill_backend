@@ -17,7 +17,6 @@ from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
     WhitelistAddress
 )
-from lastwill.contracts.submodels.models6 import AirdropAddress
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.api import create_payment

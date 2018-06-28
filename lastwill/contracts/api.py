@@ -442,7 +442,7 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
 
 
 class AirdropAddressViewSet(viewsets.ModelViewSet):
-    queryset = AirdropAddress.objects.all()
+    queryset = AirdropAddress.objects.all().order_by('id')
     serializer_class = AirdropAddressSerializer
     permission_classes = (ReadOnly,)
 
