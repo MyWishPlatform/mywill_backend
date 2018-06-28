@@ -1919,6 +1919,7 @@ class ContractDetailsAirdrop(CommonDetails):
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
     decimals = models.BooleanField(default=False)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
     @logging
     def get_arguments(self, *args, **kwargs):
@@ -1927,13 +1928,13 @@ class ContractDetailsAirdrop(CommonDetails):
             self.token_address
         ]
 
-    def compile(self):
+    def compile(self, _=''):
         dest = '/home/contract/lastwill/airdrop-contract/'
         with open(path.join(dest, 'build/contracts/AirDrop.json'), 'rb') as f:
             airdrop_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'contracts/AirDrop.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        self.eth_contract_token = create_ethcontract_in_compile(
+        self.eth_contract = create_ethcontract_in_compile(
             airdrop_json['abi'], airdrop_json['bytecode'][2:],
             airdrop_json['compiler']['version'], self.contract, source_code
         )
@@ -1956,3 +1957,6 @@ class ContractDetailsAirdrop(CommonDetails):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
         cost = cls.calc_cost({}, network)
         return cost
+
+    def get_gaslimit(self):
+        return 3000000

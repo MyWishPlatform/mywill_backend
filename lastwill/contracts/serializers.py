@@ -655,6 +655,13 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
         res = super().create(kwargs)
         return res
 
+    def update(self, contract, details, contract_details):
+        contract_details.pop('airdrop_addresses', None)
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        
+        return super().update(details, kwargs)
+
     def validate(self, details):
         assert('admin_address' in details)
         assert('token_address' in details)
@@ -666,6 +673,7 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
             airdrop_address_serializer.to_representation(aa) for aa in
             contract_details.contract.airdropaddress_set.order_by('id').all()
         ]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
 
