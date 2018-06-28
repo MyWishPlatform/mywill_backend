@@ -1,6 +1,6 @@
 from django.db import models
 
-from lastwill.contracts.models import *
+from lastwill.contracts.submodels.common import *
 
 
 class AirdropAddress(models.Model):
@@ -28,7 +28,7 @@ class ContractDetailsAirdrop(CommonDetails):
             self.token_address
         ]
 
-    def compile(self):
+    def compile(self, _):
         dest = '/home/contract/lastwill/airdrop-contract/'
         with open(path.join(dest, 'build/contracts/AirDrop.json'), 'rb') as f:
             airdrop_json = json.loads(f.read().decode('utf-8-sig'))

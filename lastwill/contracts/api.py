@@ -23,7 +23,7 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import contract_details_types, Contract, WhitelistAddress
+from lastwill.contracts.models import Contract, WhitelistAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish
@@ -287,12 +287,13 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'launch': len(in_progress),
         'now_launch': len(now_in_progress)
         }
-    for num, ctype in enumerate(contract_details_types):
-        answer['contract_type_'+str(num)] = contracts.filter(
-            contract_type=num
+    contract_details_types = Contract.get_all_details_model()
+    for ctype in contract_details_types:
+        answer['contract_type_'+str(ctype)] = contracts.filter(
+            contract_type=ctype
         ).count()
-        answer['contract_type_'+str(num)+'_new'] = contracts.filter(
-            contract_type=num
+        answer['contract_type_'+str(ctype)+'_new'] = contracts.filter(
+            contract_type=ctype
         ).filter(created_date__lte=now, created_date__gte=day).count()
     return answer
 
@@ -395,9 +396,10 @@ def get_statistics_landing(request):
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
     answer = {}
-    for i, contract in enumerate(contract_details_types):
+    contract_details_types = Contract.get_all_details_model()
+    for i in contract_details_types:
         # answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH'] / 10 ** 18
-        answer[i] = contract['model'].min_cost() / 10 ** 18
+        answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
     return JsonResponse(answer)
 
 @api_view(http_method_names=['POST'])

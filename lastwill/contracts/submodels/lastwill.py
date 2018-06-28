@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.models import *
+from lastwill.contracts.submodels.common import *
 
 
 @contract_details('Will contract', 0)

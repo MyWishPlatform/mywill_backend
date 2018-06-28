@@ -249,17 +249,17 @@ class Receiver(threading.Thread):
         print('time changed ok')
         test_logger.info('RECEIVER: time changed ok')
 
-    def airdropAddresses(self, message):
+    def airdrop(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
-        address = message['address']
-        airdrop_address = AirdropAddress.objects.filter(
-            contract=contract, address=address
-        ).first()
-        if message['status'] == 'COMMITED':
-            airdrop_address.state = 'commited'
-        else:
-            airdrop_address.state = 'progress'
-        airdrop_address.save()
+        for addr in message['airdropAddresses']:
+            airdrop_address = AirdropAddress.objects.filter(
+                contract=contract, address=addr
+            ).first()
+            if message['status'] == 'COMMITED':
+                airdrop_address.state = 'commited'
+            else:
+                airdrop_address.state = 'progress'
+            airdrop_address.save()
 
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')

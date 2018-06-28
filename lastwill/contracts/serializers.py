@@ -17,12 +17,12 @@ from .models import (
     Contract, Heir, EthContract,
     TokenHolder,  WhitelistAddress
 )
-from .submodels.models5 import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
-from .submodels.models4 import ContractDetailsToken, ContractDetailsICO
-from .submodels.models6 import ContractDetailsAirdrop, AirdropAddress
-from .submodels.models1 import ContractDetailsLastwill
-from .submodels.models2 import ContractDetailsLostKey
-from .submodels.models3 import ContractDetailsDelayedPayment
+from .submodels.neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
+from .submodels.ico import ContractDetailsToken, ContractDetailsICO
+from .submodels.airdrop import ContractDetailsAirdrop, AirdropAddress
+from .submodels.lastwill import ContractDetailsLastwill
+from .submodels.lostkey import ContractDetailsLostKey
+from .submodels.deffered import ContractDetailsDelayedPayment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
