@@ -11,7 +11,7 @@ from neo.IO.MemoryStream import StreamManager
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-from lastwill.contracts.models.models_common import *
+from lastwill.contracts.models import *
 
 
 class NeoContract(EthContract):

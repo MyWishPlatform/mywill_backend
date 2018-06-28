@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.models.models_common import *
+from lastwill.contracts.models import *
 
 
 @contract_details('MyWish ICO', 4)

@@ -10,7 +10,7 @@ from allauth.account import app_settings
 from allauth.account.models import EmailAddress
 from allauth.account.views import ConfirmEmailView
 
-from lastwill.contracts.models.models_common import Contract
+from lastwill.contracts.models import Contract
 
 
 class UserConfirmEmailView(ConfirmEmailView):
