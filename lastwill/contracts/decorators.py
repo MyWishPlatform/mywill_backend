@@ -10,20 +10,15 @@ from lastwill.settings import test_logger, NETWORKS
 from email_messages import *
 
 
-# contract_details_types = {}
+contract_details_types = []
 
 
-# def contract_details(name, c_id):
-#     def w(c):
-#         contract_details_types[c_id] = {
-#                 'name': name,
-#                 'model': c,
-#         }
-#         return c
-#     return w
-def contract_details(name, c_id):
+def contract_details(name):
     def w(c):
-        pass
+        contract_details_types.append({
+                'name': name,
+                'model': c,
+        })
         return c
     return w
 

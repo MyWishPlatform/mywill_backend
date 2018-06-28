@@ -14,15 +14,11 @@ import lastwill.check as check
 from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from .models import (
-    Contract, Heir, EthContract,
-    TokenHolder,  WhitelistAddress
+    Contract, Heir, EthContract, ContractDetailsDelayedPayment,
+    TokenHolder,  WhitelistAddress, ContractDetailsLastwill,
+    ContractDetailsLostKey, ContractDetailsAirdrop, ContractDetailsNeoICO,
+    ContractDetailsICO, ContractDetailsNeo, ContractDetailsToken, AirdropAddress
 )
-from .submodels.neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
-from .submodels.ico import ContractDetailsToken, ContractDetailsICO
-from .submodels.airdrop import ContractDetailsAirdrop, AirdropAddress
-from .submodels.lastwill import ContractDetailsLastwill
-from .submodels.lostkey import ContractDetailsLostKey
-from .submodels.deffered import ContractDetailsDelayedPayment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
@@ -648,17 +644,20 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
         res = super().create(kwargs)
         return res
 
+    def update(self, contract, details, contract_details):
+        contract_details.pop('airdrop_addresses', None)
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        
+        return super().update(details, kwargs)
+
     def validate(self, details):
         assert('admin_address' in details)
         assert('token_address' in details)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        airdrop_address_serializer = AirdropAddressSerializer()
-        res['airdrop_addresses'] = [
-            airdrop_address_serializer.to_representation(aa) for aa in
-            contract_details.contract.airdropaddress_set.order_by('id').all()
-        ]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
 
