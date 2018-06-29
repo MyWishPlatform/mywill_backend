@@ -53,9 +53,8 @@ def profile_view(request):
 @api_view(http_method_names=['POST'])
 def generate_key(request):
     user = request.user
-    if user.is_anonymous:
+    if user.is_anonymous or user.profile.use_totp:
         raise PermissionDenied()
-    assert(not user.profile.use_totp)
     user.profile.totp_key = pyotp.random_base32()
     user.profile.save()
     return Response({
@@ -68,9 +67,8 @@ def generate_key(request):
 @api_view(http_method_names=['POST'])
 def enable_2fa(request):
     user = request.user
-    if user.is_anonymous:
+    if user.is_anonymous or not user.profile.totp_key:
         raise PermissionDenied()
-    assert(user.profile.totp_key)
     if not valid_totp(user, request.data['totp']):
         raise PermissionDenied()
     user.profile.use_totp = True

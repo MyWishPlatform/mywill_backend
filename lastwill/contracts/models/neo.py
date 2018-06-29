@@ -212,7 +212,8 @@ class ContractDetailsNeo(CommonDetails):
             raise TxFail()
         print('result of send raw transaction: ', result)
         self.lgr.append('result of send raw transaction: ', result)
-        assert(result)
+        if not result:
+            raise Exception('bad result')
         self.contract.save()
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
@@ -455,7 +456,8 @@ class ContractDetailsNeoICO(CommonDetails):
         if not result:
             raise TxFail()
         print('result of send raw transaction: ', result)
-        assert(result)
+        if not result:
+            raise Exception('bad result')
         self.contract.save()
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()

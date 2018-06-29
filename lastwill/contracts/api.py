@@ -132,8 +132,8 @@ def deploy(request):
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
 
-    assert(contract.user == request.user)
-    assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
+    if contract.user != request.user or contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
+        raise PermissionDenied
 
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
@@ -159,9 +159,8 @@ def deploy(request):
 @api_view(http_method_names=['POST'])
 def i_am_alive(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    assert(contract.user == request.user)
-    assert(contract.state == 'ACTIVE')
-    assert(contract.contract_type in (0, 1))
+    if contract.user != request.user or contract.state != 'ACTIVE' or contract.contract_type not in (0, 1):
+        raise PermissionDenied
     details = contract.get_details()
     if details.last_press_imalive:
         delta = timezone.now() - details.last_press_imalive
@@ -178,9 +177,8 @@ def i_am_alive(request):
 @api_view(http_method_names=['POST'])
 def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    assert(contract.user == request.user)
-    assert(contract.contract_type in (0, 1))
-    assert(contract.state in ['ACTIVE', 'EXPIRED'])
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (0, 1):
+        raise PermissionDenied()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'cancel', queue)
     return Response('ok')
@@ -191,7 +189,8 @@ class ICOtokensView(View):
     def get(self, request, *args, **kwargs):
 
         address = request.GET.get('address', None)
-        assert (EthContract.objects.filter(address=address) != [])
+        if not EthContract.objects.filter(address=address):
+            raise PermissionDenied
         sold_tokens = count_sold_tokens(address)
         return Response({'sold tokens': sold_tokens})
 
@@ -406,9 +405,8 @@ def get_cost_all_contracts(request):
 @api_view(http_method_names=['POST'])
 def neo_crowdsale_finalize(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    assert(contract.user == request.user)
-    assert(contract.contract_type == 7)
-    assert(contract.state == 'ACTIVE')
+    if contract.user != request.user or contract.contract_type != 7 or contract.state != 'ACTIVE':
+        raise PermissionDenied
     neo_details = contract.get_details()
     now = datetime.datetime.now().timestamp()
     if neo_details.stop_date <= now:
