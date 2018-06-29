@@ -23,7 +23,8 @@ class memoize_timeout:
 @memoize_timeout(10*60)
 def convert(fsym, tsyms):
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO'}
-    assert(fsym in allowed and not (set(tsyms.split(',')) - allowed))
+    if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
+        raise Exception('currency not allowed')
     print(fsym, tsyms)
     return json.loads(requests.get(
         'https://min-api.cryptocompare.com/data/price?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)

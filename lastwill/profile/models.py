@@ -11,3 +11,4 @@ class Profile(models.Model):
     use_totp = models.BooleanField(default=False)
     is_social = models.BooleanField(default=False)
     lang = models.CharField(max_length=2, default='en')
+    last_used_totp = models.CharField(max_length=64, null=True, default=None)
