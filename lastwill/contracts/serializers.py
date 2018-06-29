@@ -630,38 +630,27 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address', 'decimals')
-
-    def create(self, contract, contract_details):
-        airdrop_addresses = contract_details.pop('airdrop_addresses')
-        for aa_json in airdrop_addresses:
-            aa_json['address'] = aa_json['address'].lower()
-            kwargs = aa_json.copy()
-            kwargs['contract'] = contract
-            AirdropAddress(**kwargs).save()
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        res = super().create(kwargs)
-        return res
-
-    def update(self, contract, details, contract_details):
-        contract_details.pop('airdrop_addresses', None)
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        
-        return super().update(details, kwargs)
-
-    def validate(self, details):
-        assert('admin_address' in details)
-        assert('token_address' in details)
+        fields = ('admin_address', 'token_address')
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added').count()
+        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing').count()
+        res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent').count()
         return res
 
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
 
 class AirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirdropAddress
-        fields = ('address', 'amount')
+        fields = ('address', 'amount', 'state')

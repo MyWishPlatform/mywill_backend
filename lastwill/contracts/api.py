@@ -29,7 +29,7 @@ from lastwill.payments.api import create_payment
 from exchange_API import to_wish
 from .models import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
-
+from .decorators import contract_details_types
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type):
     wish_cost = to_wish('ETH', int(cost))
@@ -396,10 +396,8 @@ def get_statistics_landing(request):
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
     answer = {}
-    contract_details_types = Contract.get_all_details_model()
-    for i in contract_details_types:
-        # answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH'] / 10 ** 18
-        answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
+    for i, contract in enumerate(contract_details_types):
+        answer[i] = contract['model'].min_cost() / 10**18
     return JsonResponse(answer)
 
 @api_view(http_method_names=['POST'])
@@ -436,13 +434,12 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
         contract = Contract.objects.get(id=contract_id)
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
-        else:
-            result = result.filter(contract=contract, active=True)
-            return result
+        result = result.filter(contract=contract, active=True)
+        return result
 
 
 class AirdropAddressViewSet(viewsets.ModelViewSet):
-    queryset = AirdropAddress.objects.all().order_by('id')
+    queryset = AirdropAddress.objects.all()
     serializer_class = AirdropAddressSerializer
     permission_classes = (ReadOnly,)
 
@@ -454,6 +451,21 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         contract = Contract.objects.get(id=contract_id)
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
-        else:
-            result = result.filter(contract=contract, active=True)
-            return result
+        result = result.filter(contract=contract, active=True).order_by('id')
+        state = self.request.query_params.get('state', None)
+        if state:
+            result = result.filter(state=state)
+        return result
+
+
+@api_view(http_method_names=['POST'])
+def load_airdrop(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    if contract.user != request.user or contract.contract_type != 8 or contract.state != 'ACTIVE':
+        raise PermissionDenied
+    AirdropAddress.objects.bulk_create([AirdropAddress(
+            contract=contract,
+            address=x['address'],
+            amount=x['amount']
+    ) for x in request.data.get('addresses')])
+    return {'result': 'ok'}

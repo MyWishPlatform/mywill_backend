@@ -1918,7 +1918,6 @@ class ContractDetailsAirdrop(CommonDetails):
     contract = models.ForeignKey(Contract, null=True)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
-    decimals = models.BooleanField(default=False)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
     @logging
