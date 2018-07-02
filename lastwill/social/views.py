@@ -9,9 +9,9 @@ from rest_auth.registration.serializers import SocialLoginSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
 from allauth.account.models import EmailAddress
-import pyotp
 from lastwill.profile.models import Profile
 from lastwill.profile.serializers import init_profile
+from lastwill.profile.helpers import valid_totp
 
 class SocialLoginSerializer2FA(SocialLoginSerializer):
     email = serializers.CharField(required=False, allow_blank=True)
@@ -34,7 +34,7 @@ class ProfileAndTotpSocialLoginView(SocialLoginView):
             if not totp:
                 logout(self.request)
                 raise PermissionDenied(1032)
-            if totp != pyotp.TOTP(self.user.profile.totp_key).now():
+            if not valid_totp(self.user, totp)
                 logout(self.request)
                 raise PermissionDenied(1033)
         return super().login()

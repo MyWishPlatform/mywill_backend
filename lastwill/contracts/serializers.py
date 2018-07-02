@@ -248,8 +248,12 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert('user_address' in details and 'heirs' in details and 'active_to' in details and 'check_interval' in details)
-        assert(details['check_interval'] <= 315360000)
+        if 'user_address' not in details or 'heirs' not in details:
+            raise ValidationError
+        if 'active_to' not in details or 'check_interval' not in details:
+            raise ValidationError
+        if details['check_interval'] > 315360000:
+            raise ValidationError
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(
@@ -299,7 +303,8 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert('user_address' in details and 'date' in details and 'recepient_address' in details)
+        if 'user_address' not in details or 'date' not in details or 'recepient_address' not in details:
+            raise ValidationError
         check.is_address(details['user_address'])
         check.is_address(details['recepient_address'])
         details.get('recepient_email', None) and check.is_email(details['recepient_email'])
@@ -355,32 +360,46 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             details['token_id'] = token_model.id
             details['token_type'] = token_details.token_type
         else:
-            assert('"' not in details['token_name'] and '\n' not in details['token_name'])
-            assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
-            assert(0 <= details['decimals'] <= 50)
+            if '"' in details['token_name'] or '\n' in details['token_name']:
+                raise ValidationError
+            if '"' in details['token_short_name'] or '\n' in details['token_short_name']:
+                raise ValidationError
+            if details['decimals'] < 0 or details['decimals'] > 50:
+                raise ValidationError
             details['reused_token'] = False
-            assert(details.get('token_type', 'ERC20') in ('ERC20, ERC223'))
+            if details.get('token_type', 'ERC20') not in ('ERC20, ERC223'):
+                raise ValidationError
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
         for k in ('max_wei', 'min_wei'):
             details[k] = (int(details[k]) if details.get(k, None) else None)
-        assert(details['min_wei'] is None or details['max_wei'] is None or details['min_wei'] <= details['max_wei'])
-        assert(details['max_wei'] is None or details['max_wei'] >= 10*10**18)
-        assert('admin_address' in details and 'token_holders' in details)
-        assert(len(details['token_holders']) <= 5)
+        if details['min_wei'] is not None and details['max_wei'] is not None and details['min_wei'] > details['max_wei']:
+            raise ValidationError
+        if details['max_wei'] is not None and details['max_wei'] < 10*10**18:
+            raise ValidationError
+        if 'admin_address' not in details or 'token_holders' not in details:
+            raise ValidationError
+        if len(details['token_holders']) > 5:
+            raise ValidationError
         for th in details['token_holders']:
             th['amount'] = int(th['amount'])
-        assert(len(details['token_name']) and len(details['token_short_name']))
-        assert(1 <= details['rate'] <= 10**12)
+        if not len(details['token_name']) or not len(details['token_short_name']):
+            raise ValidationError
+        if details['rate'] < 1 or details['rate'] > 10**12:
+            raise ValidationError
         check.is_address(details['admin_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
-        assert(details['stop_date'] >= details['start_date'] + 5*60)
-        assert(details['hard_cap'] >= details['soft_cap'])
-        assert(details['soft_cap'] >= 0)
+        if details['stop_date'] < details['start_date'] + 5*60:
+            raise ValidationError
+        if details['hard_cap'] < details['soft_cap']:
+            raise ValidationError
+        if details['soft_cap'] < 0:
+            raise ValidationError
         for th in details['token_holders']:
             check.is_address(th['address'])
-            assert(th['amount'] > 0)
+            if th['amount'] < 0:
+                raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
                 test_logger.error('Error freeze date in ICO serializer')
                 raise ValidationError({'result': 2}, code=400)
@@ -388,20 +407,29 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
         min_amount = 0
         for bonus in amount_bonuses:
             if bonus.get('min_amount', None) is not None:
-                assert(bonus.get('max_amount', None) is not None)
-                assert(int(bonus['min_amount']) >= min_amount)
+                if bonus.get('max_amount', None) is None:
+                    raise ValidationError
+                if int(bonus['min_amount']) < min_amount:
+                    raise ValidationError
                 min_amount = int(bonus['max_amount'])
-            assert(int(bonus['min_amount']) < int(bonus['max_amount']))
-            assert(0.1 <= bonus['bonus'])
+            if int(bonus['min_amount']) >= int(bonus['max_amount']):
+                raise ValidationError
+            if bonus['bonus'] < 0.1:
+                raise ValidationError
         time_bonuses = details['time_bonuses']
         for bonus in time_bonuses:
             if bonus.get('min_amount', None) is not None:
-                assert(bonus.get('max_amount', None) is not None)
-                assert(0 <= int(bonus['min_amount']) < int(bonus['max_amount']) <= int(details['hard_cap']))
+                if bonus.get('max_amount', None) is None:
+                    raise ValidationError
+                if not (0 <= int(bonus['min_amount']) < int(bonus['max_amount']) <= int(details['hard_cap'])):
+                    raise ValidationError
             if bonus.get('min_time', None) is not None:
-                assert(bonus.get('max_time', None) is not None)
-                assert(int(details['start_date']) <= int(bonus['min_time']) < int(bonus['max_time']) <= int(details['stop_date']))
-            assert(0.1 <= bonus['bonus'])
+                if bonus.get('max_time', None) is None:
+                    raise ValidationError
+                if not (int(details['start_date']) <= int(bonus['min_time']) < int(bonus['max_time']) <= int(details['stop_date'])):
+                    raise ValidationError
+            if bonus['bonus'] < 0.1:
+                raise ValidationError
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
@@ -455,17 +483,23 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
           
     def validate(self, details):
         now = timezone.now().timestamp() + 600
-        assert('"' not in details['token_name'] and '\n' not in details['token_name'])
-        assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
-        assert(0 <= details['decimals'] <= 50)
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details['token_short_name']:
+            raise ValidationError
+        if not (0 <= details['decimals'] <= 50):
+            raise ValidationError
         for th in details['token_holders']:
             th['amount'] = int(th['amount'])
-        assert('admin_address' in details and 'token_holders' in details)
-        assert(len(details['token_name']) and len(details['token_short_name']))
+        if 'admin_address' not in details or 'token_holders' not in details:
+            raise ValidationError
+        if details['token_name'] == '' or details['token_short_name'] == '':
+            raise ValidationError
         check.is_address(details['admin_address'])
         for th in details['token_holders']:
             check.is_address(th['address'])
-            assert(th['amount'] > 0)
+            if th['amount'] <= 0:
+                raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
                 test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
@@ -550,9 +584,10 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        assert(details['decimals'] >= 0 and details['decimals'] <= 9)
-        assert(len(details['token_short_name']) > 0)
-        assert(len(details['token_short_name']) <= 8)
+        if details['decimals'] < 0 or details['decimals'] > 9:
+            raise ValidationError
+        if len(details['token_short_name']) == 0 or len(details['token_short_name']) > 9:
+            raise ValidationError
 
 
 class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
@@ -581,17 +616,25 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        assert('"' not in details['token_name'] and '\n' not in details['token_name'])
-        assert('"' not in details['token_short_name'] and '\n' not in details['token_short_name'])
-        assert(0 <= details['decimals'] <= 9)
-        assert('admin_address' in details)
-        assert(len(details['token_name']) and len(details['token_short_name']))
-        assert(1 <= details['rate'] <= 10**12)
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details['token_short_name']:
+            raise ValidationError
+        if details['decimals'] < 0 or details['decimals'] > 9:
+            raise ValidationError
+        if 'admin_address' not in details:
+            raise ValidationError
+        if len(details['token_name']) == '' or len(details['token_short_name']) == '':
+            raise ValidationError
+        if not (1 <= details['rate'] <= 10**12):
+            raise ValidationError
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
-        assert(details['stop_date'] >= details['start_date'] + 5*60)
+        if details['stop_date'] < details['start_date'] + 5*60:
+            raise ValidationError
         details['hard_cap'] = int(details['hard_cap'])
-        assert(details['hard_cap'] >= 10)
+        if details['hard_cap'] < 10:
+            raise ValidationError
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

@@ -4,7 +4,8 @@ from lastwill.settings import *
 
 
 def move_funds(network):
-    assert (network in ['RSK_MAINNET', 'RSK_TESTNET'])
+    if network not in ['RSK_MAINNET', 'RSK_TESTNET']:
+        raise Exception('bad network')
     details = ContractDetailsLastwill.objects.filter(
         btc_duty__gt=0
     ).order_by('btc_duty')
