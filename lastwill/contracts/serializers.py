@@ -250,7 +250,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
     def validate(self, details):
         if 'user_address' not in details or 'heirs' not in details:
             raise ValidationError
-        if 'active_to' not details or 'check_interval' not in details:
+        if 'active_to' not in details or 'check_interval' not in details:
             raise ValidationError
         if details['check_interval'] > 315360000:
             raise ValidationError
@@ -360,9 +360,9 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             details['token_id'] = token_model.id
             details['token_type'] = token_details.token_type
         else:
-            if '"' in details['token_name'] or '\n' in details['token_name']):
+            if '"' in details['token_name'] or '\n' in details['token_name']:
                 raise ValidationError
-            if '"' in details['token_short_name'] or '\n' in details['token_short_name']):
+            if '"' in details['token_short_name'] or '\n' in details['token_short_name']:
                 raise ValidationError
             if details['decimals'] < 0 or details['decimals'] > 50:
                 raise ValidationError
