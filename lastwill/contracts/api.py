@@ -468,4 +468,4 @@ def load_airdrop(request):
             address=x['address'],
             amount=x['amount']
     ) for x in request.data.get('addresses')])
-    return {'result': 'ok'}
+    return JsonResponse({'result': 'ok'})

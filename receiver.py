@@ -15,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
-    WhitelistAddress
+    WhitelistAddress, AirdropAddress
 )
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
@@ -250,15 +250,10 @@ class Receiver(threading.Thread):
 
     def airdrop(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
-        for addr in message['airdropAddresses']:
-            airdrop_address = AirdropAddress.objects.filter(
-                contract=contract, address=addr
-            ).first()
-            if message['status'] == 'COMMITED':
-                airdrop_address.state = 'commited'
-            else:
-                airdrop_address.state = 'progress'
-            airdrop_address.save()
+        AirdropAddress.objects.filter(
+                contract=contract,
+                address__in=message['airdroppedAddresses'].keys()
+        ).update(state='processing' if message['status'] == 'COMMITTED' else 'sent')
 
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')
