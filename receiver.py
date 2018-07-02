@@ -15,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
-    WhitelistAddress
+    WhitelistAddress, AirdropAddress
 )
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
