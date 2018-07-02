@@ -457,8 +457,8 @@ class ContractDetailsNeoICO(CommonDetails):
             raise TxFail()
         print('result of send raw transaction: ', result)
         self.contract.save()
-        self.neo_contract.tx_hash = tx.ToJson()['txid']
-        self.neo_contract.save()
+        self.neo_contract_crowdsale.tx_hash = tx.ToJson()['txid']
+        self.neo_contract_crowdsale.save()
         return
 
     @postponable
