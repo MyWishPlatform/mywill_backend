@@ -465,7 +465,7 @@ class CommonDetails(models.Model):
             send_mail(
                     common_subject,
                     common_text.format(
-                        contract_type_name=self.contract.get_all_details_model[self.contract.contract_type]['name'],
+                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
                         link=network_link.format(address=eth_contract.address),
                         network_name=network_name
                     ),
