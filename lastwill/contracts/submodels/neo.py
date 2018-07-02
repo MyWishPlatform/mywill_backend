@@ -54,7 +54,6 @@ class ContractDetailsNeo(CommonDetails):
     @logging
     def compile(self):
         print('standalone token contract compile')
-        self.lgr.append()
         if self.temp_directory:
             print('already compiled')
             self.lgr.append('already compiled')
