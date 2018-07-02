@@ -262,7 +262,7 @@ class Receiver(threading.Thread):
         print('received', body, properties, method, flush=True)
         try:
             message = json.loads(body.decode())
-            if message.get('status', '') == 'COMMITTED' or message.get('status', '') == 'PENDING' and properties.type == 'airdropAddresses':
+            if message.get('status', '') == 'COMMITTED' or message.get('status', '') == 'PENDING' and properties.type == 'airdrop':
                 getattr(self, properties.type, self.unknown_handler)(message)
         except (TxFail, AlreadyPostponed):
             ch.basic_ack(delivery_tag=method.delivery_tag)
