@@ -8,7 +8,7 @@ django.setup()
 from django.utils import timezone
 from django.core.mail import send_mail
 
-from lastwill.contracts.models import Contract
+from lastwill.contracts.submodels.common import Contract
 from lastwill.parint import *
 from lastwill.settings import DEFAULT_FROM_EMAIL
 import email_messages

@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError
 import lastwill.check as check
 from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
-from .models import Contract, Heir, EthContract, TokenHolder, WhitelistAddress
+from .submodels.common import Contract, Heir, EthContract, TokenHolder, WhitelistAddress
 from .submodels.neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
 from .submodels.ico import ContractDetailsToken, ContractDetailsICO
 from .submodels.airdrop import ContractDetailsAirdrop, AirdropAddress

@@ -13,7 +13,7 @@ from neo.IO.MemoryStream import StreamManager
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-from lastwill.contracts.models import *
+from lastwill.contracts.submodels.common import *
 from email_messages import *
 
 

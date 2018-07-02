@@ -1,6 +1,6 @@
 from django.db import models
 
-from lastwill.contracts.models import *
+from lastwill.contracts.submodels.common import *
 
 
 class AirdropAddress(models.Model):

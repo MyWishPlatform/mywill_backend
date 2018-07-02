@@ -28,7 +28,7 @@ from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish
-from .models import EthContract, send_in_queue
+from .submodels.common import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
 

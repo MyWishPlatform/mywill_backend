@@ -12,7 +12,7 @@ django.setup()
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
-from lastwill.contracts.models import (
+from lastwill.contracts.submodels.common import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
     WhitelistAddress
 )
