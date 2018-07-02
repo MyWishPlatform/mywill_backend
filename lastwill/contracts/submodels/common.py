@@ -307,7 +307,8 @@ class Contract(models.Model):
             self.contract_type
         ).__name__.lower()+'_set').first()
 
-    def get_all_details_model(self):
+    @classmethod
+    def get_all_details_model(cls):
         contract_details_types = {}
 
         lastwill = apps.get_model('contracts', 'ContractDetailsLastwill')
@@ -332,8 +333,8 @@ class Contract(models.Model):
         return contract_details_types
 
     @classmethod
-    def get_details_model(self, contract_type):
-        contract_details_types = self.get_all_details_model()
+    def get_details_model(cls, contract_type):
+        contract_details_types = cls.get_all_details_model()
         return contract_details_types[contract_type]['model']
 
 

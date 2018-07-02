@@ -23,12 +23,10 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress
-from lastwill.contracts.submodels.airdrop import AirdropAddress
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish
-from .submodels.common import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
 

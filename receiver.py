@@ -12,11 +12,10 @@ django.setup()
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
-from lastwill.contracts.submodels.common import (
+from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
-    WhitelistAddress
+    WhitelistAddress, AirdropAddress
 )
-from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.api import create_payment
