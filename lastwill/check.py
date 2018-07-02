@@ -22,7 +22,7 @@ def is_percent(number):
         number = int(number)
         if number < 1 or number > 100:
             raise ValueError
-    except (ValueError)
+    except ValueError:
         die('{} is bad percent'.format(number))
 
 

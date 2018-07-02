@@ -34,7 +34,7 @@ class ProfileAndTotpSocialLoginView(SocialLoginView):
             if not totp:
                 logout(self.request)
                 raise PermissionDenied(1032)
-            if not valid_totp(self.user, totp)
+            if not valid_totp(self.user, totp):
                 logout(self.request)
                 raise PermissionDenied(1033)
         return super().login()
