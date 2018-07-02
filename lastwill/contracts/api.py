@@ -23,13 +23,14 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
+from lastwill.contracts.models import Contract, WhitelistAddress
+from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish
 from .models import EthContract, send_in_queue
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
-from .decorators import contract_details_types
+
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type):
     wish_cost = to_wish('ETH', int(cost))
@@ -395,8 +396,9 @@ def get_statistics_landing(request):
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
     answer = {}
-    for i, contract in enumerate(contract_details_types):
-        answer[i] = contract['model'].min_cost() / 10**18
+    contract_details_types = Contract.get_all_details_model()
+    for i in contract_details_types:
+        answer[i] = contract_details_types[i]['model'].min_cost() / 10**18
     return JsonResponse(answer)
 
 @api_view(http_method_names=['POST'])

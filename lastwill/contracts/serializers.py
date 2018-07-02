@@ -13,12 +13,13 @@ from rest_framework.exceptions import ValidationError
 import lastwill.check as check
 from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
-from .models import (
-    Contract, Heir, EthContract, ContractDetailsDelayedPayment,
-    TokenHolder,  WhitelistAddress, ContractDetailsLastwill, NeoContract,
-    ContractDetailsLostKey, ContractDetailsAirdrop, ContractDetailsNeoICO,
-    ContractDetailsICO, ContractDetailsNeo, ContractDetailsToken, AirdropAddress
-)
+from .models import Contract, Heir, EthContract, TokenHolder, WhitelistAddress
+from .submodels.neo import  NeoContract, ContractDetailsNeoICO, ContractDetailsNeo
+from .submodels.ico import ContractDetailsToken, ContractDetailsICO
+from .submodels.airdrop import ContractDetailsAirdrop, AirdropAddress
+from .submodels.lastwill import ContractDetailsLastwill
+from .submodels.lostkey import ContractDetailsLostKey
+from .submodels.deffered import ContractDetailsDelayedPayment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
