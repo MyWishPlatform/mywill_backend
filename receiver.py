@@ -11,6 +11,7 @@ import django
 django.setup()
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
@@ -266,12 +267,12 @@ class Receiver(threading.Thread):
         for address, amount in message['airdroppedAddresses'].items():
             query |= Q(address=address, amount=amount)
 
-        addrs = AirdropAddress.objects.filter(contract=contract, state=old_state, query).distinct()
+        addrs = AirdropAddress.objects.filter(query, contract=contract, active=True, state=old_state).distinct('address', 'amount')
 
         if addrs.count == 0 and message['status'] == 'COMMITED': # in case 'pending' msg was lost or dropped, but 'commited' is there
-            addrs = AirdropAddress.objects.filter(contract=contract, state='added', query).distinct()
+            addrs = AirdropAddress.objects.filter(query, contract=contract, active=True, state='added').distinct('address', 'amount')
 
-        addrs.update(state=new_state)
+        AirdropAddress.objects.filter(id__in=[x.id for x in addrs]).update(state=new_state)
 
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')
