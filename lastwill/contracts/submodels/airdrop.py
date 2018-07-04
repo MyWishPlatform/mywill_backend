@@ -5,11 +5,12 @@ from lastwill.contracts.submodels.common import *
 
 class AirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
-    address = models.CharField(max_length=50)
+    address = models.CharField(max_length=50, db_index=True)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
     amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
+        db_index=True
     )
 
 

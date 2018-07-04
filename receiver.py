@@ -5,6 +5,7 @@ import threading
 import json
 import sys
 from types import FunctionType
+import datetime
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
@@ -137,7 +138,7 @@ class Receiver(threading.Thread):
         except:
             import time
             time.sleep(0.5)
-        print('launch ok')
+        print('launch ok', flush=True)
         test_logger.info('RECEIVER: launch ok')
 
     def ownershipTransferred(self, message):
@@ -249,6 +250,7 @@ class Receiver(threading.Thread):
         test_logger.info('RECEIVER: time changed ok')
 
     def airdrop(self, message):
+        print(datetime.datetime.now(), flush=True)
         contract = EthContract.objects.get(id=message['contractId']).contract
         new_state = {
                 'COMMITTED': 'sent',
@@ -263,20 +265,47 @@ class Receiver(threading.Thread):
         }[message['status']]
 
 
-        query = Q()
-        for address, amount in message['airdroppedAddresses'].items():
-            query |= Q(address=address, amount=amount)
+        ids = []
 
-        addrs = AirdropAddress.objects.filter(query, contract=contract, active=True, state=old_state).distinct('address', 'amount')
+        for js in message['airdroppedAddresses']:
+            address = js['address']
+            amount = js['value']
 
-        if addrs.count == 0 and message['status'] == 'COMMITTED': # in case 'pending' msg was lost or dropped, but 'commited' is there
-            addrs = AirdropAddress.objects.filter(query, contract=contract, active=True, state='added').distinct('address', 'amount')
+            addr = AirdropAddress.objects.filter(
+                    address=address,
+                    amount=amount,
+                    contract=contract,
+                    active=True,
+                    state=old_state,
+            ).exclude(id__in=ids).first()
 
-        AirdropAddress.objects.filter(id__in=[x.id for x in addrs]).update(state=new_state)
-        
-        if contract.airdropaddress_set.filter(state='added', active=True).count() == 0:
-            contract.state = 'DONE'
+            # in case 'pending' msg was lost or dropped, but 'commited' is there
+            if addr is None and message['status'] == 'COMMITTED':
+                old_state = 'added'
+                addr = AirdropAddress.objects.filter(
+                        address=address,
+                        amount=amount,
+                        contract=contract,
+                        active=True,
+                        state=old_state
+                ).exclude(id__in=ids).first()
+            if addr is None:
+                continue
+
+            ids.append(addr.id)
+
+        if len(message['airdroppedAddresses']) != len(ids):
+            print('='*40, len(message['airdroppedAddresses']), len(ids), flush=True)
+
+        print('changing state for', ids, 'to', new_state, flush=True)
+
+        AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
+
+        if contract.airdropaddress_set.filter(state__in=('added', 'processing'), active=True).count() == 0:
+            contract.state = 'ENDED'
             contract.save()
+
+        print(datetime.datetime.now(), flush=True)
 
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')
@@ -286,7 +315,7 @@ class Receiver(threading.Thread):
         print('received', body, properties, method, flush=True)
         try:
             message = json.loads(body.decode())
-            if message.get('status', '') == 'COMMITTED' or message.get('status', '') == 'PENDING' and properties.type == 'airdrop':
+            if message.get('status', '') == 'COMMITTED' or properties.type == 'airdrop':
                 getattr(self, properties.type, self.unknown_handler)(message)
         except (TxFail, AlreadyPostponed):
             ch.basic_ack(delivery_tag=method.delivery_tag)

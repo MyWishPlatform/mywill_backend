@@ -26,6 +26,7 @@ from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
+import lastwill.check as check
 from exchange_API import to_wish
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
@@ -464,10 +465,14 @@ def load_airdrop(request):
         raise PermissionDenied
     if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
         raise PermissionDenied
+    print('air deleting', flush=True)
     contract.airdropaddress_set.all().delete()
+    print('air inserting', flush=True)
+    addresses = request.data.get('addresses')
     AirdropAddress.objects.bulk_create([AirdropAddress(
             contract=contract,
-            address=x['address'],
+            address=x['address'].lower(),
             amount=x['amount']
-    ) for x in request.data.get('addresses')])
+    ) for x in addresses])
+    print('air ok', flush=True)
     return JsonResponse({'result': 'ok'})
