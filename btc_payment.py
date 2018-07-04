@@ -31,7 +31,7 @@ while 1:
         })
         result = json.loads(r.content.decode())['result']
         if result is None:
-            print(btc_account.address, result, flush=True)
+            print(btc_account.address, result, json.loads(r.content.decode())['error'], flush=True)
             continue
         new_balance = int(result * 10**8)
         if new_balance > btc_account.balance: # enable funds output

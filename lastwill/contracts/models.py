@@ -611,7 +611,7 @@ class ContractDetailsLastwill(CommonDetails):
         Cg = 780476
         CBg = 26561
         Tg = 22000
-        Gp = 20 * 10 ** 9
+        Gp = 50 * 10 ** 9
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -808,7 +808,7 @@ class ContractDetailsLostKey(CommonDetails):
         Cg = 1476117
         CBg = 28031
         Tg = 22000
-        Gp = 20 * 10 ** 9
+        Gp = 50 * 10 ** 9
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -1450,7 +1450,6 @@ class ContractDetailsNeo(CommonDetails):
     @logging
     def compile(self):
         print('standalone token contract compile')
-        self.lgr.append()
         if self.temp_directory:
             print('already compiled')
             self.lgr.append('already compiled')
@@ -1610,7 +1609,7 @@ class ContractDetailsNeo(CommonDetails):
         if not result:
             raise TxFail()
         print('result of send raw transaction: ', result)
-        self.lgr.append('result of send raw transaction: ', result)
+        self.lgr.append('result of send raw transaction: ' + str(result))
         assert(result)
         self.contract.save()
         return
