@@ -251,13 +251,13 @@ class Receiver(threading.Thread):
     def airdrop(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
         new_state = {
-                'COMMITED': 'sent',
+                'COMMITTED': 'sent',
                 'PENDING': 'processing',
                 'REJECTED': 'added'
         }[message['status']]
 
         old_state = {
-                'COMMITED': 'processing',
+                'COMMITTED': 'processing',
                 'PENDING': 'added',
                 'REJECTED': 'processing'
         }[message['status']]
@@ -269,10 +269,14 @@ class Receiver(threading.Thread):
 
         addrs = AirdropAddress.objects.filter(query, contract=contract, active=True, state=old_state).distinct('address', 'amount')
 
-        if addrs.count == 0 and message['status'] == 'COMMITED': # in case 'pending' msg was lost or dropped, but 'commited' is there
+        if addrs.count == 0 and message['status'] == 'COMMITTED': # in case 'pending' msg was lost or dropped, but 'commited' is there
             addrs = AirdropAddress.objects.filter(query, contract=contract, active=True, state='added').distinct('address', 'amount')
 
         AirdropAddress.objects.filter(id__in=[x.id for x in addrs]).update(state=new_state)
+        
+        if contract.airdropaddress_set.filter(state='added', active=True).count() == 0:
+            contract.state = 'DONE'
+            contract.save()
 
     def callback(self, ch, method, properties, body):
         test_logger.info('RECEIVER: callback params')

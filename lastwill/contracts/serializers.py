@@ -680,9 +680,9 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added').count()
-        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing').count()
-        res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent').count()
+        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
+        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing', active=True).count()
+        res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent', active=True).count()
         return res
 
     def create(self, contract, contract_details):

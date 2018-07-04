@@ -449,10 +449,11 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         contract = Contract.objects.get(id=contract_id)
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
-        result = result.filter(contract=contract, active=True).order_by('id')
+        result = result.filter(contract=contract, active=True)
         state = self.request.query_params.get('state', None)
         if state:
             result = result.filter(state=state)
+        result = result.order_by('id')
         return result
 
 
@@ -461,6 +462,9 @@ def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     if contract.user != request.user or contract.contract_type != 8 or contract.state != 'ACTIVE':
         raise PermissionDenied
+    if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
+        raise PermissionDenied
+    contract.airdropaddress_set.all().delete()
     AirdropAddress.objects.bulk_create([AirdropAddress(
             contract=contract,
             address=x['address'],
