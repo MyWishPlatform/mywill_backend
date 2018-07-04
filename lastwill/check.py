@@ -19,8 +19,10 @@ def is_email(string):
 
 def is_percent(number):
     try:
-        assert 1 <= int(number) <= 100
-    except (ValueError, AssertionError):
+        number = int(number)
+        if number < 1 or number > 100:
+            raise ValueError
+    except ValueError:
         die('{} is bad percent'.format(number))
 
 

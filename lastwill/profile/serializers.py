@@ -3,7 +3,6 @@ import requests
 from bip32utils import BIP32Key
 from bip32utils import BIP32_HARDEN
 from eth_keys import keys
-import pyotp
 
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied
@@ -16,7 +15,7 @@ from rest_auth.serializers import (
 from lastwill.profile.models import Profile
 from lastwill.settings import ROOT_PUBLIC_KEY, BITCOIN_URLS
 from lastwill.payments.models import BTCAccount
-
+from lastwill.profile.helpers import valid_totp
 
 def init_profile(user, is_social=False, lang='en'):
 
@@ -58,7 +57,7 @@ class UserLoginSerializer2FA(LoginSerializer):
                 totp = attrs.get('totp', None)
                 if not totp:
                     raise PermissionDenied(1019)
-                if totp != pyotp.TOTP(user.profile.totp_key).now():
+                if not valid_totp(user, totp):
                     raise PermissionDenied(1020)
         return res
 
@@ -70,9 +69,7 @@ class PasswordChangeSerializer2FA(PasswordChangeSerializer):
         res = super().validate(attrs)
         if self.user.profile.use_totp:
             totp = attrs.get('totp', None)
-            if not totp or totp != pyotp.TOTP(
-                    self.user.profile.totp_key
-            ).now():
+            if totp is None or not valid_totp(self.user, totp):
                 raise PermissionDenied()
         return res
 
@@ -85,8 +82,5 @@ class PasswordResetConfirmSerializer2FA(PasswordResetConfirmSerializer):
             totp = attrs.get('totp', None)
             if not totp:
                 raise PermissionDenied(1021)
-            print(self.user.email, self.user.id, totp, pyotp.TOTP(
-                self.user.profile.totp_key
-            ).now())
-            if totp != pyotp.TOTP(self.user.profile.totp_key).now():
+            if not valid_totp(self.user, totp):
                 raise PermissionDenied(1022)

@@ -10,17 +10,14 @@ from lastwill.settings import test_logger, NETWORKS
 from email_messages import *
 
 
-contract_details_types = []
+# contract_details_types = []
 
 
 def contract_details(name):
     def w(c):
-        contract_details_types.append({
-                'name': name,
-                'model': c,
-        })
         return c
     return w
+
 
 class NeedRequeue(Exception):
     pass

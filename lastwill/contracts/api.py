@@ -17,17 +17,17 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, test_logger
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import contract_details_types, Contract, WhitelistAddress, AirdropAddress
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-from exchange_API import to_wish, convert
-from .models import EthContract, send_in_queue
+import lastwill.check as check
+from exchange_API import to_wish
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
 
@@ -82,9 +82,6 @@ def get_code(request):
     ).sol_path)) as f:
         return Response({'result': f.read()})
 
-@api_view()
-def get_contract_types(request):
-    return Response({x: contract_details_types[x]['name'] for x in range(len(contract_details_types))})
 
 @api_view()
 def test_comp(request):
@@ -132,8 +129,8 @@ def deploy(request):
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
 
-    assert(contract.user == request.user)
-    assert(contract.state in ('CREATED', 'WAITING_FOR_PAYMENT'))
+    if contract.user != request.user or contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
+        raise PermissionDenied
 
     # TODO: if type==4 check token contract is not at active crowdsale
     cost = contract.cost
@@ -159,9 +156,8 @@ def deploy(request):
 @api_view(http_method_names=['POST'])
 def i_am_alive(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    assert(contract.user == request.user)
-    assert(contract.state == 'ACTIVE')
-    assert(contract.contract_type in (0, 1))
+    if contract.user != request.user or contract.state != 'ACTIVE' or contract.contract_type not in (0, 1):
+        raise PermissionDenied
     details = contract.get_details()
     if details.last_press_imalive:
         delta = timezone.now() - details.last_press_imalive
@@ -178,9 +174,8 @@ def i_am_alive(request):
 @api_view(http_method_names=['POST'])
 def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    assert(contract.user == request.user)
-    assert(contract.contract_type in (0, 1))
-    assert(contract.state in ['ACTIVE', 'EXPIRED'])
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (0, 1):
+        raise PermissionDenied()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'cancel', queue)
     return Response('ok')
@@ -191,7 +186,8 @@ class ICOtokensView(View):
     def get(self, request, *args, **kwargs):
 
         address = request.GET.get('address', None)
-        assert (EthContract.objects.filter(address=address) != [])
+        if not EthContract.objects.filter(address=address):
+            raise PermissionDenied
         sold_tokens = count_sold_tokens(address)
         return Response({'sold tokens': sold_tokens})
 
@@ -290,12 +286,13 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'launch': len(in_progress),
         'now_launch': len(now_in_progress)
         }
-    for num, ctype in enumerate(contract_details_types):
-        answer['contract_type_'+str(num)] = contracts.filter(
-            contract_type=num
+    contract_details_types = Contract.get_all_details_model()
+    for ctype in contract_details_types:
+        answer['contract_type_'+str(ctype)] = contracts.filter(
+            contract_type=ctype
         ).count()
-        answer['contract_type_'+str(num)+'_new'] = contracts.filter(
-            contract_type=num
+        answer['contract_type_'+str(ctype)+'_new'] = contracts.filter(
+            contract_type=ctype
         ).filter(created_date__lte=now, created_date__gte=day).count()
     return answer
 
@@ -398,17 +395,16 @@ def get_statistics_landing(request):
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
     answer = {}
-    for i, contract in enumerate(contract_details_types):
-        # answer[contract['name']] = contract['model'].min_cost() * convert('WISH', 'ETH')['ETH'] / 10 ** 18
-        answer[i] = contract['model'].min_cost() / 10 ** 18
+    contract_details_types = Contract.get_all_details_model()
+    for i in contract_details_types:
+        answer[i] = contract_details_types[i]['model'].min_cost() / 10**18
     return JsonResponse(answer)
 
 @api_view(http_method_names=['POST'])
 def neo_crowdsale_finalize(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    assert(contract.user == request.user)
-    assert(contract.contract_type == 7)
-    assert(contract.state == 'ACTIVE')
+    if contract.user != request.user or contract.contract_type != 7 or contract.state != 'ACTIVE':
+        raise PermissionDenied
     neo_details = contract.get_details()
     now = datetime.datetime.now().timestamp()
     if neo_details.stop_date <= now:
@@ -437,14 +433,14 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
         contract = Contract.objects.get(id=contract_id)
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
-        else:
-            result = result.filter(contract=contract, active=True)
-            return result
+        result = result.filter(contract=contract, active=True)
+        return result
 
 
 class AirdropAddressViewSet(viewsets.ModelViewSet):
     queryset = AirdropAddress.objects.all()
     serializer_class = AirdropAddressSerializer
+    permission_classes = (ReadOnly,)
 
     def get_queryset(self):
         result = self.queryset
@@ -454,6 +450,29 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         contract = Contract.objects.get(id=contract_id)
         if contract.user != self.request.user:
             raise ValidationError({'result': 2}, code=403)
-        else:
-            result = result.filter(contract=contract, active=True)
-            return result
+        result = result.filter(contract=contract, active=True)
+        state = self.request.query_params.get('state', None)
+        if state:
+            result = result.filter(state=state)
+        result = result.order_by('id')
+        return result
+
+
+@api_view(http_method_names=['POST'])
+def load_airdrop(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    if contract.user != request.user or contract.contract_type != 8 or contract.state != 'ACTIVE':
+        raise PermissionDenied
+    if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
+        raise PermissionDenied
+    print('air deleting', flush=True)
+    contract.airdropaddress_set.all().delete()
+    print('air inserting', flush=True)
+    addresses = request.data.get('addresses')
+    AirdropAddress.objects.bulk_create([AirdropAddress(
+            contract=contract,
+            address=x['address'].lower(),
+            amount=x['amount']
+    ) for x in addresses])
+    print('air ok', flush=True)
+    return JsonResponse({'result': 'ok'})
