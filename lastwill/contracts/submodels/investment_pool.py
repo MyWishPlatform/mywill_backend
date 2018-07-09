@@ -49,7 +49,10 @@ class ContractDetailsInvestmentPool(CommonDetails):
             print('already compiled')
             self.lgr.append('already compiled')
             return
-        dest, preproc_config = create_directory(self, sour_path='lastwill/investment_pool')
+        dest, preproc_config = create_directory(
+            self, sour_path='lastwill/investment_pool',
+            config_name='investment-pool-config.json'
+        )
         self.lgr.append('dest %s' % dest)
         preproc_params = {'constants': {}}
 
@@ -67,25 +70,18 @@ class ContractDetailsInvestmentPool(CommonDetails):
                 int(self.max_wei))
 
         test_investment_pool_params(preproc_config, preproc_params, dest)
-        address = NETWORKS[self.contract.network.name]['address']
-
-        # with open(preproc_config, 'w') as f:
-        #     f.write(json.dumps(preproc_params))
-        # if os.system(
-        #         "/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
-        #             dest=dest)
-        # ):
-        #     raise Exception('compiler error while deploying')
-        # with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json'),
-        #           'rb') as f:
-        #     crowdsale_json = json.loads(f.read().decode('utf-8-sig'))
-        # with open(path.join(dest, 'build/TemplateCrowdsale.sol'), 'rb') as f:
-        #     source_code = f.read().decode('utf-8-sig')
-        # self.eth_contract = create_ethcontract_in_compile(
-        #     crowdsale_json['abi'], crowdsale_json['bytecode'][2:],
-        #     crowdsale_json['compiler']['version'], self.contract, source_code
-        # self.save()
-        return super().deploy()
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        with open(path.join(dest, 'build/contracts/InvestmentPool.json'),
+                  'rb') as f:
+            investment_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'build/InvestmentPool.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        self.eth_contract = create_ethcontract_in_compile(
+            investment_json['abi'], investment_json['bytecode'][2:],
+            investment_json['compiler']['version'], self.contract, source_code
+        )
+        self.save()
 
     @blocking
     @postponable

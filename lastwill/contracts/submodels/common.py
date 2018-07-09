@@ -167,7 +167,14 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
 
 
 def test_investment_pool_params(config, params, dest):
-    pass
+    with open(config, 'w') as f:
+        f.write(json.dumps(params))
+    if os.system("/bin/bash -c 'cd {dest} && yarn compile'".format(
+                dest=dest)):
+        raise Exception('compiler error while testing')
+    if os.system("/bin/bash -c 'cd {dest} &&  yarn test'".format(
+            dest=dest)):
+        raise Exception('testing error')
 
 
 def test_crowdsale_params(config, params, dest):
