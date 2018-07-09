@@ -3,6 +3,17 @@ from django.db import models
 from lastwill.contracts.submodels.common import *
 
 
+class InvestAddress(models.Model):
+    contract = models.ForeignKey(Contract, null=True)
+    address = models.CharField(max_length=50, db_index=True)
+    take_away = models.BooleanField(default=False)
+    created_date = models.DateTimeField(auto_now_add=True)
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
+        db_index=True
+    )
+
+
 @contract_details('Investment Pool')
 class ContractDetailsInvestmentPool(CommonDetails):
 
@@ -14,7 +25,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
-    decimals = models.IntegerField()
     whitelist = models.BooleanField(default=False)
     investment = models.BooleanField(default=False)
     investment_address = models.CharField(max_length=50, default='')

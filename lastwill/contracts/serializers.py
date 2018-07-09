@@ -19,7 +19,8 @@ from lastwill.contracts.models import (
         ContractDetailsToken, ContractDetailsICO,
         ContractDetailsAirdrop, AirdropAddress,
         ContractDetailsLastwill, ContractDetailsLostKey,
-        ContractDetailsDelayedPayment
+        ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
+        InvestAddress
 )
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
@@ -695,7 +696,68 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         return super().update(details, kwargs)
 
+
 class AirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirdropAddress
         fields = ('address', 'amount', 'state')
+
+
+class InvestAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestAddress
+        fields = ('address', 'amount')
+
+
+class ContractDetailsICOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsICO
+        fields = (
+                'soft_cap', 'hard_cap', 'start_date', 'stop_date',
+                'admin_address', 'admin_percent', 'ico_address',
+                'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
+                'investment', 'investment_address', 'send_tokens_hard_cap',
+                'send_tokens_soft_cap'
+        )
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        now = timezone.now().timestamp() + 600
+        for k in ('hard_cap', 'soft_cap'):
+            details[k] = int(details[k])
+        for k in ('max_wei', 'min_wei'):
+            details[k] = (int(details[k]) if details.get(k, None) else None)
+        if details['min_wei'] is not None and details['max_wei'] is not None and details['min_wei'] > details['max_wei']:
+            raise ValidationError
+        if details['max_wei'] is not None and details['max_wei'] < 10*10**18:
+            raise ValidationError
+        if 'admin_address' not in details or 'admin_percent' not in details:
+            raise ValidationError
+        check.is_address(details['admin_address'])
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+            raise ValidationError({'result': 1}, code=400)
+        if details['stop_date'] < details['start_date'] + 5*60:
+            raise ValidationError
+        if details['hard_cap'] < details['soft_cap']:
+            raise ValidationError
+        if details['soft_cap'] < 0:
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        invest_address_serializer = InvestAddressSerializer()
+        res['investment_addresses'] = [invest_address_serializer.to_representation(th) for th in contract_details.contract.investaddress_set.order_by('id').all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
