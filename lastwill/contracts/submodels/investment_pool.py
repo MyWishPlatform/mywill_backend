@@ -55,6 +55,9 @@ class ContractDetailsInvestmentPool(CommonDetails):
 
         preproc_params["D_SOFT_CAP_WEI"] = str(self.soft_cap)
         preproc_params["D_HARD_CAP_WEI"] = str(self.hard_cap)
+        preproc_params["D_START_TIME"] = self.start_date
+        preproc_params["D_END_TIME"] = self.stop_date
+        preproc_params["D_WHITELIST"] = "true" if self.whitelist else "false"
 
         if self.min_wei:
             preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(
@@ -65,11 +68,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
 
         test_investment_pool_params(preproc_config, preproc_params, dest)
         address = NETWORKS[self.contract.network.name]['address']
-        # preproc_params = add_real_params(
-        #     preproc_params, self.admin_address,
-        #     address, self.cold_wallet_address
-        # )
-        # self.lgr.append(('prepoc params', preproc_params))
+
         # with open(preproc_config, 'w') as f:
         #     f.write(json.dumps(preproc_params))
         # if os.system(
