@@ -166,6 +166,10 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
     return dest, preproc_config
 
 
+def test_investment_pool_params(config, params, dest):
+    pass
+
+
 def test_crowdsale_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))

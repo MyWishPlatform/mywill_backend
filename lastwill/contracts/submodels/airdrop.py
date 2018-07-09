@@ -30,8 +30,9 @@ class ContractDetailsAirdrop(CommonDetails):
         ]
 
     def compile(self, _=''):
-        dest = '/home/contract/lastwill/airdrop-contract/'
-        with open(path.join(dest, 'build/contracts/AirDrop.json'), 'rb') as f:
+        dest = 'lastwill/airdrop-contract/build/contracts/AirDrop.json'
+        dest = path.join(CONTRACTS_DIR, dest)
+        with open(dest, 'rb') as f:
             airdrop_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'contracts/AirDrop.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
