@@ -178,7 +178,7 @@ class ContractSerializer(serializers.ModelSerializer):
             6: ContractDetailsNeoSerializer,
             7: ContractDetailsNeoICOSerializer,
             8: ContractDetailsAirdropSerializer,
-            9: ContractDetailsInvestmentPool
+            9: ContractDetailsInvestmentPoolSerializer
         }[contract_type]
 
 
@@ -710,7 +710,7 @@ class InvestAddressSerializer(serializers.ModelSerializer):
         fields = ('address', 'amount')
 
 
-class ContractDetailsICOSerializer(serializers.ModelSerializer):
+class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsInvestmentPool
         fields = (
