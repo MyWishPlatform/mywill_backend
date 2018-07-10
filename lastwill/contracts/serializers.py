@@ -736,7 +736,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['max_wei'] is not None and details['max_wei'] < 10*10**18:
             raise ValidationError
-        if 'admin_address' not in details or 'admin_percent' not in details:
+        if 'user_address' not in details or 'admin_percent' not in details:
             raise ValidationError
         check.is_address(details['admin_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
