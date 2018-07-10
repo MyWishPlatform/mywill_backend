@@ -743,7 +743,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         check.is_address(details['user_address'])
         if details['token_address']:
             check.is_address(details['token_address'])
-        if details['invest_address']:
+        if details['investment_address']:
             check.is_address(details['user_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
@@ -756,8 +756,6 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        invest_address_serializer = InvestAddressSerializer()
-        res['investment_addresses'] = [invest_address_serializer.to_representation(th) for th in contract_details.contract.investaddress_set.order_by('id').all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
