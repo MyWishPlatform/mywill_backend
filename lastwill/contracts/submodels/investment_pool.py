@@ -20,7 +20,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
     contract = models.ForeignKey(Contract, null=True)
     admin_address = models.CharField(max_length=50)
     admin_percent = models.FloatField()
-    ico_address = models.CharField(max_length=50)
     temp_directory = models.CharField(max_length=36)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     start_date = models.IntegerField()
