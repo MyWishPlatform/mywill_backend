@@ -429,9 +429,6 @@ class CommonDetails(models.Model):
         par_int = ParInt(self.contract.network.name)
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        eth_contract.constructor_arguments = binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else ''
         self.lgr.append('nonce = %d' %nonce)
         print('nonce', nonce, flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
