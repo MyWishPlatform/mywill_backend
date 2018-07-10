@@ -728,7 +728,6 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        now = timezone.now().timestamp() + 600
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
         for k in ('max_wei', 'min_wei'):
