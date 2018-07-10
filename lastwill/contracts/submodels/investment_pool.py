@@ -59,7 +59,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
             self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(
-            self, sour_path='lastwill/investment_pool',
+            self, sour_path='lastwill/investment-pool',
             config_name='investment-pool-config.json'
         )
         self.lgr.append('dest %s' % dest)
