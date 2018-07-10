@@ -48,8 +48,8 @@ class ContractDetailsInvestmentPool(CommonDetails):
     @logging
     def get_arguments(self, *args, **kwargs):
         return [
-            self.admin_address,
-            self.ico_address
+            self.user_address,
+            self.invest_address
         ]
 
     def compile(self, _=''):
