@@ -66,11 +66,16 @@ class ContractDetailsInvestmentPool(CommonDetails):
         self.lgr.append('dest %s' % dest)
         preproc_params = {'constants': {}}
 
-        preproc_params["D_SOFT_CAP_WEI"] = str(self.soft_cap)
-        preproc_params["D_HARD_CAP_WEI"] = str(self.hard_cap)
-        preproc_params["D_START_TIME"] = self.start_date
-        preproc_params["D_END_TIME"] = self.stop_date
-        preproc_params["D_WHITELIST"] = "true" if self.whitelist else "false"
+        preproc_params["constants"]["D_SOFT_CAP_WEI"] = str(self.soft_cap)
+        preproc_params["constants"]["D_HARD_CAP_WEI"] = str(self.hard_cap)
+        preproc_params["constants"]["D_START_TIME"] = self.start_date
+        preproc_params["constants"]["D_END_TIME"] = self.stop_date
+        preproc_params["constants"]["D_WHITELIST"] = "true" if self.whitelist else "false"
+        preproc_params["constants"]["D_CAN_CHANGE_TIMES"] = "true" if self.allow_change_dates else "false"
+        preproc_params["constants"]["D_CAN_FINALIZE_AFTER_HARD_CAP_ONLY_OWNER"] = "true" if self.send_tokens_hard_cap else "false"
+        preproc_params["constants"]["D_CAN_FINALIZE_AFTER_SOFT_CAP_ONLY_OWNER"] = "true" if self.send_tokens_soft_cap else "false"
+        preproc_params["constants"]["D_MIN_VALUE_WEI"] = "0"
+        preproc_params["constants"]["D_MAX_VALUE_WEI"] = "0"
 
         if self.min_wei:
             preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(
