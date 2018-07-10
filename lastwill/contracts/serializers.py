@@ -715,7 +715,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         model = ContractDetailsInvestmentPool
         fields = (
                 'soft_cap', 'hard_cap', 'start_date', 'stop_date',
-                'user_address', 'admin_percent', 'ico_address',
+                'user_address', 'admin_percent', 
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment', 'investment_address', 'send_tokens_hard_cap',
                 'send_tokens_soft_cap'
