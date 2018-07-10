@@ -718,7 +718,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
                 'user_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment_address', 'send_tokens_hard_cap',
-                'send_tokens_soft_cap'
+                'send_tokens_soft_cap', 'investment'
         )
 
     def create(self, contract, contract_details):
@@ -728,6 +728,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
+        details.pop('investment', None)
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
         for k in ('max_wei', 'min_wei'):
