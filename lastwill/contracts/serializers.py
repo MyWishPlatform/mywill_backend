@@ -741,9 +741,9 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         elif details['admin_percent'] < 0.1 or details['admin_percent'] > 1000:
             raise ValidationError
         check.is_address(details['user_address'])
-        if details['token_address']:
+        if details.get('token_address', None):
             check.is_address(details['token_address'])
-        if details['investment_address']:
+        if details.get('investment_address', None):
             check.is_address(details['user_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
