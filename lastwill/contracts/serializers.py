@@ -715,7 +715,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         model = ContractDetailsInvestmentPool
         fields = (
                 'soft_cap', 'hard_cap', 'start_date', 'stop_date',
-                'user_address', 'admin_percent',
+                'user_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment', 'investment_address', 'send_tokens_hard_cap',
                 'send_tokens_soft_cap'
@@ -741,6 +741,10 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         elif details['admin_percent'] < 0.1 or details['admin_percent'] > 1000:
             raise ValidationError
         check.is_address(details['user_address'])
+        if details['token_address']:
+            check.is_address(details['token_address'])
+        if details['invest_address']:
+            check.is_address(details['user_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
         if details['stop_date'] < details['start_date'] + 5*60:

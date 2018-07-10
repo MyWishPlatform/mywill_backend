@@ -27,6 +27,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     whitelist = models.BooleanField(default=False)
     investment = models.BooleanField(default=False)
     investment_address = models.CharField(max_length=50, default='')
+    token_address = models.CharField(max_length=50, default='')
     allow_change_dates = models.BooleanField(default=False)
     send_tokens_hard_cap = models.BooleanField(default=False)
     send_tokens_soft_cap = models.BooleanField(default=False)
