@@ -48,7 +48,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     def get_arguments(self, *args, **kwargs):
         return {
                 'address_owner': self.user_address,
-                'address_investmentAddress': self.invest_address if self.investment_address else 0,
+                'address_investmentAddress': self.investment_address if self.investment_address else 0,
                 'address_tokenAddress': self.token_address if self.token_address else 0
         }
 
