@@ -25,7 +25,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
     whitelist = models.BooleanField(default=False)
-    investment = models.BooleanField(default=False)
     investment_address = models.CharField(max_length=50, default='')
     token_address = models.CharField(max_length=50, default='')
     allow_change_dates = models.BooleanField(default=False)
@@ -47,10 +46,11 @@ class ContractDetailsInvestmentPool(CommonDetails):
 
     @logging
     def get_arguments(self, *args, **kwargs):
-        return [
-            self.user_address,
-            self.invest_address
-        ]
+        return {
+                'address_owner': self.user_address,
+                'address_investmentAddress': self.invest_address if self.investment_address else 0,
+                'address_tokenAddress': self.token_address if self.token_address else 0
+        }
 
     def compile(self, _=''):
         self.lgr.append('compile %d' % self.contract.id)

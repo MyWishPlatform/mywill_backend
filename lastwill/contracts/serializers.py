@@ -717,7 +717,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
                 'soft_cap', 'hard_cap', 'start_date', 'stop_date',
                 'user_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
-                'investment', 'investment_address', 'send_tokens_hard_cap',
+                'investment_address', 'send_tokens_hard_cap',
                 'send_tokens_soft_cap'
         )
 
