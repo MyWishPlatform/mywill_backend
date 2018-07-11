@@ -75,8 +75,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
         preproc_params["constants"]["D_CAN_CHANGE_TIMES"] = "true" if self.allow_change_dates else "false"
         preproc_params["constants"]["D_CAN_FINALIZE_AFTER_HARD_CAP_ONLY_OWNER"] = "true" if self.send_tokens_hard_cap else "false"
         preproc_params["constants"]["D_CAN_FINALIZE_AFTER_SOFT_CAP_ONLY_OWNER"] = "true" if self.send_tokens_soft_cap else "false"
-        preproc_params["constants"]["D_MIN_VALUE_WEI"] = "0"
-        preproc_params["constants"]["D_MAX_VALUE_WEI"] = "0"
         preproc_params["constants"]["D_REWARD_PERMILLE"] = int(self.admin_percent * 10)
 
         if self.min_wei:
