@@ -4,14 +4,9 @@ import json
 
 from flask import Flask, request
 from flask_restful import Resource, Api
-from flask.ext.sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://lastwill_curr:lastwill_curr@localhost/lastwill_curr'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['USERNAME'] = 'lastwill_curr'
-app.config['PASSWORD'] = 'lastwill_curr'
-db = SQLAlchemy(app)
 
 
 class memoize_timeout:
@@ -37,11 +32,6 @@ class CurrencyProxi(Resource):
         req = request.get_json()
         fsym = req['fsym']
         tsyms = req['tsyms']
-        allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO'}
-        if fsym not in allowed or any(
-                [x not in allowed for x in tsyms.split(',')]):
-            raise Exception('currency not allowed')
-        print(fsym, tsyms)
         return json.loads(requests.get(
             'https://min-api.cryptocompare.com/data/price?fsym={fsym}&tsyms={tsyms}'.format(
                 fsym=fsym, tsyms=tsyms)
