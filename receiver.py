@@ -315,7 +315,7 @@ class Receiver(threading.Thread):
         print('received', body, properties, method, flush=True)
         try:
             message = json.loads(body.decode())
-            if message.get('status', '') == 'COMMITTED' or properties.type == 'airdrop':
+            if message.get('status', '') == 'COMMITTED' or properties.type in ('airdrop', 'investment'):
                 getattr(self, properties.type, self.unknown_handler)(message)
         except (TxFail, AlreadyPostponed):
             ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -349,6 +349,22 @@ class Receiver(threading.Thread):
             w.save()
         except:
             pass
+
+    def investment(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        if message['status'] == 'COMMITED':
+            contract.state='DONE'
+            contract.save()
+        else:
+            contract.state = 'CANCELLED'
+            contract.save()
+
+    def tokensAdded(self, mesage):
+        pass
+
+    def tokensSent(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().tokenSent(message)
 
 
 def methods(cls):

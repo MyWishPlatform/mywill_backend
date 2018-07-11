@@ -120,3 +120,19 @@ class ContractDetailsInvestmentPool(CommonDetails):
 
     def get_gaslimit(self):
         return 3000000
+
+    def fundsAdded(self, message):
+        invest = InvestAddress(
+            contract=self.contract,
+            address=message['address'],
+            amount=message['amount']
+        )
+        invest.save()
+
+    def tokenSent(self, message):
+        invest = InvestAddress.objects.filter(
+            address=message['address'],
+            amount=message['amount']
+        ).first()
+        invest.take_away = True
+        invest.save()

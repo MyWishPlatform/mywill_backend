@@ -482,7 +482,7 @@ def load_airdrop(request):
 def get_contract_for_link(request):
     details = ContractDetailsInvestmentPool.objects.get(
         link=request.query_params['link'],
-        contract__state__in=('ACTIVE', 'CANCEL', 'DONE', 'ENDED')
+        contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
     )
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
