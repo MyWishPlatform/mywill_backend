@@ -749,7 +749,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         if details.get('token_address', None):
             check.is_address(details['token_address'])
         if details.get('investment_address', None):
-            check.is_address(details['user_address'])
+            check.is_address(details['investment_address'])
         if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
             raise ValidationError({'result': 1}, code=400)
         if details['stop_date'] < details['start_date'] + 5*60:
