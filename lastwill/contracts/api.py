@@ -23,7 +23,7 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 import lastwill.check as check
@@ -476,3 +476,10 @@ def load_airdrop(request):
     ) for x in addresses])
     print('air ok', flush=True)
     return JsonResponse({'result': 'ok'})
+
+
+@api_view(http_method_names=['GET'])
+def get_contract_for_link(request):
+    details = ContractDetailsInvestmentPool.objects.get(link=request.data.get('link'))
+    contract = details.contract
+    return contract

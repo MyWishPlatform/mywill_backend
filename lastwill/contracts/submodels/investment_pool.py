@@ -30,6 +30,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     allow_change_dates = models.BooleanField(default=False)
     send_tokens_hard_cap = models.BooleanField(default=False)
     send_tokens_soft_cap = models.BooleanField(default=False)
+    link = models.CharField(max_length=50, default=None, null=True)
 
     soft_cap = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
@@ -104,6 +105,12 @@ class ContractDetailsInvestmentPool(CommonDetails):
     @logging
     def deploy(self):
         return super().deploy()
+
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        res = super().msg_deployed(message, eth_contract_attr_name)
+        self.link = str(uuid.uuid4())
+        self.save()
+        return res
 
     @staticmethod
     def calc_cost(kwargs, network):
