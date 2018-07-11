@@ -480,6 +480,9 @@ def load_airdrop(request):
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_link(request):
-    details = ContractDetailsInvestmentPool.objects.get(link=request.query_params['link'])
+    details = ContractDetailsInvestmentPool.objects.get(
+        link=request.query_params['link'],
+        contract__state__in=('ACTIVE', 'CANCEL', 'DONE', 'ENDED')
+    )
     contract = details.contract
-    return contract
+    return ContractSerializer.to_representation(contract)

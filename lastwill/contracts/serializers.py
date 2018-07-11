@@ -1,5 +1,6 @@
 import datetime
 import binascii
+import uuid
 from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
 
@@ -718,10 +719,14 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
                 'user_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment_address', 'send_tokens_hard_cap',
-                'send_tokens_soft_cap'
+                'send_tokens_soft_cap', 'link'
         )
+        extra_kwargs = {
+            'link': {'read_only': True}
+        }
 
     def create(self, contract, contract_details):
+        contract_details['link'] = str(uuid.uuid4())
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         res = super().create(kwargs)
