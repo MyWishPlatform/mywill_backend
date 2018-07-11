@@ -485,4 +485,4 @@ def get_contract_for_link(request):
         contract__state__in=('ACTIVE', 'CANCEL', 'DONE', 'ENDED')
     )
     contract = details.contract
-    return ContractSerializer.to_representation(contract)
+    return ContractSerializer().to_representation(contract)
