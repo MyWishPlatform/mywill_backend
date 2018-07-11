@@ -480,6 +480,6 @@ def load_airdrop(request):
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_link(request):
-    details = ContractDetailsInvestmentPool.objects.get(link=request.data.get('link'))
+    details = ContractDetailsInvestmentPool.objects.get(link=request.query_params['link'])
     contract = details.contract
     return contract
