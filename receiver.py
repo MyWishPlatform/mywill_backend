@@ -352,7 +352,7 @@ class Receiver(threading.Thread):
 
     def investment(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
-        if message['status'] == 'COMMITED':
+        if message['status'] == 'COMMITTED':
             contract.state='DONE'
             contract.save()
         else:
