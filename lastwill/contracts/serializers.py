@@ -716,7 +716,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         model = ContractDetailsInvestmentPool
         fields = (
                 'soft_cap', 'hard_cap', 'start_date', 'stop_date',
-                'user_address', 'admin_percent','token_address',
+                'admin_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment_address', 'send_tokens_hard_cap',
                 'send_tokens_soft_cap', 'link'
@@ -741,11 +741,11 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['max_wei'] is not None and details['max_wei'] < 10*10**18:
             raise ValidationError
-        if 'user_address' not in details or 'admin_percent' not in details:
+        if 'admin_address' not in details or 'admin_percent' not in details:
             raise ValidationError
         elif details['admin_percent'] < 0.1 or details['admin_percent'] > 1000:
             raise ValidationError
-        check.is_address(details['user_address'])
+        check.is_address(details['admin_address'])
         if details.get('token_address', None):
             check.is_address(details['token_address'])
         if details.get('investment_address', None):

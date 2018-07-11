@@ -18,7 +18,7 @@ class InvestAddress(models.Model):
 class ContractDetailsInvestmentPool(CommonDetails):
 
     contract = models.ForeignKey(Contract, null=True)
-    user_address = models.CharField(max_length=50)
+    admin_address = models.CharField(max_length=50)
     admin_percent = models.FloatField()
     temp_directory = models.CharField(max_length=36)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
@@ -48,7 +48,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     @logging
     def get_arguments(self, *args, **kwargs):
         return [
-                self.user_address,
+                self.admin_address,
                 self.investment_address if self.investment_address else '0x'+'0'*40,
                 self.token_address if self.token_address else '0x'+'0'*40
         ]
