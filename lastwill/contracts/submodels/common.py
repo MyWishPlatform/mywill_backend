@@ -413,7 +413,7 @@ class CommonDetails(models.Model):
     @logging
     def deploy(self, eth_contract_attr_name='eth_contract'):
         self.lgr.append(' deploy %d' %self.contract.id)
-        if self.contract.state == 'ACTIVE':
+        if self.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
             self.lgr.append('launch message ignored because already deployed')
