@@ -366,6 +366,15 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         contract.get_details().tokenSent(message)
 
+    def InvestmentPoolSetup(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        if message['investment_address']:
+            details.investment_address = message['investment_address']
+        if message['token_address']:
+            details.token_address = message['token_address']
+        details.save()
+
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
