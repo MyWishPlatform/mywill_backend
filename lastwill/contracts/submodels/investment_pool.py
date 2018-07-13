@@ -122,15 +122,15 @@ class ContractDetailsInvestmentPool(CommonDetails):
     def fundsAdded(self, message):
         invest = InvestAddress(
             contract=self.contract,
-            address=message['address'],
-            amount=message['amount']
+            address=message['investorAddress'],
+            amount=message['value']
         )
         invest.save()
 
     def tokenSent(self, message):
         invest = InvestAddress.objects.filter(
-            address=message['address'],
-            amount=message['amount']
+            address=message['investorAddress'],
+            amount=message['value']
         ).first()
         invest.take_away = True
         invest.save()
