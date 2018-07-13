@@ -366,7 +366,7 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         contract.get_details().tokenSent(message)
 
-    def InvestmentPoolSetup(self, message):
+    def investmentPoolSetup(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
         if message['investmentAddress']:
