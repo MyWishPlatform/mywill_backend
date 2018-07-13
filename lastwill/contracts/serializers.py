@@ -719,10 +719,11 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
                 'admin_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment_address', 'send_tokens_hard_cap',
-                'send_tokens_soft_cap', 'link'
+                'send_tokens_soft_cap', 'link', 'investment_tx_hash'
         )
         extra_kwargs = {
-            'link': {'read_only': True}
+            'link': {'read_only': True},
+            'investment_tx_hash': {'read_only': True}
         }
 
     def create(self, contract, contract_details):

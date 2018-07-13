@@ -31,6 +31,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     send_tokens_hard_cap = models.BooleanField(default=False)
     send_tokens_soft_cap = models.BooleanField(default=False)
     link = models.CharField(max_length=50, unique=True)
+    investment_tx_hash = models.CharField(max_length=50, default='')
     balance = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
@@ -146,3 +147,15 @@ class ContractDetailsInvestmentPool(CommonDetails):
         if 'endTime' in message:
             self.stop_date = message['endTime']
         self.save()
+
+    def finalized(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        if message['status'] == 'COMMITTED':
+            contract.state='DONE'
+            contract.save()
+            details = contract.get_details()
+            details.investment_tx_hash = message['transactionHash']
+            details.save()
+        else:
+            contract.state = 'CANCELLED'
+            contract.save()

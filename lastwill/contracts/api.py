@@ -144,7 +144,7 @@ def deploy(request):
             user=request.user, balance__gte=wish_cost
     ).update(balance=F('balance') - wish_cost):
         raise Exception('no money')
-    create_payment(request.user.id, -wish_cost, '', 'ETH', -cost, False)
+    create_payment(request.user.id, -wish_cost, '', 'ETH', '-'+cost, False)
 
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()

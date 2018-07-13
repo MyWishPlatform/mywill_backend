@@ -350,15 +350,6 @@ class Receiver(threading.Thread):
         except:
             pass
 
-    def investment(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        if message['status'] == 'COMMITTED':
-            contract.state='DONE'
-            contract.save()
-        else:
-            contract.state = 'CANCELLED'
-            contract.save()
-
     def tokensAdded(self, mesage):
         pass
 
