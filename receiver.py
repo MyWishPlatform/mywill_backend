@@ -370,9 +370,9 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
         if message['investment_address']:
-            details.investment_address = message['investment_address']
+            details.investment_address = message['investmentAddress']
         if message['token_address']:
-            details.token_address = message['token_address']
+            details.token_address = message['tokenAddress']
         details.save()
 
 
