@@ -134,3 +134,10 @@ class ContractDetailsInvestmentPool(CommonDetails):
         ).first()
         invest.take_away = True
         invest.save()
+
+    def timesChanged(self, message):
+        if 'startTime' in message:
+            self.start_date = message['startTime']
+        if 'endTime' in message:
+            self.stop_date = message['endTime']
+        self.save()
