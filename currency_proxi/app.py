@@ -27,11 +27,11 @@ class memoize_timeout:
 
 
 class CurrencyProxi(Resource):
-    @memoize_timeout
+    @memoize_timeout(10*60)
     def get(self):
-        req = request.get_json()
-        fsym = req['fsym']
-        tsyms = req['tsyms']
+        # req = request.get_json()
+        fsym = request.args.get('fsym')
+        tsyms = request.args.get('tsyms')
         return json.loads(requests.get(
             'https://min-api.cryptocompare.com/data/price?fsym={fsym}&tsyms={tsyms}'.format(
                 fsym=fsym, tsyms=tsyms)
@@ -39,4 +39,4 @@ class CurrencyProxi(Resource):
 
 
 api = Api(app)
-api.add_resource(CurrencyProxi, '/convert/')
+api.add_resource(CurrencyProxi, '/convert')
