@@ -31,6 +31,9 @@ class ContractDetailsInvestmentPool(CommonDetails):
     send_tokens_hard_cap = models.BooleanField(default=False)
     send_tokens_soft_cap = models.BooleanField(default=False)
     link = models.CharField(max_length=50, unique=True)
+    balance = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
 
     soft_cap = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
@@ -126,6 +129,8 @@ class ContractDetailsInvestmentPool(CommonDetails):
             amount=message['value']
         )
         invest.save()
+        self.balance = message['balance']
+        self.save()
 
     def tokenSent(self, message):
         invest = InvestAddress.objects.filter(
