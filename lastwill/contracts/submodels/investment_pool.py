@@ -31,7 +31,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     send_tokens_hard_cap = models.BooleanField(default=False)
     send_tokens_soft_cap = models.BooleanField(default=False)
     link = models.CharField(max_length=50, unique=True)
-    investment_tx_hash = models.CharField(max_length=50, default='')
+    investment_tx_hash = models.CharField(max_length=70, default='')
     balance = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )

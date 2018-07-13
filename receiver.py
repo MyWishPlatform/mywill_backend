@@ -46,10 +46,10 @@ class Receiver(threading.Thread):
         channel = connection.channel()
 
         channel.queue_declare(
-                queue = NETWORKS[self.network]['queue'],
-                durable = True,
-                auto_delete = False,
-                exclusive = False
+                queue=NETWORKS[self.network]['queue'],
+                durable=True,
+                auto_delete=False,
+                exclusive=False
         )
         channel.basic_consume(
                 self.callback,
