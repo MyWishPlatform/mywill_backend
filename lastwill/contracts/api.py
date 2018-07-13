@@ -489,7 +489,7 @@ def get_contract_for_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_invest_balance_day(request):
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=request.query_params['id'])
     date = datetime.datetime.now().date()
     invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
     balance = 0
