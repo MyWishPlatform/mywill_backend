@@ -715,6 +715,7 @@ class InvestAddressSerializer(serializers.ModelSerializer):
 @memoize_timeout(10*60)
 def count_last_balance(contract):
     now_date = datetime.datetime.now()
+    now_date = now_date - datetime.timedelta(days=1)
     if now_date.minute > 30:
         if now_date.hour != 23:
             date = datetime.datetime(
