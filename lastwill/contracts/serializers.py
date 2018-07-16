@@ -23,6 +23,7 @@ from lastwill.contracts.models import (
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress
 )
+from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
@@ -711,6 +712,35 @@ class InvestAddressSerializer(serializers.ModelSerializer):
         fields = ('address', 'amount')
 
 
+@memoize_timeout(10*60)
+def count_last_balance(contract):
+    now_date = datetime.datetime.now()
+    if now_date.minute > 30:
+        if now_date.hour != 23:
+            date = datetime.datetime(
+                now_date.year, now_date.month,
+                now_date.day, now_date.hour + 1, 0, 0
+            )
+        else:
+            date = datetime.datetime(
+                now_date.year, now_date.month,
+                now_date.day, 0, 0, 0
+            )
+    else:
+        date = datetime.datetime(
+            now_date.year, now_date.month,
+            now_date.day, now_date.hour, 0, 0
+        )
+    # date = datetime.datetime.now().date()
+    invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
+    balance = 0
+    for inv in invests:
+        balance = balance + inv.amount
+    if balance == 0:
+        balance = str(balance)
+    return balance
+
+
 class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsInvestmentPool
@@ -719,11 +749,12 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
                 'admin_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment_address', 'send_tokens_hard_cap',
-                'send_tokens_soft_cap', 'link', 'investment_tx_hash'
+                'send_tokens_soft_cap', 'link', 'investment_tx_hash', 'balance'
         )
         extra_kwargs = {
             'link': {'read_only': True},
-            'investment_tx_hash': {'read_only': True}
+            'investment_tx_hash': {'read_only': True},
+            'balance': {'read_only': True},
         }
 
     def create(self, contract, contract_details):
@@ -765,6 +796,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
+        res['last_balance'] = count_last_balance(contract_details.contract)
         return res
 
     def update(self, contract, details, contract_details):

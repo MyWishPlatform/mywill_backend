@@ -1,5 +1,5 @@
 import sys, traceback
-from time import sleep
+import time
 
 from django.db.models import Q
 from django.core.mail import send_mail
@@ -91,7 +91,7 @@ def blocking(f):
                 Q(network__name=network_name) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
         ).update(locked_by=args[0].contract.id):
             print('address locked. sleeping 5 and requeueing the message', flush=True)
-            sleep(5)
+            time.sleep(5)
             raise NeedRequeue()
         return f(*args, **kwargs)
     return wrapper
@@ -133,3 +133,20 @@ def take_off_blocking(network, contract_id=None, address=None):
         DeployAddress.objects.select_for_update().filter(
             network__name=network, address=address, locked_by=contract_id
         ).update(locked_by=None)
+
+
+class memoize_timeout:
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self.cache = {}
+
+    def __call__(self, f):
+        def func(*args, **kwargs):
+            key = (args, tuple(sorted(kwargs.items())))
+            v = self.cache.get(key, (0,0))
+            print('cache')
+            if time.time() - v[1] > self.timeout:
+                print('updating')
+                v = self.cache[key] = f(*args, **kwargs), time.time()
+            return v[0]
+        return func

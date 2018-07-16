@@ -32,23 +32,6 @@ from exchange_API import to_wish
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
 
-class memoize_timeout:
-    def __init__(self, timeout):
-        self.timeout = timeout
-        self.cache = {}
-
-    def __call__(self, f):
-        def func(*args, **kwargs):
-            key = (args, tuple(sorted(kwargs.items())))
-            v = self.cache.get(key, (0,0))
-            print('cache')
-            if time.time() - v[1] > self.timeout:
-                print('updating')
-                v = self.cache[key] = f(*args, **kwargs), time.time()
-            return v[0]
-        return func
-
-
 def check_and_apply_promocode(promo_str, user, cost, contract_type):
     wish_cost = to_wish('ETH', int(cost))
     if promo_str:
@@ -506,7 +489,6 @@ def get_contract_for_link(request):
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 @api_view(http_method_names=['GET'])
-@memoize_timeout(10*60)
 def get_invest_balance_day(request):
     contract = Contract.objects.get(id=request.query_params['id'])
     now_date = datetime.datetime.now()
