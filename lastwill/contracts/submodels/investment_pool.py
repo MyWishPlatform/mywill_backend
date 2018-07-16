@@ -136,7 +136,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     def tokenSent(self, message):
         invest = InvestAddress.objects.filter(
             address=message['investorAddress'],
-            amount=message['value']
+            amount=message['amount']
         ).first()
         invest.take_away = True
         invest.save()
