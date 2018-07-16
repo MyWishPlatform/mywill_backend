@@ -27,7 +27,7 @@ def convert(fsym, tsyms):
         raise Exception('currency not allowed')
     print(fsym, tsyms)
     return json.loads(requests.get(
-        'https://min-api.cryptocompare.com/data/price?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)
+        'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)
     ).content.decode())
 
 
