@@ -531,4 +531,6 @@ def get_invest_balance_day(request):
     balance = 0
     for inv in invests:
         balance = balance + inv.amount
+    if balance == 0:
+        balance = str(balance)
     return JsonResponse({'last_balance': balance})
