@@ -138,8 +138,9 @@ class ContractDetailsInvestmentPool(CommonDetails):
             address=message['investorAddress'],
             amount=message['amount']
         ).first()
-        invest.take_away = True
-        invest.save()
+        if invest:
+            invest.take_away = True
+            invest.save()
 
     def timesChanged(self, message):
         if 'startTime' in message:
