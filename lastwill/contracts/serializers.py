@@ -736,8 +736,7 @@ def count_last_balance(contract):
     balance = 0
     for inv in invests:
         balance = balance + inv.amount
-    if balance == 0:
-        balance = str(balance)
+    balance = str(balance)
     return balance
 
 
