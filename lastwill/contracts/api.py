@@ -1,4 +1,5 @@
 import datetime
+import time
 from os import path
 
 from django.utils import timezone
@@ -29,6 +30,23 @@ from lastwill.payments.api import create_payment
 import lastwill.check as check
 from exchange_API import to_wish
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
+
+
+class memoize_timeout:
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self.cache = {}
+
+    def __call__(self, f):
+        def func(*args, **kwargs):
+            key = (args, tuple(sorted(kwargs.items())))
+            v = self.cache.get(key, (0,0))
+            print('cache')
+            if time.time() - v[1] > self.timeout:
+                print('updating')
+                v = self.cache[key] = f(*args, **kwargs), time.time()
+            return v[0]
+        return func
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type):
@@ -488,9 +506,27 @@ def get_contract_for_link(request):
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 @api_view(http_method_names=['GET'])
+@memoize_timeout(10*60)
 def get_invest_balance_day(request):
     contract = Contract.objects.get(id=request.query_params['id'])
-    date = datetime.datetime.now().date()
+    now_date = datetime.datetime.now()
+    if now_date.minute > 30:
+        if now_date.hour != 23:
+            date = datetime.datetime(
+                now_date.year, now_date.month,
+                now_date.day, now_date.hour + 1, 0, 0
+            )
+        else:
+            date = datetime.datetime(
+                now_date.year, now_date.month,
+                now_date.day, 0, 0, 0
+            )
+    else:
+        date = datetime.datetime(
+            now_date.year, now_date.month,
+            now_date.day, now_date.hour, 0, 0
+        )
+    # date = datetime.datetime.now().date()
     invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
     balance = 0
     for inv in invests:
