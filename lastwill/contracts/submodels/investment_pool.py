@@ -167,3 +167,8 @@ class ContractDetailsInvestmentPool(CommonDetails):
         now = timezone.now()
         if self.start_date < now.timestamp():
             raise ValidationError({'result': 1}, code=400)
+
+    def cancelled(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.state = 'CANCELLED'
+        contract.save()

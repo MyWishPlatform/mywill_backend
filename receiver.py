@@ -366,6 +366,11 @@ class Receiver(threading.Thread):
             details.token_address = message['tokenAddress']
         details.save()
 
+    def cancelled(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.cancelled(message)
+
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
