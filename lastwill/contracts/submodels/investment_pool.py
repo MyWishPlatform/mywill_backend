@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 
@@ -160,3 +162,8 @@ class ContractDetailsInvestmentPool(CommonDetails):
         else:
             contract.state = 'CANCELLED'
             contract.save()
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.start_date < now.timestamp():
+            raise ValidationError({'result': 1}, code=400)
