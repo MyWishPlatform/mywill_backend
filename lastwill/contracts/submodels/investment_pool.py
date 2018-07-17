@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -152,14 +154,14 @@ class ContractDetailsInvestmentPool(CommonDetails):
         self.save()
 
     def finalized(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract = self.contract
         if message['status'] == 'COMMITTED':
             contract.state='DONE'
             contract.save()
             details = contract.get_details()
             details.investment_tx_hash = message['transactionHash']
             details.save()
-        elif message['status'] == 'REJECTED':
+        elif message['status'] == 'REJECTED' and datetime.datetime.now().timestamp() > self.stop_date:
             contract.state = 'CANCELLED'
             contract.save()
 
@@ -169,6 +171,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
             raise ValidationError({'result': 1}, code=400)
 
     def cancelled(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract = self.contract
         contract.state = 'CANCELLED'
         contract.save()
