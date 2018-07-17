@@ -775,7 +775,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
             raise ValidationError
         if 'admin_address' not in details or 'admin_percent' not in details:
             raise ValidationError
-        elif details['admin_percent'] < 0.1 or details['admin_percent'] > 1000:
+        elif details['admin_percent'] < 0 or details['admin_percent'] >= 1000:
             raise ValidationError
         check.is_address(details['admin_address'])
         if details.get('token_address', None):
