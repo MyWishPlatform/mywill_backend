@@ -159,13 +159,13 @@ class ContractDetailsInvestmentPool(CommonDetails):
             details = contract.get_details()
             details.investment_tx_hash = message['transactionHash']
             details.save()
-        else:
+        elif message['status'] == 'REJECTED':
             contract.state = 'CANCELLED'
             contract.save()
 
     def predeploy_validate(self):
         now = timezone.now()
-        if self.start_date < now.timestamp():
+        if self.start_date < now.timestamp() + 7 * 60:
             raise ValidationError({'result': 1}, code=400)
 
     def cancelled(self, message):
