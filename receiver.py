@@ -371,6 +371,11 @@ class Receiver(threading.Thread):
         details = contract.get_details()
         details.cancelled(message)
 
+    def refund(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.cancelled(message)
+
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
