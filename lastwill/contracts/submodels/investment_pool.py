@@ -36,6 +36,8 @@ class ContractDetailsInvestmentPool(CommonDetails):
     send_tokens_soft_cap = models.BooleanField(default=False)
     link = models.CharField(max_length=50, unique=True)
     investment_tx_hash = models.CharField(max_length=70, default='')
+    platform_as_admin = models.BooleanField(default=True)
+
     balance = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
@@ -91,7 +93,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
         if self.max_wei:
             preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(
                 int(self.max_wei))
-
+        print('params', preproc_params, flush=True)
         test_investment_pool_params(preproc_config, preproc_params, dest)
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))

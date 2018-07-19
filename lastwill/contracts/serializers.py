@@ -749,7 +749,8 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
                 'admin_address', 'admin_percent','token_address',
                 'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
                 'investment_address', 'send_tokens_hard_cap',
-                'send_tokens_soft_cap', 'link', 'investment_tx_hash', 'balance'
+                'send_tokens_soft_cap', 'link', 'investment_tx_hash', 'balance',
+                'platform_as_admin'
         )
         extra_kwargs = {
             'link': {'read_only': True},
