@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-
+from lastwill.settings import NETWORKS
 
 class InvestAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
@@ -60,7 +60,8 @@ class ContractDetailsInvestmentPool(CommonDetails):
         return [
                 self.admin_address,
                 self.investment_address if self.investment_address else '0x'+'0'*40,
-                self.token_address if self.token_address else '0x'+'0'*40
+                self.token_address if self.token_address else '0x'+'0'*40,
+                NETWORKS[self.contract.network.name]['address'] if self.platform_as_admin else '0x'+'0'*40,
         ]
 
     def compile(self, _=''):

@@ -33,7 +33,7 @@ class ContractDetailsAirdrop(CommonDetails):
         dest = path.join(CONTRACTS_DIR, 'lastwill/airdrop-contract/')
         with open(path.join(dest, 'build/contracts/AirDrop.json'), 'rb') as f:
             airdrop_json = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'build/contracts/AirDrop.sol'), 'rb') as f:
+        with open(path.join(dest, 'contracts/AirDrop.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         self.eth_contract = create_ethcontract_in_compile(
             airdrop_json['abi'], airdrop_json['bytecode'][2:],

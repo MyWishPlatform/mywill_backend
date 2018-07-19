@@ -797,6 +797,8 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
+        if contract_details.contract.state not in ('ACTIVE', 'CANCELLED', 'DONE', 'ENDED'):
+            res.pop('link', '')
         res['last_balance'] = count_last_balance(contract_details.contract)
         return res
 
