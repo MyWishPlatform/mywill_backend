@@ -11,7 +11,11 @@ class ContractDetailsEOSToken(CommonDetails):
     admin_address = models.CharField(max_length=50)
     decimals = models.IntegerField()
     token_type = models.CharField(max_length=32, default='ERC20')
-    type_payments = models.CharField(max_length=50)
+    type_payments = models.CharField(
+        max_length=15,
+        choices=(('eos', 'EOSISH'), ('wish', 'WISH')),
+        default='wish'
+    )
     eth_contract_token = models.ForeignKey(
         EthContract,
         null=True,
