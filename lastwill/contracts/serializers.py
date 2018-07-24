@@ -834,9 +834,8 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
             raise ValidationError
         params = {"account_name":details['admin_address']}
-        try:
-            requests.post(EOS_URL+'v1/chain/get_account', json=params)
-        except:
+        req = requests.post(EOS_URL+'v1/chain/get_account', json=params)
+        if req.status_code != 200:
             raise ValidationError
 
     def to_representation(self, contract_details):

@@ -40,3 +40,6 @@ class ContractDetailsEOSToken(CommonDetails):
 
     def get_arguments(self, eth_contract_attr_name):
         return []
+
+    def create(self):
+        pass
