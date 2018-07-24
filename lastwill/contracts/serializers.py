@@ -1,4 +1,5 @@
 import datetime
+import requests
 import binascii
 import uuid
 from ethereum.abi import method_id as m_id
@@ -12,7 +13,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
+from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger, EOS_URL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -831,6 +832,11 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         if details['decimals'] < 0 or details['decimals'] > 15:
             raise ValidationError
         if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
+            raise ValidationError
+        params = {"account_name":details['admin_address']}
+        try:
+            requests.post(EOS_URL+'v1/chain/get_account', json=params)
+        except:
             raise ValidationError
 
     def to_representation(self, contract_details):

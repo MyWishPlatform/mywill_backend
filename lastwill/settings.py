@@ -232,6 +232,7 @@ LOGGING = {
 }
 
 
+EOS_URL = 'http://127.0.0.1:8887/'
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 
