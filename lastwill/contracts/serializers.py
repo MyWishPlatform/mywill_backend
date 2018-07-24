@@ -806,3 +806,53 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
+
+
+class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsInvestmentPool
+        fields = ('token_short_name', 'admin_address', 'decimals')
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        if 'admin_address' not in details :
+            raise ValidationError
+        if details['decimals'] < 0 or details['decimals'] > 15:
+            raise ValidationError
+        if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th) for th in
+            contract_details.contract.tokenholder_set.order_by('id').all()
+        ]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
