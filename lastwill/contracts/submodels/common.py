@@ -568,3 +568,13 @@ class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
+
+
+class EOSTokenHolder(models.Model):
+    contract = models.ForeignKey(Contract)
+    name = models.CharField(max_length=512, null=True)
+    address = models.CharField(max_length=50)
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    freeze_date = models.IntegerField(null=True)

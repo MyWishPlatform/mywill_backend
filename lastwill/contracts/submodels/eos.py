@@ -6,11 +6,9 @@ from lastwill.contracts.submodels.common import *
 
 
 class ContractDetailsEOSToken(CommonDetails):
-    token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
     decimals = models.IntegerField()
-    token_type = models.CharField(max_length=32, default='ERC20')
     type_payments = models.CharField(
         max_length=15,
         choices=(('eos', 'EOSISH'), ('wish', 'WISH')),
@@ -23,12 +21,11 @@ class ContractDetailsEOSToken(CommonDetails):
         related_name='token_details_token',
         on_delete=models.SET_NULL
     )
-    future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
     def predeploy_validate(self):
         now = timezone.now()
-        token_holders = self.contract.tokenholder_set.all()
+        token_holders = self.contract.eostokenholder_set.all()
         for th in token_holders:
             if th.freeze_date:
                 if th.freeze_date < now.timestamp() + 600:
