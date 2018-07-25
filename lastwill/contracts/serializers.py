@@ -859,7 +859,7 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         token_holder_serializer = EOSTokenHolderSerializer()
         res['token_holders'] = [
             token_holder_serializer.to_representation(th) for th in
-            contract_details.contract.tokenholder_set.order_by('id').all()
+            contract_details.contract.eostokenholder_set.order_by('id').all()
         ]
         res['eos_contract'] = EOSContractSerializer().to_representation(contract_details.eos_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET', 'EOS_TESTNET']:
@@ -867,7 +867,7 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         return res
 
     def update(self, contract, details, contract_details):
-        contract.tokenholder_set.all().delete()
+        contract.eostokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address']
