@@ -22,7 +22,7 @@ from lastwill.contracts.models import (
         ContractDetailsAirdrop, AirdropAddress,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-        InvestAddress
+        InvestAddress, EOSTokenHolder
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -809,6 +809,12 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
 
+class EOSTokenHolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSTokenHolder
+        fields = ('address', 'amount', 'freeze_date', 'name')
+
+
 class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsInvestmentPool
@@ -820,7 +826,7 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
             th_json['address'] = th_json['address']
             kwargs = th_json.copy()
             kwargs['contract'] = contract
-            TokenHolder(**kwargs).save()
+            EOSTokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         res = super().create(kwargs)
@@ -840,7 +846,7 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        token_holder_serializer = TokenHolderSerializer()
+        token_holder_serializer = EOSTokenHolderSerializer()
         res['token_holders'] = [
             token_holder_serializer.to_representation(th) for th in
             contract_details.contract.tokenholder_set.order_by('id').all()
@@ -857,7 +863,7 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
             th_json['address'] = th_json['address']
             kwargs = th_json.copy()
             kwargs['contract'] = contract
-            TokenHolder(**kwargs).save()
+            EOSTokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
