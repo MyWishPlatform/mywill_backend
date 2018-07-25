@@ -1,19 +1,37 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+
+
+class EOSContract(models.Model):
+    contract = models.ForeignKey(Contract, null=True, default=None)
+    original_contract = models.ForeignKey(
+        Contract, null=True, default=None, related_name='orig_eoscontract'
+    )
+    address = models.CharField(max_length=50, null=True, default=None)
+    tx_hash = models.CharField(max_length=70, null=True, default=None)
+
+    source_code = models.TextField()
+    bytecode = models.TextField()
+    abi = JSONField(default={})
+    compiler_version = models.CharField(
+        max_length=200, null=True, default=None
+    )
+    constructor_arguments = models.TextField()
 
 
 class ContractDetailsEOSToken(CommonDetails):
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
     decimals = models.IntegerField()
-    eth_contract_token = models.ForeignKey(
-        EthContract,
+    eos_contract = models.ForeignKey(
+        EOSContract,
         null=True,
         default=None,
-        related_name='token_details_token',
+        related_name='eos_token_details',
         on_delete=models.SET_NULL
     )
     temp_directory = models.CharField(max_length=36)
