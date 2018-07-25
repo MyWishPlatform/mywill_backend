@@ -22,7 +22,7 @@ from lastwill.contracts.models import (
         ContractDetailsAirdrop, AirdropAddress,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken
+        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -189,6 +189,15 @@ class ContractSerializer(serializers.ModelSerializer):
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
+
+
+class EOSContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSContract
         fields = (
             'id', 'address', 'source_code', 'abi',
             'bytecode', 'compiler_version', 'constructor_arguments'
@@ -852,9 +861,9 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
             token_holder_serializer.to_representation(th) for th in
             contract_details.contract.tokenholder_set.order_by('id').all()
         ]
-        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
-            res['eth_contract']['source_code'] = ''
+        res['eos_contract'] = EOSContractSerializer().to_representation(contract_details.eos_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET', 'EOS_TESTNET']:
+            res['eos_contract']['source_code'] = ''
         return res
 
     def update(self, contract, details, contract_details):
