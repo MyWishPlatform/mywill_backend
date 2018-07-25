@@ -327,6 +327,7 @@ class Contract(models.Model):
         neo_ico = apps.get_model('contracts', 'ContractDetailsNeoICO')
         airdrop = apps.get_model('contracts', 'ContractDetailsAirdrop')
         investment = apps.get_model('contracts', 'ContractDetailsInvestmentPool')
+        eos_token = apps.get_model('contracts', 'ContractDetailsEOSToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -339,6 +340,7 @@ class Contract(models.Model):
         contract_details_types[7] = {'name': 'MyWish NEO ICO', 'model': neo_ico}
         contract_details_types[8] = {'name': 'Airdrop', 'model': airdrop}
         contract_details_types[9] = {'name': 'InvestmentPool', 'model': investment}
+        contract_details_types[10] = {'name': 'EOS Token', 'model': eos_token}
         return contract_details_types
 
     @classmethod
