@@ -22,7 +22,7 @@ from lastwill.contracts.models import (
         ContractDetailsAirdrop, AirdropAddress,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-        InvestAddress, EOSTokenHolder
+        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -818,7 +818,7 @@ class EOSTokenHolderSerializer(serializers.ModelSerializer):
 
 class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ContractDetailsInvestmentPool
+        model = ContractDetailsEOSToken
         fields = ('token_short_name', 'admin_address', 'decimals')
 
     def create(self, contract, contract_details):
