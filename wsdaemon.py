@@ -35,7 +35,7 @@ class WSP(WebSocketServerProtocol):
 
     def onConnect(self, request):
         origin = request.headers.get('origin', '') 
-#        self.check_origin(origin)
+        self.check_origin(origin)
         cookie = parse_cookie(request.headers.get('cookie', ''))
         self.check_auth(cookie)
         return super().onConnect(request)
