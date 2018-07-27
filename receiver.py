@@ -1,3 +1,4 @@
+import queue
 import pika
 import os
 import traceback
@@ -13,26 +14,25 @@ django.setup()
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.db.models.signals import post_save
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
     WhitelistAddress, AirdropAddress
 )
+from lastwill.contracts.serializers import ContractSerializer
 from lastwill.settings import NETWORKS, test_logger
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.api import create_payment
+from lastwill.profile.models import Profile
 from exchange_API import to_wish
 
 
 class Receiver(threading.Thread):
 
-    def __init__(self, network=None):
+    def __init__(self, network):
         super().__init__()
-        if network is None:
-            if len(sys.argv) > 1 and sys.argv[1] in NETWORKS:
-                self.network = sys.argv[1]
-        else:
-            self.network = network
+        self.network = network
 
     def run(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -381,14 +381,76 @@ def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
 
 
+class WSInterface(threading.Thread):
+    def __init__(self):
+        super().__init__()
+        self.interthread_queue = queue.Queue()
+
+    def send(self, user, message, data):
+        self.interthread_queue.put({'user': user, 'msg': message, 'data': data})
+
+    def run(self):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+                '127.0.0.1',
+                5672,
+                'mywill',
+                pika.PlainCredentials('java', 'java'),
+                heartbeat_interval=0,
+        ))
+        self.channel = connection.channel()
+        self.channel.queue_declare(queue='websockets', durable=True, auto_delete=False, exclusive=False)
+        while 1:
+            message = self.interthread_queue.get()
+            user = message.pop('user')
+            self.channel.basic_publish(
+                    exchange='',
+                    routing_key='websockets',
+                    body=json.dumps(message),
+                    properties=pika.BasicProperties(expiration='30000', type=str(user)),
+            )
+
+
+
 """
 rabbitmqctl add_user java java
 rabbitmqctl add_vhost mywill
 rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
+def save_profile(sender, instance, **kwargs):
+    try:
+        ws_interface.send(
+                instance.user.id,
+                'update_user',
+                {'balance': str(instance.balance)},
+        )
+    except Exception as e:
+        print('in save profile callback:', e)
+
+
+def save_contract(sender, instance, **kwargs):
+    try:
+        contract_data = ContractSerializer().to_representation(instance)
+        ws_interface.send(
+                instance.user.id,
+                'update_contract',
+                contract_data,
+        )
+    except Exception as e:
+        print('in save contract callback:', e)
+
+
+post_save.connect(save_contract, sender=Contract)
+post_save.connect(save_profile, sender=Profile)
 
 nets = NETWORKS.keys()
+
+ws_interface = WSInterface()
+ws_interface.start()
+
 for net in nets:
     rec = Receiver(net)
     rec.start()
+
+
+
