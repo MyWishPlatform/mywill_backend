@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import EOS_URL
+from lastwill.settings import EOS_URL, CONTRACTS_DIR
 
 
 class EOSContract(models.Model):
@@ -68,6 +68,7 @@ class ContractDetailsEOSToken(CommonDetails):
         }
 
     def deploy(self):
+        self.compile()
         params = {"account_name": 'mywishio'}
         req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
         key = ''
@@ -97,8 +98,25 @@ class ContractDetailsEOSToken(CommonDetails):
                 "/bin/bash -c '" + c2 + "'".format(
                     url=EOS_URL,
                     account_name=self.admin_address,
-                    contract_path='/home/glowstick/eos_c/airdrop/airdrop/'
+                    contract_path=CONTRACTS_DIR + 'eosio.token/eosio.token/'
                     )
 
         ):
             raise Exception('deploy error 2')
+
+    def compile(self):
+        dest = path.join(CONTRACTS_DIR, 'eosio.token/')
+        with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.abi'), 'rb') as f:
+            abi = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.wasm'), 'rb') as f:
+            bytecode = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'eosio.token/eosio.token.cpp'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        eos_contract = EOSContract()
+        eos_contract.abi = abi
+        eos_contract.bytecode = bytecode
+        eos_contract.contract = self.contract
+        eos_contract.original_contract = self.contract
+        eos_contract.source_code = source_code
+        eos_contract.save()
+        self.save()
