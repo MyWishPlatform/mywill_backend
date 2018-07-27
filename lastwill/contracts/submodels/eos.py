@@ -4,6 +4,7 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.settings import EOS_URL
 
 
 class EOSContract(models.Model):
@@ -59,5 +60,45 @@ class ContractDetailsEOSToken(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    def create(self):
-        pass
+    def get_stake_params(self):
+        return {
+            'stake_net': '10.0000 EOS',
+            'stake_cpu': '10.0000 EOS',
+            'buy_ram_kbytes': 128
+        }
+
+    def deploy(self):
+        params = {"account_name": 'mywishio'}
+        req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
+        key = ''
+        for x in req['permissions']:
+            if x['perm_name'] == 'active' and x['parent'] == 'owner':
+                key = x['required_auth']['keys'][0]['key']
+
+        c1 = ('cleos -u {url} system newaccount mywishio {account_name} '
+             '{key1} {key2} --stake-net {s_net} --stake-cpu {s_cpu} '
+             '--buy-ram-kbytes {ram}')
+        params = self.get_stake_params()
+        if os.system(
+                "/bin/bash -c '" + c1 + "'".format(
+                    url=EOS_URL,
+                    account_name=self.admin_address,
+                    key1=key, key2=key,
+                    s_net=params['stake-net'],
+                    s_cpu=params['stake_cpu'],
+                    ram=params['buy_ram_kbytes']
+                    )
+
+        ):
+            raise Exception('deploy error 1')
+
+        c2 = 'cleos -u {url} set contract {account_name} {contract_path}'
+        if os.system(
+                "/bin/bash -c '" + c2 + "'".format(
+                    url=EOS_URL,
+                    account_name=self.admin_address,
+                    contract_path='/home/glowstick/eos_c/airdrop/airdrop/'
+                    )
+
+        ):
+            raise Exception('deploy error 2')
