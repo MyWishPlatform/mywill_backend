@@ -71,7 +71,7 @@ class ContractDetailsEOSToken(CommonDetails):
         }
 
     def create(self):
-        self.compile()
+        # self.compile()
         params = {"account_name": 'mywishio'}
         req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
         # key = ''
@@ -119,6 +119,8 @@ class ContractDetailsEOSToken(CommonDetails):
 
         ):
             raise Exception('deploy error')
+        self.contract.state='WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
 
     def compile(self):
         dest = path.join(CONTRACTS_DIR, 'eosio.token/')
@@ -138,4 +140,5 @@ class ContractDetailsEOSToken(CommonDetails):
         self.save()
 
     def created(self):
-        pass
+        self.contract.state='ACTIVE'
+        self.contract.save()
