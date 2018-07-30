@@ -110,12 +110,13 @@ class ContractDetailsEOSToken(CommonDetails):
             '["{account_name}", "{max_supply} {token_name}"]' 
             -p mywish.token {account_name}""")
         if os.system(
-                "/bin/bash -c '" + c3 + "'".format(
+                "/bin/bash -c '" + c3.format(
                     url=EOS_URL,
                     account_name=self.admin_address,
                     max_supply=self.maximum_supply,
                     token_name=self.token_short_name
                     )
+                + "'"
 
         ):
             raise Exception('deploy error')
