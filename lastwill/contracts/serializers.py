@@ -828,7 +828,7 @@ class EOSTokenHolderSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSToken
-        fields = ('token_short_name', 'admin_address', 'decimals')
+        fields = ('token_short_name', 'admin_address', 'decimals', 'maximum_supply')
 
     def create(self, contract, contract_details):
         token_holders = contract_details.pop('token_holders')

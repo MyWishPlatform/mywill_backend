@@ -36,6 +36,9 @@ class ContractDetailsEOSToken(CommonDetails):
         on_delete=models.SET_NULL
     )
     temp_directory = models.CharField(max_length=36)
+    maximum_supply = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -67,42 +70,55 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
-    def deploy(self):
+    def create(self):
         self.compile()
         params = {"account_name": 'mywishio'}
         req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
-        key = ''
-        for x in req['permissions']:
-            if x['perm_name'] == 'active' and x['parent'] == 'owner':
-                key = x['required_auth']['keys'][0]['key']
+        # key = ''
+        # for x in req['permissions']:
+        #     if x['perm_name'] == 'active' and x['parent'] == 'owner':
+        #         key = x['required_auth']['keys'][0]['key']
+        #
+        # c1 = ('cleos -u {url} system newaccount mywishio {account_name} '
+        #      '{key1} {key2} --stake-net {s_net} --stake-cpu {s_cpu} '
+        #      '--buy-ram-kbytes {ram}')
+        # params = self.get_stake_params()
+        # if os.system(
+        #         "/bin/bash -c '" + c1 + "'".format(
+        #             url=EOS_URL,
+        #             account_name=self.admin_address,
+        #             key1=key, key2=key,
+        #             s_net=params['stake-net'],
+        #             s_cpu=params['stake_cpu'],
+        #             ram=params['buy_ram_kbytes']
+        #             )
+        #
+        # ):
+        #     raise Exception('deploy error 1')
 
-        c1 = ('cleos -u {url} system newaccount mywishio {account_name} '
-             '{key1} {key2} --stake-net {s_net} --stake-cpu {s_cpu} '
-             '--buy-ram-kbytes {ram}')
-        params = self.get_stake_params()
+        # c2 = 'cleos -u {url} set contract {account_name} {contract_path}'
+        # if os.system(
+        #         "/bin/bash -c '" + c2 + "'".format(
+        #             url=EOS_URL,
+        #             account_name=self.admin_address,
+        #             contract_path=CONTRACTS_DIR + 'eosio.token/eosio.token/'
+        #             )
+        #
+        # ):
+        #     raise Exception('deploy error 2')
+        c3 = ("""cleos -u {url} push action mywish.token create 
+            '["{account_name}", "{max_supply} {token_name}"]' 
+            -p mywish.token {account_name}""")
         if os.system(
-                "/bin/bash -c '" + c1 + "'".format(
+                "/bin/bash -c '" + c3 + "'".format(
                     url=EOS_URL,
                     account_name=self.admin_address,
-                    key1=key, key2=key,
-                    s_net=params['stake-net'],
-                    s_cpu=params['stake_cpu'],
-                    ram=params['buy_ram_kbytes']
+                    max_supply=self.maximum_supply,
+                    token_name=self.token_short_name
                     )
 
         ):
-            raise Exception('deploy error 1')
-
-        c2 = 'cleos -u {url} set contract {account_name} {contract_path}'
-        if os.system(
-                "/bin/bash -c '" + c2 + "'".format(
-                    url=EOS_URL,
-                    account_name=self.admin_address,
-                    contract_path=CONTRACTS_DIR + 'eosio.token/eosio.token/'
-                    )
-
-        ):
-            raise Exception('deploy error 2')
+            raise Exception('deploy error')
 
     def compile(self):
         dest = path.join(CONTRACTS_DIR, 'eosio.token/')
@@ -120,3 +136,6 @@ class ContractDetailsEOSToken(CommonDetails):
         eos_contract.source_code = source_code
         eos_contract.save()
         self.save()
+
+    def created(self):
+        pass
