@@ -5,18 +5,19 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import EOS_URL, CONTRACTS_DIR, EOS_PASSWORD
+from lastwill.settings import EOS_ACCOUNT_NAME, EOS_WALLET_NAME
 
 
-def unlock_eos_account(account_name):
-    lock_command = 'cleos wallet lock -n {account}'.format(account=account_name)
+def unlock_eos_account():
+    lock_command = 'cleos wallet lock -n {wallet}'.format(wallet=EOS_WALLET_NAME)
     if os.system(
             "/bin/bash -c '{command}'".format(command=lock_command)
 
     ):
         raise Exception('lock command error')
 
-    unlock_command = 'echo {password} | cleos wallet unlock -n {account}'.format(
-        password=EOS_PASSWORD, account=account_name
+    unlock_command = 'echo {password} | cleos wallet unlock -n {wallet}'.format(
+        password=EOS_PASSWORD, wallet=EOS_WALLET_NAME
     )
     if os.system(
             "/bin/bash -c '{command}'".format(command=unlock_command)
@@ -125,9 +126,10 @@ class ContractDetailsEOSToken(CommonDetails):
         #
         # ):
         #     raise Exception('deploy error 2')
-        unlock_eos_account(self.admin_address)
-        c3 = ("""cleos -u {url} push action mywishtoken3 create '\\''["{account_name}", "{max_supply} {token_name}"]'\\'' -p mywishtoken3 {account_name}""")
+        unlock_eos_account()
+        c3 = ("""cleos -u {url} push action {our_account} create '\\''["{account_name}", "{max_supply} {token_name}"]'\\'' -p {our_account} {account_name}""")
         command = "/bin/bash -c '" + c3.format(
+                    our_account=EOS_ACCOUNT_NAME,
                     url=EOS_URL,
                     account_name=self.admin_address,
                     max_supply=self.maximum_supply,
