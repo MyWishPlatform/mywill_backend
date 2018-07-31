@@ -106,9 +106,9 @@ class ContractDetailsEOSToken(CommonDetails):
         #
         # ):
         #     raise Exception('deploy error 2')
-        c3 = ("""cleos -u {url} push action mywish.token create 
+        c3 = ("""cleos -u {url} push action mywishtoken3 create 
             '["{account_name}", "{max_supply} {token_name}"]' 
-            -p mywish.token {account_name}""")
+            -p mywishtoken3 {account_name}""")
         if os.system(
                 "/bin/bash -c '" + c3.format(
                     url=EOS_URL,
