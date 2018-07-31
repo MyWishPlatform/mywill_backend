@@ -138,6 +138,7 @@ class ContractDetailsEOSToken(CommonDetails):
         print('command = ', command)
         if os.system(
                 "/bin/bash -c '" + c3.format(
+                    our_account=EOS_ACCOUNT_NAME,
                     url=EOS_URL,
                     account_name=self.admin_address,
                     max_supply=self.maximum_supply,
