@@ -376,6 +376,10 @@ class Receiver(threading.Thread):
         details = contract.get_details()
         details.cancelled(message)
 
+    def created(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.created(message)
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]

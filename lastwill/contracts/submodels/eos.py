@@ -140,6 +140,6 @@ class ContractDetailsEOSToken(CommonDetails):
         eos_contract.save()
         self.save()
 
-    def created(self):
+    def created(self, message):
         self.contract.state='ACTIVE'
         self.contract.save()
