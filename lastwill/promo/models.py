@@ -19,6 +19,8 @@ class Promo(models.Model):
 class User2Promo(models.Model):
     user = models.ForeignKey(User)
     promo = models.ForeignKey(Promo)
+    created_date = models.DateTimeField(auto_now_add=True)
+    contract_id = models.IntegerField(default=0)
 
 
 class Promo2ContractType(models.Model):
