@@ -4,7 +4,25 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import EOS_URL, CONTRACTS_DIR
+from lastwill.settings import EOS_URL, CONTRACTS_DIR, EOS_PASSWORD
+
+
+def unlock_eos_account(account_name):
+    lock_command = 'cleos wallet lock -n {account}'.format(account=account_name)
+    if os.system(
+            "/bin/bash -c '{command}'".format(command=lock_command)
+
+    ):
+        raise Exception('lock command error')
+
+    unlock_command = 'echo {password} | cleos wallet unlock -n {account}'.format(
+        password=EOS_PASSWORD, account=account_name
+    )
+    if os.system(
+            "/bin/bash -c '{command}'".format(command=unlock_command)
+
+    ):
+        raise Exception('unlock command error')
 
 
 class EOSContract(models.Model):
@@ -39,6 +57,7 @@ class ContractDetailsEOSToken(CommonDetails):
     maximum_supply = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+    easy_token = models.BooleanField(default=True)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -72,8 +91,8 @@ class ContractDetailsEOSToken(CommonDetails):
 
     def deploy(self):
         # self.compile()
-        params = {"account_name": 'mywishio'}
-        req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
+        # params = {"account_name": 'mywishio'}
+        # req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
         # key = ''
         # for x in req['permissions']:
         #     if x['perm_name'] == 'active' and x['parent'] == 'owner':
@@ -106,6 +125,7 @@ class ContractDetailsEOSToken(CommonDetails):
         #
         # ):
         #     raise Exception('deploy error 2')
+        unlock_eos_account(self.admin_address)
         c3 = ("""cleos -u {url} push action mywishtoken3 create '\\''["{account_name}", "{max_supply} {token_name}"]'\\'' -p mywishtoken3 {account_name}""")
         command = "/bin/bash -c '" + c3.format(
                     url=EOS_URL,
