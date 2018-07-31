@@ -70,7 +70,7 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
-    def deploy(self, _):
+    def deploy(self):
         # self.compile()
         params = {"account_name": 'mywishio'}
         req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
