@@ -151,7 +151,7 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error')
 
-        result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[1]
+        result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
         print('result  ', result)
         try:
             tx_hash = re.match('executed transaction: ([\da-f]{64})',
