@@ -139,6 +139,7 @@ class ContractDetailsEOSToken(CommonDetails):
             eos_contract = EOSContract()
             eos_contract.tx_hash = tx_hash
             eos_contract.address = EOS_ACCOUNT_NAME
+            eos_contract.contract=self.contract
             eos_contract.save()
         except:
             raise Exception('deploy error')
