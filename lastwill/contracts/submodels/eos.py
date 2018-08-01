@@ -119,14 +119,6 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error 2')
         unlock_eos_account()
-        # c3 = ("""cleos -u {url} push action {our_account} create '\\''["{account_name}", "{max_supply} {token_name}"]'\\'' -p {our_account} {account_name}""")
-        # command = "/bin/bash -c '" + c3.format(
-        #             our_account=EOS_ACCOUNT_NAME,
-        #             url=EOS_URL,
-        #             account_name=self.admin_address,
-        #             max_supply=self.maximum_supply,
-        #             token_name=self.token_short_name
-        #             )+ "'"
         command = [
             'cleos', '-u', EOS_URL, 'push', 'action',
             EOS_ACCOUNT_NAME, 'create',
@@ -138,25 +130,16 @@ class ContractDetailsEOSToken(CommonDetails):
             EOS_ACCOUNT_NAME, self.admin_address
         ]
         print('command = ', command)
-        # if os.system(
-        #         "/bin/bash -c '" + c3.format(
-        #             our_account=EOS_ACCOUNT_NAME,
-        #             url=EOS_URL,
-        #             account_name=self.admin_address,
-        #             max_supply=self.maximum_supply,
-        #             token_name=self.token_short_name
-        #             )
-        #         + "'"
-        #
-        # ):
-        #     raise Exception('deploy error')
-
         result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
         print('result  ', result)
         try:
             tx_hash = re.match('executed transaction: ([\da-f]{64})',
                                result[1].decode()).group(1)
             print('tx_hash ', tx_hash)
+            eos_contract = EOSContract()
+            eos_contract.tx_hash = tx_hash
+            eos_contract.address = EOS_ACCOUNT_NAME
+            eos_contract.save()
         except:
             raise Exception('deploy error')
         self.contract.state='WAITING_FOR_DEPLOYMENT'
