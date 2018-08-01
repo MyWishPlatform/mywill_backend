@@ -77,9 +77,9 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
-    @logging
-    @blocking
-    @postponable
+    # @logging
+    # @blocking
+    # @postponable
     def deploy(self):
         # self.compile()
         # params = {"account_name": 'mywishio'}
@@ -149,8 +149,9 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error')
 
-        temp = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[1][22:86]
+        temp = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[1]
         print('temp  ', temp)
+        print('tx hash ', temp[22:86])
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
