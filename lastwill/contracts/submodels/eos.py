@@ -135,6 +135,9 @@ class ContractDetailsEOSToken(CommonDetails):
 
         ):
             raise Exception('deploy error')
+
+        temp = Popen(command, stdin=PIPE, stdout=PIPE).communicate()[0]
+        print('temp  ', temp)
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
