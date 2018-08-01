@@ -26,21 +26,8 @@ def unlock_eos_account():
         raise Exception('unlock command error')
 
 
-class EOSContract(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None)
-    original_contract = models.ForeignKey(
-        Contract, null=True, default=None, related_name='orig_eoscontract'
-    )
-    address = models.CharField(max_length=50, null=True, default=None)
-    tx_hash = models.CharField(max_length=70, null=True, default=None)
-
-    source_code = models.TextField()
-    bytecode = models.TextField()
-    abi = JSONField(default={})
-    compiler_version = models.CharField(
-        max_length=200, null=True, default=None
-    )
-    constructor_arguments = models.TextField()
+class EOSContract(EthContract):
+    pass
 
 
 class ContractDetailsEOSToken(CommonDetails):
