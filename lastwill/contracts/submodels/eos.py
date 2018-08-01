@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
@@ -149,9 +151,14 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error')
 
-        temp = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[1]
-        print('temp  ', temp)
-        print('tx hash ', temp[22:86])
+        result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[1]
+        print('result  ', result)
+        try:
+            tx_hash = re.match('executed transaction: ([\da-f]{64})',
+                               result[1].decode()).group(1)
+            print('tx_hash ', tx_hash)
+        except:
+            raise Exception('deploy error')
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
