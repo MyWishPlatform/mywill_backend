@@ -77,6 +77,9 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
+    @logging
+    @blocking
+    @postponable
     def deploy(self):
         # self.compile()
         # params = {"account_name": 'mywishio'}
@@ -114,14 +117,24 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error 2')
         unlock_eos_account()
-        c3 = ("""cleos -u {url} push action {our_account} create '\\''["{account_name}", "{max_supply} {token_name}"]'\\'' -p {our_account} {account_name}""")
-        command = "/bin/bash -c '" + c3.format(
-                    our_account=EOS_ACCOUNT_NAME,
-                    url=EOS_URL,
-                    account_name=self.admin_address,
-                    max_supply=self.maximum_supply,
-                    token_name=self.token_short_name
-                    )+ "'"
+        # c3 = ("""cleos -u {url} push action {our_account} create '\\''["{account_name}", "{max_supply} {token_name}"]'\\'' -p {our_account} {account_name}""")
+        # command = "/bin/bash -c '" + c3.format(
+        #             our_account=EOS_ACCOUNT_NAME,
+        #             url=EOS_URL,
+        #             account_name=self.admin_address,
+        #             max_supply=self.maximum_supply,
+        #             token_name=self.token_short_name
+        #             )+ "'"
+        command = [
+            'cleos', '-u', EOS_URL, 'push', 'action',
+            EOS_ACCOUNT_NAME, 'create',
+            '["{acc_name}","{max_sup} {token}"]'.format(
+                acc_name=self.admin_address,
+                max_sup=self.maximum_supply,
+                token=self.token_short_name
+            ), '-p',
+            EOS_ACCOUNT_NAME, self.admin_address
+        ]
         print('command = ', command)
         # if os.system(
         #         "/bin/bash -c '" + c3.format(
@@ -136,7 +149,7 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error')
 
-        temp = Popen(command, stdin=PIPE, stdout=PIPE).communicate()[0]
+        temp = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()[1][22:86]
         print('temp  ', temp)
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
