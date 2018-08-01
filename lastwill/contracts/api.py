@@ -71,8 +71,9 @@ class ContractViewSet(ModelViewSet):
 
     def get_queryset(self):
         result = self.queryset.order_by('-created_date')
-        eos = int(self.request.query_params.get('eos', None))
+        eos = self.request.query_params.get('eos', None)
         if eos is not None:
+            eos = int(eos)
             if eos:
                 result = result.filter(contract_type=10)
             else:
