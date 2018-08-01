@@ -123,18 +123,18 @@ class ContractDetailsEOSToken(CommonDetails):
                     token_name=self.token_short_name
                     )+ "'"
         print('command = ', command)
-        if os.system(
-                "/bin/bash -c '" + c3.format(
-                    our_account=EOS_ACCOUNT_NAME,
-                    url=EOS_URL,
-                    account_name=self.admin_address,
-                    max_supply=self.maximum_supply,
-                    token_name=self.token_short_name
-                    )
-                + "'"
-
-        ):
-            raise Exception('deploy error')
+        # if os.system(
+        #         "/bin/bash -c '" + c3.format(
+        #             our_account=EOS_ACCOUNT_NAME,
+        #             url=EOS_URL,
+        #             account_name=self.admin_address,
+        #             max_supply=self.maximum_supply,
+        #             token_name=self.token_short_name
+        #             )
+        #         + "'"
+        #
+        # ):
+        #     raise Exception('deploy error')
 
         temp = Popen(command, stdin=PIPE, stdout=PIPE).communicate()[0]
         print('temp  ', temp)
