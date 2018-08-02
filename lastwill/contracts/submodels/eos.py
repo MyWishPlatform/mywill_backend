@@ -227,6 +227,6 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    def deployed(self, message):
+    def msg_deployed(self, message):
         self.contract.state='ACTIVE'
         self.contract.save()
