@@ -10,7 +10,8 @@ from email_messages import *
 @contract_details('Deferred payment contract')
 class ContractDetailsDelayedPayment(CommonDetails):
     sol_path = 'lastwill/delayed-payment/'
-    filename = 'contracts/DelayedPayment.sol'
+    source_filename = 'contracts/DelayedPayment.sol'
+    result_filename = 'build/contracts/DelayedPayment.json'
     date = models.DateTimeField()
     user_address = models.CharField(max_length=50)
     recepient_address = models.CharField(max_length=50)

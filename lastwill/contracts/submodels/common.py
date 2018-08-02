@@ -399,7 +399,7 @@ class CommonDetails(models.Model):
         eth_contract = EthContract()
         eth_contract.source_code = source
         eth_contract.compiler_version = result['version']
-        sol_path_name = path.basename(sol_path)[:-4]
+        sol_path_name = path.basename(path.join(sol_path, self.result_filename))[:-4]
         eth_contract.abi = json.loads(
             result['contracts']['<stdin>:'+sol_path_name]['abi']
         )
