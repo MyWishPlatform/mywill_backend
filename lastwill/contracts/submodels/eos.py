@@ -171,8 +171,8 @@ class ContractDetailsEOSToken(CommonDetails):
 class ContractDetailsEOSAccount(CommonDetails):
     public_key = models.CharField(max_length=128)
     account_name = models.CharField(max_length=50)
-    stake_net_value = models.IntegerField(default=10.0000)
-    stake_cpu_value = models.IntegerField(default=10.0000)
+    stake_net_value = models.CharField(default='10.0000')
+    stake_cpu_value = models.CharField(default='10.0000')
     buy_ram_kbytes = models.IntegerField(default=128)
     eos_contract = models.ForeignKey(
         EOSContract,
@@ -206,8 +206,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         command = [
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
             EOS_ACCOUNT_NAME, self.admin_address, self.public_key,
-            self.public_key, '—stake-net ', str(self.stake_net_value) + ' EOS',
-            ' —stake-cpu ', str(self.stake_cpu_value) + ' EOS',
+            self.public_key, '—stake-net ', "%s" % str(self.stake_net_value) + ' EOS',
+            ' —stake-cpu ', "%s" % str(self.stake_cpu_value) + ' EOS',
             '—buy-ram-kbytes ' + str(self.buy_ram_kbytes)
         ]
         print('command = ', command)
