@@ -22,7 +22,8 @@ from lastwill.contracts.models import (
         ContractDetailsAirdrop, AirdropAddress,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract
+        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
+        ContractDetailsEOSAccount
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -874,6 +875,40 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             EOSTokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+
+
+
+
+
+class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsEOSAccount
+        fields = ('owner_public_key', 'active_public_key','account_name')
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        if 'account_name' not in details :
+            raise ValidationError
+        if len(details['account_name'])!= 12:
+            raise ValidationError
+        if '6' in details['account_name'] or '7' in details['account_name'] or '8' in details['account_name'] or '9' in details['account_name']:
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        return res
+
+    def update(self, contract, details, contract_details):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)

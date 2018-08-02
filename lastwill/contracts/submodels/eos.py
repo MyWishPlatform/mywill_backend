@@ -169,7 +169,8 @@ class ContractDetailsEOSToken(CommonDetails):
 
 
 class ContractDetailsEOSAccount(CommonDetails):
-    public_key = models.CharField(max_length=128)
+    owner_public_key = models.CharField(max_length=128)
+    active_public_key = models.CharField(max_length=128)
     account_name = models.CharField(max_length=50)
     stake_net_value = models.CharField(default='10.0000')
     stake_cpu_value = models.CharField(default='10.0000')
@@ -201,7 +202,6 @@ class ContractDetailsEOSAccount(CommonDetails):
     # @blocking
     # @postponable
     def deploy(self):
-
         unlock_eos_account()
         command = [
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
@@ -223,6 +223,10 @@ class ContractDetailsEOSAccount(CommonDetails):
             eos_contract.contract=self.contract
             eos_contract.save()
         except:
-            raise Exception('deploy error')
+            raise Exception('create account error')
         self.contract.state='WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
+
+    def deployed(self, message):
+        self.contract.state='ACTIVE'
         self.contract.save()
