@@ -387,7 +387,7 @@ class CommonDetails(models.Model):
         if getattr(self, eth_contract_attr_name):
             getattr(self, eth_contract_attr_name).delete()
         sol_path = path.join(CONTRACTS_DIR, sol_path)
-        with open(sol_path, 'rb') as f:
+        with open(path.join(sol_path, self.filname), 'rb') as f:
             source = f.read().decode('utf-8-sig')
         directory = path.dirname(sol_path)
         result = json.loads(Popen(
