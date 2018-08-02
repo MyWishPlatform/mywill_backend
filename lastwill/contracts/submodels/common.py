@@ -395,7 +395,7 @@ class CommonDetails(models.Model):
             source = f.read().decode('utf-8-sig')
         directory = path.dirname(sol_path)
         result = json.loads(Popen(
-                SOLC.format(directory).split(),
+                ['yarn', 'compile'],
                 stdin=PIPE,
                 stdout=PIPE,
                 cwd=directory

@@ -14,7 +14,7 @@ from email_messages import *
 
 @contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
-    sol_path = 'lastwill/contracts/contracts/LastWillNotify.sol'
+    sol_path = 'lastwill/contracts/contracts/'
 
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
