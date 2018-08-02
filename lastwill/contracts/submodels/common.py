@@ -394,8 +394,8 @@ class CommonDetails(models.Model):
         with open(path.join(sol_path, self.source_filename), 'rb') as f:
             source = f.read().decode('utf-8-sig')
         os.system('cd {dir} && yarn compile'.format(dir=sol_path))
-        sol_path_name = path.basename(path.join(sol_path, self.result_filename))[:-4]
-        with open (sol_path_name, 'rb') as f:
+        result_name = path.join(sol_path, self.result_filename)
+        with open (result_name, 'rb') as f:
             result =json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
         eth_contract.source_code = source
