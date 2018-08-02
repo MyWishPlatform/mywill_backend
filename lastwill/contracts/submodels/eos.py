@@ -171,9 +171,9 @@ class ContractDetailsEOSToken(CommonDetails):
 class ContractDetailsEOSAccount(CommonDetails):
     public_key = models.CharField(max_length=128)
     account_name = models.CharField(max_length=50)
-    stake_net_value = models.IntegerField()
-    stake_cpu_value = models.IntegerField()
-    buy_ram_kbytes = models.IntegerField()
+    stake_net_value = models.IntegerField(default=10.0000)
+    stake_cpu_value = models.IntegerField(default=10.0000)
+    buy_ram_kbytes = models.IntegerField(default=128)
     eos_contract = models.ForeignKey(
         EOSContract,
         null=True,
@@ -203,10 +203,6 @@ class ContractDetailsEOSAccount(CommonDetails):
     def deploy(self):
 
         unlock_eos_account()
-        ccc = ('cleos -u http://127.0.0.1:8887 system newaccount mywishio '
-               'lehalehaleha EOS6bfZpKqCXFD2CFD8gcA4PVXBzT4sFZ5sabVM4KRFLW1y5HcywQ '
-               'EOS6bfZpKqCXFD2CFD8gcA4PVXBzT4sFZ5sabVM4KRFLW1y5HcywQ '
-               '—stake-net "10.0000 EOS" —stake-cpu "10.0000 EOS" —buy-ram-kbytes 128')
         command = [
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
             EOS_ACCOUNT_NAME, self.admin_address, self.public_key,
