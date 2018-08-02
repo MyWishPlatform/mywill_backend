@@ -187,7 +187,7 @@ class ContractDetailsLastwill(CommonDetails):
     def get_gaslimit(self):
         Cg = 1270525
         CBg = 26561
-        return Cg + len(self.contract.heir_set.all()) * CBg + 80000
+        return Cg + len(self.contract.heir_set.all()) * CBg + 25000
 
     @blocking
     @postponable
