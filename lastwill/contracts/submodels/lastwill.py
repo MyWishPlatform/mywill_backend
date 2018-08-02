@@ -14,8 +14,9 @@ from email_messages import *
 
 @contract_details('Will contract')
 class ContractDetailsLastwill(CommonDetails):
-    sol_path = 'lastwill/contracts/contracts/LastWillNotify.sol'
-
+    sol_path = 'lastwill/last-will/'
+    source_filename = 'contracts/LastWillNotify.sol'
+    result_filename = 'build/contracts/LastWillNotify.json'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
@@ -184,9 +185,9 @@ class ContractDetailsLastwill(CommonDetails):
             )
 
     def get_gaslimit(self):
-        Cg = 780476
+        Cg = 1270525
         CBg = 26561
-        return Cg + len(self.contract.heir_set.all()) * CBg + 80000
+        return Cg + len(self.contract.heir_set.all()) * CBg + 25000
 
     @blocking
     @postponable

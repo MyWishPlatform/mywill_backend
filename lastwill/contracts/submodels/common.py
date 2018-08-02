@@ -391,23 +391,17 @@ class CommonDetails(models.Model):
         if getattr(self, eth_contract_attr_name):
             getattr(self, eth_contract_attr_name).delete()
         sol_path = path.join(CONTRACTS_DIR, sol_path)
-        with open(sol_path, 'rb') as f:
+        with open(path.join(sol_path, self.source_filename), 'rb') as f:
             source = f.read().decode('utf-8-sig')
-        directory = path.dirname(sol_path)
-        result = json.loads(Popen(
-                SOLC.format(directory).split(),
-                stdin=PIPE,
-                stdout=PIPE,
-                cwd=directory
-        ).communicate(source.encode())[0].decode())
+        os.system('cd {dir} && yarn compile'.format(dir=sol_path))
+        result_name = path.join(sol_path, self.result_filename)
+        with open (result_name, 'rb') as f:
+            result =json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
         eth_contract.source_code = source
-        eth_contract.compiler_version = result['version']
-        sol_path_name = path.basename(sol_path)[:-4]
-        eth_contract.abi = json.loads(
-            result['contracts']['<stdin>:'+sol_path_name]['abi']
-        )
-        eth_contract.bytecode = result['contracts']['<stdin>:'+sol_path_name]['bin']
+        eth_contract.compiler_version = result['compiler']['version']
+        eth_contract.abi = result['abi']
+        eth_contract.bytecode = result['bytecode'][2:]
         eth_contract.contract = self.contract
         eth_contract.original_contract = self.contract
         eth_contract.save()
