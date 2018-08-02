@@ -166,3 +166,67 @@ class ContractDetailsEOSToken(CommonDetails):
     def created(self, message):
         self.contract.state='ACTIVE'
         self.contract.save()
+
+
+class ContractDetailsEOSAccount(CommonDetails):
+    public_key = models.CharField(max_length=128)
+    account_name = models.CharField(max_length=50)
+    stake_net_value = models.IntegerField()
+    stake_cpu_value = models.IntegerField()
+    buy_ram_kbytes = models.IntegerField()
+    eos_contract = models.ForeignKey(
+        EOSContract,
+        null=True,
+        default=None,
+        related_name='eos_token_details',
+        on_delete=models.SET_NULL
+    )
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return 5000
+
+    def get_arguments(self, eth_contract_attr_name):
+        return []
+
+    # @logging
+    # @blocking
+    # @postponable
+    def deploy(self):
+
+        unlock_eos_account()
+        ccc = ('cleos -u http://127.0.0.1:8887 system newaccount mywishio '
+               'lehalehaleha EOS6bfZpKqCXFD2CFD8gcA4PVXBzT4sFZ5sabVM4KRFLW1y5HcywQ '
+               'EOS6bfZpKqCXFD2CFD8gcA4PVXBzT4sFZ5sabVM4KRFLW1y5HcywQ '
+               '—stake-net "10.0000 EOS" —stake-cpu "10.0000 EOS" —buy-ram-kbytes 128')
+        command = [
+            'cleos', '-u', EOS_URL, 'system', 'newaccount',
+            EOS_ACCOUNT_NAME, self.admin_address, self.public_key,
+            self.public_key, '—stake-net ', str(self.stake_net_value) + ' EOS',
+            ' —stake-cpu ', str(self.stake_cpu_value) + ' EOS',
+            '—buy-ram-kbytes ' + str(self.buy_ram_kbytes)
+        ]
+        print('command = ', command)
+        result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+        print('result  ', result)
+        try:
+            tx_hash = re.match('executed transaction: ([\da-f]{64})',
+                               result[1].decode()).group(1)
+            print('tx_hash ', tx_hash)
+            eos_contract = EOSContract()
+            eos_contract.tx_hash = tx_hash
+            eos_contract.address = EOS_ACCOUNT_NAME
+            eos_contract.contract=self.contract
+            eos_contract.save()
+        except:
+            raise Exception('deploy error')
+        self.contract.state='WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
