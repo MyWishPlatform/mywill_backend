@@ -207,8 +207,8 @@ class ContractDetailsEOSAccount(CommonDetails):
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
             EOS_ACCOUNT_NAME, self.account_name, self.owner_public_key,
             self.active_public_key, '--stake-net', '"%s"' % (str(self.stake_net_value) + ' EOS'),
-            ' --stake-cpu ', '"%s"' % (str(self.stake_cpu_value) + ' EOS'),
-            '--buy-ram-kbytes ' + str(self.buy_ram_kbytes)
+            '--stake-cpu', '"%s"' % (str(self.stake_cpu_value) + ' EOS'),
+            '--buy-ram-kbytes' + str(self.buy_ram_kbytes)
         ]
         print('command = ', command)
         result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
