@@ -393,14 +393,7 @@ class CommonDetails(models.Model):
         sol_path = path.join(CONTRACTS_DIR, sol_path)
         with open(path.join(sol_path, self.source_filename), 'rb') as f:
             source = f.read().decode('utf-8-sig')
-        directory = path.dirname(sol_path)
-        result1 = json.loads(Popen(
-                ['yarn', 'compile'],
-                stdin=PIPE,
-                stdout=PIPE,
-                cwd=directory
-
-        ).communicate(source.encode())[0].decode())
+        os.system('cd {dir} && yarn compile'.format(dir=sol_path))
         sol_path_name = path.basename(path.join(sol_path, self.result_filename))[:-4]
         with open (sol_path_name, 'rb') as f:
             result =json.loads(f.read().decode('utf-8-sig'))
