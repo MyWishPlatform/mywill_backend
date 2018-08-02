@@ -1,6 +1,7 @@
 import datetime
 import requests
 import binascii
+import string
 import uuid
 from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
@@ -897,7 +898,7 @@ class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
             raise ValidationError
         if len(details['account_name'])!= 12:
             raise ValidationError
-        if '6' in details['account_name'] or '7' in details['account_name'] or '8' in details['account_name'] or '9' in details['account_name']:
+        if not all([x in '12345'+string.ascii_lowercase for x in details['account_name']]):
             raise ValidationError
 
     def to_representation(self, contract_details):
