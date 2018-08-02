@@ -183,7 +183,8 @@ class ContractSerializer(serializers.ModelSerializer):
             7: ContractDetailsNeoICOSerializer,
             8: ContractDetailsAirdropSerializer,
             9: ContractDetailsInvestmentPoolSerializer,
-            10: ContractDetailsEOSTokenSerializer
+            10: ContractDetailsEOSTokenSerializer,
+            11: ContractDetailsEOSAccountSerializer
         }[contract_type]
 
 
@@ -878,11 +879,6 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
-
-
-
-
-
 
 
 class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
