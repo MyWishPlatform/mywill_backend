@@ -206,8 +206,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         command = [
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
             EOS_ACCOUNT_NAME, self.admin_address, self.public_key,
-            self.public_key, '—stake-net ', "%s" % str(self.stake_net_value) + ' EOS',
-            ' —stake-cpu ', "%s" % str(self.stake_cpu_value) + ' EOS',
+            self.public_key, '—stake-net ', '"%s"' % str(self.stake_net_value) + ' EOS',
+            ' —stake-cpu ', '"%s"' % str(self.stake_cpu_value) + ' EOS',
             '—buy-ram-kbytes ' + str(self.buy_ram_kbytes)
         ]
         print('command = ', command)
