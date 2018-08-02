@@ -401,7 +401,7 @@ class CommonDetails(models.Model):
         eth_contract.source_code = source
         eth_contract.compiler_version = result['compiler']['version']
         eth_contract.abi = result['abi']
-        eth_contract.bytecode = result['bytecode']
+        eth_contract.bytecode = result['bytecode'][2:]
         eth_contract.contract = self.contract
         eth_contract.original_contract = self.contract
         eth_contract.save()
