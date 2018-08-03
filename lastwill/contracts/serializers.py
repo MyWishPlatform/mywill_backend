@@ -143,11 +143,18 @@ class ContractSerializer(serializers.ModelSerializer):
             eth_cost = Contract.get_details_model(
                 contract.contract_type
             ).calc_cost(res['contract_details'], contract.network)
-        res['cost'] = {
-            'ETH': str(eth_cost),
-            'WISH': str(int(to_wish('ETH', int(eth_cost)))),
-            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
-        }
+        if contract.contract_type == 11:
+            res['cost'] = {
+                'ETH': str(int(eth_cost) * convert('WISH', 'ETH')['ETH']),
+                'WISH': str(eth_cost),
+                'BTC': str(int(eth_cost) * convert('WISH', 'BTC')['BTC'])
+            }
+        else:
+            res['cost'] = {
+                'ETH': str(eth_cost),
+                'WISH': str(int(to_wish('ETH', int(eth_cost)))),
+                'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+            }
         return res
 
     def update(self, contract, validated_data):
