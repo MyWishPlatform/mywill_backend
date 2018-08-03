@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import EOS_URL, CONTRACTS_DIR, EOS_PASSWORD
 from lastwill.settings import EOS_ACCOUNT_NAME, EOS_WALLET_NAME
+from exchange_API import to_wish, convert
 
 
 def unlock_eos_account():
@@ -193,7 +194,8 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 5000 * 10**18
+        cost = 5000*10**18 * convert('WISH', 'ETH')['ETH']
+        return cost
 
     def get_arguments(self, eth_contract_attr_name):
         return []
