@@ -194,7 +194,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 5000*10**18 * convert('WISH', 'ETH')['ETH']
+        cost = 5000*10**18
         return cost
 
     def get_arguments(self, eth_contract_attr_name):
