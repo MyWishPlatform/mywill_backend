@@ -125,15 +125,24 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'EOS'
             if network.name == 'EOS_TESTNET':
                 network_name = 'EOS Testnet'
-
-            send_mail(
-                    email_messages.create_subject,
-                    email_messages.create_message.format(
-                        network_name=network_name
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [validated_data['user'].email]
-            )
+            if contract.contract_type != 11:
+                send_mail(
+                        email_messages.create_subject,
+                        email_messages.create_message.format(
+                            network_name=network_name
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [validated_data['user'].email]
+                )
+            else:
+                send_mail(
+                        email_messages.eos_create_subject,
+                        email_messages.eos_create_message.format(
+                            network_name=network_name
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [validated_data['user'].email]
+                )
         return contract
 
     def to_representation(self, contract):
