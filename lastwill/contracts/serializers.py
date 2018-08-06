@@ -121,6 +121,10 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'NEO'
             if network.name == 'NEO_TESTNET':
                 network_name = 'NEO Testnet'
+            if network.name == 'EOS_MAINNET':
+                network_name = 'EOS'
+            if network.name == 'EOS_TESTNET':
+                network_name = 'EOS Testnet'
 
             send_mail(
                     email_messages.create_subject,
