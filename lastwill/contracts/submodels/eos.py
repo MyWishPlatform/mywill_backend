@@ -120,7 +120,7 @@ class ContractDetailsEOSToken(CommonDetails):
         # ):
         #     raise Exception('deploy error 2')
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
-        password = NETWORKS[self.contract.network.name]['password']
+        password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
         command = [
@@ -208,7 +208,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     @postponable
     def deploy(self):
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
-        password = NETWORKS[self.contract.network.name]['password']
+        password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
         command = [
