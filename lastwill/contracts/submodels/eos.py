@@ -131,7 +131,7 @@ class ContractDetailsEOSToken(CommonDetails):
                 max_sup=self.maximum_supply,
                 token=self.token_short_name
             ), '-p',
-            acc_name, self.admin_address
+            acc_name
         ]
         print('command = ', command)
         result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
