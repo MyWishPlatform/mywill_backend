@@ -11,8 +11,8 @@ from lastwill.settings import EOS_ACCOUNT_NAME, EOS_WALLET_NAME
 from exchange_API import to_wish, convert
 
 
-def unlock_eos_account():
-    lock_command = 'cleos wallet lock -n {wallet}'.format(wallet=EOS_WALLET_NAME)
+def unlock_eos_account(wallet_name, password):
+    lock_command = 'cleos wallet lock -n {wallet}'.format(wallet=wallet_name)
     if os.system(
             "/bin/bash -c '{command}'".format(command=lock_command)
 
@@ -20,7 +20,7 @@ def unlock_eos_account():
         raise Exception('lock command error')
 
     unlock_command = 'echo {password} | cleos wallet unlock -n {wallet}'.format(
-        password=EOS_PASSWORD, wallet=EOS_WALLET_NAME
+        password=password, wallet=wallet_name
     )
     if os.system(
             "/bin/bash -c '{command}'".format(command=unlock_command)
@@ -119,16 +119,19 @@ class ContractDetailsEOSToken(CommonDetails):
         #
         # ):
         #     raise Exception('deploy error 2')
-        unlock_eos_account()
+        wallet_name = NETWORKS[self.contract.network.name]['address']
+        password = NETWORKS[self.contract.network.name]['password']
+        unlock_eos_account(wallet_name, password)
+        acc_name = NETWORKS[self.contract.network.name]['account']
         command = [
             'cleos', '-u', EOS_URL, 'push', 'action',
-            EOS_ACCOUNT_NAME, 'create',
+            acc_name, 'create',
             '["{acc_name}","{max_sup} {token}"]'.format(
                 acc_name=self.admin_address,
                 max_sup=self.maximum_supply,
                 token=self.token_short_name
             ), '-p',
-            EOS_ACCOUNT_NAME, self.admin_address
+            acc_name, self.admin_address
         ]
         print('command = ', command)
         result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
@@ -139,7 +142,7 @@ class ContractDetailsEOSToken(CommonDetails):
             print('tx_hash ', tx_hash)
             eos_contract = EOSContract()
             eos_contract.tx_hash = tx_hash
-            eos_contract.address = EOS_ACCOUNT_NAME
+            eos_contract.address = acc_name
             eos_contract.contract=self.contract
             eos_contract.save()
         except:
@@ -204,10 +207,13 @@ class ContractDetailsEOSAccount(CommonDetails):
     # @blocking
     # @postponable
     def deploy(self):
-        unlock_eos_account()
+        wallet_name = NETWORKS[self.contract.network.name]['address']
+        password = NETWORKS[self.contract.network.name]['password']
+        unlock_eos_account(wallet_name, password)
+        acc_name = NETWORKS[self.contract.network.name]['account']
         command = [
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
-            EOS_ACCOUNT_NAME, self.account_name, self.owner_public_key,
+            acc_name, self.account_name, self.owner_public_key,
             self.active_public_key, '--stake-net', str(self.stake_net_value) + ' EOS',
             '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
             '--buy-ram-kbytes', str(self.buy_ram_kbytes)
@@ -221,7 +227,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             print('tx_hash ', tx_hash)
             eos_contract = EOSContract()
             eos_contract.tx_hash = tx_hash
-            eos_contract.address = EOS_ACCOUNT_NAME
+            eos_contract.address = acc_name
             eos_contract.contract=self.contract
             eos_contract.save()
         except:
