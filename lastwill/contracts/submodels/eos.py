@@ -216,7 +216,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
         print('result  ', result)
         try:
-            tx_hash = re.match('executed transaction: ([\da-f]{64})',
+            tx_hash = re.search('executed transaction: ([\da-f]{64})',
                                result[1].decode()).group(1)
             print('tx_hash ', tx_hash)
             eos_contract = EOSContract()
