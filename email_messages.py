@@ -31,6 +31,16 @@ If you have any question or want to get free promotion of your project in MyWish
 Thank you for using MyWish.
 """
 
+eos_create_subject = """Your account is ready for deployment"""
+eos_create_message = """Congratulations!
+
+Your eos account is created and ready for deployment to {network_name}.
+
+If you have any question or want to get free promotion of your project in MyWish social channels please contact support@mywish.io.
+
+Thank you for using MyWish.
+"""
+
 heir_subject = """MyWish notification"""
 heir_message = """Hello!
 
