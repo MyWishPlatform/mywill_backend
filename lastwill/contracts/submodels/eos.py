@@ -80,9 +80,9 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
-    # @logging
-    # @blocking
-    # @postponable
+    @logging
+    @blocking
+    @postponable
     def deploy(self):
         # self.compile()
         # params = {"account_name": 'mywishio'}
@@ -119,10 +119,10 @@ class ContractDetailsEOSToken(CommonDetails):
         #
         # ):
         #     raise Exception('deploy error 2')
-        wallet_name = NETWORKS[self.contract.network.name]['address']
+        wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['password']
         unlock_eos_account(wallet_name, password)
-        acc_name = NETWORKS[self.contract.network.name]['account']
+        acc_name = NETWORKS[self.contract.network.name]['address']
         command = [
             'cleos', '-u', EOS_URL, 'push', 'action',
             acc_name, 'create',
@@ -203,14 +203,14 @@ class ContractDetailsEOSAccount(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    # @logging
-    # @blocking
-    # @postponable
+    @logging
+    @blocking
+    @postponable
     def deploy(self):
-        wallet_name = NETWORKS[self.contract.network.name]['address']
+        wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['password']
         unlock_eos_account(wallet_name, password)
-        acc_name = NETWORKS[self.contract.network.name]['account']
+        acc_name = NETWORKS[self.contract.network.name]['address']
         command = [
             'cleos', '-u', EOS_URL, 'system', 'newaccount',
             acc_name, self.account_name, self.owner_public_key,
