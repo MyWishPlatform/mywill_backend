@@ -381,6 +381,16 @@ class Receiver(threading.Thread):
         details = contract.get_details()
         details.created(message)
 
+    def newAccount(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.msg_deployed(message, eth_contract_attr_name='eos_contract')
+
+    def tokenCreated(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.msg_deployed(message, eth_contract_attr_name='eos_contract')
+
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]

@@ -232,7 +232,7 @@ LOGGING = {
 }
 
 
-EOS_URL = 'http://127.0.0.1:8887/'
+EOS_URL = 'http://127.0.0.1:8886/'
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 

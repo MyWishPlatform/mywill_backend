@@ -84,41 +84,6 @@ class ContractDetailsEOSToken(CommonDetails):
     @blocking
     @postponable
     def deploy(self):
-        # self.compile()
-        # params = {"account_name": 'mywishio'}
-        # req = requests.post(EOS_URL + 'v1/chain/get_account', json=params)
-        # key = ''
-        # for x in req['permissions']:
-        #     if x['perm_name'] == 'active' and x['parent'] == 'owner':
-        #         key = x['required_auth']['keys'][0]['key']
-        #
-        # c1 = ('cleos -u {url} system newaccount mywishio {account_name} '
-        #      '{key1} {key2} --stake-net {s_net} --stake-cpu {s_cpu} '
-        #      '--buy-ram-kbytes {ram}')
-        # params = self.get_stake_params()
-        # if os.system(
-        #         "/bin/bash -c '" + c1 + "'".format(
-        #             url=EOS_URL,
-        #             account_name=self.admin_address,
-        #             key1=key, key2=key,
-        #             s_net=params['stake-net'],
-        #             s_cpu=params['stake_cpu'],
-        #             ram=params['buy_ram_kbytes']
-        #             )
-        #
-        # ):
-        #     raise Exception('deploy error 1')
-
-        # c2 = 'cleos -u {url} set contract {account_name} {contract_path}'
-        # if os.system(
-        #         "/bin/bash -c '" + c2 + "'".format(
-        #             url=EOS_URL,
-        #             account_name=self.admin_address,
-        #             contract_path=CONTRACTS_DIR + 'eosio.token/eosio.token/'
-        #             )
-        #
-        # ):
-        #     raise Exception('deploy error 2')
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -134,22 +99,34 @@ class ContractDetailsEOSToken(CommonDetails):
             acc_name
         ]
         print('command = ', command)
-        result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-        print('result  ', result)
-        try:
-            tx_hash = re.match('executed transaction: ([\da-f]{64})',
-                               result[1].decode()).group(1)
-            print('tx_hash ', tx_hash)
-            eos_contract = EOSContract()
-            eos_contract.tx_hash = tx_hash
-            eos_contract.address = acc_name
-            eos_contract.contract=self.contract
-            eos_contract.save()
-        except:
-            raise Exception('deploy error')
+
+        attempts_count = 10
+        for attempt in range(attempts_count):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = re.search('executed transaction: ([\da-f]{64})', stderr.decode())
+            if result:
+                break
+        else:
+            raise Exception('cannot make tx with %i attempts' % attempts_count)
+
+        tx_hash = result.group(1)
+        print('tx_hash:', tx_hash, flush=True)
+        eos_contract = EOSContract()
+        eos_contract.tx_hash = tx_hash
+        eos_contract.address = acc_name
+        eos_contract.contract=self.contract
+        eos_contract.save()
+
+        self.eos_contract = eos_contract
+        self.save()
+
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+
+    '''
     def compile(self):
         dest = path.join(CONTRACTS_DIR, 'eosio.token/')
         with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.abi'), 'rb') as f:
@@ -166,11 +143,7 @@ class ContractDetailsEOSToken(CommonDetails):
         eos_contract.source_code = source_code
         eos_contract.save()
         self.save()
-
-    def created(self, message):
-        self.contract.state='ACTIVE'
-        self.contract.save()
-
+    '''
 
 class ContractDetailsEOSAccount(CommonDetails):
     owner_public_key = models.CharField(max_length=128)
@@ -218,23 +191,31 @@ class ContractDetailsEOSAccount(CommonDetails):
             '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
             '--buy-ram-kbytes', str(self.buy_ram_kbytes)
         ]
-        print('command = ', command)
-        result = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-        print('result  ', result)
-        try:
-            tx_hash = re.search('executed transaction: ([\da-f]{64})',
-                               result[1].decode()).group(1)
-            print('tx_hash ', tx_hash)
-            eos_contract = EOSContract()
-            eos_contract.tx_hash = tx_hash
-            eos_contract.address = acc_name
-            eos_contract.contract=self.contract
-            eos_contract.save()
-        except:
-            raise Exception('create account error')
+        print('command:', command, flush=True)
+        
+
+        attempts_count = 10
+        for attempt in range(attempts_count):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = re.search('executed transaction: ([\da-f]{64})', stderr.decode())
+            if result:
+                break
+        else:
+            raise Exception('cannot make tx with %i attempts' % attempts_count)
+
+        tx_hash = result.group(1)
+        print('tx_hash:', tx_hash, flush=True)
+        eos_contract = EOSContract()
+        eos_contract.tx_hash = tx_hash
+        eos_contract.address = acc_name
+        eos_contract.contract=self.contract
+        eos_contract.save()
+
+        self.eos_contract = eos_contract
+        self.save()
+
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    def msg_deployed(self, message):
-        self.contract.state='ACTIVE'
-        self.contract.save()
