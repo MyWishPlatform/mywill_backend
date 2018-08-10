@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import CONTRACTS_DIR, EOS_PASSWORD, EOS_ATTEMPTS_COUNT
+from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
 from exchange_API import to_wish, convert
 
 
