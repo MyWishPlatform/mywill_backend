@@ -14,7 +14,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger, EOS_URL
+from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -867,10 +867,10 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
             raise ValidationError
         if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
             raise ValidationError
-        params = {"account_name":details['admin_address']}
-        req = requests.post(EOS_URL+'v1/chain/get_account', json=params)
-        if req.status_code != 200:
-            raise ValidationError
+#        params = {"account_name":details['admin_address']}
+#        req = requests.post(EOS_URL+'v1/chain/get_account', json=params)
+#        if req.status_code != 200:
+#            raise ValidationError
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

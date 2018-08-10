@@ -6,8 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import EOS_URL, CONTRACTS_DIR, EOS_PASSWORD
-from lastwill.settings import EOS_ACCOUNT_NAME, EOS_WALLET_NAME
+from lastwill.settings import CONTRACTS_DIR, EOS_PASSWORD, EOS_ATTEMPTS_COUNT
 from exchange_API import to_wish, convert
 
 
@@ -88,8 +87,9 @@ class ContractDetailsEOSToken(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
+        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [
-            'cleos', '-u', EOS_URL, 'push', 'action',
+            'cleos', '-u', eos_url, 'push', 'action',
             acc_name, 'create',
             '["{acc_name}","{max_sup} {token}"]'.format(
                 acc_name=self.admin_address,
@@ -100,8 +100,7 @@ class ContractDetailsEOSToken(CommonDetails):
         ]
         print('command = ', command)
 
-        attempts_count = 10
-        for attempt in range(attempts_count):
+        for attempt in range(EOS_ATTEMPTS_COUNT):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
@@ -109,7 +108,7 @@ class ContractDetailsEOSToken(CommonDetails):
             if result:
                 break
         else:
-            raise Exception('cannot make tx with %i attempts' % attempts_count)
+            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
         print('tx_hash:', tx_hash, flush=True)
@@ -184,8 +183,9 @@ class ContractDetailsEOSAccount(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
+        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [
-            'cleos', '-u', EOS_URL, 'system', 'newaccount',
+            'cleos', '-u', eos_url, 'system', 'newaccount',
             acc_name, self.account_name, self.owner_public_key,
             self.active_public_key, '--stake-net', str(self.stake_net_value) + ' EOS',
             '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
@@ -194,8 +194,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         print('command:', command, flush=True)
         
 
-        attempts_count = 10
-        for attempt in range(attempts_count):
+        for attempt in range(EOS_ATTEMPTS_COUNT):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
@@ -203,7 +202,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             if result:
                 break
         else:
-            raise Exception('cannot make tx with %i attempts' % attempts_count)
+            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
         print('tx_hash:', tx_hash, flush=True)
