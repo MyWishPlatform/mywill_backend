@@ -232,12 +232,13 @@ LOGGING = {
 }
 
 
-
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/dashboard/first_entry'
+
+EOS_ATTEMPTS_COUNT = 16
 
 try:
     from lastwill.settings_local import *

@@ -5,6 +5,8 @@ MAIL_NETWORK = {
     'RSK_MAINNET': 'RSK',
     'RSK_TESTNET': 'RSK Testnet',
     'NEO_TESTNET': 'NEO Test Net',
-    'NEO_MAINNET': 'NEO'
+    'NEO_MAINNET': 'NEO',
+    'EOS_MAINNET': 'EOS',
+    'EOS_TESTNET': 'EOS Testnet',
 }
 

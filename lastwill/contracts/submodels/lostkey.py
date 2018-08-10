@@ -12,13 +12,17 @@ from email_messages import *
 
 @contract_details('Wallet contract (lost key)')
 class ContractDetailsLostKey(CommonDetails):
-    sol_path = 'lastwill/contracts/contracts/LastWillParityWallet.sol'
+    sol_path = 'lastwill/lost-key/'
+    source_filename = 'LostKeyDelayedPaymentWallet.sol'
+    result_filename = 'LostKeyDelayedPaymentWallet.json'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    transfer_threshold_wei = models.IntegerField()
+    transfer_delay_seconds = models.IntegerField()
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -31,6 +35,8 @@ class ContractDetailsLostKey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
+            self.transfer_threshold_wei,
+            self.transfer_delay_seconds
         ]
 
     def fundsAdded(self, message):

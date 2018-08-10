@@ -31,6 +31,16 @@ If you have any question or want to get free promotion of your project in MyWish
 Thank you for using MyWish.
 """
 
+eos_create_subject = """Your account is ready for creation"""
+eos_create_message = """Congratulations!
+
+Your EOS account is ready for creation in EOS Testnet.
+
+If you have any question please contact support@mywish.io.
+
+Thank you for using MyWish.
+"""
+
 heir_subject = """MyWish notification"""
 heir_message = """Hello!
 

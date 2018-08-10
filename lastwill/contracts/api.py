@@ -32,7 +32,7 @@ from exchange_API import to_wish
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
 
-def check_and_apply_promocode(promo_str, user, cost, contract_type):
+def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     wish_cost = to_wish('ETH', int(cost))
     if promo_str:
         try:
@@ -44,7 +44,7 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type):
         else:
            cost = cost - cost * discount / 100
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=user, promo=promo_object).save()
+        User2Promo(user=user, promo=promo_object, contract_id=cid).save()
         Promo.objects.select_for_update().filter(
                 promo_str=promo_str.upper()
         ).update(
@@ -71,6 +71,13 @@ class ContractViewSet(ModelViewSet):
 
     def get_queryset(self):
         result = self.queryset.order_by('-created_date')
+        eos = self.request.query_params.get('eos', None)
+        if eos is not None:
+            eos = int(eos)
+            if eos:
+                result = result.filter(contract_type=10)
+            else:
+                result = result.exclude(contract_type=10)
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -137,7 +144,7 @@ def deploy(request):
     cost = contract.cost
     promo_str = request.data.get('promo', None)
     cost = check_and_apply_promocode(
-        promo_str, request.user, cost, contract.contract_type
+        promo_str, request.user, cost, contract.contract_type, contract.id
     )
     wish_cost = to_wish('ETH', int(cost))
 

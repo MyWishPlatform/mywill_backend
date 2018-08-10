@@ -1,5 +1,7 @@
 import datetime
+import requests
 import binascii
+import string
 import uuid
 from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
@@ -21,7 +23,8 @@ from lastwill.contracts.models import (
         ContractDetailsAirdrop, AirdropAddress,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-        InvestAddress
+        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
+        ContractDetailsEOSAccount
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -118,15 +121,28 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'NEO'
             if network.name == 'NEO_TESTNET':
                 network_name = 'NEO Testnet'
-
-            send_mail(
-                    email_messages.create_subject,
-                    email_messages.create_message.format(
-                        network_name=network_name
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [validated_data['user'].email]
-            )
+            if network.name == 'EOS_MAINNET':
+                network_name = 'EOS'
+            if network.name == 'EOS_TESTNET':
+                network_name = 'EOS Testnet'
+            if contract.contract_type != 11:
+                send_mail(
+                        email_messages.create_subject,
+                        email_messages.create_message.format(
+                            network_name=network_name
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [validated_data['user'].email]
+                )
+            else:
+                send_mail(
+                        email_messages.eos_create_subject,
+                        email_messages.eos_create_message.format(
+                            network_name=network_name
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [validated_data['user'].email]
+                )
         return contract
 
     def to_representation(self, contract):
@@ -180,13 +196,24 @@ class ContractSerializer(serializers.ModelSerializer):
             6: ContractDetailsNeoSerializer,
             7: ContractDetailsNeoICOSerializer,
             8: ContractDetailsAirdropSerializer,
-            9: ContractDetailsInvestmentPoolSerializer
+            9: ContractDetailsInvestmentPoolSerializer,
+            10: ContractDetailsEOSTokenSerializer,
+            11: ContractDetailsEOSAccountSerializer
         }[contract_type]
 
 
 class EthContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EthContract
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
+
+
+class EOSContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSContract
         fields = (
             'id', 'address', 'source_code', 'abi',
             'bytecode', 'compiler_version', 'constructor_arguments'
@@ -283,7 +310,9 @@ class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
             'active_to',
             'check_interval',
             'last_check',
-            'next_check'
+            'next_check',
+            'transfer_threshold_wei',
+            'transfer_delay_seconds'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
@@ -800,6 +829,95 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
         if contract_details.contract.state not in ('ACTIVE', 'CANCELLED', 'DONE', 'ENDED'):
             res.pop('link', '')
         res['last_balance'] = count_last_balance(contract_details.contract)
+        return res
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+class EOSTokenHolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSTokenHolder
+        fields = ('address', 'amount', 'freeze_date', 'name')
+
+
+class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsEOSToken
+        fields = ('token_short_name', 'admin_address', 'decimals', 'maximum_supply')
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            EOSTokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        if 'admin_address' not in details :
+            raise ValidationError
+        if details['decimals'] < 0 or details['decimals'] > 15:
+            raise ValidationError
+        if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
+            raise ValidationError
+#        params = {"account_name":details['admin_address']}
+#        req = requests.post(EOS_URL+'v1/chain/get_account', json=params)
+#        if req.status_code != 200:
+#            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = EOSTokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th) for th in
+            contract_details.contract.eostokenholder_set.order_by('id').all()
+        ]
+        res['eos_contract'] = EOSContractSerializer().to_representation(contract_details.eos_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET', 'EOS_TESTNET']:
+            res['eos_contract']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.eostokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            EOSTokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsEOSAccount
+        fields = ('owner_public_key', 'active_public_key','account_name')
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        if 'account_name' not in details :
+            raise ValidationError
+        if len(details['account_name'])!= 12:
+            raise ValidationError
+        if not all([x in '12345'+string.ascii_lowercase for x in details['account_name']]):
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
         return res
 
     def update(self, contract, details, contract_details):

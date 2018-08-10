@@ -327,6 +327,8 @@ class Contract(models.Model):
         neo_ico = apps.get_model('contracts', 'ContractDetailsNeoICO')
         airdrop = apps.get_model('contracts', 'ContractDetailsAirdrop')
         investment = apps.get_model('contracts', 'ContractDetailsInvestmentPool')
+        eos_token = apps.get_model('contracts', 'ContractDetailsEOSToken')
+        eos_account = apps.get_model('contracts', 'ContractDetailsEOSAccount')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -339,6 +341,8 @@ class Contract(models.Model):
         contract_details_types[7] = {'name': 'MyWish NEO ICO', 'model': neo_ico}
         contract_details_types[8] = {'name': 'Airdrop', 'model': airdrop}
         contract_details_types[9] = {'name': 'InvestmentPool', 'model': investment}
+        contract_details_types[10] = {'name': 'EOS Token', 'model': eos_token}
+        contract_details_types[11] = {'name': 'EOS Account', 'model': eos_account}
         return contract_details_types
 
     @classmethod
@@ -387,23 +391,18 @@ class CommonDetails(models.Model):
         if getattr(self, eth_contract_attr_name):
             getattr(self, eth_contract_attr_name).delete()
         sol_path = path.join(CONTRACTS_DIR, sol_path)
-        with open(sol_path, 'rb') as f:
+        with open(path.join(sol_path, self.source_filename), 'rb') as f:
             source = f.read().decode('utf-8-sig')
-        directory = path.dirname(sol_path)
-        result = json.loads(Popen(
-                SOLC.format(directory).split(),
-                stdin=PIPE,
-                stdout=PIPE,
-                cwd=directory
-        ).communicate(source.encode())[0].decode())
+        os.system('cd {dir} && yarn compile'.format(dir=sol_path))
+        os.system('cd {dir} && yarn combine-contracts'.format(dir=sol_path))
+        result_name = path.join(sol_path, self.result_filename)
+        with open (result_name, 'rb') as f:
+            result =json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
         eth_contract.source_code = source
-        eth_contract.compiler_version = result['version']
-        sol_path_name = path.basename(sol_path)[:-4]
-        eth_contract.abi = json.loads(
-            result['contracts']['<stdin>:'+sol_path_name]['abi']
-        )
-        eth_contract.bytecode = result['contracts']['<stdin>:'+sol_path_name]['bin']
+        eth_contract.compiler_version = result['compiler']['version']
+        eth_contract.abi = result['abi']
+        eth_contract.bytecode = result['bytecode'][2:]
         eth_contract.contract = self.contract
         eth_contract.original_contract = self.contract
         eth_contract.save()
@@ -568,3 +567,13 @@ class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
+
+
+class EOSTokenHolder(models.Model):
+    contract = models.ForeignKey(Contract)
+    name = models.CharField(max_length=512, null=True)
+    address = models.CharField(max_length=50)
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    freeze_date = models.IntegerField(null=True)
