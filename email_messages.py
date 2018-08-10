@@ -31,12 +31,12 @@ If you have any question or want to get free promotion of your project in MyWish
 Thank you for using MyWish.
 """
 
-eos_create_subject = """Your account is ready for deployment"""
+eos_create_subject = """Your account is ready for creation"""
 eos_create_message = """Congratulations!
 
-Your eos account is created and ready for deployment to {network_name}.
+Your EOS account is ready for creation in EOS Testnet.
 
-If you have any question or want to get free promotion of your project in MyWish social channels please contact support@mywish.io.
+If you have any question please contact support@mywish.io.
 
 Thank you for using MyWish.
 """
