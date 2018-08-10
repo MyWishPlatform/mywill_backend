@@ -64,7 +64,7 @@ class ContractDetailsLostKey(CommonDetails):
         Cg = 1476117
         CBg = 28031
         Tg = 22000
-        Gp = 20 * 10 ** 9
+        Gp = 60 * 10 ** 9
         Dg = 29435
         DBg = 9646
         B = heirs_num

@@ -119,7 +119,7 @@ class ContractDetailsLastwill(CommonDetails):
         Cg = 780476
         CBg = 26561
         Tg = 22000
-        Gp = 20 * 10 ** 9
+        Gp = 60 * 10 ** 9
         Dg = 29435
         DBg = 9646
         B = heirs_num
