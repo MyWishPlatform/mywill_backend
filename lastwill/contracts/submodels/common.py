@@ -465,7 +465,7 @@ class CommonDetails(models.Model):
         eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        if self.contract.user.email:
+        if self.contract.user.email and self.contract.contract_type != 11:
             send_mail(
                     common_subject,
                     common_text.format(
@@ -475,6 +475,16 @@ class CommonDetails(models.Model):
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
+            )
+        if self.contract.user.email and self.contract.contract_type == 11:
+            send_mail(
+                eos_account_subject,
+                eos_account_message.format(
+                    link=network_link.format(address=self.account_name),
+                    network_name=network_name
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
             )
 
     def get_value(self):
