@@ -465,7 +465,7 @@ class CommonDetails(models.Model):
         eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        if self.contract.user.email:
+        if self.contract.user.email and self.contract.contract_type != 11:
             send_mail(
                     common_subject,
                     common_text.format(

@@ -311,8 +311,8 @@ class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
             'check_interval',
             'last_check',
             'next_check',
-            'transfer_threshold_wei',
-            'transfer_delay_seconds'
+#            'transfer_threshold_wei',
+#            'transfer_delay_seconds'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
