@@ -44,7 +44,7 @@ Thank you for using MyWish.
 eos_account_subject = """Your account is ready"""
 eos_account_message = """Hello,
 
-We are happy to inform you that your contract was successfully created and deployed to EOS Testnet network.
+We are happy to inform you that your account was successfully created in EOS Testnet network.
 EOS Account: {link}
 
 Please contact support@mywish.io if you need if you have any questions.
