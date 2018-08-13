@@ -1,4 +1,7 @@
 import requests
+import os
+import hashlib
+import binascii
 import string
 import random
 
@@ -23,8 +26,10 @@ def init_profile(user, is_social=False, lang='en'):
 
     key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     btc_address = key.ChildKey(user.id).Address()
-    chars = string.ascii_lowercase + string.digits + string.ascii_uppercase
-    memo_str = ''.join(random.choice(chars) for _ in range(16))
+    m = hashlib.sha256()
+    memo_str = os.urandom(6)
+    m.update(memo_str)
+    memo_str = binascii.hexlify(memo_str + m.digest()[0:2])
 
     btc_account = BTCAccount(address=btc_address)
     btc_account.user = user
