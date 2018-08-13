@@ -1,4 +1,6 @@
 import requests
+import string
+import random
 
 from bip32utils import BIP32Key
 from bip32utils import BIP32_HARDEN
@@ -21,13 +23,16 @@ def init_profile(user, is_social=False, lang='en'):
 
     key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     btc_address = key.ChildKey(user.id).Address()
+    chars = string.ascii_lowercase + string.digits
+    memo_str = ''.join(random.choice(chars) for _ in range(16))
 
     btc_account = BTCAccount(address=btc_address)
     btc_account.user = user
     btc_account.save()
     eth_address = keys.PublicKey(key.ChildKey(user.id).K.to_string()).to_checksum_address()
     Profile(
-        user=user, internal_address=eth_address, is_social=is_social, lang=lang
+        user=user, internal_address=eth_address,
+        is_social=is_social, lang=lang, memo=memo_str
     ).save()
     requests.post(
         BITCOIN_URLS['main'],
