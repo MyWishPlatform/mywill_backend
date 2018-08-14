@@ -13,4 +13,4 @@ class Profile(models.Model):
     is_social = models.BooleanField(default=False)
     lang = models.CharField(max_length=2, default='en')
     last_used_totp = models.CharField(max_length=64, null=True, default=None)
-    memo = models.CharField(max_length=25, null=True, default=None)
+    memo = models.CharField(max_length=25, null=True, default=None, unique=True)
