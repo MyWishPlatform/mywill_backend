@@ -14,8 +14,14 @@ def create_payment(uid, value, tx, currency, amount, update=True):
     user = User.objects.get(id=uid)
 
     if update:
-        Profile.objects.select_for_update().filter(id=user.profile.id).update(
-        balance=F('balance') + value)
+        if currency == 'EOS':
+            Profile.objects.select_for_update().filter(
+                id=user.profile.id).update(
+                eos_balance=F('eos_balance') + value)
+        else:
+            Profile.objects.select_for_update().filter(
+                id=user.profile.id).update(
+                balance=F('balance') + value)
 
     payment = InternalPayment(
         user_id=uid,

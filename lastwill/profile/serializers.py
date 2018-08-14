@@ -27,7 +27,7 @@ def init_profile(user, is_social=False, lang='en'):
     key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     btc_address = key.ChildKey(user.id).Address()
     m = hashlib.sha256()
-    memo_str = os.urandom(6)
+    memo_str = os.urandom(8)
     m.update(memo_str)
     memo_str = binascii.hexlify(memo_str + m.digest()[0:2])
 
