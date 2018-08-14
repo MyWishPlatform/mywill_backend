@@ -236,6 +236,10 @@ def get_currency_statistics():
         'https://api.coinmarketcap.com/v1/ticker/bitcoin/'
     ).content.decode())[0]
 
+    eos_info = json.loads(requests.get(
+        'https://api.coinmarketcap.com/v1/ticker/eos/'
+    ).content.decode())[0]
+
     eth_info = json.loads(requests.get(
         'https://api.coinmarketcap.com/v1/ticker/ethereum/'
     ).content.decode())[0]
@@ -260,6 +264,12 @@ def get_currency_statistics():
     'eth_percent_change_24h': round(
         float(eth_info['percent_change_24h']), 10
     ),
+    'eos_price_usd':  round(
+        float(eos_info['price_usd'])),
+    'eos_percent_change_24h': round(
+        float(eos_info['percent_change_24h']), 10
+        ),
+    'eos_rank': eos_info['rank'],
     'mywish_rank': mywish_info['rank'],
     'bitcoin_rank': btc_info['rank'],
     'eth_rank': eth_info['rank']
