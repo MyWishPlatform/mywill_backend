@@ -34,7 +34,7 @@ Thank you for using MyWish.
 eos_create_subject = """Your account is ready for creation"""
 eos_create_message = """Congratulations!
 
-Your EOS account is ready for creation in EOS Testnet.
+Your EOS account is ready for creation in {network_name}.
 
 If you have any question please contact support@mywish.io.
 
@@ -44,7 +44,7 @@ Thank you for using MyWish.
 eos_account_subject = """Your account is ready"""
 eos_account_message = """Hello,
 
-We are happy to inform you that your account was successfully created in EOS Testnet network.
+We are happy to inform you that your account was successfully created in {network_name}.
 EOS Account: {link}
 
 Please contact support@mywish.io if you need if you have any questions.
