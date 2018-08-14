@@ -433,3 +433,6 @@ class ContractDetailsToken(CommonDetails):
 
     def check_contract(self):
         pass
+
+    def initialized(self, message):
+        pass
