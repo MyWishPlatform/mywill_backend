@@ -47,15 +47,13 @@ def positive_payment(user, currency, value):
 
 def negative_payment(user, currency, value):
     if currency != 'EOS':
-        wish_cost = to_wish('ETH', int(value))
 
         if not Profile.objects.select_for_update().filter(
-                user=user, balance__gte=wish_cost
-        ).update(balance=F('balance') - wish_cost):
+                user=user, balance__gte=value
+        ).update(balance=F('balance') - value):
             raise Exception('no money')
     else:
         eos_cost = value * (convert('ETH', 'EOS')['EOS'])
-
         if not Profile.objects.select_for_update().filter(
                 user=user, eos_balance__gte=eos_cost
         ).update(eos_balance=F('eos_balance') - eos_cost):
