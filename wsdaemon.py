@@ -35,7 +35,7 @@ class WSP(WebSocketServerProtocol):
 
     def onConnect(self, request):
         origin = request.headers.get('origin', '') 
-        self.check_origin(origin)
+#        self.check_origin(origin)
         cookie = parse_cookie(request.headers.get('cookie', ''))
         self.check_auth(cookie)
         return super().onConnect(request)
@@ -88,9 +88,7 @@ def read(queue_object, proto_dict):
     user = int(properties.type)
     print('sending to', user)
     for c in proto_dict.get(user, []):
-        yield c.sendMessage({
-            body.encode()
-        }, False)
+        yield c.sendMessage(body, False)
     print('sended to', user)
 
 if __name__ == '__main__':
