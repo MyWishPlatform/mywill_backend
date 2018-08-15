@@ -146,24 +146,8 @@ def deploy(request):
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
-    if contract.network.name != 'EOS_MAINNET':
-        wish_cost = to_wish('ETH', int(cost))
-
-        if not Profile.objects.select_for_update().filter(
-                user=request.user, balance__gte=wish_cost
-        ).update(balance=F('balance') - wish_cost):
-            raise Exception('no money')
-        create_payment(request.user.id, -wish_cost, '', 'ETH', '-'+str(cost), False)
-    else:
-        eos_cost = cost * (convert('ETH', 'EOS')['EOS'])
-
-        if not Profile.objects.select_for_update().filter(
-                user=request.user, eos_balance__gte=eos_cost
-        ).update(eos_balance=F('eos_balance') - eos_cost):
-            raise Exception('no money')
-        create_payment(request.user.id, -eos_cost, '', 'EOS', '-' + str(cost),
-                       False)
-
+    currency = 'EOS' if contract.network.name == 'EOS_MAINNET' else 'ETH'
+    create_payment(request.user.id, '', currency, cost)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
