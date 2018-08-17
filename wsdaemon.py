@@ -88,9 +88,7 @@ def read(queue_object, proto_dict):
     user = int(properties.type)
     print('sending to', user)
     for c in proto_dict.get(user, []):
-        yield c.sendMessage({
-            body.encode()
-        }, False)
+        yield c.sendMessage(body, False)
     print('sended to', user)
 
 if __name__ == '__main__':

@@ -868,7 +868,7 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
             raise ValidationError
         details['maximum_supply'] = int(details['maximum_supply'])
-        if any([x in string.punctuation for x in details['token_short_name']):
+        if any([x in string.punctuation for x in details['token_short_name']]):
             raise ValidationError
 
     def to_representation(self, contract_details):
