@@ -219,3 +219,24 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+
+class ContractDetailsEOSICO(CommonDetails):
+    soft_cap = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    hard_cap = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    token_short_name = models.CharField(max_length=64)
+    admin_address = models.CharField(max_length=50)
+    is_transferable_at_once = models.BooleanField(default=False)
+    start_date = models.IntegerField()
+    stop_date = models.IntegerField()
+    rate = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    decimals = models.IntegerField()
+    temp_directory = models.CharField(max_length=36)
+    continue_minting = models.BooleanField(default=False)
+    allow_change_dates = models.BooleanField(default=False)
+    whitelist = models.BooleanField(default=False)
