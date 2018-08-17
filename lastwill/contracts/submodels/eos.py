@@ -240,3 +240,34 @@ class ContractDetailsEOSICO(CommonDetails):
     continue_minting = models.BooleanField(default=False)
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
+
+    eos_contract_token = models.ForeignKey(
+        EOSContract,
+        null=True,
+        default=None,
+        related_name='ico_details_token',
+        on_delete=models.SET_NULL
+    )
+    eos_contract_crowdsale = models.ForeignKey(
+        EOSContract,
+        null=True,
+        default=None,
+        related_name='ico_details_crowdsale',
+        on_delete=models.SET_NULL
+    )
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        cost = 2 * 10**18
+        return cost
+
+    def get_arguments(self, eth_contract_attr_name):
+        return []
