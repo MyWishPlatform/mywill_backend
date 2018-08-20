@@ -245,14 +245,14 @@ class ContractDetailsEOSICO(CommonDetails):
         EOSContract,
         null=True,
         default=None,
-        related_name='ico_details_token',
+        related_name='eos_ico_details_token',
         on_delete=models.SET_NULL
     )
     eos_contract_crowdsale = models.ForeignKey(
         EOSContract,
         null=True,
         default=None,
-        related_name='ico_details_crowdsale',
+        related_name='eos_ico_details_crowdsale',
         on_delete=models.SET_NULL
     )
 
