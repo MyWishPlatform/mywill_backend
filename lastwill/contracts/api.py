@@ -28,7 +28,7 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 import lastwill.check as check
-from exchange_API import to_wish
+from exchange_API import to_wish, convert
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
 
 
@@ -146,14 +146,8 @@ def deploy(request):
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
-    wish_cost = to_wish('ETH', int(cost))
-
-    if not Profile.objects.select_for_update().filter(
-            user=request.user, balance__gte=wish_cost
-    ).update(balance=F('balance') - wish_cost):
-        raise Exception('no money')
-    create_payment(request.user.id, -wish_cost, '', 'ETH', '-'+str(cost), False)
-
+    currency = 'EOS' if contract.contract_type == 10 else 'ETH'
+    create_payment(request.user.id, '', currency, cost)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
@@ -226,6 +220,10 @@ def get_currency_statistics():
         'https://api.coinmarketcap.com/v1/ticker/bitcoin/'
     ).content.decode())[0]
 
+    eos_info = json.loads(requests.get(
+        'https://api.coinmarketcap.com/v1/ticker/eos/'
+    ).content.decode())[0]
+
     eth_info = json.loads(requests.get(
         'https://api.coinmarketcap.com/v1/ticker/ethereum/'
     ).content.decode())[0]
@@ -250,6 +248,12 @@ def get_currency_statistics():
     'eth_percent_change_24h': round(
         float(eth_info['percent_change_24h']), 10
     ),
+    'eos_price_usd':  round(
+        float(eos_info['price_usd'])),
+    'eos_percent_change_24h': round(
+        float(eos_info['percent_change_24h']), 10
+        ),
+    'eos_rank': eos_info['rank'],
     'mywish_rank': mywish_info['rank'],
     'bitcoin_rank': btc_info['rank'],
     'eth_rank': eth_info['rank']

@@ -25,7 +25,7 @@ from lastwill.contracts.models import (
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
-        ContractDetailsEOSAccount
+        ContractDetailsEOSAccount, ContractDetailsEOSICO
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -199,7 +199,8 @@ class ContractSerializer(serializers.ModelSerializer):
             8: ContractDetailsAirdropSerializer,
             9: ContractDetailsInvestmentPoolSerializer,
             10: ContractDetailsEOSTokenSerializer,
-            11: ContractDetailsEOSAccountSerializer
+            11: ContractDetailsEOSAccountSerializer,
+            12: ContractDetailsEOSICO
         }[contract_type]
 
 
@@ -919,4 +920,98 @@ class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
     def update(self, contract, details, contract_details):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsEOSToken
+        fields = (
+            'soft_cap', 'hard_cap', 'token_short_name',
+            'is_transferable_at_once','start_date', 'stop_date',
+            'decimals', 'rate', 'admin_address',
+            'continue_minting', 'allow_change_dates', 'whitelist'
+        )
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        res = super().create(kwargs)
+        return res
+
+    def validate(self, details):
+        now = timezone.now().timestamp() + 600
+        if 'eos_contract_token' in details and 'id' in details['eos_contract_token'] and details['eos_contract_token']['id']:
+            token_model = EOSContract.objects.get(id=details['eos_contract_token']['id'])
+            token_details = token_model.contract.get_details()
+            details.pop('eos_contract_token')
+            details['token_name'] = token_details.token_name
+            details['decimals'] = token_details.decimals
+            details['token_type'] = token_details.token_type
+        else:
+            if '"' in details['token_short_name'] or '\n' in details['token_short_name']:
+                raise ValidationError
+            if details['decimals'] < 0 or details['decimals'] > 50:
+                raise ValidationError
+
+        for k in ('hard_cap', 'soft_cap'):
+            details[k] = int(details[k])
+        if 'admin_address' not in details or 'token_holders' not in details:
+            raise ValidationError
+        if len(details['token_holders']) > 5:
+            raise ValidationError
+        for th in details['token_holders']:
+            th['amount'] = int(th['amount'])
+        if not len(details['token_short_name']):
+            raise ValidationError
+        if details['rate'] < 1 or details['rate'] > 10**12:
+            raise ValidationError
+        check.is_address(details['admin_address'])
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+            raise ValidationError({'result': 1}, code=400)
+        if details['stop_date'] < details['start_date'] + 5*60:
+            raise ValidationError
+        if details['hard_cap'] < details['soft_cap']:
+            raise ValidationError
+        if details['soft_cap'] < 0:
+            raise ValidationError
+        for th in details['token_holders']:
+            check.is_address(th['address'])
+            if th['amount'] < 0:
+                raise ValidationError
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in ICO serializer')
+                raise ValidationError({'result': 2}, code=400)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['eos_contract_token'] = EOSContractSerializer().to_representation(contract_details.eos_contract_token)
+        res['eos_contract_crowdsale'] = EOSContractSerializer().to_representation(contract_details.etos_contract_crowdsale)
+        res['rate'] = int(res['rate'])
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eos_contract_token']['source_code'] = ''
+            res['eos_contract_crowdsale']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address'].lower()
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('eos_contract_token', None)
+        kwargs.pop('eos_contract_crowdsale', None)
+
         return super().update(details, kwargs)

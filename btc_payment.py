@@ -43,7 +43,7 @@ while 1:
                 id=btc_account.id
             ).update(balance=new_balance)
             create_payment(
-                user.id, wish_value, '', 'BTC',
+                user.id, '', 'BTC',
                 ((new_balance-btc_account.balance)/10**8) * 10**18
             )
     print('ok')

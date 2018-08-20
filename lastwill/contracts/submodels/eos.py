@@ -219,3 +219,55 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+
+class ContractDetailsEOSICO(CommonDetails):
+    soft_cap = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    hard_cap = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    token_short_name = models.CharField(max_length=64)
+    admin_address = models.CharField(max_length=50)
+    is_transferable_at_once = models.BooleanField(default=False)
+    start_date = models.IntegerField()
+    stop_date = models.IntegerField()
+    rate = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+    decimals = models.IntegerField()
+    temp_directory = models.CharField(max_length=36)
+    continue_minting = models.BooleanField(default=False)
+    allow_change_dates = models.BooleanField(default=False)
+    whitelist = models.BooleanField(default=False)
+
+    eos_contract_token = models.ForeignKey(
+        EOSContract,
+        null=True,
+        default=None,
+        related_name='ico_details_token',
+        on_delete=models.SET_NULL
+    )
+    eos_contract_crowdsale = models.ForeignKey(
+        EOSContract,
+        null=True,
+        default=None,
+        related_name='ico_details_crowdsale',
+        on_delete=models.SET_NULL
+    )
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        cost = 2 * 10**18
+        return cost
+
+    def get_arguments(self, eth_contract_attr_name):
+        return []
