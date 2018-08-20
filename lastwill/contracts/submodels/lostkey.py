@@ -13,8 +13,8 @@ from email_messages import *
 @contract_details('Wallet contract (lost key)')
 class ContractDetailsLostKey(CommonDetails):
     sol_path = 'lastwill/lost-key/'
-    source_filename = 'LostKeyDelayedPaymentWallet.sol'
-    result_filename = 'LostKeyDelayedPaymentWallet.json'
+    source_filename = 'contracts/LostKeyDelayedPaymentWallet.sol'
+    result_filename = 'build/contracts/LostKeyDelayedPaymentWallet.json'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
