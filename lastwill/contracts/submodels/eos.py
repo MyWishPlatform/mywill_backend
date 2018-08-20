@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
+from lastwill.consts import eos_config
 from exchange_API import to_wish, convert
 
 
@@ -282,8 +283,76 @@ class ContractDetailsEOSICO(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(self)
+        dest, preproc_config = create_directory(
+            self,
+            sour_path='lastwill/eosio-crowdsale/*',
+            config_name='config.h'
+        )
 
         token_holders = self.contract.tokenholder_set.all()
 
-        preproc_params = ''
+        preproc_params = eos_config.format(
+            address=self.admin_address,
+            token_short_name=self.token_short_name,
+            decimals=self.decimals,
+            whitelist="true" if self.whitelist else "false",
+            transferable="true" if self.is_transferable_at_once else "false",
+            rate=self.rate,
+            min_wei=self.min_wei,
+            max_wei=self.max_wei,
+            soft_cap=self.soft_cap,
+            hard_cap=self.hard_cap,
+            start_date=self.start_date,
+            stop_date=self.stop_date
+        )
+
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system(
+                "/bin/bash -c 'cd {dest} && make'".format(
+                    dest=dest)
+        ):
+            raise Exception('compiler error while deploying')
+
+    def deploy(self):
+        self.compile()
+        wallet_name = NETWORKS[self.contract.network.name]['wallet']
+        password = NETWORKS[self.contract.network.name]['eos_password']
+        unlock_eos_account(wallet_name, password)
+        acc_name = NETWORKS[self.contract.network.name]['address']
+        path = 'lastwill/eosio-crowdsale/build/'
+        eos_url = 'http://%s:%s' % (
+        str(NETWORKS[self.contract.network.name]['host']),
+        str(NETWORKS[self.contract.network.name]['port']))
+        command = [
+            'cleos', '-u', eos_url, 'set', 'contract',
+            acc_name, path
+        ]
+        print('command:', command, flush=True)
+
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = re.search('executed transaction: ([\da-f]{64})',
+                               stderr.decode())
+            if result:
+                break
+        else:
+            raise Exception(
+                'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+        tx_hash = result.group(1)
+        print('tx_hash:', tx_hash, flush=True)
+        eos_contract_crowdsale = EOSContract()
+        eos_contract_crowdsale.tx_hash = tx_hash
+        eos_contract_crowdsale.address = acc_name
+        eos_contract_crowdsale.contract = self.contract
+        eos_contract_crowdsale.save()
+
+        self.eos_contract_crowdsale = eos_contract_crowdsale
+        self.save()
+
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
