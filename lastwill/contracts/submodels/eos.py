@@ -238,7 +238,7 @@ class ContractDetailsEOSICO(CommonDetails):
     )
     decimals = models.IntegerField()
     temp_directory = models.CharField(max_length=36)
-    continue_minting = models.BooleanField(default=False)
+    # continue_minting = models.BooleanField(default=False)
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
     min_wei = models.DecimalField(

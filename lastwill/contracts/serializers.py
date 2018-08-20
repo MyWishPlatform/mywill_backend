@@ -930,7 +930,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             'soft_cap', 'hard_cap', 'token_short_name',
             'is_transferable_at_once','start_date', 'stop_date',
             'decimals', 'rate', 'admin_address', 'min_wei', 'max_wei',
-            'continue_minting', 'allow_change_dates', 'whitelist'
+            'allow_change_dates', 'whitelist'
         )
 
     def create(self, contract, contract_details):
