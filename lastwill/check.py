@@ -1,4 +1,5 @@
 import re
+from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
 
 def die(message):
@@ -28,3 +29,10 @@ def is_percent(number):
 
 def is_sum_eq_100(iterable):
     sum(iterable) == 100 or die('percentage sum is {} not 100'.format(sum(iterable)))
+
+
+def is_eos_address(string):
+    re.match('^[1-5a-z\.]{1,12}$', string) or die('{} is not a valid eos address'.format(string))
+
+def is_eos_public(string):
+    all(x in ascii_letters + digits for x in string) or die('{} is not a valid public key'.format(string))

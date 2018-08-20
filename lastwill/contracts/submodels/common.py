@@ -395,8 +395,8 @@ class CommonDetails(models.Model):
         sol_path = path.join(CONTRACTS_DIR, sol_path)
         with open(path.join(sol_path, self.source_filename), 'rb') as f:
             source = f.read().decode('utf-8-sig')
-        os.system('cd {dir} && yarn compile'.format(dir=sol_path))
-        os.system('cd {dir} && yarn combine-contracts'.format(dir=sol_path))
+#        os.system('cd {dir} && yarn compile'.format(dir=sol_path))
+#        os.system('cd {dir} && yarn combine-contracts'.format(dir=sol_path))
         result_name = path.join(sol_path, self.result_filename)
         with open (result_name, 'rb') as f:
             result =json.loads(f.read().decode('utf-8-sig'))
@@ -467,27 +467,38 @@ class CommonDetails(models.Model):
         eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        if self.contract.user.email and self.contract.contract_type != 11:
-            send_mail(
-                    common_subject,
-                    common_text.format(
-                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
-                        link=network_link.format(address=eth_contract.address),
+        if self.contract.user.email:
+            if self.contract.contract_type ==11:
+                send_mail(
+                    eos_account_subject,
+                    eos_account_message.format(
+                        link=network_link.format(address=self.account_name),
                         network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
-            )
-        if self.contract.user.email and self.contract.contract_type == 11:
-            send_mail(
-                eos_account_subject,
-                eos_account_message.format(
-                    link=network_link.format(address=self.account_name),
-                    network_name=network_name
-                ),
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+                )
+            elif self.contract.contract_type ==10:
+                send_mail(
+                    eos_contract_subject,
+                    eos_contract_message.format(
+                        token_name=self.token_short_name,
+                        network_name=network_name
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
+                )
+            else:
+                send_mail(
+                        common_subject,
+                        common_text.format(
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                )
 
     def get_value(self):
         return 0

@@ -1,4 +1,5 @@
 import datetime
+import string
 import requests
 import binascii
 import string
@@ -862,16 +863,14 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        if 'admin_address' not in details :
-            raise ValidationError
+        check.is_eos_address(details['admin_address'])
         if details['decimals'] < 0 or details['decimals'] > 15:
             raise ValidationError
         if len(details['token_short_name']) < 1 or len(details['token_short_name']) > 7:
             raise ValidationError
-#        params = {"account_name":details['admin_address']}
-#        req = requests.post(EOS_URL+'v1/chain/get_account', json=params)
-#        if req.status_code != 200:
-#            raise ValidationError
+        details['maximum_supply'] = int(details['maximum_supply'])
+        if any([x in string.punctuation for x in details['token_short_name']]):
+            raise ValidationError
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
@@ -910,12 +909,9 @@ class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        if 'account_name' not in details :
-            raise ValidationError
-        if len(details['account_name'])!= 12:
-            raise ValidationError
-        if not all([x in '12345'+string.ascii_lowercase for x in details['account_name']]):
-            raise ValidationError
+        check.is_eos_address(details['account_name'])
+        check.is_eos_public(details['owner_public_key'])
+        check.is_eos_public(details['active_public_key'])
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

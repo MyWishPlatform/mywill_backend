@@ -52,6 +52,19 @@ Please contact support@mywish.io if you need if you have any questions.
 Best wishes,
 MyWish Team."""
 
+eos_contract_subject = """Your contract is ready"""
+eos_contract_message = """Hello,
+
+We are happy to inform you that your contract was successfully created and deployed to {network_name}.
+EOS Token: {token_name}
+
+You can MINT your token now.
+
+Please contact support@mywish.io if you need if you have any questions.
+
+Best wishes,
+MyWish Team."""
+
 heir_subject = """MyWish notification"""
 heir_message = """Hello!
 

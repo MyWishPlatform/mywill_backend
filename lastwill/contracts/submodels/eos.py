@@ -86,7 +86,7 @@ class ContractDetailsEOSToken(CommonDetails):
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
-        acc_name = NETWORKS[self.contract.network.name]['address']
+        acc_name = NETWORKS[self.contract.network.name]['token_address']
         eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [
             'cleos', '-u', eos_url, 'push', 'action',
