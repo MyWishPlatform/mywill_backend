@@ -985,9 +985,6 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             check.is_address(th['address'])
             if th['amount'] < 0:
                 raise ValidationError
-            if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in ICO serializer')
-                raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
