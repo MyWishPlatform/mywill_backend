@@ -140,9 +140,9 @@ class ContractDetailsLostKey(CommonDetails):
             )
 
     def get_gaslimit(self):
-        Cg = 1476117
+        Cg = 3200000
         CBg = 28031
-        return Cg + len(self.contract.heir_set.all()) * CBg + 3000 + 80000
+        return Cg + len(self.contract.heir_set.all()) * CBg
 
     @blocking
     @postponable
