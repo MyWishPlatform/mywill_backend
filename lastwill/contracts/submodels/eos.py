@@ -240,6 +240,12 @@ class ContractDetailsEOSICO(CommonDetails):
     continue_minting = models.BooleanField(default=False)
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
+    min_wei = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
+    max_wei = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
 
     eos_contract_token = models.ForeignKey(
         EOSContract,
@@ -271,3 +277,13 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def get_arguments(self, eth_contract_attr_name):
         return []
+
+    def compile(self):
+        if self.temp_directory:
+            print('already compiled')
+            return
+        dest, preproc_config = create_directory(self)
+
+        token_holders = self.contract.tokenholder_set.all()
+
+        preproc_params = ''
