@@ -989,7 +989,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eos_contract_token'] = EOSContractSerializer().to_representation(contract_details.eos_contract_token)
-        res['eos_contract_crowdsale'] = EOSContractSerializer().to_representation(contract_details.etos_contract_crowdsale)
+        res['eos_contract_crowdsale'] = EOSContractSerializer().to_representation(contract_details.eos_contract_crowdsale)
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eos_contract_token']['source_code'] = ''
