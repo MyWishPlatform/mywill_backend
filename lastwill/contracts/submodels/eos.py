@@ -234,6 +234,8 @@ class ContractDetailsEOSICO(CommonDetails):
     )
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
+    owner_public_key = models.CharField(max_length=50)
+    active_public_key = models.CharField(max_length=50)
     is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
