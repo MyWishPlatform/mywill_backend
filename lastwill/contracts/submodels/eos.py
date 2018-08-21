@@ -89,12 +89,16 @@ class ContractDetailsEOSToken(CommonDetails):
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['token_address']
         eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        if self.decimals != 0:
+            max_supply = str(self.maximum_supply)[:-self.decimals] + '.' + str(self.maximum_supply)[-self.decimals:]
+        else:
+            max_supply = str(self.maximum_supply)
         command = [
             'cleos', '-u', eos_url, 'push', 'action',
             acc_name, 'create',
             '["{acc_name}","{max_sup} {token}"]'.format(
                 acc_name=self.admin_address,
-                max_sup=self.maximum_supply,
+                max_sup=max_supply,
                 token=self.token_short_name
             ), '-p',
             acc_name
@@ -170,7 +174,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 0.05 *10**18
+        cost = 0.1 *10**18
         return cost
 
     def get_arguments(self, eth_contract_attr_name):
