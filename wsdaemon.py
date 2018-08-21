@@ -21,7 +21,7 @@ class WSP(WebSocketServerProtocol):
     user = None
     
     def check_origin(self, origin):
-        if origin != 'http://dev.mywish.io':
+        if origin not in ('http://dev.mywish.io', 'http://contracts.mywish.io'):
             raise ConnectionDeny(404)
 
     def check_auth(self, cookie):
