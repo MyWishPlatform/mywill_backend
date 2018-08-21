@@ -8,6 +8,7 @@ from exchange_API import to_wish, convert
 
 
 def create_payment(uid, tx, currency, amount):
+    amount = float(amount)
     if amount == 0.0:
         return
     print('create payment')
