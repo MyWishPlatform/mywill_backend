@@ -925,7 +925,7 @@ class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
 
 class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ContractDetailsEOSToken
+        model = ContractDetailsEOSICO
         fields = (
             'soft_cap', 'hard_cap', 'token_short_name',
             'is_transferable_at_once','start_date', 'stop_date',
