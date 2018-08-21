@@ -313,7 +313,7 @@ class ContractDetailsEOSICO(CommonDetails):
         )
 
         with open(preproc_config, 'w') as f:
-            f.write(json.dumps(preproc_params))
+            f.write(preproc_params)
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
