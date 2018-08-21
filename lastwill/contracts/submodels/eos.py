@@ -318,6 +318,41 @@ class ContractDetailsEOSICO(CommonDetails):
         ):
             raise Exception('compiler error while deploying')
 
+    # def create_account(self):
+    #     wallet_name = NETWORKS[self.contract.network.name]['wallet']
+    #     password = NETWORKS[self.contract.network.name]['eos_password']
+    #     unlock_eos_account(wallet_name, password)
+    #     acc_name = NETWORKS[self.contract.network.name]['address']
+    #     eos_url = 'http://%s:%s' % (
+    #     str(NETWORKS[self.contract.network.name]['host']),
+    #     str(NETWORKS[self.contract.network.name.]['port']))
+    #     command = [
+    #         'cleos', '-u', eos_url, 'system', 'newaccount',
+    #         acc_name, self.account_name, self.owner_public_key,
+    #         self.active_public_key, '--stake-net',
+    #         str(self.stake_net_value) + ' EOS',
+    #         '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
+    #         '--buy-ram-kbytes', str(self.buy_ram_kbytes),
+    #         '--transfer',
+    #     ]
+    #     print('command:', command, flush=True)
+    #
+    #     for attempt in range(EOS_ATTEMPTS_COUNT):
+    #         print('attempt', attempt, flush=True)
+    #         stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+    #                                stderr=PIPE).communicate()
+    #         print(stdout, stderr, flush=True)
+    #         result = re.search('executed transaction: ([\da-f]{64})',
+    #                            stderr.decode())
+    #         if result:
+    #             break
+    #     else:
+    #         raise Exception(
+    #             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    #
+    #     tx_hash = result.group(1)
+    #     print('tx_hash:', tx_hash, flush=True)
+
     def deploy(self):
         self.compile()
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
