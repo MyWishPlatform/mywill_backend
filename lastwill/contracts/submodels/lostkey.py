@@ -13,8 +13,8 @@ from email_messages import *
 @contract_details('Wallet contract (lost key)')
 class ContractDetailsLostKey(CommonDetails):
     sol_path = 'lastwill/lost-key/'
-    source_filename = 'LostKeyDelayedPaymentWallet.sol'
-    result_filename = 'LostKeyDelayedPaymentWallet.json'
+    source_filename = 'contracts/LostKeyDelayedPaymentWallet.sol'
+    result_filename = 'build/contracts/LostKeyDelayedPaymentWallet.json'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
@@ -140,9 +140,9 @@ class ContractDetailsLostKey(CommonDetails):
             )
 
     def get_gaslimit(self):
-        Cg = 1476117
+        Cg = 3200000
         CBg = 28031
-        return Cg + len(self.contract.heir_set.all()) * CBg + 3000 + 80000
+        return Cg + len(self.contract.heir_set.all()) * CBg
 
     @blocking
     @postponable
