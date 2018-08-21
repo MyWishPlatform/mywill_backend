@@ -947,7 +947,6 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        now = timezone.now().timestamp() + 600
         if 'eos_contract_token' in details and 'id' in details['eos_contract_token'] and details['eos_contract_token']['id']:
             token_model = EOSContract.objects.get(id=details['eos_contract_token']['id'])
             token_details = token_model.contract.get_details()
@@ -982,7 +981,6 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         if details['soft_cap'] < 0:
             raise ValidationError
         for th in details['token_holders']:
-            check.is_address(th['address'])
             if th['amount'] < 0:
                 raise ValidationError
 
