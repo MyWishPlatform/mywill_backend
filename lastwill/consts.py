@@ -12,7 +12,7 @@ MAIL_NETWORK = {
 
 eos_config = """
 #define ISSUER {address}
-#define TOKEN {token_short_name}
+#define SYMBOL {token_short_name}
 #define DECIMALS {decimals}
 
 #define WHITELIST {whitelist}
@@ -20,13 +20,13 @@ eos_config = """
 #define TRANSFERABLE {transferable}
 
 #define RATE {rate}
-#define RATE_PRECISION 100 
+#define RATE_DENOM 100 
 
 #define MIN_CONTRIB  {min_wei}
 #define MAX_CONTRIB {max_wei}
 
-#define SOFT_CAP_EOS  {soft_cap}
-#define HARD_CAP_EOS {hard_cap}
+#define SOFT_CAP_TKN  {soft_cap}
+#define HARD_CAP_TKN {hard_cap}
 
 #define START_DATE  {start_date}
 #define FINISH_DATE {stop_date}
