@@ -88,7 +88,10 @@ class ContractDetailsEOSToken(CommonDetails):
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['token_address']
         eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        max_supply = str(self.maximum_supply)[:-self.decimals] + '.' + str(self.maximum_supply)[-self.decimals:]
+        if self.decimals != 0:
+            max_supply = str(self.maximum_supply)[:-self.decimals] + '.' + str(self.maximum_supply)[-self.decimals:]
+        else:
+            max_supply = str(self.maximum_supply)
         command = [
             'cleos', '-u', eos_url, 'push', 'action',
             acc_name, 'create',
