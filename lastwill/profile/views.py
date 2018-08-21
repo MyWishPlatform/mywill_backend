@@ -48,6 +48,7 @@ def profile_view(request):
             'id': request.user.id,
             'lang': request.user.profile.lang,
             'memo': request.user.profile.memo,
+            'eos_balance': request.user.profile.eos_balance,
     })
 
 
