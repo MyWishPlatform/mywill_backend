@@ -244,7 +244,6 @@ class ContractDetailsEOSICO(CommonDetails):
     )
     decimals = models.IntegerField()
     temp_directory = models.CharField(max_length=36)
-    # continue_minting = models.BooleanField(default=False)
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
     min_wei = models.DecimalField(
@@ -295,7 +294,29 @@ class ContractDetailsEOSICO(CommonDetails):
             config_name='config.h'
         )
 
-        token_holders = self.contract.tokenholder_set.all()
+        if os.system(
+                ("/bin/bash -c 'cd {dest} && ./configure.sh "
+                 "--issuer {address} --symbol {symbol} --decimals {decimals} "
+                 "--softcap {soft_cap} --hardcap {hard_cap} "
+                 "--start {start_date} --finish {stop_date} --whitelist {whitelist} "
+                 "--transferable {transferable} --rate {rate} --ratedenom 100 "
+                 "--mincontrib {min_wei} --maxcontrib {max_wei}'").format(
+                    dest=dest,
+                    address=self.admin_address,
+                    symbol=self.token_short_name,
+                    decimals=self.decimals,
+                    whitelist="true" if self.whitelist else "false",
+                    transferable="true" if self.is_transferable_at_once else "false",
+                    rate=self.rate,
+                    min_wei=self.min_wei,
+                    max_wei=self.max_wei,
+                    soft_cap=self.soft_cap,
+                    hard_cap=self.hard_cap,
+                    start_date=self.start_date,
+                    stop_date=self.stop_date
+                )
+        ):
+            raise Exception('error generate config')
 
         preproc_params = eos_config.format(
             address=self.admin_address,
@@ -319,41 +340,6 @@ class ContractDetailsEOSICO(CommonDetails):
                     dest=dest)
         ):
             raise Exception('compiler error while deploying')
-
-    # def create_account(self):
-    #     wallet_name = NETWORKS[self.contract.network.name]['wallet']
-    #     password = NETWORKS[self.contract.network.name]['eos_password']
-    #     unlock_eos_account(wallet_name, password)
-    #     acc_name = NETWORKS[self.contract.network.name]['address']
-    #     eos_url = 'http://%s:%s' % (
-    #     str(NETWORKS[self.contract.network.name]['host']),
-    #     str(NETWORKS[self.contract.network.name.]['port']))
-    #     command = [
-    #         'cleos', '-u', eos_url, 'system', 'newaccount',
-    #         acc_name, self.account_name, self.owner_public_key,
-    #         self.active_public_key, '--stake-net',
-    #         str(self.stake_net_value) + ' EOS',
-    #         '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
-    #         '--buy-ram-kbytes', str(self.buy_ram_kbytes),
-    #         '--transfer',
-    #     ]
-    #     print('command:', command, flush=True)
-    #
-    #     for attempt in range(EOS_ATTEMPTS_COUNT):
-    #         print('attempt', attempt, flush=True)
-    #         stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-    #                                stderr=PIPE).communicate()
-    #         print(stdout, stderr, flush=True)
-    #         result = re.search('executed transaction: ([\da-f]{64})',
-    #                            stderr.decode())
-    #         if result:
-    #             break
-    #     else:
-    #         raise Exception(
-    #             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-    #
-    #     tx_hash = result.group(1)
-    #     print('tx_hash:', tx_hash, flush=True)
 
     def deploy(self):
         self.compile()
