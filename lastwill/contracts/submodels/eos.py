@@ -298,7 +298,8 @@ class ContractDetailsEOSICO(CommonDetails):
             "--softcap {soft_cap} --hardcap {hard_cap} "
             "--start {start_date} --finish {stop_date} --whitelist {whitelist} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
-            "--mincontrib {min_wei} --maxcontrib {max_wei}'").format(
+            "--mincontrib {min_wei} --maxcontrib {max_wei}'"
+            "> {dest}/config.h").format(
                 dest=dest,
                 address=self.admin_address,
                 symbol=self.token_short_name,
