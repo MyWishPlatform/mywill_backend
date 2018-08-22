@@ -7,7 +7,6 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
-from lastwill.consts import eos_config
 from exchange_API import to_wish, convert
 
 
