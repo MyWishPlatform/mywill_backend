@@ -324,6 +324,23 @@ class ContractDetailsEOSICO(CommonDetails):
         ):
             raise Exception('compiler error while deploying')
 
+        with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
+            abi = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'crowdsale/crowdsale.wast'), 'rb') as f:
+            bytecode = f.read().decode('utf-8-sig')
+        with open(path.join(dest, 'crowdsale.cpp'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+
+        eos_contract_crowdsale = EOSContract()
+        eos_contract_crowdsale.contract = self.contract
+        eos_contract_crowdsale.original_contract = self.contract
+        eos_contract_crowdsale.abi = abi
+        eos_contract_crowdsale.bytecode = bytecode
+        eos_contract_crowdsale.source_code = source_code
+        eos_contract_crowdsale.save()
+        self.eos_contract_crowdsale = eos_contract_crowdsale
+        self.save()
+
     def deploy(self):
         self.compile()
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
@@ -355,14 +372,5 @@ class ContractDetailsEOSICO(CommonDetails):
 
         tx_hash = result.group(1)
         print('tx_hash:', tx_hash, flush=True)
-        eos_contract_crowdsale = EOSContract()
-        eos_contract_crowdsale.tx_hash = tx_hash
-        eos_contract_crowdsale.address = acc_name
-        eos_contract_crowdsale.contract = self.contract
-        eos_contract_crowdsale.save()
-
-        self.eos_contract_crowdsale = eos_contract_crowdsale
-        self.save()
-
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
