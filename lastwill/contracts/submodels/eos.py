@@ -298,7 +298,8 @@ class ContractDetailsEOSICO(CommonDetails):
             "--softcap {soft_cap} --hardcap {hard_cap} "
             "--start {start_date} --finish {stop_date} --whitelist {whitelist} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
-            "--mincontrib {min_wei} --maxcontrib {max_wei}'").format(
+            "--mincontrib {min_wei} --maxcontrib {max_wei}'"
+            "> {dest}/config.h").format(
                 dest=dest,
                 address=self.admin_address,
                 symbol=self.token_short_name,
@@ -306,8 +307,8 @@ class ContractDetailsEOSICO(CommonDetails):
                 whitelist="true" if self.whitelist else "false",
                 transferable="true" if self.is_transferable_at_once else "false",
                 rate=self.rate,
-                min_wei=self.min_wei if self.min_wei else "NULL",
-                max_wei=self.max_wei if self.max_wei else "NULL",
+                min_wei=self.min_wei if self.min_wei else 0,
+                max_wei=self.max_wei if self.max_wei else 0,
                 soft_cap=self.soft_cap,
                 hard_cap=self.hard_cap,
                 start_date=self.start_date,
