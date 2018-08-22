@@ -386,8 +386,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 acc_name=self.admin_address,
                 max_sup=max_supply,
                 token=self.token_short_name
-            ), '-p',
-            acc_name
+            ), '-p', acc_name, '-jd'
         ]
         print('command:', command, flush=True)
 
@@ -404,3 +403,23 @@ class ContractDetailsEOSICO(CommonDetails):
             raise Exception(
                 'push action create 1 cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('second step success')
+
+        command = [
+            'cleos', '-u', eos_url, 'set', 'contract',
+            self.admin_address, 'crowdsale', '-jd',
+        ]
+        print('command:', command, flush=True)
+
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = json.dumps(stderr.decode())
+            if result['actions']:
+                actions.append(result['actions'])
+                break
+        else:
+            raise Exception(
+                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        print('set contract success')
