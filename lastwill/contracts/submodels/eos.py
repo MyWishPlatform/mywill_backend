@@ -389,9 +389,11 @@ class ContractDetailsEOSICO(CommonDetails):
         print('second step success')
 
         unlock_eos_account(wallet_name, password)
+        ico_path = path.join('temp/', self.temp_directory, '/crowdsale')
+        print('path', ico_path)
         command = [
             'cleos', '-u', eos_url, 'set', 'contract', self.admin_address,
-            path.join(CONTRACTS_TEMP_DIR, self.temp_directory, ''), '-jd',
+            ico_path, '-jd',
         ]
         print('command:', command, flush=True)
 
