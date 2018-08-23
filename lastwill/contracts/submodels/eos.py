@@ -245,6 +245,7 @@ class ContractDetailsEOSICO(CommonDetails):
     temp_directory = models.CharField(max_length=36)
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
+    protected_mode = models.BooleanField(default=False)
     min_wei = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
