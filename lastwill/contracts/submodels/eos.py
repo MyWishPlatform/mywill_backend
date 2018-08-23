@@ -423,3 +423,69 @@ class ContractDetailsEOSICO(CommonDetails):
             raise Exception(
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('set contract success')
+
+        command = [
+            'cleos', '-u', eos_url, 'push', 'action',
+            self.admin_address, 'init', '-p', self.admin_address, '-jd',
+        ]
+        print('command:', command, flush=True)
+
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = json.dumps(stderr.decode())
+            if result['actions']:
+                actions.append(result['actions'])
+                break
+        else:
+            raise Exception(
+                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        print('init contract success')
+
+        command = [
+            'cleos', '-u', eos_url, 'set', 'account', 'permission',
+            self.admin_address, 'active', self.active_public_key, 'owner',
+            '-p', self.admin_address, '-jd',
+        ]
+        print('command:', command, flush=True)
+
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = json.dumps(stderr.decode())
+            if result['actions']:
+                actions.append(result['actions'])
+                break
+        else:
+            raise Exception(
+                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        print('first set permission success')
+
+        command = [
+            'cleos', '-u', eos_url, 'set', 'account', 'permission',
+            self.admin_address, 'owner', self.active_public_key, 'owner',
+            '-p', self.admin_address + '@owner', '-jd',
+        ]
+        print('command:', command, flush=True)
+
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = json.dumps(stderr.decode())
+            if result['actions']:
+                actions.append(result['actions'])
+                break
+        else:
+            raise Exception(
+                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        print('second set permission success')
+
+        print('*'*60)
+        print(actions)
+        print('*'*60)
