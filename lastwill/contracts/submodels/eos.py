@@ -370,9 +370,9 @@ class ContractDetailsEOSICO(CommonDetails):
             # print(stdout, stderr, flush=True)
             result = json.dumps(stdout.decode())
             result2 = json.dumps(stderr.decode())
-            print('result1', result)
+            print('result1', type(result), result)
             print('*'*60)
-            print('result2', result)
+            print('result2', type(result2), result2)
             if result['actions']:
                 actions.append(result['actions'])
                 break
