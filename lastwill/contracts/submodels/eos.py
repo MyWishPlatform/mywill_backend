@@ -328,6 +328,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.compile()
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
+        our_public_key = NETWORKS[self.contract.network.name]['pub']
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
         token_name = NETWORKS[self.contract.network.name]['token_address']
@@ -338,8 +339,8 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['port']))
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
-            acc_name, self.admin_address, self.owner_public_key,
-            self.active_public_key, '--stake-net', '0.01' + ' EOS',
+            acc_name, self.admin_address, our_public_key,
+            our_public_key, '--stake-net', '0.01' + ' EOS',
             '--stake-cpu', '0.64' + ' EOS', '--buy-ram-kbytes', '4',
             '-jd',
         ]
