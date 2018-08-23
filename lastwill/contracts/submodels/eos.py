@@ -409,7 +409,7 @@ class ContractDetailsEOSICO(CommonDetails):
         unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'set', 'contract',
-            self.admin_address, 'crowdsale', '-jd',
+            self.admin_address, 'crowdsale', self.temp_directorys, '-jd',
         ]
         print('command:', command, flush=True)
 
