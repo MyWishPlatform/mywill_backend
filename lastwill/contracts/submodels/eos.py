@@ -369,10 +369,10 @@ class ContractDetailsEOSICO(CommonDetails):
                                    stderr=PIPE).communicate()
             # print(stdout, stderr, flush=True)
             result = json.loads(stdout.decode())
-            result2 = json.loads(stderr.decode())
+            # result2 = json.loads(stderr.decode())
             print('result1', type(result), result)
             print('*'*60)
-            print('result2', type(result2), result2)
+            # print('result2', type(result2), result2)
             if result['actions']:
                 actions.append(result['actions'])
                 break
