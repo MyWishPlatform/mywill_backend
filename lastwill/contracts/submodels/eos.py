@@ -377,6 +377,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('new account created')
 
+        unlock_eos_account(wallet_name, password)
         if self.decimals != 0:
             max_supply = str(self.hard_cap)[:-self.decimals] + '.' + str(self.hard_cap)[-self.decimals:]
         else:
@@ -405,6 +406,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 'push action create 1 cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('second step success')
 
+        unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'set', 'contract',
             self.admin_address, 'crowdsale', '-jd',
@@ -426,6 +428,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('set contract success')
 
+        unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'push', 'action',
             self.admin_address, 'init', '-p', self.admin_address, '-jd',
@@ -447,6 +450,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('init contract success')
 
+        unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'set', 'account', 'permission',
             self.admin_address, 'active', self.active_public_key, 'owner',
@@ -469,6 +473,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('first set permission success')
 
+        unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'set', 'account', 'permission',
             self.admin_address, 'owner', self.active_public_key, 'owner',
