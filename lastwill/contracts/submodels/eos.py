@@ -1,4 +1,5 @@
 import re
+from os import path
 
 from django.db import models
 from django.utils import timezone
@@ -128,25 +129,6 @@ class ContractDetailsEOSToken(CommonDetails):
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-
-    '''
-    def compile(self):
-        dest = path.join(CONTRACTS_DIR, 'eosio.token/')
-        with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.abi'), 'rb') as f:
-            abi = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.wasm'), 'rb') as f:
-            bytecode = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'eosio.token/eosio.token.cpp'), 'rb') as f:
-            source_code = f.read().decode('utf-8-sig')
-        eos_contract = EOSContract()
-        eos_contract.abi = abi
-        eos_contract.bytecode = bytecode
-        eos_contract.contract = self.contract
-        eos_contract.original_contract = self.contract
-        eos_contract.source_code = source_code
-        eos_contract.save()
-        self.save()
-    '''
 
 class ContractDetailsEOSAccount(CommonDetails):
     owner_public_key = models.CharField(max_length=128)
@@ -349,7 +331,7 @@ class ContractDetailsEOSICO(CommonDetails):
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
         token_name = NETWORKS[self.contract.network.name]['token_address']
-        path = 'lastwill/eosio-crowdsale/build/'
+        # path = 'lastwill/eosio-crowdsale/build/'
         actions = []
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
