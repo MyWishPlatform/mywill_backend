@@ -368,7 +368,7 @@ class ContractDetailsEOSICO(CommonDetails):
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
-            result = json.dumps(stderr.decode())
+            result = json.dumps(stdout.decode())
             if result['actions']:
                 actions.append(result['actions'])
                 break
