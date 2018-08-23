@@ -368,8 +368,8 @@ class ContractDetailsEOSICO(CommonDetails):
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
             # print(stdout, stderr, flush=True)
-            result = json.dumps(stdout.decode())
-            result2 = json.dumps(stderr.decode())
+            result = json.loads(stdout.decode())
+            result2 = json.loads(stderr.decode())
             print('result1', type(result), result)
             print('*'*60)
             print('result2', type(result2), result2)
