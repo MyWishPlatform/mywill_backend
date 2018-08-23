@@ -394,8 +394,9 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
+            # print(stdout, stderr, flush=True)
             result = json.dumps(stderr.decode())
+            print('result', result, flush=True)
             if result['actions']:
                 actions.append(result['actions'])
                 break
@@ -414,8 +415,10 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
+            # print(stdout, stderr, flush=True)
             result = json.dumps(stderr.decode())
+            result = json.dumps(stderr.decode())
+            print('result', result, flush=True)
             if result['actions']:
                 actions.append(result['actions'])
                 break
@@ -434,8 +437,10 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
+            # print(stdout, stderr, flush=True)
             result = json.dumps(stderr.decode())
+            result = json.dumps(stderr.decode())
+            print('result', result, flush=True)
             if result['actions']:
                 actions.append(result['actions'])
                 break
@@ -455,8 +460,9 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
+            # print(stdout, stderr, flush=True)
             result = json.dumps(stderr.decode())
+            print('result', result, flush=True)
             if result['actions']:
                 actions.append(result['actions'])
                 break
@@ -476,8 +482,9 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
+            # print(stdout, stderr, flush=True)
             result = json.dumps(stderr.decode())
+            print('result', result, flush=True)
             if result['actions']:
                 actions.append(result['actions'])
                 break
