@@ -415,6 +415,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
+            print('stdout', stdout, stderr)
             result = json.loads(stdout.decode())
             print('result', type(result), result)
             if result['actions']:
@@ -435,6 +436,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
+            print('stdout', stdout, stderr)
             result = json.loads(stdout.decode())
             print('result', type(result), result)
             if result['actions']:
@@ -456,6 +458,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
+            print('stdout', stdout, stderr)
             result = json.loads(stdout.decode())
             print('result', type(result), result)
             if result['actions']:
@@ -477,6 +480,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
+            print('stdout', stdout, stderr)
             result = json.loads(stdout.decode())
             print('result', type(result), result)
             if result['actions']:
