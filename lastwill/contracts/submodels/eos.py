@@ -340,8 +340,8 @@ class ContractDetailsEOSICO(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             acc_name, self.admin_address, our_public_key,
-            our_public_key, '--stake-net', '0.01' + ' EOS',
-            '--stake-cpu', '0.64' + ' EOS', '--buy-ram-kbytes', '4',
+            our_public_key, '--stake-net', '10.0000' + ' EOS',
+            '--stake-cpu', '10.0000' + ' EOS', '--buy-ram-kbytes', '300',
             '-jd',
         ]
         print('command:', command, flush=True)
