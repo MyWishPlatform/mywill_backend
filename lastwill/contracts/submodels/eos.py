@@ -415,7 +415,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
         unlock_eos_account(wallet_name, password)
         command = [
-            '/home/pydaemon/test.sh', '-u', eos_url, 'push', 'action',
+            'cleos', '-u', eos_url, 'push', 'action',
             self.admin_address, 'init', '""', '-p', self.admin_address, '-jd',
         ]
         print('command:', command, flush=True)
