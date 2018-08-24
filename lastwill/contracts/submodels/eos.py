@@ -394,7 +394,7 @@ class ContractDetailsEOSICO(CommonDetails):
         print('path', ico_path)
         command = [
             'cleos', '-u', eos_url, 'set', 'contract', self.admin_address,
-            ico_path, '-jd',
+            ico_path, '-ps', '-jd',
         ]
         print('command:', command, flush=True)
 
