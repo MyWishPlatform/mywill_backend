@@ -345,7 +345,7 @@ class ContractDetailsEOSICO(CommonDetails):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
-            abi = str(json.loads(f.read().decode('utf-8-sig')))
+            abi = binascii.hexlify(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'crowdsale/crowdsale.wasm'), 'rb') as f:
             bytecode = binascii.hexlify(f.read()).decode("utf-8")
         with open(path.join(dest, 'crowdsale.cpp'), 'rb') as f:
