@@ -163,9 +163,10 @@ class ContractSerializer(serializers.ModelSerializer):
             'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
         }
         if contract.network.name == 'EOS_MAINNET':
-            res['cost']['EOS'] = Contract.get_details_model(
+            res['cost']['EOS'] = str(Contract.get_details_model(
                 contract.contract_type
-            ).calc_cost_eos(res['contract_details'], contract.network)
+            ).calc_cost_eos(res['contract_details'], contract.network))
+            res['cost']['EOSISH'] = str(res['cost']['EOS'] * 10)
         return res
 
     def update(self, contract, validated_data):
