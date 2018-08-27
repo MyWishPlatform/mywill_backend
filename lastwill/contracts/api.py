@@ -415,7 +415,7 @@ def get_cost_all_contracts(request):
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
-        if contract_details_types[i]['model'].contract_type > 9 and eos:
+        if contract_details_types[i]['model'].contract.contract_type > 9 and eos:
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
