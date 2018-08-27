@@ -346,161 +346,161 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def deploy(self):
         self.compile()
-        wallet_name = NETWORKS[self.contract.network.name]['wallet']
-        password = NETWORKS[self.contract.network.name]['eos_password']
-        our_public_key = NETWORKS[self.contract.network.name]['pub']
-        unlock_eos_account(wallet_name, password)
-        acc_name = NETWORKS[self.contract.network.name]['address']
-        token_name = NETWORKS[self.contract.network.name]['token_address']
-        # path = 'lastwill/eosio-crowdsale/build/'
-        actions = []
-        eos_url = 'http://%s:%s' % (
-        str(NETWORKS[self.contract.network.name]['host']),
-        str(NETWORKS[self.contract.network.name]['port']))
-        command = [
-            'cleos', '-u', eos_url, 'system', 'newaccount',
-            acc_name, self.admin_address, our_public_key,
-            our_public_key, '--stake-net', '10.0000' + ' EOS',
-            '--stake-cpu', '10.0000' + ' EOS', '--buy-ram-kbytes', '300',
-            '-jd',
-        ]
-        print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            result = json.loads(stdout.decode())
-            print('result', type(result), result)
-            if result['actions']:
-                actions.append(result['actions'])
-                break
-        else:
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('new account created')
-
-        unlock_eos_account(wallet_name, password)
-        if self.decimals != 0:
-            max_supply = str(self.hard_cap)[:-self.decimals] + '.' + str(self.hard_cap)[-self.decimals:]
-        else:
-            max_supply = str(self.hard_cap)
-        command = [
-            'cleos', '-u', eos_url, 'push', 'action',
-            token_name, 'create', '["{acc_name}","{max_sup} {token}"]'.format(
-                acc_name=self.admin_address,
-                max_sup=max_supply,
-                token=self.token_short_name
-            ), '-p', acc_name, '-jd'
-        ]
-        print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            result = json.loads(stdout.decode())
-            print('result', type(result), result)
-            if result['actions']:
-                actions.append(result['actions'])
-                break
-        else:
-            raise Exception(
-                'push action create 1 cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('second step success')
-
-        unlock_eos_account(wallet_name, password)
-        ico_path = 'temp/' + self.temp_directory + '/crowdsale'
-        print('path', ico_path)
-        command = [
-            'cleos', '-u', eos_url, 'set', 'contract', self.admin_address,
-            ico_path, '-p', acc_name, '-jd',
-        ]
-        print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print('stdout', stdout, stderr)
-            result = json.loads(stdout.decode())
-            print('result', type(result), result)
-            if result['actions']:
-                actions.append(result['actions'])
-                break
-        else:
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('set contract success')
-
-        unlock_eos_account(wallet_name, password)
-        command = [
-            '/home/pydaemon/test.sh', '-u', eos_url, 'push', 'action',
-            self.admin_address, 'init', '""', '-p', self.admin_address, '-jd',
-        ]
-        print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print('stdout', stdout, stderr)
-            result = json.loads(stdout.decode())
-            print('result', type(result), result)
-            if result['actions']:
-                actions.append(result['actions'])
-                break
-        else:
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('init contract success')
-
-        unlock_eos_account(wallet_name, password)
-        command = [
-            'cleos', '-u', eos_url, 'set', 'account', 'permission',
-            self.admin_address, 'active', self.active_public_key, 'owner',
-            '-p', self.admin_address, '-jd',
-        ]
-        print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print('stdout', stdout, stderr)
-            result = json.loads(stdout.decode())
-            print('result', type(result), result)
-            if result['actions']:
-                actions.append(result['actions'])
-                break
-        else:
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('first set permission success')
-
-        unlock_eos_account(wallet_name, password)
-        command = [
-            'cleos', '-u', eos_url, 'set', 'account', 'permission',
-            self.admin_address, 'owner', self.active_public_key, 'owner',
-            '-p', self.admin_address + '@owner', '-jd',
-        ]
-        print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print('stdout', stdout, stderr)
-            result = json.loads(stdout.decode())
-            print('result', type(result), result)
-            if result['actions']:
-                actions.append(result['actions'])
-                break
-        else:
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('second set permission success')
-
-        print('*'*60)
-        print(actions)
-        print('*'*60)
+        # wallet_name = NETWORKS[self.contract.network.name]['wallet']
+        # password = NETWORKS[self.contract.network.name]['eos_password']
+        # our_public_key = NETWORKS[self.contract.network.name]['pub']
+        # unlock_eos_account(wallet_name, password)
+        # acc_name = NETWORKS[self.contract.network.name]['address']
+        # token_name = NETWORKS[self.contract.network.name]['token_address']
+        # # path = 'lastwill/eosio-crowdsale/build/'
+        # actions = []
+        # eos_url = 'http://%s:%s' % (
+        # str(NETWORKS[self.contract.network.name]['host']),
+        # str(NETWORKS[self.contract.network.name]['port']))
+        # command = [
+        #     'cleos', '-u', eos_url, 'system', 'newaccount',
+        #     acc_name, self.admin_address, our_public_key,
+        #     our_public_key, '--stake-net', '10.0000' + ' EOS',
+        #     '--stake-cpu', '10.0000' + ' EOS', '--buy-ram-kbytes', '300',
+        #     '-jd',
+        # ]
+        # print('command:', command, flush=True)
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     result = json.loads(stdout.decode())
+        #     print('result', type(result), result)
+        #     if result['actions']:
+        #         actions.append(result['actions'])
+        #         break
+        # else:
+        #     raise Exception(
+        #         'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('new account created')
+        #
+        # unlock_eos_account(wallet_name, password)
+        # if self.decimals != 0:
+        #     max_supply = str(self.hard_cap)[:-self.decimals] + '.' + str(self.hard_cap)[-self.decimals:]
+        # else:
+        #     max_supply = str(self.hard_cap)
+        # command = [
+        #     'cleos', '-u', eos_url, 'push', 'action',
+        #     token_name, 'create', '["{acc_name}","{max_sup} {token}"]'.format(
+        #         acc_name=self.admin_address,
+        #         max_sup=max_supply,
+        #         token=self.token_short_name
+        #     ), '-p', acc_name, '-jd'
+        # ]
+        # print('command:', command, flush=True)
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     result = json.loads(stdout.decode())
+        #     print('result', type(result), result)
+        #     if result['actions']:
+        #         actions.append(result['actions'])
+        #         break
+        # else:
+        #     raise Exception(
+        #         'push action create 1 cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('second step success')
+        #
+        # unlock_eos_account(wallet_name, password)
+        # ico_path = 'temp/' + self.temp_directory + '/crowdsale'
+        # print('path', ico_path)
+        # command = [
+        #     'cleos', '-u', eos_url, 'set', 'contract', self.admin_address,
+        #     ico_path, '-p', acc_name, '-jd',
+        # ]
+        # print('command:', command, flush=True)
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     print('stdout', stdout, stderr)
+        #     result = json.loads(stdout.decode())
+        #     print('result', type(result), result)
+        #     if result['actions']:
+        #         actions.append(result['actions'])
+        #         break
+        # else:
+        #     raise Exception(
+        #         'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('set contract success')
+        #
+        # unlock_eos_account(wallet_name, password)
+        # command = [
+        #     '/home/pydaemon/test.sh', '-u', eos_url, 'push', 'action',
+        #     self.admin_address, 'init', '""', '-p', self.admin_address, '-jd',
+        # ]
+        # print('command:', command, flush=True)
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     print('stdout', stdout, stderr)
+        #     result = json.loads(stdout.decode())
+        #     print('result', type(result), result)
+        #     if result['actions']:
+        #         actions.append(result['actions'])
+        #         break
+        # else:
+        #     raise Exception(
+        #         'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('init contract success')
+        #
+        # unlock_eos_account(wallet_name, password)
+        # command = [
+        #     'cleos', '-u', eos_url, 'set', 'account', 'permission',
+        #     self.admin_address, 'active', self.active_public_key, 'owner',
+        #     '-p', self.admin_address, '-jd',
+        # ]
+        # print('command:', command, flush=True)
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     print('stdout', stdout, stderr)
+        #     result = json.loads(stdout.decode())
+        #     print('result', type(result), result)
+        #     if result['actions']:
+        #         actions.append(result['actions'])
+        #         break
+        # else:
+        #     raise Exception(
+        #         'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('first set permission success')
+        #
+        # unlock_eos_account(wallet_name, password)
+        # command = [
+        #     'cleos', '-u', eos_url, 'set', 'account', 'permission',
+        #     self.admin_address, 'owner', self.active_public_key, 'owner',
+        #     '-p', self.admin_address + '@owner', '-jd',
+        # ]
+        # print('command:', command, flush=True)
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     print('stdout', stdout, stderr)
+        #     result = json.loads(stdout.decode())
+        #     print('result', type(result), result)
+        #     if result['actions']:
+        #         actions.append(result['actions'])
+        #         break
+        # else:
+        #     raise Exception(
+        #         'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('second set permission success')
+        #
+        # print('*'*60)
+        # print(actions)
+        # print('*'*60)
