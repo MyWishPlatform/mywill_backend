@@ -240,8 +240,6 @@ class ContractDetailsEOSICO(CommonDetails):
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
     issuer = models.CharField(max_length=50)
-    owner_public_key = models.CharField(max_length=128)
-    active_public_key = models.CharField(max_length=128)
     is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
@@ -347,7 +345,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
             abi = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'crowdsale/crowdsale.wast'), 'rb') as f:
+        with open(path.join(dest, 'crowdsale/crowdsale.wasm'), 'rb') as f:
             bytecode = f.read().decode('utf-8-sig')
         with open(path.join(dest, 'crowdsale.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
