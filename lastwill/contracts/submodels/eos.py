@@ -1,4 +1,5 @@
 import re
+import binascii
 from os import path
 
 from django.db import models
@@ -346,7 +347,7 @@ class ContractDetailsEOSICO(CommonDetails):
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
             abi = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'crowdsale/crowdsale.wasm'), 'rb') as f:
-            bytecode = f.read().decode('utf-8-sig')
+            bytecode = binascii.hexlify(f.read())
         with open(path.join(dest, 'crowdsale.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
 
