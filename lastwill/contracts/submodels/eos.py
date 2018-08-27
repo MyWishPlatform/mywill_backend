@@ -435,7 +435,7 @@ class ContractDetailsEOSICO(CommonDetails):
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
         command = [
-            'cleos', '-u', eos_url, 'push', 'transaction', dest + 'deploy_params.json'
+            'cleos', '-u', eos_url, 'push', 'transaction', path.join(dest, 'deploy_params.json')
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
