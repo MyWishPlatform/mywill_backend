@@ -379,7 +379,7 @@ class ContractDetailsEOSICO(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         unlock_eos_account(wallet_name, password)
-        actions = [
+        actions ={ "actions": [
             {"account":"eosio","name":"newaccount",
              "authorization":
                 [{"actor":acc_name,"permission":"active"}],
@@ -430,7 +430,7 @@ class ContractDetailsEOSICO(CommonDetails):
                      "parent":"owner",
                      "auth":{"threshold":1,"keys":
                          [{"key":self.owner_public_key,"weight":1}],
-                             "accounts":[],"waits":[]}}}]
+                             "accounts":[],"waits":[]}}}]}
 
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
