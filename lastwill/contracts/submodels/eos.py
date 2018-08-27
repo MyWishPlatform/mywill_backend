@@ -385,7 +385,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 [{"actor":acc_name,"permission":"active"}],
              "data":{"creator":acc_name,"name":self.admin_address,
                      "owner":
-                 {"threshold":1,"keys":[{"key":self.active_public_key,"weight":1}],
+                 {"threshold":1,"keys":[{"key":our_public_key,"weight":1}],
                   "accounts":[],"waits":[]},
                      "active":
                          {"threshold":1,"keys":
@@ -423,14 +423,52 @@ class ContractDetailsEOSICO(CommonDetails):
              "authorization":
                  [{"actor":self.admin_address,"permission":"active"}],
              "data":{}},
-            {"account":"eosio","name":"updateauth",
-             "authorization":
-                 [{"actor":self.admin_address,"permission":"active"}],
-             "data":{"account":self.admin_address,"permission":"active",
-                     "parent":"owner",
-                     "auth":{"threshold":1,"keys":
-                         [{"key":self.owner_public_key,"weight":1}],
-                             "accounts":[],"waits":[]}}}]}
+            {"account": "eosio", "name": "updateauth",
+                "authorization": [{
+                    "actor": self.admin_address
+                    "permission": "owner"
+                }],
+                "data": {
+                    "account": self.admin_address,
+                    "permission": "owner",
+                    "parent": "",
+                    "auth": {
+                        "threshold": 1,
+                        "keys": [],
+                        "accounts": [{
+                            "permission": {
+                                "actor": self.admin_address,
+                                "permission": "owner"
+                            },
+                            "weight": 1
+                        }],
+                        "waits": []
+                    }
+                }
+            }, {
+                "account": "eosio",
+                "name": "updateauth",
+                "authorization": [{
+                    "actor": self.admin_address,
+                    "permission": "active"
+                }],
+                "data": {
+                    "account": self.admin_address,
+                    "permission": "active",
+                    "parent": "owner",
+                    "auth": {
+                        "threshold": 1, "keys": [],
+                        "accounts": [{
+                            "permission": {
+                                "actor": self.admin_address,
+                                "permission": "active"
+                            },
+                            "weight": 1
+                        }],
+                        "waits": []
+                    }
+                }
+            }]}
 
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
