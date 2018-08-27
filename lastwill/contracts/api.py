@@ -144,12 +144,14 @@ def deploy(request):
     # TODO: if type==4 check token contract is not at active crowdsale
     if eos:
         cost = contract_details.calc_cost_eos()
-    cost = contract.cost
+        currency = 'EOS'
+    else:
+        cost = contract.cost
+        currency = 'ETH'
     promo_str = request.data.get('promo', None)
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
-    currency = 'EOS' if contract.contract_type == 10 else 'ETH'
     create_payment(request.user.id, '', currency, cost)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
