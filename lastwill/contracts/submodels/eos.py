@@ -350,7 +350,7 @@ class ContractDetailsEOSICO(CommonDetails):
             bytecode = binascii.hexlify(f.read()).decode("utf-8")
         with open(path.join(dest, 'crowdsale.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-
+        print('types', type(bytecode), type(abi))
         eos_contract_crowdsale = EOSContract()
         eos_contract_crowdsale.contract = self.contract
         eos_contract_crowdsale.original_contract = self.contract
