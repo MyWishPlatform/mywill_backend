@@ -162,6 +162,10 @@ class ContractSerializer(serializers.ModelSerializer):
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
             'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
         }
+        if contract.network.name == 'EOS_MAINNET':
+            res['cost']['EOS'] = Contract.get_details_model(
+                contract.contract_type
+            ).calc_cost_eos(res['contract_details'], contract.network)
         return res
 
     def update(self, contract, validated_data):
