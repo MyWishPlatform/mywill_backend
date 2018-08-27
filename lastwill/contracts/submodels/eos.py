@@ -314,7 +314,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "/bin/bash -c 'cd {dest} && ./configure.sh "
             "--issuer {address} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
-            "--start {start_date} --finish {stop_date} --whitelist {whitelist} "
+            "--whitelist {whitelist} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             "> {dest}/config.h").format(
@@ -329,8 +329,6 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_wei=self.max_wei if self.max_wei else 0,
                 soft_cap=self.soft_cap,
                 hard_cap=self.hard_cap,
-                start_date=self.start_date,
-                stop_date=self.stop_date,
                 issuer=self.issuer
                 )
         print('command = ', command)
@@ -420,7 +418,7 @@ class ContractDetailsEOSICO(CommonDetails):
             {"account":self.admin_address,"name":"init",
              "authorization":
                  [{"actor":self.admin_address,"permission":"active"}],
-             "data":{}},
+             "data":{"start": self.start_date, "finish": self.stop_date}},
             {"account": "eosio", "name": "updateauth",
                 "authorization": [{
                     "actor": self.admin_address,
