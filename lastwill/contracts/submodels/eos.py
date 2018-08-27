@@ -64,6 +64,12 @@ class ContractDetailsEOSToken(CommonDetails):
         cost = cls.calc_cost({}, network)
         return cost
 
+    @classmethod
+    def min_cost_eos(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost_eos({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -157,6 +163,12 @@ class ContractDetailsEOSAccount(CommonDetails):
         cost = cls.calc_cost({}, network)
         return cost
 
+    @classmethod
+    def min_cost_eos(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost_eos({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -227,6 +239,7 @@ class ContractDetailsEOSICO(CommonDetails):
     )
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
+    issuer = models.CharField(max_length=50)
     owner_public_key = models.CharField(max_length=128)
     active_public_key = models.CharField(max_length=128)
     is_transferable_at_once = models.BooleanField(default=False)
@@ -268,6 +281,12 @@ class ContractDetailsEOSICO(CommonDetails):
         cost = cls.calc_cost({}, network)
         return cost
 
+    @classmethod
+    def min_cost_eos(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost_eos({}, network)
+        return cost
+
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
@@ -299,7 +318,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "--softcap {soft_cap} --hardcap {hard_cap} "
             "--start {start_date} --finish {stop_date} --whitelist {whitelist} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
-            "--mincontrib {min_wei} --maxcontrib {max_wei}'"
+            "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             "> {dest}/config.h").format(
                 dest=dest,
                 address=self.admin_address,
@@ -313,7 +332,8 @@ class ContractDetailsEOSICO(CommonDetails):
                 soft_cap=self.soft_cap,
                 hard_cap=self.hard_cap,
                 start_date=self.start_date,
-                stop_date=self.stop_date
+                stop_date=self.stop_date,
+                issuer=self.issuer
                 )
         print('command = ', command)
         if os.system(command):

@@ -936,7 +936,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             'is_transferable_at_once','start_date', 'stop_date',
             'decimals', 'rate', 'admin_address', 'min_wei', 'max_wei',
             'allow_change_dates', 'whitelist', 'owner_public_key',
-            'active_public_key', 'protected_mode'
+            'active_public_key', 'protected_mode', 'issuer'
         )
 
     def create(self, contract, contract_details):
