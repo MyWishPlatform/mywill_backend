@@ -425,7 +425,7 @@ class ContractDetailsEOSICO(CommonDetails):
              "data":{}},
             {"account": "eosio", "name": "updateauth",
                 "authorization": [{
-                    "actor": self.admin_address
+                    "actor": self.admin_address,
                     "permission": "owner"
                 }],
                 "data": {
