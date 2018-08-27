@@ -411,7 +411,7 @@ def get_statistics_landing(request):
 
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
-    eos = request.data.get('eos', False)
+    eos = request.query_params.get('eos', False)
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
