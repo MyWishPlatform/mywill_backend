@@ -370,6 +370,7 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
+        dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
         if self.decimals != 0:
             max_supply = str(self.hard_cap)[:-self.decimals] + '.' + str(self.hard_cap)[-self.decimals:]
         else:
@@ -431,8 +432,10 @@ class ContractDetailsEOSICO(CommonDetails):
                          [{"key":self.owner_public_key,"weight":1}],
                              "accounts":[],"waits":[]}}}]
 
+        with open(path.join(dest, 'deploy_params.json'), 'w') as f:
+            f.write(json.dumps(actions))
         command = [
-            'cleos', '-u', eos_url, 'push', 'transaction', str(actions)
+            'cleos', '-u', eos_url, 'push', 'transaction', dest + 'deploy_params.json'
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
