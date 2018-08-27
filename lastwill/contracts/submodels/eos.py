@@ -69,6 +69,12 @@ class ContractDetailsEOSToken(CommonDetails):
             return 0
         return int(0.99 * 10 ** 18)
 
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(150 * 10 ** 4)
+
     def get_arguments(self, eth_contract_attr_name):
         return []
 
@@ -129,25 +135,6 @@ class ContractDetailsEOSToken(CommonDetails):
         self.contract.save()
 
 
-    '''
-    def compile(self):
-        dest = path.join(CONTRACTS_DIR, 'eosio.token/')
-        with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.abi'), 'rb') as f:
-            abi = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'eosio.token/eosio.token/eosio.token.wasm'), 'rb') as f:
-            bytecode = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'eosio.token/eosio.token.cpp'), 'rb') as f:
-            source_code = f.read().decode('utf-8-sig')
-        eos_contract = EOSContract()
-        eos_contract.abi = abi
-        eos_contract.bytecode = bytecode
-        eos_contract.contract = self.contract
-        eos_contract.original_contract = self.contract
-        eos_contract.source_code = source_code
-        eos_contract.save()
-        self.save()
-    '''
-
 class ContractDetailsEOSAccount(CommonDetails):
     owner_public_key = models.CharField(max_length=128)
     active_public_key = models.CharField(max_length=128)
@@ -175,6 +162,12 @@ class ContractDetailsEOSAccount(CommonDetails):
             return 0
         cost = 0.1 *10**18
         return cost
+
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(100 * 10 ** 4)
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -280,6 +273,12 @@ class ContractDetailsEOSICO(CommonDetails):
         cost = 2 * 10**18
         return cost
 
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(250 * 10 ** 4)
+
     def get_arguments(self, eth_contract_attr_name):
         return []
 
@@ -340,6 +339,8 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_contract_crowdsale.save()
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
+        self.contract.state='ACTIVE'
+        self.contract.save()
 
     def deploy(self):
         self.compile()
