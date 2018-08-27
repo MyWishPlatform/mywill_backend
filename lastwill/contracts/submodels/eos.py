@@ -412,7 +412,7 @@ class ContractDetailsEOSICO(CommonDetails):
                              "accounts":[],"waits":[]}}}]
 
         command = [
-            'cleos', '-u', eos_url, 'push', 'transaction', actions
+            'cleos', '-u', eos_url, 'push', 'transaction', str(actions)
         ]
         print('command:', command, flush=True)
 
