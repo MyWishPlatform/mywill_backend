@@ -166,7 +166,7 @@ class ContractSerializer(serializers.ModelSerializer):
             res['cost']['EOS'] = str(Contract.get_details_model(
                 contract.contract_type
             ).calc_cost_eos(res['contract_details'], contract.network))
-            res['cost']['EOSISH'] = str(res['cost']['EOS'] * 10)
+            res['cost']['EOSISH'] = str(float(res['cost']['EOS']) * 10)
         return res
 
     def update(self, contract, validated_data):

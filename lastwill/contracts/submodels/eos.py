@@ -346,6 +346,65 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def deploy(self):
         self.compile()
+        acc_name = NETWORKS[self.contract.network.name]['address']
+        our_public_key = NETWORKS[self.contract.network.name]['pub']
+        if self.decimals != 0:
+            max_supply = str(self.hard_cap)[:-self.decimals] + '.' + str(self.hard_cap)[-self.decimals:]
+        else:
+            max_supply = str(self.hard_cap)
+        actions = [
+            {"account":"eosio","name":"newaccount",
+             "authorization":
+                [{"actor":acc_name,"permission":"active"}],
+             "data":{"creator":acc_name,"name":self.admin_address,
+                     "owner":
+                 {"threshold":1,"keys":[{"key":self.active_public_key,"weight":1}],
+                  "accounts":[],"waits":[]},
+                     "active":
+                         {"threshold":1,"keys":
+                             [{"key":our_public_key,"weight":1}],
+                          "accounts":[],"waits":[]}}},
+            {"account":"eosio","name":"delegatebw",
+             "authorization":
+                 [{"actor":acc_name,"permission":"active"}],
+             "data":{"from":acc_name,"receiver":self.admin_address,
+                     "stake_net_quantity":"10.0000 EOS",
+                     "stake_cpu_quantity":"10.0000 EOS",
+                     "transfer":0}},
+            {"account":"eosio","name":"buyrambytes",
+             "authorization":
+                 [{"actor":acc_name,"permission":"active"}],
+             "data":{"payer":acc_name,"receiver":self.admin_address,"bytes":32768}},
+            {"account":"eosio","name":"setcode",
+             "authorization":
+                 [{"actor":self.admin_address,"permission":"active"}],
+             "data":{"account":self.admin_address,"vmtype":0,"vmversion":0,
+                     "code":self.eos_contract_crowdsale.bytecode}},
+            {"account":"eosio","name":"setabi",
+             "authorization":
+                 [{"actor":self.admin_address,"permission":"active"}],
+             "data":{"account":self.admin_address,
+                     "abi":self.eos_contract_crowdsale.abi}},
+
+            {"account":acc_name,"name":"create",
+             "authorization":
+                 [{"actor":acc_name,"permission":"active"}],
+             "data":{"issuer":self.admin_address,
+                     "maximum_supply": max_supply+' '+self.token_short_name,
+                     "lock":True}},
+            {"account":self.admin_address,"name":"init",
+             "authorization":
+                 [{"actor":self.admin_address,"permission":"active"}],
+             "data":{}},
+            {"account":"eosio","name":"updateauth",
+             "authorization":
+                 [{"actor":self.admin_address,"permission":"active"}],
+             "data":{"account":self.admin_address,"permission":"active",
+                     "parent":"owner",
+                     "auth":{"threshold":1,"keys":
+                         [{"key":self.owner_public_key,"weight":1}],
+                             "accounts":[],"waits":[]}}}]
+
         # wallet_name = NETWORKS[self.contract.network.name]['wallet']
         # password = NETWORKS[self.contract.network.name]['eos_password']
         # our_public_key = NETWORKS[self.contract.network.name]['pub']
