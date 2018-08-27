@@ -70,6 +70,12 @@ class ContractDetailsEOSToken(CommonDetails):
             return 0
         return int(0.99 * 10 ** 18)
 
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(150 * 10 ** 4)
+
     def get_arguments(self, eth_contract_attr_name):
         return []
 
@@ -157,6 +163,12 @@ class ContractDetailsEOSAccount(CommonDetails):
             return 0
         cost = 0.1 *10**18
         return cost
+
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(100 * 10 ** 4)
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -263,6 +275,12 @@ class ContractDetailsEOSICO(CommonDetails):
         cost = 2 * 10**18
         return cost
 
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(250 * 10 ** 4)
+
     def get_arguments(self, eth_contract_attr_name):
         return []
 
@@ -323,6 +341,8 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_contract_crowdsale.save()
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
+        self.contract.state='ACTIVE'
+        self.contract.save()
 
     def deploy(self):
         self.compile()

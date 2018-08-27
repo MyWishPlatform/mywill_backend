@@ -133,6 +133,7 @@ def get_token_contracts(request):
 
 @api_view(http_method_names=['POST'])
 def deploy(request):
+    eos = request.data.get('eos', False)
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
@@ -141,6 +142,8 @@ def deploy(request):
         raise PermissionDenied
 
     # TODO: if type==4 check token contract is not at active crowdsale
+    if eos:
+        cost = contract_details.calc_cost_eos()
     cost = contract.cost
     promo_str = request.data.get('promo', None)
     cost = check_and_apply_promocode(
