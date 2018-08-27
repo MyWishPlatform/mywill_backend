@@ -415,6 +415,7 @@ class ContractDetailsEOSICO(CommonDetails):
             'cleos', '-u', eos_url, 'push', 'transaction', str(actions)
         ]
         print('command:', command, flush=True)
+        print('lenght of command', len(str(command)))
 
         for attempt in range(EOS_ATTEMPTS_COUNT):
             print('attempt', attempt, flush=True)
