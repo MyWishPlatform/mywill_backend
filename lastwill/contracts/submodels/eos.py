@@ -305,6 +305,7 @@ class ContractDetailsEOSICO(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
+        acc_name = NETWORKS[self.contract.network.name]['address']
         dest, preproc_config = create_directory(
             self,
             sour_path='lastwill/eosio-crowdsale/*',
@@ -314,10 +315,11 @@ class ContractDetailsEOSICO(CommonDetails):
             "/bin/bash -c 'cd {dest} && ./configure.sh "
             "--issuer {address} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
-            "--whitelist {whitelist} "
+            "--whitelist {whitelist} --contract {acc_name}"
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             "> {dest}/config.h").format(
+                acc_name=acc_name,
                 dest=dest,
                 address=self.admin_address,
                 symbol=self.token_short_name,
