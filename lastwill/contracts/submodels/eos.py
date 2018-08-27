@@ -315,7 +315,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "/bin/bash -c 'cd {dest} && ./configure.sh "
             "--issuer {address} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
-            "--whitelist {whitelist} --contract {acc_name}"
+            "--whitelist {whitelist} --contract {acc_name} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             "> {dest}/config.h").format(
@@ -333,7 +333,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 hard_cap=self.hard_cap,
                 issuer=self.issuer
                 )
-        print('command = ', command)
+        print('command = ', command, flush=True)
         if os.system(command):
             raise Exception('error generate config')
 
