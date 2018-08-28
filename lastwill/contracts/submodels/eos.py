@@ -174,7 +174,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 0.1 *10**18
+        cost = 0.05 *10**18
         return cost
 
     @staticmethod
