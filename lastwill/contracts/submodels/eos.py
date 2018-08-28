@@ -405,12 +405,12 @@ class ContractDetailsEOSICO(CommonDetails):
              "authorization":
                  [{"actor":self.admin_address,"permission":"active"}],
              "data":{"account":self.admin_address,"vmtype":0,"vmversion":0,
-                     "code":self.eos_contract_crowdsale.bytecode}},
+                     "code":""}},
             {"account":"eosio","name":"setabi",
              "authorization":
                  [{"actor":self.admin_address,"permission":"active"}],
              "data":{"account":self.admin_address,
-                     "abi":self.eos_contract_crowdsale.abi}},
+                     "abi":""}},
 
             {"account":acc_name,"name":"create",
              "authorization":
