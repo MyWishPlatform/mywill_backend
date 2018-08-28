@@ -382,7 +382,6 @@ class ContractDetailsEOSICO(CommonDetails):
             'cleos', '-u', eos_url, 'set', 'abi', self.admin_address,
             path.join(dest, 'crowdsale/crowdsale.abi'), '-jd', '-s'
         ]
-        abi = None
         print('command:', command, flush=True)
         for attempt in range(EOS_ATTEMPTS_COUNT):
              print('attempt', attempt, flush=True)
@@ -391,11 +390,12 @@ class ContractDetailsEOSICO(CommonDetails):
              # print('stdout', stdout, stderr)
              abi = json.loads(stdout.decode())['actions'][0]['data'][10:].encode("utf-8").hex()
              # abi = json.loads(stdout.decode())['actions'][0]['data'][10:].encode("utf-8")
-             print('abi', abi)
+             # print('abi', abi)
+             if abi:
+                 break
+        else:
+            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
-        if not abi:
-             raise Exception(
-                 'set abi cannot make tx')
         actions = {
             "actions": [
             {"account": "eosio", "name": "newaccount",
