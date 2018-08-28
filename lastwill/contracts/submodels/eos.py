@@ -378,115 +378,133 @@ class ContractDetailsEOSICO(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         unlock_eos_account(wallet_name, password)
-        actions = { "actions": [
-            {"account":"eosio","name":"newaccount",
-             "authorization":
-                [{"actor":acc_name,"permission":"active"}],
-             "data":{"creator":acc_name,"name":self.admin_address,
-                     "owner":
-                 {"threshold":1,"keys":[{"key":our_public_key,"weight":1}],
-                  "accounts":[],"waits":[]},
-                     "active":
-                         {"threshold":1,"keys":
-                             [{"key":our_public_key,"weight":1}],
-                          "accounts":[],"waits":[]}}},
-            {"account":"eosio","name":"delegatebw",
-             "authorization":
-                 [{"actor":acc_name,"permission":"active"}],
-             "data":{"from":acc_name,"receiver":self.admin_address,
-                     "stake_net_quantity":"10.0000 EOS",
-                     "stake_cpu_quantity":"10.0000 EOS",
-                     "transfer":0}},
-            {"account":"eosio","name":"buyrambytes",
-             "authorization":
-                 [{"actor":acc_name,"permission":"active"}],
-             "data":{"payer":acc_name,"receiver":self.admin_address,"bytes":32768}},
-            {"account":"eosio","name":"setcode",
-             "authorization":
-                 [{"actor":self.admin_address,"permission":"active"}],
-             "data":{"account":self.admin_address,"vmtype":0,"vmversion":0,
-                     "code":""}},
-            {"account":"eosio","name":"setabi",
-             "authorization":
-                 [{"actor":self.admin_address,"permission":"active"}],
-             "data":{"account":self.admin_address,
-                     "abi":""}},
 
-            {"account":acc_name,"name":"create",
-             "authorization":
-                 [{"actor":acc_name,"permission":"active"}],
-             "data":{"issuer":self.admin_address,
-                     "maximum_supply": max_supply+' '+self.token_short_name,
-                     "lock":True}},
-            {"account":self.admin_address,"name":"init",
-             "authorization":
-                 [{"actor":self.admin_address,"permission":"active"}],
-             "data":{"start": self.start_date, "finish": self.stop_date}},
-            {"account": "eosio", "name": "updateauth",
-                "authorization": [{
-                    "actor": self.admin_address,
-                    "permission": "owner"
-                }],
-                "data": {
-                    "account": self.admin_address,
-                    "permission": "owner",
-                    "parent": "",
-                    "auth": {
-                        "threshold": 1,
-                        "keys": [],
-                        "accounts": [{
-                            "permission": {
-                                "actor": self.admin_address,
-                                "permission": "owner"
-                            },
-                            "weight": 1
-                        }],
-                        "waits": []
-                    }
-                }
-            }, {
-                "account": "eosio",
-                "name": "updateauth",
-                "authorization": [{
-                    "actor": self.admin_address,
-                    "permission": "active"
-                }],
-                "data": {
-                    "account": self.admin_address,
-                    "permission": "active",
-                    "parent": "owner",
-                    "auth": {
-                        "threshold": 1, "keys": [],
-                        "accounts": [{
-                            "permission": {
-                                "actor": self.admin_address,
-                                "permission": "active"
-                            },
-                            "weight": 1
-                        }],
-                        "waits": []
-                    }
-                }
-            }]}
-        print(type(actions))
-        with open(path.join(dest, 'deploy_params.json'), 'w') as f:
-            f.write(json.dumps(actions))
         command = [
-            'cleos', '-u', eos_url, 'push', 'transaction', path.join(dest, 'deploy_params.json')
+            'cleos', '-u', eos_url, 'setabi', self.admin_address,
+            path.join(dest, 'crowdsale/crowdsale.abi'), '-jd'
         ]
         print('command:', command, flush=True)
-        print('lenght of command', len(str(command)))
-
         for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})',
-                               stderr.decode())
-            if result:
-                break
+             print('attempt', attempt, flush=True)
+             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                    stderr=PIPE).communicate()
+             print('stdout', stdout, stderr)
         else:
-            raise Exception(
-                'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('SUCCESS')
+             raise Exception(
+                 'set abi cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+        # actions = {"actions": [
+        #     {"account": "eosio", "name": "newaccount",
+        #      "authorization":
+        #          [{"actor": acc_name, "permission": "active"}],
+        #      "data": {"creator": acc_name, "name": self.admin_address,
+        #               "owner":
+        #                   {"threshold": 1,
+        #                    "keys": [{"key": our_public_key, "weight": 1}],
+        #                    "accounts": [], "waits": []},
+        #               "active":
+        #                   {"threshold": 1, "keys":
+        #                       [{"key": our_public_key, "weight": 1}],
+        #                    "accounts": [], "waits": []}}},
+        #     {"account": "eosio", "name": "delegatebw",
+        #      "authorization":
+        #          [{"actor": acc_name, "permission": "active"}],
+        #      "data": {"from": acc_name, "receiver": self.admin_address,
+        #               "stake_net_quantity": "10.0000 EOS",
+        #               "stake_cpu_quantity": "10.0000 EOS",
+        #               "transfer": 0}},
+        #     {"account": "eosio", "name": "buyrambytes",
+        #      "authorization":
+        #          [{"actor": acc_name, "permission": "active"}],
+        #      "data": {"payer": acc_name, "receiver": self.admin_address,
+        #               "bytes": 32768}},
+        #     {"account": "eosio", "name": "setcode",
+        #      "authorization":
+        #          [{"actor": self.admin_address, "permission": "active"}],
+        #      "data": {"account": self.admin_address, "vmtype": 0,
+        #               "vmversion": 0,
+        #               "code": self.eos_contract_crowdsale.bytecode}},
+        #     {"account": "eosio", "name": "setabi",
+        #      "authorization":
+        #          [{"actor": self.admin_address, "permission": "active"}],
+        #      "data": {"account": self.admin_address,
+        #               "abi": self.eos_contract_crowdsale.abi}},
+        #
+        #     {"account": acc_name, "name": "create",
+        #      "authorization":
+        #          [{"actor": acc_name, "permission": "active"}],
+        #      "data": {"issuer": self.admin_address,
+        #               "maximum_supply": max_supply + ' ' + self.token_short_name,
+        #               "lock": True}},
+        #     {"account": self.admin_address, "name": "init",
+        #      "authorization":
+        #          [{"actor": self.admin_address, "permission": "active"}],
+        #      "data": {"start": self.start_date, "finish": self.stop_date}},
+        #     {"account": "eosio", "name": "updateauth",
+        #      "authorization": [{
+        #          "actor": self.admin_address,
+        #          "permission": "owner"
+        #      }],
+        #      "data": {
+        #          "account": self.admin_address,
+        #          "permission": "owner",
+        #          "parent": "",
+        #          "auth": {
+        #              "threshold": 1,
+        #              "keys": [],
+        #              "accounts": [{
+        #                  "permission": {
+        #                      "actor": self.admin_address,
+        #                      "permission": "owner"
+        #                  },
+        #                  "weight": 1
+        #              }],
+        #              "waits": []
+        #          }
+        #      }
+        #      }, {
+        #         "account": "eosio",
+        #         "name": "updateauth",
+        #         "authorization": [{
+        #             "actor": self.admin_address,
+        #             "permission": "active"
+        #         }],
+        #         "data": {
+        #             "account": self.admin_address,
+        #             "permission": "active",
+        #             "parent": "owner",
+        #             "auth": {
+        #                 "threshold": 1, "keys": [],
+        #                 "accounts": [{
+        #                     "permission": {
+        #                         "actor": self.admin_address,
+        #                         "permission": "active"
+        #                     },
+        #                     "weight": 1
+        #                 }],
+        #                 "waits": []
+        #             }
+        #         }
+        #     }]}
+        # print(type(actions))
+        # with open(path.join(dest, 'deploy_params.json'), 'w') as f:
+        #     f.write(json.dumps(actions))
+        # command = [
+        #     'cleos', '-u', eos_url, 'push', 'transaction', path.join(dest, 'deploy_params.json')
+        # ]
+        # print('command:', command, flush=True)
+        # print('lenght of command', len(str(command)))
+        #
+        # for attempt in range(EOS_ATTEMPTS_COUNT):
+        #     print('attempt', attempt, flush=True)
+        #     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+        #                            stderr=PIPE).communicate()
+        #     print(stdout, stderr, flush=True)
+        #     result = re.search('executed transaction: ([\da-f]{64})',
+        #                        stderr.decode())
+        #     if result:
+        #         break
+        # else:
+        #     raise Exception(
+        #         'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        # print('SUCCESS')
