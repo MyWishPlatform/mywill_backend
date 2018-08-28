@@ -387,11 +387,13 @@ class ContractDetailsEOSICO(CommonDetails):
              print('attempt', attempt, flush=True)
              stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                     stderr=PIPE).communicate()
-             print('stdout', stdout, stderr)
-             abi = binascii.hexlify(json.loads(stdout.decode())['data'][10:0])
+             # print('stdout', stdout, stderr)
+             abi = binascii.hexlify(json.loads(stdout.decode())['actions']['data'][10:0])
+             print('abi', abi)
         else:
              raise Exception(
                  'set abi cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
         actions = {
             "actions": [
             {"account": "eosio", "name": "newaccount",
