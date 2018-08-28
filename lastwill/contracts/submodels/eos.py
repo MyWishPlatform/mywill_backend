@@ -380,8 +380,8 @@ class ContractDetailsEOSICO(CommonDetails):
         unlock_eos_account(wallet_name, password)
 
         command = [
-            'cleos', '-u', eos_url, 'setabi', self.admin_address,
-            path.join(dest, 'crowdsale/crowdsale.abi'), '-jd'
+            'cleos', '-u', eos_url, 'set', 'abi', self.admin_address,
+            path.join(dest, 'crowdsale/crowdsale.abi'), '-jd', '-s'
         ]
         print('command:', command, flush=True)
         for attempt in range(EOS_ATTEMPTS_COUNT):
@@ -392,7 +392,6 @@ class ContractDetailsEOSICO(CommonDetails):
         else:
              raise Exception(
                  'set abi cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
         # actions = {"actions": [
         #     {"account": "eosio", "name": "newaccount",
         #      "authorization":
