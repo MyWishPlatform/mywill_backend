@@ -388,7 +388,7 @@ class ContractDetailsEOSICO(CommonDetails):
              stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                     stderr=PIPE).communicate()
              # print('stdout', stdout, stderr)
-             abi = json.loads(stdout.decode())['actions'][0]['data'][10:].encode("utf-8").hex()
+             abi = json.loads(stdout.decode())['actions'][0]['data'][20:]
              # abi = json.loads(stdout.decode())['actions'][0]['data'][10:].encode("utf-8")
              # print('abi', abi)
              if abi:
