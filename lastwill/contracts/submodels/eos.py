@@ -464,7 +464,7 @@ class ContractDetailsEOSICO(CommonDetails):
                         }],
                         "data": {
                             "issuer": self.admin_address,
-                            "maximum_supply": max_supply,
+                            "maximum_supply": max_supply + " " + self.token_short_name,
                             "lock": True
                         }
                     }, {
