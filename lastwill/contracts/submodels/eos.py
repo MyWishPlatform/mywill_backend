@@ -467,7 +467,20 @@ class ContractDetailsEOSICO(CommonDetails):
                             "maximum_supply": max_supply + " " + self.token_short_name,
                             "lock": True
                         }
-                    }, {
+                    },
+                    # {
+                    #     "account": self.admin_address,
+                    #     "name": "init",
+                    #     "authorization": [{
+                    #         "actor": self.admin_address,
+                    #         "permission": "active"
+                    #     }],
+                    #     "data": {
+                    #         "start": self.start_date,
+                    #         "finish": self.stop_date
+                    #     }
+                    # },
+                    {
                         "account": "eosio",
                         "name": "updateauth",
                         "authorization": [{
@@ -522,7 +535,9 @@ class ContractDetailsEOSICO(CommonDetails):
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
         command = [
-            'cleos', '-u', eos_url, 'push', 'transaction', path.join(dest, 'deploy_params.json')
+            'cleos', '-u', eos_url, 'push', 'transaction',
+            path.join(dest, 'deploy_params.json'), 
+            '-p', acc_name, '-p', self.admin_address
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
