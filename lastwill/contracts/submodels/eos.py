@@ -536,7 +536,7 @@ class ContractDetailsEOSICO(CommonDetails):
             f.write(json.dumps(actions))
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
-            path.join(dest, 'deploy_params.json'), 
+            path.join(dest, 'deploy_params.json'),
             '-p', acc_name, '-p', self.admin_address
         ]
         print('command:', command, flush=True)
@@ -547,7 +547,7 @@ class ContractDetailsEOSICO(CommonDetails):
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})',
+            result = re.search('transaction_id: ([\da-f]{64})',
                                stderr.decode())
             if result:
                 break
