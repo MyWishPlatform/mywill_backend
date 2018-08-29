@@ -548,7 +548,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                    stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
             result = re.search('transaction_id: ([\da-f]{64})',
-                               stderr.decode())
+                               stdout.decode())
             if result:
                 break
         else:
