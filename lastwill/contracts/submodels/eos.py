@@ -431,8 +431,6 @@ class ContractDetailsEOSICO(CommonDetails):
         else:
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         actions = {
-            'actions':
-                {
                     "actions": [{
                         "account": "eosio",
                         "name": "setcode",
@@ -530,8 +528,6 @@ class ContractDetailsEOSICO(CommonDetails):
                         }
                     }]
                 }
-
-        }
 
         print(type(actions))
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
