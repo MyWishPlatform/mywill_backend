@@ -547,9 +547,9 @@ class ContractDetailsEOSICO(CommonDetails):
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
-            result = re.search('transaction_id: ([\da-f]{64})',
-                               stdout.decode())
+            result = json.loads(stdout.decode())['transaction_id']
             if result:
+                print('tx id', result)
                 break
         else:
             raise Exception(
