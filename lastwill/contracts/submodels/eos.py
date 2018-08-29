@@ -468,17 +468,6 @@ class ContractDetailsEOSICO(CommonDetails):
                             "lock": True
                         }
                     }, {
-                        "account": self.admin_address,
-                        "name": "init",
-                        "authorization": [{
-                            "actor": self.admin_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "start": self.start_date,
-                            "finish": self.stop_date
-                        }
-                    }, {
                         "account": "eosio",
                         "name": "updateauth",
                         "authorization": [{
