@@ -435,8 +435,8 @@ class ContractDetailsEOSICO(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
             'mywishtest15', 'init',
-            '{"start": {start}, "finish": {stop}}'.format(
-                start=self.start_date, stop=self.stop_date
+            '{"start": {start_date}, "finish": {stop_date}}'.format(
+                start_date=self.start_date, stop_date=self.stop_date
             )
         ]
         print('command:', command, flush=True)
