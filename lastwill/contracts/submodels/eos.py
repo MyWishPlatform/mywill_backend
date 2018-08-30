@@ -447,7 +447,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                     stderr=PIPE).communicate()
              # print('stdout', stdout, stderr)
              init_data = stdout.decode()
-             print('init_data')
+             print('init_data', init_data)
              if init_data:
                  break
         else:
