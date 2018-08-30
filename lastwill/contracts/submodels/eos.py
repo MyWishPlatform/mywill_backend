@@ -575,10 +575,13 @@ class ContractDetailsEOSICO(CommonDetails):
             #                    stdout.decode())
             # print('tx', tx)
             if result:
-                result = json.loads(stdout.decode())
+                result = json.loads(stdout.decode())['transaction_id']
                 print(result)
                 break
         else:
             raise Exception(
                 'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('SUCCESS')
+        self.contract.state='ACTIVE'
+        self.contract.save()
+
