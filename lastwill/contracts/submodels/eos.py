@@ -546,7 +546,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            # print(stdout, stderr, flush=True)
+            print(stdout, stderr, flush=True)
             print(type(stdout), len(stdout), flush=True)
             print(json.loads(stdout.decode()))
             result = json.dumps(stdout.decode())['transaction_id']
