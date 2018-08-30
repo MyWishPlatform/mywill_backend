@@ -430,6 +430,29 @@ class ContractDetailsEOSICO(CommonDetails):
                  break
         else:
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+        unlock_eos_account(wallet_name, password)
+        command = [
+            'cleos', '-u', eos_url, 'convert', 'pack_action_data',
+            'mywishtest15', 'init',
+            '{"start": {start}, "finish": {stop}}'.format(
+                start=self.start_date, stop=self.stop_date
+            )
+        ]
+        print('command:', command, flush=True)
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+             print('attempt', attempt, flush=True)
+             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                    stderr=PIPE).communicate()
+             # print('stdout', stdout, stderr)
+             init_data = stdout.decode()
+             print('init_data')
+             if init_data:
+                 break
+        else:
+            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+
         actions = {
                     "actions": [{
                         "account": "eosio",
@@ -468,18 +491,15 @@ class ContractDetailsEOSICO(CommonDetails):
                             "lock": True
                         }
                     },
-                    # {
-                    #     "account": self.admin_address,
-                    #     "name": "init",
-                    #     "authorization": [{
-                    #         "actor": self.admin_address,
-                    #         "permission": "active"
-                    #     }],
-                    #     "data": {
-                    #         "start": self.start_date,
-                    #         "finish": self.stop_date
-                    #     }
-                    # },
+                    {
+                        "account": self.admin_address,
+                        "name": "init",
+                        "authorization": [{
+                            "actor": self.admin_address,
+                            "permission": "active"
+                        }],
+                        "data": init_data
+                    },
                     {
                         "account": "eosio",
                         "name": "updateauth",
