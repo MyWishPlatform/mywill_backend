@@ -432,13 +432,14 @@ class ContractDetailsEOSICO(CommonDetails):
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         unlock_eos_account(wallet_name, password)
+        dates = json.dumps({'start': self.start_date, 'stop': self.stop_date})
+
+        print(dates)
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
-            'mywishtest15', 'init',
-            '{"start": {start_date}, "finish": {stop_date}}'.format(
-                start_date=self.start_date, stop_date=self.stop_date
-            )
+            'mywishtest15', 'init', str(dates)
         ]
+
         print('command:', command, flush=True)
         for attempt in range(EOS_ATTEMPTS_COUNT):
              print('attempt', attempt, flush=True)
