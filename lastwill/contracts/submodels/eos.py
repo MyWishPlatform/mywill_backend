@@ -549,7 +549,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print(stdout, stderr, flush=True)
             print(type(stdout), len(stdout), flush=True)
             print(json.loads(stdout.decode()))
-            result = json.dumps(stdout.decode())['transaction_id']
+            result = json.dumps(stdout.decode())
             print(result)
             # tx = re.search('"transaction_id": ([\da-f]{64})',
             #                    stdout.decode())
