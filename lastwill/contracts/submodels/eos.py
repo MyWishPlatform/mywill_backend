@@ -568,14 +568,15 @@ class ContractDetailsEOSICO(CommonDetails):
                                    stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
             print(type(stdout), len(stdout), flush=True)
-            print(json.loads(stdout.decode()))
-            result = json.loads(stdout.decode())
-            print(result)
+            # print(json.loads(stdout.decode()))
+            result = stdout.decode()
+            # print(result)
             # tx = re.search('"transaction_id": ([\da-f]{64})',
             #                    stdout.decode())
             # print('tx', tx)
             if result:
-                # print('tx id', result)
+                result = json.loads(stdout.decode())
+                print(result)
                 break
         else:
             raise Exception(
