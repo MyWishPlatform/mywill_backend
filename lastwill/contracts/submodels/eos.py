@@ -142,6 +142,9 @@ class ContractDetailsEOSToken(CommonDetails):
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+    def tokenCreated(self, message):
+        self.msg_deployed(message, eth_contract_attr_name='eos_contract')
+
 
 class ContractDetailsEOSAccount(CommonDetails):
     owner_public_key = models.CharField(max_length=128)
@@ -586,4 +589,7 @@ class ContractDetailsEOSICO(CommonDetails):
         return
 
     def msg_deployed(self, message):
-        return super().deploy(message, eth_contract_attr_name='eos_contract_crowdsale')
+        return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
+
+    def tokenCreated(self, message):
+         return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
