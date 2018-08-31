@@ -360,6 +360,7 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_contract_crowdsale = EOSContract()
         eos_contract_crowdsale.contract = self.contract
         eos_contract_crowdsale.original_contract = self.contract
+        eos_contract_crowdsale.address = self.crowdsale_address
         eos_contract_crowdsale.abi = abi
         eos_contract_crowdsale.bytecode = bytecode
         eos_contract_crowdsale.source_code = source_code
