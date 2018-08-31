@@ -562,7 +562,7 @@ class ContractDetailsEOSICO(CommonDetails):
             print('attempt', attempt, flush=True)
             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                    stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
+            # print(stdout, stderr, flush=True)
             print(type(stdout), len(stdout), flush=True)
             result = stdout.decode()
             if result:
