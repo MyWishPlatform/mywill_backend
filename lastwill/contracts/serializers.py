@@ -934,8 +934,8 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         fields = (
             'soft_cap', 'hard_cap', 'token_short_name', 'whitelist',
             'is_transferable_at_once','start_date', 'stop_date',
-            'decimals', 'rate', 'address_crowdsale', 'min_wei', 'max_wei',
-            'allow_change_dates', 'protected_mode', 'address_admin'
+            'decimals', 'rate', 'crowdsale_address', 'min_wei', 'max_wei',
+            'allow_change_dates', 'protected_mode', 'admin_address'
         )
 
     def create(self, contract, contract_details):
@@ -966,7 +966,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
 
         for k in ('hard_cap', 'soft_cap'):
             details[k] = int(details[k])
-        if 'address_admin' not in details or 'token_holders' not in details:
+        if 'admin_address' not in details or 'token_holders' not in details:
             raise ValidationError
         if len(details['token_holders']) > 5:
             raise ValidationError
