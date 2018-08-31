@@ -584,3 +584,6 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def setcode(self, message):
         return
+
+    def msg_deployed(self, message):
+        return super().deploy('eos_contract_crowdsale')
