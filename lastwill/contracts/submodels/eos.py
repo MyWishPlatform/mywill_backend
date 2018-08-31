@@ -363,8 +363,6 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_contract_crowdsale.save()
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
-        self.contract.state='ACTIVE'
-        self.contract.save()
 
     def deploy(self):
         self.compile()
