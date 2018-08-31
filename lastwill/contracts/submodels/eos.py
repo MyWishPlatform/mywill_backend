@@ -363,7 +363,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.state='ACTIVE'
         self.contract.save()
 
-    def create_account(self):
+    def deploy(self):
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -397,8 +397,10 @@ class ContractDetailsEOSICO(CommonDetails):
         tx_hash = result.group(1)
         print('tx_hash:', tx_hash, flush=True)
         print('account for eos ico created', flush=True)
+        self.eos_contract_crowdsale.tx_hash = tx_hash
+        self.eos_contract_crowdsale.save()
 
-    def deploy(self):
+    def newAccount(self):
         self.compile()
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
@@ -411,7 +413,6 @@ class ContractDetailsEOSICO(CommonDetails):
             max_supply = str(self.hard_cap)
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
-        our_public_key = NETWORKS[self.contract.network.name]['pub']
         unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'set', 'abi', self.admin_address,
@@ -422,10 +423,7 @@ class ContractDetailsEOSICO(CommonDetails):
              print('attempt', attempt, flush=True)
              stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                     stderr=PIPE).communicate()
-             # print('stdout', stdout, stderr)
              abi = json.loads(stdout.decode())['actions'][0]['data'][20:]
-             # abi = json.loads(stdout.decode())['actions'][0]['data'][10:].encode("utf-8")
-             # print('abi', abi)
              if abi:
                  break
         else:
@@ -438,20 +436,17 @@ class ContractDetailsEOSICO(CommonDetails):
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
             'mywishtest15', 'init', str(dates)
         ]
-
         print('command:', command, flush=True)
         for attempt in range(EOS_ATTEMPTS_COUNT):
              print('attempt', attempt, flush=True)
              stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                     stderr=PIPE).communicate()
-             # print('stdout', stdout, stderr)
              init_data = stdout.decode()
              print('init_data', init_data)
              if init_data:
                  break
         else:
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
 
         actions = {
                     "actions": [{
@@ -568,12 +563,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                    stderr=PIPE).communicate()
             print(stdout, stderr, flush=True)
             print(type(stdout), len(stdout), flush=True)
-            # print(json.loads(stdout.decode()))
             result = stdout.decode()
-            # print(result)
-            # tx = re.search('"transaction_id": ([\da-f]{64})',
-            #                    stdout.decode())
-            # print('tx', tx)
             if result:
                 result = json.loads(stdout.decode())['transaction_id']
                 print(result)
@@ -584,3 +574,5 @@ class ContractDetailsEOSICO(CommonDetails):
         print('SUCCESS')
         self.contract.state='ACTIVE'
         self.contract.save()
+        self.eos_contract_crowdsale.tx_hash = result
+        self.eos_contract_crowdsale.save()
