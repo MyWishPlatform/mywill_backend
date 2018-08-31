@@ -227,7 +227,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.eos_contract = eos_contract
         self.save()
 
-        self.contract.state='WAITING_FOR_DEPLOYMENT'
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
 
@@ -572,7 +572,11 @@ class ContractDetailsEOSICO(CommonDetails):
             raise Exception(
                 'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('SUCCESS')
-        self.contract.state='ACTIVE'
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
         self.eos_contract_crowdsale.tx_hash = result
         self.eos_contract_crowdsale.save()
+
+    def initialized(self):
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
