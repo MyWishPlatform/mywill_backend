@@ -404,7 +404,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.tx_hash = tx_hash
         self.eos_contract_crowdsale.save()
 
-    def newAccount(self):
+    def newAccount(self, message):
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
