@@ -586,4 +586,4 @@ class ContractDetailsEOSICO(CommonDetails):
         return
 
     def msg_deployed(self, message):
-        return super().deploy('eos_contract_crowdsale')
+        return super().deploy(message, eth_contract_attr_name='eos_contract_crowdsale')
