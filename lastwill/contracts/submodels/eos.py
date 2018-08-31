@@ -231,7 +231,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.contract.save()
 
     def newAccount(self, message):
-        self.msg_deployed(message)
+        self.msg_deployed(message, eth_contract_attr_name='eos_contract')
 
 
 class ContractDetailsEOSICO(CommonDetails):
