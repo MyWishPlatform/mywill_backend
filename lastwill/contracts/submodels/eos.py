@@ -230,6 +230,9 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+    def newAccount(self, message):
+        self.msg_deployed(message)
+
 
 class ContractDetailsEOSICO(CommonDetails):
     soft_cap = models.DecimalField(
