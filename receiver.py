@@ -384,7 +384,7 @@ class Receiver(threading.Thread):
     def tokenCreated(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
-        details.tokenCreated(message, eth_contract_attr_name='eos_contract')
+        details.tokenCreated(message)
 
     def setcode(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
