@@ -580,3 +580,6 @@ class ContractDetailsEOSICO(CommonDetails):
     def initialized(self):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+
+    def setcode(self, message):
+        return
