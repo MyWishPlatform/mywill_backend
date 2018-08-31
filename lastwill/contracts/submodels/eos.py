@@ -239,8 +239,8 @@ class ContractDetailsEOSICO(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     token_short_name = models.CharField(max_length=64)
-    admin_address = models.CharField(max_length=50)
-    issuer = models.CharField(max_length=50)
+    address_crowdsale = models.CharField(max_length=50)
+    address_admin = models.CharField(max_length=50)
     is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
@@ -322,7 +322,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "> {dest}/config.h").format(
                 acc_name=acc_name,
                 dest=dest,
-                address=self.admin_address,
+                address=self.address_crowdsale,
                 symbol=self.token_short_name,
                 decimals=self.decimals,
                 whitelist="true" if self.whitelist else "false",
@@ -332,7 +332,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_wei=self.max_wei if self.max_wei else 0,
                 soft_cap=self.soft_cap,
                 hard_cap=self.hard_cap,
-                issuer=self.issuer
+                issuer=self.address_admin
                 )
         print('command = ', command, flush=True)
         if os.system(command):
@@ -364,6 +364,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.save()
 
     def deploy(self):
+        self.compile()
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -374,7 +375,7 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['port']))
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
-            acc_name, self.admin_address, our_public_key, our_public_key,
+            acc_name, self.address_crowdsale, our_public_key, our_public_key,
             '--stake-net', "10.0000 EOS",
             '--stake-cpu', "10.0000 EOS",
             '--buy-ram-kbytes', "300", '--transfer',
@@ -401,7 +402,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.save()
 
     def newAccount(self):
-        self.compile()
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
@@ -415,7 +415,7 @@ class ContractDetailsEOSICO(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
         command = [
-            'cleos', '-u', eos_url, 'set', 'abi', self.admin_address,
+            'cleos', '-u', eos_url, 'set', 'abi', self.address_crowdsale,
             path.join(dest, 'crowdsale/crowdsale.abi'), '-jd', '-s'
         ]
         print('command:', command, flush=True)
@@ -453,11 +453,11 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": "eosio",
                         "name": "setcode",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.address_crowdsale,
                             "permission": "active"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.address_crowdsale,
                             "vmtype": 0,
                             "vmversion": 0,
                             "code": self.eos_contract_crowdsale.bytecode
@@ -466,11 +466,11 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": "eosio",
                         "name": "setabi",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.address_crowdsale,
                             "permission": "active"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.address_crowdsale,
                             "abi": abi
                         }
                     }, {
@@ -481,16 +481,16 @@ class ContractDetailsEOSICO(CommonDetails):
                             "permission": "active"
                         }],
                         "data": {
-                            "issuer": self.admin_address,
+                            "issuer": self.address_crowdsale,
                             "maximum_supply": max_supply + " " + self.token_short_name,
                             "lock": True
                         }
                     },
                     {
-                        "account": self.admin_address,
+                        "account": self.address_crowdsale,
                         "name": "init",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.address_crowdsale,
                             "permission": "active"
                         }],
                         "data": init_data
@@ -499,11 +499,11 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": "eosio",
                         "name": "updateauth",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.address_crowdsale,
                             "permission": "owner"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.address_crowdsale,
                             "permission": "owner",
                             "parent": "",
                             "auth": {
@@ -511,7 +511,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                 "keys": [],
                                 "accounts": [{
                                     "permission": {
-                                        "actor": self.admin_address,
+                                        "actor": self.address_crowdsale,
                                         "permission": "owner"
                                     },
                                     "weight": 1
@@ -523,11 +523,11 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": "eosio",
                         "name": "updateauth",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.address_crowdsale,
                             "permission": "active"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.address_crowdsale,
                             "permission": "active",
                             "parent": "owner",
                             "auth": {
@@ -535,7 +535,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                 "keys": [],
                                 "accounts": [{
                                     "permission": {
-                                        "actor": self.admin_address,
+                                        "actor": self.address_crowdsale,
                                         "permission": "active"
                                     },
                                     "weight": 1
@@ -552,7 +552,7 @@ class ContractDetailsEOSICO(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
             path.join(dest, 'deploy_params.json'),
-            '-p', acc_name, '-p', self.admin_address
+            '-p', acc_name, '-p', self.address_crowdsale
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
