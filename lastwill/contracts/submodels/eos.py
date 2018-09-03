@@ -611,7 +611,7 @@ class ContractDetailsEOSICO(CommonDetails):
         return
 
     def msg_deployed(self, message):
-        return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
+        pass
 
     def tokenCreated(self, message):
          return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
