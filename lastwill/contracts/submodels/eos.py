@@ -223,7 +223,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         print('tx_hash:', tx_hash, flush=True)
         eos_contract = EOSContract()
         eos_contract.tx_hash = tx_hash
-        eos_contract.address = acc_name
+        eos_contract.address = self.account_name
         eos_contract.contract=self.contract
         eos_contract.save()
 
