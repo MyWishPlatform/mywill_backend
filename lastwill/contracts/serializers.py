@@ -944,7 +944,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             th_json['address'] = th_json['address'].lower()
             kwargs = th_json.copy()
             kwargs['contract'] = contract
-            TokenHolder(**kwargs).save()
+            EOSTokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         res = super().create(kwargs)
@@ -990,7 +990,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        token_holder_serializer = TokenHolderSerializer()
+        token_holder_serializer = EOSTokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eos_contract_token'] = EOSContractSerializer().to_representation(contract_details.eos_contract_token)
         res['eos_contract_crowdsale'] = EOSContractSerializer().to_representation(contract_details.eos_contract_crowdsale)
