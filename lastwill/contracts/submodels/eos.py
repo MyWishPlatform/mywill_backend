@@ -615,3 +615,10 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def tokenCreated(self, message):
          return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
+
+    def timesChanged(self, message):
+        if 'startTime' in message:
+            self.start_date = message['startTime']
+        if 'endTime' in message:
+            self.stop_date = message['endTime']
+        self.save()
