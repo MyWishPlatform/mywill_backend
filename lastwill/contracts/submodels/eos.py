@@ -142,6 +142,9 @@ class ContractDetailsEOSToken(CommonDetails):
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+    def tokenCreated(self, message):
+        self.msg_deployed(message, eth_contract_attr_name='eos_contract')
+
 
 class ContractDetailsEOSAccount(CommonDetails):
     owner_public_key = models.CharField(max_length=128)
@@ -174,7 +177,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 0.1 *10**18
+        cost = 0.05 *10**18
         return cost
 
     @staticmethod
@@ -227,8 +230,11 @@ class ContractDetailsEOSAccount(CommonDetails):
         self.eos_contract = eos_contract
         self.save()
 
-        self.contract.state='WAITING_FOR_DEPLOYMENT'
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
+
+    def newAccount(self, message):
+        self.msg_deployed(message, eth_contract_attr_name='eos_contract')
 
 
 class ContractDetailsEOSICO(CommonDetails):
@@ -239,8 +245,8 @@ class ContractDetailsEOSICO(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     token_short_name = models.CharField(max_length=64)
+    crowdsale_address = models.CharField(max_length=50)
     admin_address = models.CharField(max_length=50)
-    issuer = models.CharField(max_length=50)
     is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
@@ -322,7 +328,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "> {dest}/config.h").format(
                 acc_name=acc_name,
                 dest=dest,
-                address=self.admin_address,
+                address=self.crowdsale_address,
                 symbol=self.token_short_name,
                 decimals=self.decimals,
                 whitelist="true" if self.whitelist else "false",
@@ -332,7 +338,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_wei=self.max_wei if self.max_wei else 0,
                 soft_cap=self.soft_cap,
                 hard_cap=self.hard_cap,
-                issuer=self.issuer
+                issuer=self.admin_address
                 )
         print('command = ', command, flush=True)
         if os.system(command):
@@ -354,16 +360,16 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_contract_crowdsale = EOSContract()
         eos_contract_crowdsale.contract = self.contract
         eos_contract_crowdsale.original_contract = self.contract
+        eos_contract_crowdsale.address = self.crowdsale_address
         eos_contract_crowdsale.abi = abi
         eos_contract_crowdsale.bytecode = bytecode
         eos_contract_crowdsale.source_code = source_code
         eos_contract_crowdsale.save()
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
-        self.contract.state='ACTIVE'
-        self.contract.save()
 
-    def create_account(self):
+    def deploy(self):
+        self.compile()
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -374,7 +380,7 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['port']))
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
-            acc_name, self.admin_address, our_public_key, our_public_key,
+            acc_name, self.crowdsale_address, our_public_key, our_public_key,
             '--stake-net', "10.0000 EOS",
             '--stake-cpu', "10.0000 EOS",
             '--buy-ram-kbytes', "300", '--transfer',
@@ -397,9 +403,10 @@ class ContractDetailsEOSICO(CommonDetails):
         tx_hash = result.group(1)
         print('tx_hash:', tx_hash, flush=True)
         print('account for eos ico created', flush=True)
+        self.eos_contract_crowdsale.tx_hash = tx_hash
+        self.eos_contract_crowdsale.save()
 
-    def deploy(self):
-        self.compile()
+    def newAccount(self, message):
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
@@ -411,10 +418,9 @@ class ContractDetailsEOSICO(CommonDetails):
             max_supply = str(self.hard_cap)
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
-        our_public_key = NETWORKS[self.contract.network.name]['pub']
         unlock_eos_account(wallet_name, password)
         command = [
-            'cleos', '-u', eos_url, 'set', 'abi', self.admin_address,
+            'cleos', '-u', eos_url, 'set', 'abi', self.crowdsale_address,
             path.join(dest, 'crowdsale/crowdsale.abi'), '-jd', '-s'
         ]
         print('command:', command, flush=True)
@@ -422,24 +428,41 @@ class ContractDetailsEOSICO(CommonDetails):
              print('attempt', attempt, flush=True)
              stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                     stderr=PIPE).communicate()
-             # print('stdout', stdout, stderr)
              abi = json.loads(stdout.decode())['actions'][0]['data'][20:]
-             # abi = json.loads(stdout.decode())['actions'][0]['data'][10:].encode("utf-8")
-             # print('abi', abi)
              if abi:
                  break
         else:
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+        unlock_eos_account(wallet_name, password)
+        dates = json.dumps({'start': self.start_date, 'finish': self.stop_date})
+        print(dates, flush=True)
+        command = [
+            'cleos', '-u', eos_url, 'convert', 'pack_action_data',
+            'mywishtest15', 'init', str(dates)
+        ]
+        print('command:', command, flush=True)
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+             print('attempt', attempt, flush=True)
+             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
+                                    stderr=PIPE).communicate()
+             init_data = stdout.decode()
+             print('init_data', init_data)
+             if init_data:
+                 break
+        else:
+            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
         actions = {
                     "actions": [{
                         "account": "eosio",
                         "name": "setcode",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.crowdsale_address,
                             "permission": "active"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.crowdsale_address,
                             "vmtype": 0,
                             "vmversion": 0,
                             "code": self.eos_contract_crowdsale.bytecode
@@ -448,11 +471,11 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": "eosio",
                         "name": "setabi",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.crowdsale_address,
                             "permission": "active"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.crowdsale_address,
                             "abi": abi
                         }
                     }, {
@@ -463,32 +486,29 @@ class ContractDetailsEOSICO(CommonDetails):
                             "permission": "active"
                         }],
                         "data": {
-                            "issuer": self.admin_address,
+                            "issuer": self.crowdsale_address,
                             "maximum_supply": max_supply + " " + self.token_short_name,
                             "lock": True
                         }
                     },
-                    # {
-                    #     "account": self.admin_address,
-                    #     "name": "init",
-                    #     "authorization": [{
-                    #         "actor": self.admin_address,
-                    #         "permission": "active"
-                    #     }],
-                    #     "data": {
-                    #         "start": self.start_date,
-                    #         "finish": self.stop_date
-                    #     }
-                    # },
+                    {
+                        "account": self.crowdsale_address,
+                        "name": "init",
+                        "authorization": [{
+                            "actor": self.crowdsale_address,
+                            "permission": "active"
+                        }],
+                        "data": init_data
+                    },
                     {
                         "account": "eosio",
                         "name": "updateauth",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.crowdsale_address,
                             "permission": "owner"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.crowdsale_address,
                             "permission": "owner",
                             "parent": "",
                             "auth": {
@@ -496,7 +516,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                 "keys": [],
                                 "accounts": [{
                                     "permission": {
-                                        "actor": self.admin_address,
+                                        "actor": self.crowdsale_address,
                                         "permission": "owner"
                                     },
                                     "weight": 1
@@ -508,11 +528,11 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": "eosio",
                         "name": "updateauth",
                         "authorization": [{
-                            "actor": self.admin_address,
+                            "actor": self.crowdsale_address,
                             "permission": "active"
                         }],
                         "data": {
-                            "account": self.admin_address,
+                            "account": self.crowdsale_address,
                             "permission": "active",
                             "parent": "owner",
                             "auth": {
@@ -520,7 +540,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                 "keys": [],
                                 "accounts": [{
                                     "permission": {
-                                        "actor": self.admin_address,
+                                        "actor": self.crowdsale_address,
                                         "permission": "active"
                                     },
                                     "weight": 1
@@ -537,7 +557,7 @@ class ContractDetailsEOSICO(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
             path.join(dest, 'deploy_params.json'),
-            '-p', acc_name, '-p', self.admin_address
+            '-p', acc_name, '-p', self.crowdsale_address
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
@@ -548,15 +568,29 @@ class ContractDetailsEOSICO(CommonDetails):
                                    stderr=PIPE).communicate()
             # print(stdout, stderr, flush=True)
             print(type(stdout), len(stdout), flush=True)
-            # print(json.loads(stdout.decode()))
-            result = json.dumps(stdout.decode())['transaction_id']
-            tx = re.search('"transaction_id": ([\da-f]{64})',
-                               stdout.decode())
-            print('tx', tx)
+            result = stdout.decode()
             if result:
-                print('tx id', result)
+                result = json.loads(stdout.decode())['transaction_id']
+                print(result)
                 break
         else:
             raise Exception(
                 'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('SUCCESS')
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
+        self.eos_contract_crowdsale.tx_hash = result
+        self.eos_contract_crowdsale.save()
+
+    def initialized(self):
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
+
+    def setcode(self, message):
+        return
+
+    def msg_deployed(self, message):
+        return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
+
+    def tokenCreated(self, message):
+         return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
