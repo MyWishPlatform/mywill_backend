@@ -312,6 +312,12 @@ class ContractDetailsEOSICO(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
+        token_holders = self.contract.eostokenholder_set.all()
+        mint = ''
+        for th in token_holders:
+            mint =  mint + '--mint ' + '"{address} {amount}"'.format(
+                address=th.address, amount=th.amount
+            )
         acc_name = NETWORKS[self.contract.network.name]['address']
         dest, preproc_config = create_directory(
             self,
@@ -325,7 +331,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "--whitelist {whitelist} --contract {acc_name} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
-            "> {dest}/config.h").format(
+            " {mint} > {dest}/config.h").format(
                 acc_name=acc_name,
                 dest=dest,
                 address=self.crowdsale_address,
@@ -338,7 +344,8 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_wei=self.max_wei if self.max_wei else 0,
                 soft_cap=self.soft_cap,
                 hard_cap=self.hard_cap,
-                issuer=self.admin_address
+                issuer=self.admin_address,
+                mint=mint
                 )
         print('command = ', command, flush=True)
         if os.system(command):
@@ -412,10 +419,17 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
+        token_holders = self.contract.eostokenholder_set.all()
+        total_supply = self.hard_cap
+        for th in token_holders:
+            total_supply = total_supply + th.amount
         if self.decimals != 0:
-            max_supply = str(self.hard_cap)[:-self.decimals] + '.' + str(self.hard_cap)[-self.decimals:]
+            if len(str(total_supply)) == self.decimals:
+                max_supply = '0.' + str(total_supply)
+            else:
+                max_supply = str(total_supply)[:-self.decimals] + '.' + str(total_supply)[-self.decimals:]
         else:
-            max_supply = str(self.hard_cap)
+            max_supply = str(total_supply)
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
