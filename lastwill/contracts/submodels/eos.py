@@ -466,7 +466,7 @@ class ContractDetailsEOSICO(CommonDetails):
              print('attempt', attempt, flush=True)
              stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
                                     stderr=PIPE).communicate()
-             init_data = stdout.decode()
+             init_data = stdout.decode().replace('\n', '')
              print('init_data', init_data)
              if init_data:
                  break
@@ -622,3 +622,20 @@ class ContractDetailsEOSICO(CommonDetails):
         if 'endTime' in message:
             self.stop_date = message['endTime']
         self.save()
+
+class EOSAirdropAddress(models.Model):
+    contract = models.ForeignKey(Contract, null=True)
+    address = models.CharField(max_length=50, db_index=True)
+    active = models.BooleanField(default=True)
+    state = models.CharField(max_length=10, default='added')
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
+        db_index=True
+    )
+
+class ContractDetailsEOSAirdrop(CommonDetails):
+
+    contract = models.ForeignKey(Contract, null=True)
+    admin_address = models.CharField(max_length=50)
+    token_address = models.CharField(max_length=50)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
