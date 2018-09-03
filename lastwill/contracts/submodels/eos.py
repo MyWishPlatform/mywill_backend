@@ -605,6 +605,7 @@ class ContractDetailsEOSICO(CommonDetails):
     def initialized(self):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
         return
