@@ -602,7 +602,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.tx_hash = result
         self.eos_contract_crowdsale.save()
 
-    def initialized(self):
+    def initialized(self, message):
         self.contract.state = 'ACTIVE'
         self.contract.save()
         take_off_blocking(self.contract.network.name, self.contract.id)
