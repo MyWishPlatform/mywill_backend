@@ -561,7 +561,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                 "accounts": [{
                                     "permission": {
                                         "actor": self.crowdsale_address,
-                                        "permission": "active"
+                                        "permission": "eosio.code"
                                     },
                                     "weight": 1
                                 }],
@@ -632,6 +632,7 @@ class EOSAirdropAddress(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
         db_index=True
     )
+
 
 class ContractDetailsEOSAirdrop(CommonDetails):
 
