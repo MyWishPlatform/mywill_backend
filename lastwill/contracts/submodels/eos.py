@@ -614,7 +614,7 @@ class ContractDetailsEOSICO(CommonDetails):
         pass
 
     def tokenCreated(self, message):
-         return super().msg_deployed(message, eth_contract_attr_name='eos_contract_crowdsale')
+         pass
 
     def timesChanged(self, message):
         if 'startTime' in message:
