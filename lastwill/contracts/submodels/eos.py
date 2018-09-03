@@ -375,6 +375,9 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
 
+    @logging
+    @blocking
+    @postponable
     def deploy(self):
         self.compile()
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
@@ -413,6 +416,9 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.tx_hash = tx_hash
         self.eos_contract_crowdsale.save()
 
+    @logging
+    @blocking
+    @postponable
     def newAccount(self, message):
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
