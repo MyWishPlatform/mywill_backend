@@ -536,3 +536,17 @@ def get_invest_balance_day(request):
     if balance == 0:
         balance = str(balance)
     return JsonResponse({'last_balance': balance})
+
+
+@api_view(http_method_names=['POST'])
+def check_status(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    if contract.user != request.user or contract.state != 'ACTIVE':
+        raise PermissionDenied
+
+    now = datetime.datetime.now().timestamp()
+    
+
+
+
+    return JsonResponse(ContractSerializer().to_representation(contract))
