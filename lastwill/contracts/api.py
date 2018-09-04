@@ -143,7 +143,7 @@ def deploy(request):
 
     # TODO: if type==4 check token contract is not at active crowdsale
     if eos:
-        cost = contract_details.calc_cost_eos(contract_details, 'EOS_MAINNET')
+        cost = contract_details.calc_cost_eos(contract_details, contract.network)
         currency = 'EOS'
     else:
         cost = contract.cost
