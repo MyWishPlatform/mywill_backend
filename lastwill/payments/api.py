@@ -54,7 +54,7 @@ def negative_payment(user, currency, value):
         ).update(balance=F('balance') - value):
             raise Exception('no money')
     else:
-        eos_cost = value * (convert('ETH', 'EOS')['EOS'])
+        eos_cost = value
         if not Profile.objects.select_for_update().filter(
                 user=user, eos_balance__gte=eos_cost
         ).update(eos_balance=F('eos_balance') - eos_cost):
