@@ -29,7 +29,7 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_cost_all_contracts, neo_crowdsale_finalize,
                                     WhitelistAddressViewSet, AirdropAddressViewSet,
                                     load_airdrop, get_contract_for_link,
-                                    get_invest_balance_day)
+                                    get_invest_balance_day, check_status)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -82,6 +82,7 @@ urlpatterns = [
     url(r'^api/load_airdrop/$', load_airdrop),
     url(r'^api/get_contract_for_link/$', get_contract_for_link),
     url(r'^api/get_invest_balance_day/$', get_invest_balance_day),
+    url(r'^api/check_status/$', check_status),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
