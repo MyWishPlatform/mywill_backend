@@ -328,8 +328,8 @@ class ContractDetailsEOSICO(CommonDetails):
             "/bin/bash -c 'cd {dest} && ./configure.sh "
             "--issuer {address} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
-            "--whitelist {whitelist} --contract {token_addr} "
-            "--transferable {transferable} --rate {rate} --ratedenom 100 "
+            "--whitelist {whitelist} --contract {acc_name} "
+            "--transferable {transferable} --rate {rate} --ratedenom 1 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             " {mint} > {dest}/config.h").format(
                 token_addr=token_addr,
