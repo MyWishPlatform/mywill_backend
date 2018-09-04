@@ -46,6 +46,7 @@ class ParInt:
                 )
             except requests.exceptions.ConnectionError as e:
                 raise ParConnectExc()
+            print('raw response', temp.content, flush=True)
             result = json.loads(temp.content.decode())
             if result.get('error'):
                 raise ParErrorExc(result['error']['message'])
