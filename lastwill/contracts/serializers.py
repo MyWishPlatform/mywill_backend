@@ -1002,13 +1002,13 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         return res
 
     def update(self, contract, details, contract_details):
-        contract.tokenholder_set.all().delete()
+        contract.eostokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
             kwargs = th_json.copy()
             kwargs['contract'] = contract
-            TokenHolder(**kwargs).save()
+            EOSTokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         kwargs.pop('eos_contract_token', None)
