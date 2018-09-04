@@ -331,7 +331,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "--whitelist {whitelist} --contract {acc_name} "
             "--transferable {transferable} --rate {rate} --ratedenom 1 "
             "--mincontrib {min_wei} --maxcontrib {max_wei}"
-            " {mint}' > {dest}/config.h").format(
+            " {mint} > {dest}/config.h' ").format(
                 acc_name=acc_name,
                 dest=dest,
                 # address=self.crowdsale_address,
