@@ -509,7 +509,7 @@ class ContractDetailsEOSICO(CommonDetails):
                         "data": {
                             "issuer": self.crowdsale_address,
                             "maximum_supply": max_supply + " " + self.token_short_name,
-                            "lock": True
+                            "lock": not self.is_transferable_at_once
                         }
                     },
                     {
