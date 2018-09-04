@@ -20,7 +20,7 @@ def create_payment(uid, tx, currency, amount):
     else:
         value = amount * 10
     if amount < 0.0:
-        negative_payment(user, currency, value)
+        negative_payment(user, currency, -value)
     else:
         positive_payment(user, currency, value)
 
