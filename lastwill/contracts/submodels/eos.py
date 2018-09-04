@@ -315,7 +315,7 @@ class ContractDetailsEOSICO(CommonDetails):
         token_holders = self.contract.eostokenholder_set.all()
         mint = ''
         for th in token_holders:
-            mint =  mint + '--mint ' + '"{address} {amount}"'.format(
+            mint =  mint + ' --mint ' + '"{address} {amount}"'.format(
                 address=th.address, amount=th.amount
             )
         token_address = NETWORKS[self.contract.network.name]['token_address']
@@ -330,7 +330,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "--softcap {soft_cap} --hardcap {hard_cap} "
             "--whitelist {whitelist} --contract {acc_name} "
             "--transferable {transferable} --rate {rate} --ratedenom 1 "
-            "--mincontrib {min_wei} --maxcontrib {max_wei}"
+            "--mincontrib {min_wei} --maxcontrib {max_wei} "
             " {mint} > {dest}/config.h' ").format(
                 acc_name=token_address,
                 dest=dest,
