@@ -624,9 +624,9 @@ class ContractDetailsEOSICO(CommonDetails):
          pass
 
     def timesChanged(self, message):
-        if 'startTime' in message:
+        if 'startTime' in message and message['startTime']:
             self.start_date = message['startTime']
-        if 'endTime' in message:
+        if 'endTime' in message and message['endTime']:
             self.stop_date = message['endTime']
         self.save()
 
