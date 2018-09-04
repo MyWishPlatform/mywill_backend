@@ -152,7 +152,7 @@ def deploy(request):
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
-    create_payment(request.user.id, '', currency, cost)
+    create_payment(request.user.id, '', currency, -cost)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
