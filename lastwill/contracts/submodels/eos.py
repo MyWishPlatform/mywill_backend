@@ -318,7 +318,7 @@ class ContractDetailsEOSICO(CommonDetails):
             mint =  mint + '--mint ' + '"{address} {amount}"'.format(
                 address=th.address, amount=th.amount
             )
-        acc_name = NETWORKS[self.contract.network.name]['address']
+        token_addr = NETWORKS[self.contract.network.name]['token_address']
         dest, preproc_config = create_directory(
             self,
             sour_path='lastwill/eosio-crowdsale/*',
@@ -328,11 +328,11 @@ class ContractDetailsEOSICO(CommonDetails):
             "/bin/bash -c 'cd {dest} && ./configure.sh "
             "--issuer {address} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
-            "--whitelist {whitelist} --contract {acc_name} "
+            "--whitelist {whitelist} --contract {token_addr} "
             "--transferable {transferable} --rate {rate} --ratedenom 100 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             " {mint} > {dest}/config.h").format(
-                acc_name=acc_name,
+                token_addr=token_addr,
                 dest=dest,
                 address=self.crowdsale_address,
                 symbol=self.token_short_name,
@@ -424,6 +424,7 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
+        token_address = NETWORKS[self.contract.network.name]['token_address']
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
         token_holders = self.contract.eostokenholder_set.all()
         total_supply = self.hard_cap
@@ -499,7 +500,7 @@ class ContractDetailsEOSICO(CommonDetails):
                             "abi": abi
                         }
                     }, {
-                        "account": acc_name,
+                        "account": token_address,
                         "name": "create",
                         "authorization": [{
                             "actor": acc_name,
@@ -577,7 +578,7 @@ class ContractDetailsEOSICO(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
             path.join(dest, 'deploy_params.json'),
-            '-p', acc_name, '-p', self.crowdsale_address
+            '-p', acc_name, '-p', self.crowdsale_address # do we need -p token_addres if address diff from token_address?
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
@@ -603,8 +604,14 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.save()
 
     def initialized(self, message):
+        self.eos_contract_token = EOSContract()
+        token_address = NETWORKS[self.contract.network.name]['token_address']
+        self.eos_contract_token.address = token_address
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        self.eos_contract_token.save()
+        self.save()
+        
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
