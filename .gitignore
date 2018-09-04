@@ -28,3 +28,10 @@ lastwill/contracts/serializers.py.save
 temp/
 test_btc_addreses.txt
 env/
+jon.cs
+jon_new.cs
+lastwill/contracts/submodels/common.py.save
+slogger.py
+templates/wstest.html
+ws_test.py
+
