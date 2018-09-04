@@ -338,7 +338,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 symbol=self.token_short_name,
                 decimals=self.decimals,
                 whitelist="true" if self.whitelist else "false",
-                transferable="false" if self.is_transferable_at_once else "true",
+                transferable="true" if self.is_transferable_at_once else "false",
                 rate=self.rate,
                 min_wei=self.min_wei if self.min_wei else 0,
                 max_wei=self.max_wei if self.max_wei else 0,
