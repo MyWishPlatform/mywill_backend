@@ -329,7 +329,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "--issuer {address} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
             "--whitelist {whitelist} --contract {acc_name} "
-            "--transferable {transferable} --rate {rate} --ratedenom 100 "
+            "--transferable {transferable} --rate {rate} --ratedenom 1 "
             "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
             " {mint} > {dest}/config.h").format(
                 acc_name=acc_name,
