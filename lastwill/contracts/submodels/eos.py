@@ -318,7 +318,7 @@ class ContractDetailsEOSICO(CommonDetails):
             mint =  mint + '--mint ' + '"{address} {amount}"'.format(
                 address=th.address, amount=th.amount
             )
-        acc_name = NETWORKS[self.contract.network.name]['address']
+        token_address = NETWORKS[self.contract.network.name]['token_address']
         dest, preproc_config = create_directory(
             self,
             sour_path='lastwill/eosio-crowdsale/*',
@@ -332,7 +332,7 @@ class ContractDetailsEOSICO(CommonDetails):
             "--transferable {transferable} --rate {rate} --ratedenom 1 "
             "--mincontrib {min_wei} --maxcontrib {max_wei}"
             " {mint} > {dest}/config.h' ").format(
-                acc_name=acc_name,
+                acc_name=token_address,
                 dest=dest,
                 # address=self.crowdsale_address,
                 symbol=self.token_short_name,
