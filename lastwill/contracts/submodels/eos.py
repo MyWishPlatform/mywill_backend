@@ -326,15 +326,15 @@ class ContractDetailsEOSICO(CommonDetails):
         )
         command = (
             "/bin/bash -c 'cd {dest} && ./configure.sh "
-            "--issuer {address} --symbol {symbol} --decimals {decimals} "
+            "--issuer {issuer} --symbol {symbol} --decimals {decimals} "
             "--softcap {soft_cap} --hardcap {hard_cap} "
             "--whitelist {whitelist} --contract {acc_name} "
             "--transferable {transferable} --rate {rate} --ratedenom 1 "
-            "--mincontrib {min_wei} --maxcontrib {max_wei} --issuer {issuer}'"
-            " {mint} > {dest}/config.h").format(
-                token_addr=token_addr,
+            "--mincontrib {min_wei} --maxcontrib {max_wei}"
+            " {mint}' > {dest}/config.h").format(
+                acc_name=acc_name,
                 dest=dest,
-                address=self.crowdsale_address,
+                # address=self.crowdsale_address,
                 symbol=self.token_short_name,
                 decimals=self.decimals,
                 whitelist="true" if self.whitelist else "false",
