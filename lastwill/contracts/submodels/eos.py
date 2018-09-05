@@ -636,6 +636,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_token = EOSContract()
         token_address = NETWORKS[self.contract.network.name]['token_address']
         self.eos_contract_token.address = token_address
+        self.eos_contract_token.contract = self.contract
         self.contract.state = 'ACTIVE'
         self.contract.save()
         self.eos_contract_token.save()
