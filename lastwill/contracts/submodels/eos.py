@@ -495,7 +495,7 @@ class ContractDetailsEOSICO(CommonDetails):
                                 }],
                                 "accounts": [{
                                     "permission": {
-                                        "actor": "mywishte1111",
+                                        "actor": self.crowdsale_address,
                                         "permission": "eosio.code"
                                     },
                                     "weight": 1
