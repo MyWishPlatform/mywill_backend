@@ -632,6 +632,10 @@ class ContractDetailsEOSICO(CommonDetails):
             self.stop_date = message['endTime']
         self.save()
 
+    @logging
+    def finalized(self, message):
+        pass
+
 class EOSAirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_length=50, db_index=True)
