@@ -479,30 +479,25 @@ class ContractDetailsEOSICO(CommonDetails):
 
         actions = {
                     "actions": [
-
                         {
-                            "account": "eosio",
-                            "name": "updateauth",
-                            "authorization": [{
-                                "actor": self.crowdsale_address,
-                                "permission": "active"
-                            }],
-                            "data": {
-                                "threshold": 1,
-                                "keys": [{
-                                    "key": our_public_key,
-                                    "weight": 1
-                                }],
-                                "accounts": [{
-                                    "permission": {
+                        "account": "eosio",
+                        "name": "updateauth",
+                        "authorization": [{
+                            "actor": self.crowdsale_address,
+                            "permission": "active"
+                        }],
+                         "data": {
+                             "account": self.crowdsale_address,
+                             "permission": "active", "parent": "active",
+                             "auth": {"threshold": 1, "keys":
+                                      [{
+                                        "key": our_public_key,
+                                        "weight": 1}],
+                                        "accounts": [{"permission": {
                                         "actor": self.crowdsale_address,
-                                        "permission": "eosio.code"
-                                    },
-                                    "weight": 1
-                                }],
-                                "waits": []
-                            }
-                        },
+                                        "permission": "eosio.code"},
+                                                "weight": 1}],
+                                    "waits": []}}},
 
                         {
                         "account": "eosio",
