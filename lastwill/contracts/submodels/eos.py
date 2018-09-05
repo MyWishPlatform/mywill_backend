@@ -425,6 +425,7 @@ class ContractDetailsEOSICO(CommonDetails):
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
+        our_public_key = NETWORKS[self.contract.network.name]['pub']
         token_address = NETWORKS[self.contract.network.name]['token_address']
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
         token_holders = self.contract.eostokenholder_set.all()
@@ -477,7 +478,33 @@ class ContractDetailsEOSICO(CommonDetails):
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         actions = {
-                    "actions": [{
+                    "actions": [
+
+                        {
+                            "account": "eosio",
+                            "name": "updateauth",
+                            "authorization": [{
+                                "actor": self.crowdsale_address,
+                                "permission": "active"
+                            }],
+                            "data": {
+                                "threshold": 1,
+                                "keys": [{
+                                    "key": our_public_key,
+                                    "weight": 1
+                                }],
+                                "accounts": [{
+                                    "permission": {
+                                        "actor": "mywishte1111",
+                                        "permission": "eosio.code"
+                                    },
+                                    "weight": 1
+                                }],
+                                "waits": []
+                            }
+                        },
+
+                        {
                         "account": "eosio",
                         "name": "setcode",
                         "authorization": [{
