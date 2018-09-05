@@ -315,8 +315,16 @@ class ContractDetailsEOSICO(CommonDetails):
         token_holders = self.contract.eostokenholder_set.all()
         mint = ''
         for th in token_holders:
+            if self.decimals != 0:
+                if len(str(th.amount)) == self.decimals:
+                    amount = '0.' + str(th.amount)
+                else:
+                    amount = str(th.amount)[:-self.decimals] + '.' + str(
+                        th.amount)[-self.decimals:]
+            else:
+                amount = str(th.amount)
             mint =  mint + ' --mint ' + '"{address} {amount}"'.format(
-                address=th.address, amount=th.amount
+                address=th.address, amount=amount
             )
         print('mint', mint, flush=True)
         token_address = NETWORKS[self.contract.network.name]['token_address']
