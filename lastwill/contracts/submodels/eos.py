@@ -634,7 +634,8 @@ class ContractDetailsEOSICO(CommonDetails):
 
     @logging
     def finalized(self, message):
-        pass
+        self.contract.state = 'DONE'
+        self.contract.save()
 
 class EOSAirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)

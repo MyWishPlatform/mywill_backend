@@ -973,7 +973,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             raise ValidationError
         for th in details['token_holders']:
             th['amount'] = int(th['amount'])
-        if not len(details['token_short_name']):
+        if not len(details['token_short_name']):\
             raise ValidationError
         if details['rate'] < 1 or details['rate'] > 10**12:
             raise ValidationError
