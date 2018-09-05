@@ -318,6 +318,7 @@ class ContractDetailsEOSICO(CommonDetails):
             mint =  mint + ' --mint ' + '"{address} {amount}"'.format(
                 address=th.address, amount=th.amount
             )
+        print('mint', mint, flush=True)
         token_address = NETWORKS[self.contract.network.name]['token_address']
         dest, preproc_config = create_directory(
             self,
@@ -437,6 +438,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_supply = str(total_supply)[:-self.decimals] + '.' + str(total_supply)[-self.decimals:]
         else:
             max_supply = str(total_supply)
+        print('total supply', max_supply, flush=True)
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
