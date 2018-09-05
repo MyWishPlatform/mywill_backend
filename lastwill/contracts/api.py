@@ -1,6 +1,7 @@
 import datetime
 import time
 from os import path
+from subprocess import Popen, PIPE
 
 from django.utils import timezone
 from django.db.models import F
@@ -543,10 +544,19 @@ def check_status(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     if contract.user != request.user or contract.state != 'ACTIVE':
         raise PermissionDenied
-
+    if contract.contract_type != 12:
+        raise PermissionDenied
+    details = contract.get_details()
     now = datetime.datetime.now().timestamp()
-    
-
-
-
+    addr = details.crowdsale_address
+    command = ['cleos', '-u', 'http://127.0.0.1:8887', 'get', 'table', addr, addr, 'state']
+    stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+    if stdout:
+        result = json.loads(stdout.decode())['rows'][0]
+        if (now > result['finish'] and result['total_tokens'] >= details.soft_cap) or result['total_tokens'] >= details.hard_cap:
+            contract.state = 'DONE'
+            contract.save()
+        elif now > result['finish'] and result['total_tokens'] < details.soft_cap:
+            contract.state = 'CANCELLED'
+            contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
