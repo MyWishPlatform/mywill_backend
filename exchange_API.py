@@ -20,7 +20,7 @@ class memoize_timeout:
         return func
 
 
-@memoize_timeout(10*60)
+# @memoize_timeout(10*60)
 def convert(fsym, tsyms):
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS'}
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
