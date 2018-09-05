@@ -628,14 +628,16 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.save()
 
     def initialized(self, message):
-        self.eos_contract_token = EOSContract()
+        print("eos crowdsale initialized msg", flush=True)
+        eos_contract_token = EOSContract()
         token_address = NETWORKS[self.contract.network.name]['token_address']
-        self.eos_contract_token.address = token_address
-        self.eos_contract_token.contract = self.contract
+        eos_contract_token.address = token_address
+        eos_contract_token.contract = self.contract
+        eos_contract_token.save()
+        self.eos_contract_token = eos_contract_token
+        self.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        self.eos_contract_token.save()
-        self.save()
         
         take_off_blocking(self.contract.network.name, self.contract.id)
 
@@ -646,7 +648,7 @@ class ContractDetailsEOSICO(CommonDetails):
         pass
 
     def tokenCreated(self, message):
-         pass
+        pass
 
     def timesChanged(self, message):
         if 'startTime' in message and message['startTime']:
