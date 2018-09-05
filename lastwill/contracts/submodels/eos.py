@@ -488,7 +488,7 @@ class ContractDetailsEOSICO(CommonDetails):
                         }],
                          "data": {
                              "account": self.crowdsale_address,
-                             "permission": "active", "parent": "active",
+                             "permission": "active", "parent": "owner",
                              "auth": {"threshold": 1, "keys":
                                       [{
                                         "key": our_public_key,
