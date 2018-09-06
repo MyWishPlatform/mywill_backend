@@ -310,7 +310,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def predeploy_validate(self):
         now = timezone.now()
-        if self.start_date < now.timestamp():
+        if self.start_date < now.timestamp() + 600:
             raise ValidationError({'result': 1}, code=400)
 
     def compile(self):
