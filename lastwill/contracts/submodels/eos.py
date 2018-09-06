@@ -126,6 +126,7 @@ class ContractDetailsEOSToken(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
@@ -217,6 +218,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
@@ -310,7 +312,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
     def predeploy_validate(self):
         now = timezone.now()
-        if self.start_date < now.timestamp():
+        if self.start_date < now.timestamp() + 600:
             raise ValidationError({'result': 1}, code=400)
 
     def compile(self):
@@ -416,6 +418,7 @@ class ContractDetailsEOSICO(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception(
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
@@ -464,6 +467,7 @@ class ContractDetailsEOSICO(CommonDetails):
              if abi:
                  break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         unlock_eos_account(wallet_name, password)
@@ -483,6 +487,7 @@ class ContractDetailsEOSICO(CommonDetails):
              if init_data:
                  break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         actions = {
@@ -535,7 +540,7 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": token_address,
                         "name": "create",
                         "authorization": [{
-                            "actor": acc_name,
+                            "actor": token_address,
                             "permission": "active"
                         }],
                         "data": {
@@ -627,6 +632,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 print(result)
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception(
                 'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('SUCCESS')
