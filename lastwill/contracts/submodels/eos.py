@@ -126,6 +126,7 @@ class ContractDetailsEOSToken(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
@@ -217,6 +218,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
@@ -413,6 +415,7 @@ class ContractDetailsEOSICO(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception(
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
@@ -461,6 +464,7 @@ class ContractDetailsEOSICO(CommonDetails):
              if abi:
                  break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         unlock_eos_account(wallet_name, password)
@@ -480,6 +484,7 @@ class ContractDetailsEOSICO(CommonDetails):
              if init_data:
                  break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         actions = {
@@ -624,6 +629,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 print(result)
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception(
                 'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('SUCCESS')
