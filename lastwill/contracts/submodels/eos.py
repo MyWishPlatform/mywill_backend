@@ -394,12 +394,15 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
+        net = NETWORKS[self.contract.network.name]['stake_net']
+        cpu = NETWORKS[self.contract.network.name]['stake_cpu']
+        ram = NETWORKS[self.contract.network.name]['ram']
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             acc_name, self.crowdsale_address, our_public_key, our_public_key,
-            '--stake-net', "0.1000 EOS",
-            '--stake-cpu', "1.0000 EOS",
-            '--buy-ram-kbytes', "300", '--transfer',
+            '--stake-net', net,
+            '--stake-cpu', cpu,
+            '--buy-ram-kbytes', ram, '--transfer',
         ]
         print('command:', command, flush=True)
 
