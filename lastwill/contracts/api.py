@@ -558,7 +558,7 @@ def check_status(request):
         if now > result['finish'] and result['total_tokens'] < details.soft_cap:
             contract.state = 'CANCELLED'
             contract.save()
-        elif details.transferable and now > result['finish'] and result['total_tokens'] >= details.soft_cap
+        elif details.transferable and now > result['finish'] and result['total_tokens'] >= details.soft_cap:
             contract.state = 'DONE'
             contract.save()        
         elif details.transferable and result['total_tokens'] >= details.hard_cap:
