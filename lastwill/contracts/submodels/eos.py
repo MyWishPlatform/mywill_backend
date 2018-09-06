@@ -308,6 +308,11 @@ class ContractDetailsEOSICO(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.start_date < now.timestamp():
+            raise ValidationError({'result': 1}, code=400)
+
     def compile(self):
         if self.temp_directory:
             print('already compiled')
