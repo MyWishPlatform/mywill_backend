@@ -906,7 +906,10 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAccount
-        fields = ('owner_public_key', 'active_public_key','account_name')
+        fields = (
+            'owner_public_key', 'active_public_key','account_name',
+            'stake_net_value', 'stake_cpu_value', 'buy_ram_kbytes'
+        )
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
