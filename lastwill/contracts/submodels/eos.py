@@ -210,7 +210,11 @@ class ContractDetailsEOSAccount(CommonDetails):
             print('stderr', stderr, flush=True)
             raise Exception(
                 'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        return int(100 * 10 ** 4) + kwargs.buy_ram_kbytes * ram_price
+        eos_cost = (
+                int(100 * 10 ** 4) + kwargs.buy_ram_kbytes * ram_price
+                + float(kwargs.stake_net_value) + float(kwargs.stake_cpu_value)
+        )
+        return eos_cost
 
     def get_arguments(self, eth_contract_attr_name):
         return []
