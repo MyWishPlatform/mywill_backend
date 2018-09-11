@@ -174,14 +174,6 @@ class ContractDetailsEOSAccount(CommonDetails):
         cost = cls.calc_cost_eos({}, network)
         return cost
 
-    def calc_cost(self, network):
-        if NETWORKS[network.name]['is_free']:
-            return 0
-        # cost = 0.05 *10**18
-        eos_cost = self.calc_cost_eos()
-        cost = eos_cost * convert('EOS', 'ETH')['ETH']
-        return cost
-
     def calc_cost_eos(self, network):
         if NETWORKS[network.name]['is_free']:
             return 0
@@ -213,6 +205,14 @@ class ContractDetailsEOSAccount(CommonDetails):
                 + float(self.stake_net_value) + float(self.stake_cpu_value)
         )
         return eos_cost
+
+    def calc_cost(self, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        # cost = 0.05 *10**18
+        eos_cost = self.calc_cost_eos()
+        cost = eos_cost * convert('EOS', 'ETH')['ETH']
+        return cost
 
     def get_arguments(self, eth_contract_attr_name):
         return []
