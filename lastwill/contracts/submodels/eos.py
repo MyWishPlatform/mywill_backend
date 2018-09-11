@@ -205,6 +205,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
+    @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='EOS_MAINNET')
         cost = cls.calc_cost({}, network)
