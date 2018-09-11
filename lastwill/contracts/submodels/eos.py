@@ -162,16 +162,14 @@ class ContractDetailsEOSAccount(CommonDetails):
         on_delete=models.SET_NULL
     )
 
-    @classmethod
-    def min_cost(cls):
+    def min_cost(self):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost({}, network)
+        cost = self.calc_cost({}, network)
         return cost
 
-    @classmethod
-    def min_cost_eos(cls):
+    def min_cost_eos(self):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost_eos({}, network)
+        cost = self.calc_cost_eos({}, network)
         return cost
 
     def calc_cost_eos(self, network):
