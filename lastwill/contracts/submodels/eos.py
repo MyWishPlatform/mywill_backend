@@ -178,7 +178,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = self.calc_cost.eos()
+        eos_cost = self.calc_cost_eos()
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         return cost
 
