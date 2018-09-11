@@ -208,13 +208,13 @@ class ContractDetailsEOSAccount(CommonDetails):
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost({}, network)
+        cost = cls.calc_cost(network)
         return cost
 
     @classmethod
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost_eos({}, network)
+        cost = cls.calc_cost_eos(network)
         return cost
 
     @logging
