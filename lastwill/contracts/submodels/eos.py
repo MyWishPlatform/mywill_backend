@@ -174,22 +174,20 @@ class ContractDetailsEOSAccount(CommonDetails):
         cost = cls.calc_cost_eos({}, network)
         return cost
 
-    @staticmethod
-    def calc_cost(kwargs, network):
+    def calc_cost(self, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = kwargs.calc_cost.eos()
+        eos_cost = self.calc_cost.eos()
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         return cost
 
-    @staticmethod
-    def calc_cost_eos(kwargs, network):
+    def calc_cost_eos(self, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         eos_url = 'http://%s:%s' % (
-            str(NETWORKS[kwargs.contract.network.name]['host']),
-            str(NETWORKS[kwargs.contract.network.name]['port'])
+            str(NETWORKS[self.contract.network.name]['host']),
+            str(NETWORKS[self.contract.network.name]['port'])
         )
 
         command1 = [
@@ -211,8 +209,8 @@ class ContractDetailsEOSAccount(CommonDetails):
             raise Exception(
                 'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         eos_cost = (
-                int(100 * 10 ** 4) + kwargs.buy_ram_kbytes * ram_price
-                + float(kwargs.stake_net_value) + float(kwargs.stake_cpu_value)
+                int(100 * 10 ** 4) + self.buy_ram_kbytes * ram_price
+                + float(self.stake_net_value) + float(self.stake_cpu_value)
         )
         return eos_cost
 
