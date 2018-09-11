@@ -162,16 +162,6 @@ class ContractDetailsEOSAccount(CommonDetails):
         on_delete=models.SET_NULL
     )
 
-    def min_cost(self):
-        network = Network.objects.get(name='EOS_MAINNET')
-        cost = self.calc_cost({}, network)
-        return cost
-
-    def min_cost_eos(self):
-        network = Network.objects.get(name='EOS_MAINNET')
-        cost = self.calc_cost_eos({}, network)
-        return cost
-
     def calc_cost_eos(self, network):
         if NETWORKS[network.name]['is_free']:
             return 0
@@ -214,6 +204,17 @@ class ContractDetailsEOSAccount(CommonDetails):
 
     def get_arguments(self, eth_contract_attr_name):
         return []
+
+    def min_cost(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @classmethod
+    def min_cost_eos(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost_eos({}, network)
+        return cost
 
     @logging
     @blocking
