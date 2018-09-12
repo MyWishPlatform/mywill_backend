@@ -162,12 +162,13 @@ class ContractDetailsEOSAccount(CommonDetails):
         on_delete=models.SET_NULL
     )
 
-    def calc_cost_eos(self, network):
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         eos_url = 'http://%s:%s' % (
-            str(NETWORKS[self.contract.network.name]['host']),
-            str(NETWORKS[self.contract.network.name]['port'])
+            str(NETWORKS[network]['host']),
+            str(NETWORKS[network]['port'])
         )
 
         command1 = [
@@ -189,16 +190,21 @@ class ContractDetailsEOSAccount(CommonDetails):
             raise Exception(
                 'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         eos_cost = (
-                int(100 * 10 ** 4) + self.buy_ram_kbytes * ram_price
-                + float(self.stake_net_value) + float(self.stake_cpu_value)
+                int(100 * 10 ** 4) + kwargs['ram'] * ram_price
+                + float(kwargs['net']) + float(kwargs['cpu'])
         )
         return eos_cost
 
+    @staticmethod
     def calc_cost(self, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = self.calc_cost_eos()
+        eos_cost = self.calc_cost_eos({
+            'cpu': '0.64',
+            'net': '0.01',
+            'ram': 4
+        }, network.name)
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         return cost
 
@@ -214,7 +220,11 @@ class ContractDetailsEOSAccount(CommonDetails):
     @classmethod
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost_eos(network)
+        cost = cls.calc_cost_eos({
+            'cpu': '0.64',
+            'net': '0.01',
+            'ram': 4
+        }, network)
         return cost
 
     @logging
