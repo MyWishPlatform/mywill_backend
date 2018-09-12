@@ -906,7 +906,10 @@ class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAccount
-        fields = ('owner_public_key', 'active_public_key','account_name')
+        fields = (
+            'owner_public_key', 'active_public_key','account_name',
+            'stake_net_value', 'stake_cpu_value', 'buy_ram_kbytes'
+        )
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
@@ -1015,3 +1018,33 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         kwargs.pop('eos_contract_crowdsale', None)
 
         return super().update(details, kwargs)
+
+
+class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsEOSAirdrop
+        fields = ('admin_address', 'token_address')
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
+        res['processing_count'] = contract_details.contract.eosairdropaddress_set.filter(state='processing', active=True).count()
+        res['sent_count'] = contract_details.contract.eosairdropaddress_set.filter(state='sent', active=True).count()
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+class EOSAirdropAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSAirdropAddress
+        fields = ('address', 'amount', 'state')

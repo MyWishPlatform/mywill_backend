@@ -75,7 +75,7 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(0.99 * 10 ** 18)
+        return int(2.99 * 10 ** 18)
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
@@ -126,6 +126,7 @@ class ContractDetailsEOSToken(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
@@ -161,33 +162,60 @@ class ContractDetailsEOSAccount(CommonDetails):
         on_delete=models.SET_NULL
     )
 
+    def calc_cost_eos(self, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        eos_url = 'http://%s:%s' % (
+            str(NETWORKS[self.contract.network.name]['host']),
+            str(NETWORKS[self.contract.network.name]['port'])
+        )
+
+        command1 = [
+            'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
+        ]
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = stdout.decode()
+            if result:
+                ram = json.loads(stdout.decode())['rows'][0]
+                print(result)
+                ram_price = ram['quote']['balance'] / ram['base']['balance'] * 1024
+                break
+        else:
+            print('stderr', stderr, flush=True)
+            raise Exception(
+                'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        eos_cost = (
+                int(100 * 10 ** 4) + self.buy_ram_kbytes * ram_price
+                + float(self.stake_net_value) + float(self.stake_cpu_value)
+        )
+        return eos_cost
+
+    def calc_cost(self, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        # cost = 0.05 *10**18
+        eos_cost = self.calc_cost_eos()
+        cost = eos_cost * convert('EOS', 'ETH')['ETH']
+        return cost
+
+    def get_arguments(self, eth_contract_attr_name):
+        return []
+
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost({}, network)
+        cost = cls.calc_cost(network)
         return cost
 
     @classmethod
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost_eos({}, network)
+        cost = cls.calc_cost_eos(network)
         return cost
-
-    @staticmethod
-    def calc_cost(kwargs, network):
-        if NETWORKS[network.name]['is_free']:
-            return 0
-        cost = 0.05 *10**18
-        return cost
-
-    @staticmethod
-    def calc_cost_eos(kwargs, network):
-        if NETWORKS[network.name]['is_free']:
-            return 0
-        return int(100 * 10 ** 4)
-
-    def get_arguments(self, eth_contract_attr_name):
-        return []
 
     @logging
     @blocking
@@ -217,6 +245,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         tx_hash = result.group(1)
@@ -308,6 +337,11 @@ class ContractDetailsEOSICO(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.start_date < now.timestamp() + 600:
+            raise ValidationError({'result': 1}, code=400)
+
     def compile(self):
         if self.temp_directory:
             print('already compiled')
@@ -389,12 +423,15 @@ class ContractDetailsEOSICO(CommonDetails):
         eos_url = 'http://%s:%s' % (
         str(NETWORKS[self.contract.network.name]['host']),
         str(NETWORKS[self.contract.network.name]['port']))
+        net = NETWORKS[self.contract.network.name]['stake_net']
+        cpu = NETWORKS[self.contract.network.name]['stake_cpu']
+        ram = NETWORKS[self.contract.network.name]['ram']
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             acc_name, self.crowdsale_address, our_public_key, our_public_key,
-            '--stake-net', "10.0000 EOS",
-            '--stake-cpu', "10.0000 EOS",
-            '--buy-ram-kbytes', "300", '--transfer',
+            '--stake-net', net,
+            '--stake-cpu', cpu,
+            '--buy-ram-kbytes', ram, '--transfer',
         ]
         print('command:', command, flush=True)
 
@@ -408,6 +445,7 @@ class ContractDetailsEOSICO(CommonDetails):
             if result:
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception(
                 'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
@@ -456,6 +494,7 @@ class ContractDetailsEOSICO(CommonDetails):
              if abi:
                  break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         unlock_eos_account(wallet_name, password)
@@ -475,6 +514,7 @@ class ContractDetailsEOSICO(CommonDetails):
              if init_data:
                  break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
         actions = {
@@ -527,7 +567,7 @@ class ContractDetailsEOSICO(CommonDetails):
                         "account": token_address,
                         "name": "create",
                         "authorization": [{
-                            "actor": acc_name,
+                            "actor": token_address,
                             "permission": "active"
                         }],
                         "data": {
@@ -619,6 +659,7 @@ class ContractDetailsEOSICO(CommonDetails):
                 print(result)
                 break
         else:
+            print('stderr', stderr, flush=True)
             raise Exception(
                 'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('SUCCESS')

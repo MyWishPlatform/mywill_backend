@@ -26,7 +26,7 @@ create_message = """Congratulations!
 
 Your contract is created and ready for deployment to {network_name}.
 
-If you have any question or want to get free promotion of your project in MyWish social channels please contact support@mywish.io.
+If you have any questions or want to get free promotion of your project in MyWish social channels please contact support@mywish.io.
 
 Thank you for using MyWish.
 """
@@ -36,7 +36,7 @@ eos_create_message = """Congratulations!
 
 Your EOS account is ready for creation in {network_name}.
 
-If you have any question please contact support@mywish.io.
+If you have any questions please contact support@mywish.io.
 
 Thank you for using MyWish.
 """
