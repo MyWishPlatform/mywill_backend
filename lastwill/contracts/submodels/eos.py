@@ -196,15 +196,11 @@ class ContractDetailsEOSAccount(CommonDetails):
         return eos_cost
 
     @staticmethod
-    def calc_cost(self, network):
+    def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = self.calc_cost_eos({
-            'cpu': '0.64',
-            'net': '0.01',
-            'ram': 4
-        }, network.name)
+        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network.name)
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         return cost
 
@@ -214,7 +210,13 @@ class ContractDetailsEOSAccount(CommonDetails):
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost(network)
+        cost = cls.calc_cost(
+            {
+            'cpu': '0.64',
+            'net': '0.01',
+            'ram': 4
+        }, network
+        )
         return cost
 
     @classmethod
