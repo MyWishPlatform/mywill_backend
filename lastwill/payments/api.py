@@ -13,12 +13,14 @@ def create_payment(uid, tx, currency, amount):
         return
     print('create payment')
     user = User.objects.get(id=uid)
-    if currency != 'EOS':
-        value = amount if currency == 'WISH' else to_wish(
-                currency, amount
-        )
-    else:
+    if currency == 'EOSISH':
+        value = amount
+    elif currency == 'EOS':
         value = amount * 10
+    else:
+        value = amount if currency == 'WISH' else to_wish(
+            currency, amount
+        )
     if amount < 0.0:
         negative_payment(user, currency, -value)
     else:
