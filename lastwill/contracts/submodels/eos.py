@@ -167,8 +167,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         eos_url = 'http://%s:%s' % (
-            str(NETWORKS[network]['host']),
-            str(NETWORKS[network]['port'])
+            str(NETWORKS[network.name]['host']),
+            str(NETWORKS[network.name]['port'])
         )
 
         command1 = [
@@ -200,7 +200,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network.name)
+        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network)
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         return cost
 
