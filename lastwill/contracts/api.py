@@ -603,7 +603,8 @@ def get_eos_cost(request):
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
-        'EOS': eos_cost,
+        'EOS': str(eos_cost),
+        'EOSISH': str(eos_cost * 10),
         'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
