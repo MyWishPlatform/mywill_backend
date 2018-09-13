@@ -601,4 +601,4 @@ def get_eos_cost(request):
     cpu = request.query_params['stake_cpu_value']
     eos_cost = (float(ram) * ram_price + float(net) + float(cpu)) * 2
     print('eos cost', eos_cost, flush=True)
-    return round(eos_cost, 0) * 10 ** 4
+    return JsonResponse({'EOS': round(eos_cost, 0) * 10 ** 4})
