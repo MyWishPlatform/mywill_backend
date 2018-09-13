@@ -194,8 +194,8 @@ class ContractDetailsEOSAccount(CommonDetails):
                 'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('get ram price', flush=True)
         eos_cost = (
-                int(100 * 10 ** 4) + kwargs['ram'] * ram_price
-                + float(kwargs['net']) + float(kwargs['cpu'])
+                int(100 * 10 ** 4) + kwargs['buy_ram_kbytes'] * ram_price
+                + float(kwargs['stake_net_value']) + float(kwargs['stake_cpu_value'])
         )
         print('eos cost', eos_cost, flush=True)
         return eos_cost
@@ -218,9 +218,9 @@ class ContractDetailsEOSAccount(CommonDetails):
         network = Network.objects.get(name='EOS_MAINNET')
         cost = cls.calc_cost(
             {
-            'cpu': '0.64',
-            'net': '0.01',
-            'ram': 4
+            'stake_cpu_value': '0.64',
+            'stake_net_value': '0.01',
+            'buy_ram_kbytes': 4
         }, network
         )
         return cost
@@ -229,9 +229,9 @@ class ContractDetailsEOSAccount(CommonDetails):
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
         cost = cls.calc_cost_eos({
-            'cpu': '0.64',
-            'net': '0.01',
-            'ram': 4
+            'stake_cpu_value': '0.64',
+            'stake_net_value': '0.01',
+            'buy_ram_kbytes': 4
         }, network)
         return cost
 

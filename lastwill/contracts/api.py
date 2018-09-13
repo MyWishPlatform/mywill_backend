@@ -418,10 +418,8 @@ def get_cost_all_contracts(request):
     for i in contract_details_types:
         if i > 9 and eos:
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
-            print(i, answer[i], '-----', flush=True)
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
-            print(i, answer[i], '-----', flush=True)
     return JsonResponse(answer)
 
 @api_view(http_method_names=['POST'])
