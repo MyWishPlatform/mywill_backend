@@ -198,7 +198,7 @@ class ContractDetailsEOSAccount(CommonDetails):
                 + float(kwargs['stake_net_value']) + float(kwargs['stake_cpu_value'])
         )
         print('eos cost', eos_cost, flush=True)
-        return eos_cost
+        return eos_cost / 10**4
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -208,7 +208,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network)
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         print('convert eos cost', cost, flush=True)
-        return cost
+        return cost * 10**18
 
     def get_arguments(self, eth_contract_attr_name):
         return []
