@@ -209,7 +209,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / 10 ** 4
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         print('convert eos cost', cost, flush=True)
-        return cost * 10**18
+        return round(cost, 2) * 10**18
 
     def get_arguments(self, eth_contract_attr_name):
         return []
