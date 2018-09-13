@@ -19,7 +19,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR, EOS_ATTEMPTS_COUNT
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.profile.models import Profile
@@ -565,3 +565,40 @@ def check_status(request):
             contract.state = 'DONE'
             contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['POST', 'GET'])
+def get_eos_cost(request):
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port'])
+    )
+    command1 = [
+        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
+    ]
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
+                               stderr=PIPE).communicate()
+        print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            ram = json.loads(result)['rows'][0]
+            print('result', result, flush=True)
+            print('ram', ram, flush=True)
+            print('quote', ram['quote']['balance'].split(), flush=True)
+            print('base', ram['base']['balance'].split(), flush=True)
+            ram_price = float(ram['quote']['balance'].split()[0]) / float(
+                ram['base']['balance'].split()[0]) * 1024
+            break
+    else:
+        print('stderr', stderr, flush=True)
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    print('get ram price', flush=True)
+    ram = request.query_params['buy_ram_kbytes']
+    net = request.query_params['stake_net_value']
+    cpu = request.query_params['stake_cpu_value']
+    eos_cost = (ram * ram_price + float(net) + float(cpu)) * 2
+    print('eos cost', eos_cost, flush=True)
+    return round(eos_cost, 0) * 10 ** 4
