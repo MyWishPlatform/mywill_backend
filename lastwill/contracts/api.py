@@ -601,4 +601,10 @@ def get_eos_cost(request):
     cpu = request.query_params['stake_cpu_value']
     eos_cost = (float(ram) * ram_price + float(net) + float(cpu)) * 2
     print('eos cost', eos_cost, flush=True)
-    return JsonResponse({'EOS': round(eos_cost, 0)})
+
+    return JsonResponse({
+        'EOS': round(eos_cost, 0),
+        'ETH': str(int(eos_cost) * convert('EOS', 'ETH')['ETH']),
+        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
+        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+    })
