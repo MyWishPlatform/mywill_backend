@@ -192,10 +192,12 @@ class ContractDetailsEOSAccount(CommonDetails):
             print('stderr', stderr, flush=True)
             raise Exception(
                 'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        print('get ram price', flush=True)
         eos_cost = (
                 int(100 * 10 ** 4) + kwargs['ram'] * ram_price
                 + float(kwargs['net']) + float(kwargs['cpu'])
         )
+        print('eos cost', eos_cost, flush=True)
         return eos_cost
 
     @staticmethod
