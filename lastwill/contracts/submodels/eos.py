@@ -199,7 +199,7 @@ class ContractDetailsEOSAccount(CommonDetails):
                  + float(kwargs['stake_cpu_value'])
         ) * 2
         print('eos cost', eos_cost, flush=True)
-        return eos_cost * 10 ** 4
+        return round(eos_cost, 0) * 10 ** 4
 
     @staticmethod
     def calc_cost(kwargs, network):
