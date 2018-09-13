@@ -182,11 +182,11 @@ class ContractDetailsEOSAccount(CommonDetails):
             result = stdout.decode()
             if result:
                 ram = json.loads(result)['rows'][0]
-                print('result', result)
-                print('ram', ram)
-                print('quote', ram['quote']['balance'].split())
-                print('base', ram['base']['balance'].split())
-                ram_price = float(ram['quote']['balance'].split()) / float(ram['base']['balance'].split()) * 1024
+                print('result', result, flush=True)
+                print('ram', ram, flush=True)
+                print('quote', ram['quote']['balance'].split(), flush=True)
+                print('base', ram['base']['balance'].split(), flush=True)
+                ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
                 break
         else:
             print('stderr', stderr, flush=True)
