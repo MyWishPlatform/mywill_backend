@@ -194,7 +194,7 @@ class ContractDetailsEOSAccount(CommonDetails):
                 'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
         print('get ram price', flush=True)
         eos_cost = (
-                kwargs['buy_ram_kbytes'] * ram_price
+                float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
                  + float(kwargs['stake_cpu_value'])
         ) * 2
