@@ -16,6 +16,7 @@ django.setup()
 from django.http.cookie import parse_cookie
 from django.contrib.sessions.models import Session
 from django.contrib.auth.models import User
+from django.conf import settings
 
 class WSP(WebSocketServerProtocol):
     user = None
@@ -25,7 +26,7 @@ class WSP(WebSocketServerProtocol):
             raise ConnectionDeny(404)
 
     def check_auth(self, cookie):
-        session_key = cookie.get('sessionid', '') 
+        session_key = cookie.get(settings.SESSION_COOKIE_NAME, '') 
         try:
             session = Session.objects.get(session_key=session_key)
             user_id = session.get_decoded().get('_auth_user_id')

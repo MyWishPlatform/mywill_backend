@@ -241,6 +241,8 @@ ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/dashboard/first_entry'
 
 EOS_ATTEMPTS_COUNT = 16
 
+SESSION_COOKIE_DOMAIN = '.mywish.io'
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
