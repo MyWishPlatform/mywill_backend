@@ -197,7 +197,7 @@ class ContractDetailsEOSAccount(CommonDetails):
                 float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
                  + float(kwargs['stake_cpu_value'])
-        ) * 2
+        ) + 2
         print('eos cost', eos_cost, flush=True)
         return round(eos_cost, 0) * 10 ** 4
 
