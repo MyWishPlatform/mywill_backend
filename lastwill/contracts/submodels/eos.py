@@ -30,6 +30,23 @@ def unlock_eos_account(wallet_name, password):
         raise Exception('unlock command error')
 
 
+def implement_cleos_command(command_list):
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        stdout, stderr = Popen(command_list, stdin=PIPE, stdout=PIPE,
+                               stderr=PIPE).communicate()
+        print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            json_result = json.loads(result)
+            break
+    else:
+        print('stderr', stderr, flush=True)
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    return json_result
+
+
 class EOSContract(EthContract):
     pass
 
