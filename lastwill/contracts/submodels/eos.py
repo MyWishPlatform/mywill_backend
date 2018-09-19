@@ -135,18 +135,7 @@ class ContractDetailsEOSToken(CommonDetails):
         ]
         print('command = ', command)
 
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})', stderr.decode())
-            if result:
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-        tx_hash = result.group(1)
+        tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
         eos_contract = EOSContract()
         eos_contract.tx_hash = tx_hash
@@ -191,25 +180,9 @@ class ContractDetailsEOSAccount(CommonDetails):
         command1 = [
             'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
         ]
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = stdout.decode()
-            if result:
-                ram = json.loads(result)['rows'][0]
-                print('result', result, flush=True)
-                print('ram', ram, flush=True)
-                print('quote', ram['quote']['balance'].split(), flush=True)
-                print('base', ram['base']['balance'].split(), flush=True)
-                ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-        print('get ram price', flush=True)
+        result = implement_cleos_command(command1)
+        ram = result['rows'][0]
+        ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
         eos_cost = (
                 float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
@@ -271,20 +244,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             '--transfer',
         ]
         print('command:', command, flush=True)
-        
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})', stderr.decode())
-            if result:
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-        tx_hash = result.group(1)
+        tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
         eos_contract = EOSContract()
         eos_contract.tx_hash = tx_hash
@@ -470,22 +430,7 @@ class ContractDetailsEOSICO(CommonDetails):
             '--buy-ram-kbytes', ram, '--transfer',
         ]
         print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})',
-                               stderr.decode())
-            if result:
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-        tx_hash = result.group(1)
+        tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
         print('account for eos ico created', flush=True)
         self.eos_contract_crowdsale.tx_hash = tx_hash
@@ -522,17 +467,7 @@ class ContractDetailsEOSICO(CommonDetails):
             path.join(dest, 'crowdsale/crowdsale.abi'), '-jd', '-s'
         ]
         print('command:', command, flush=True)
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-             print('attempt', attempt, flush=True)
-             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                    stderr=PIPE).communicate()
-             abi = json.loads(stdout.decode())['actions'][0]['data'][20:]
-             if abi:
-                 break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
+        abi = implement_cleos_command(command)['actions'][0]['data'][20:]
         unlock_eos_account(wallet_name, password)
         dates = json.dumps({'start': self.start_date, 'finish': self.stop_date})
         print(dates, flush=True)
@@ -541,18 +476,7 @@ class ContractDetailsEOSICO(CommonDetails):
             'mywishtest15', 'init', str(dates)
         ]
         print('command:', command, flush=True)
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-             print('attempt', attempt, flush=True)
-             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                    stderr=PIPE).communicate()
-             init_data = stdout.decode().replace('\n', '')
-             print('init_data', init_data)
-             if init_data:
-                 break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
+        init_data = implement_cleos_command(command).replace('\n', '')
         actions = {
                     "actions": [
                         {
@@ -683,21 +607,7 @@ class ContractDetailsEOSICO(CommonDetails):
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
 
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            # print(stdout, stderr, flush=True)
-            print(type(stdout), len(stdout), flush=True)
-            result = stdout.decode()
-            if result:
-                result = json.loads(stdout.decode())['transaction_id']
-                print(result)
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        result = implement_cleos_command(command)['transaction_id']
         print('SUCCESS')
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
