@@ -476,7 +476,7 @@ class ContractDetailsEOSICO(CommonDetails):
             'mywishtest15', 'init', str(dates)
         ]
         print('command:', command, flush=True)
-        init_data = implement_cleos_command(command).replace('\n', '')
+        init_data = implement_cleos_command(command)
         actions = {
                     "actions": [
                         {
