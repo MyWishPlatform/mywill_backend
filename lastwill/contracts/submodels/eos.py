@@ -536,6 +536,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.state = 'DONE'
         self.contract.save()
 
+
 class EOSAirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_length=50, db_index=True)
