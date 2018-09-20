@@ -8,6 +8,7 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.contracts.submodels.eos_json import *
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
 from exchange_API import to_wish, convert
 
@@ -476,126 +477,14 @@ class ContractDetailsEOSICO(CommonDetails):
         ]
         print('command:', command, flush=True)
         init_data = implement_cleos_command(command)
-        actions = {
-                    "actions": [
-                        {
-                        "account": "eosio",
-                        "name": "updateauth",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                         "data": {
-                             "account": self.crowdsale_address,
-                             "permission": "active", "parent": "owner",
-                             "auth": {"threshold": 1, "keys":
-                                      [{
-                                        "key": our_public_key,
-                                        "weight": 1}],
-                                        "accounts": [{"permission": {
-                                        "actor": self.crowdsale_address,
-                                        "permission": "eosio.code"},
-                                                "weight": 1}],
-                                    "waits": []}}},
 
-                        {
-                        "account": "eosio",
-                        "name": "setcode",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "vmtype": 0,
-                            "vmversion": 0,
-                            "code": self.eos_contract_crowdsale.bytecode
-                        }
-                    }, {
-                        "account": "eosio",
-                        "name": "setabi",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "abi": abi
-                        }
-                    }, {
-                        "account": token_address,
-                        "name": "create",
-                        "authorization": [{
-                            "actor": token_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "issuer": self.crowdsale_address,
-                            "maximum_supply": max_supply + " " + self.token_short_name,
-                            "lock": not self.is_transferable_at_once
-                        }
-                    },
-                    {
-                        "account": self.crowdsale_address,
-                        "name": "init",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": init_data
-                    },
-                    {
-                        "account": "eosio",
-                        "name": "updateauth",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "owner"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "permission": "owner",
-                            "parent": "",
-                            "auth": {
-                                "threshold": 1,
-                                "keys": [],
-                                "accounts": [{
-                                    "permission": {
-                                        "actor": self.crowdsale_address,
-                                        "permission": "owner"
-                                    },
-                                    "weight": 1
-                                }],
-                                "waits": []
-                            }
-                        }
-                    }, {
-                        "account": "eosio",
-                        "name": "updateauth",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "permission": "active",
-                            "parent": "owner",
-                            "auth": {
-                                "threshold": 1,
-                                "keys": [],
-                                "accounts": [{
-                                    "permission": {
-                                        "actor": self.crowdsale_address,
-                                        "permission": "eosio.code"
-                                    },
-                                    "weight": 1
-                                }],
-                                "waits": []
-                            }
-                        }
-                    }]
-                }
+        actions = create_eos_json(
+            self.crowdsale_address, our_public_key,
+            self.eos_contract_crowdsale.bytecode,
+            abi, token_address, max_supply, self.token_short_name,
+            self.is_transferable_at_once, init_data
+        )
 
-        print(type(actions))
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
         command = [
