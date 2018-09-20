@@ -178,12 +178,27 @@ class ContractDetailsEOSAccount(CommonDetails):
         )
 
         command1 = [
-            'cleos', '-u', eos_url, 'get', 'table',
-            'eosio', 'eosio', 'rammarket', '-j'
+            'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
         ]
-        result = implement_cleos_command(command1)
-        ram = result['rows'][0]
-        ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
+        for attempt in range(EOS_ATTEMPTS_COUNT):
+            print('attempt', attempt, flush=True)
+            stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
+                                   stderr=PIPE).communicate()
+            print(stdout, stderr, flush=True)
+            result = stdout.decode()
+            if result:
+                ram = json.loads(result)['rows'][0]
+                print('result', result, flush=True)
+                print('ram', ram, flush=True)
+                print('quote', ram['quote']['balance'].split(), flush=True)
+                print('base', ram['base']['balance'].split(), flush=True)
+                ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
+                break
+        else:
+            print('stderr', stderr, flush=True)
+            raise Exception(
+                'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        print('get ram price', flush=True)
         eos_cost = (
                 float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
