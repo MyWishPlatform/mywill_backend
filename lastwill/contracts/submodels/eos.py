@@ -553,4 +553,46 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     contract = models.ForeignKey(Contract, null=True)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eos_contract = models.ForeignKey(EOSContract, null=True, default=None)
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        cost = 2.5 * 10**18
+        return cost
+
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(250 * 10 ** 4)
+
+    def deploy(self):
+        eos_url = 'http://%s:%s' % (
+            str(NETWORKS[self.contract.network.name]['host']),
+            str(NETWORKS[self.contract.network.name]['port']))
+        acc_name = NETWORKS[self.contract.network.name]['address']
+        our_public_key = NETWORKS[self.contract.network.name]['pub']
+        token_address = NETWORKS[self.contract.network.name]['token_address']
+        command = ['cleos', '-u', eos_url, 'push',  'action', acc_name,
+                   '["{token}", "{max_supply} {token_short_name}"]'.format(
+                       token=self.token_address,
+                       max_supply=self.max_supply,
+                       token_short_name=self.token_short_name
+                   ), '-p', acc_name]
+        result = implement_cleos_command(command)['transaction_id']
+        print('result', result)
+
+        command = [
+            'cleos', 'set', 'account', 'permission', self.token_address, 'active',
+            ('{"threshold":1,"keys":'
+             '[{"key":"{key}","weight":1}],'
+             '"accounts":'
+             '[{"permission":{"actor":"{addr}","permission":"eosio.code"},'
+             '"weight":1}]}'.format(
+                key=our_public_key, addr=self.token_address
+            )), 'owner', '-p', self.token_address
+        ]
+        result = implement_cleos_command(command)['transaction_id']
+        print('result', result)
