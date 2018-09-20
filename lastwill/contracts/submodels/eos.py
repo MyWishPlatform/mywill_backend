@@ -130,7 +130,7 @@ class ContractDetailsEOSToken(CommonDetails):
                 acc_name=self.admin_address,
                 max_sup=max_supply,
                 token=self.token_short_name
-            ), '-p',
+            ), '-p', '-j',
             acc_name
         ]
         print('command = ', command)
@@ -178,7 +178,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         )
 
         command1 = [
-            'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
+            'cleos', '-u', eos_url, 'get', 'table',
+            'eosio', 'eosio', 'rammarket', '-j'
         ]
         result = implement_cleos_command(command1)
         ram = result['rows'][0]
@@ -241,7 +242,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             self.active_public_key, '--stake-net', str(self.stake_net_value) + ' EOS',
             '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
             '--buy-ram-kbytes', str(self.buy_ram_kbytes),
-            '--transfer',
+            '--transfer', '-j'
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
@@ -427,7 +428,7 @@ class ContractDetailsEOSICO(CommonDetails):
             acc_name, self.crowdsale_address, our_public_key, our_public_key,
             '--stake-net', net,
             '--stake-cpu', cpu,
-            '--buy-ram-kbytes', ram, '--transfer',
+            '--buy-ram-kbytes', ram, '--transfer', '-j'
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
@@ -458,7 +459,6 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_supply = str(total_supply)[:-self.decimals] + '.' + str(total_supply)[-self.decimals:]
         else:
             max_supply = str(total_supply)
-        print('total supply', max_supply, flush=True)
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -470,10 +470,9 @@ class ContractDetailsEOSICO(CommonDetails):
         abi = implement_cleos_command(command)['actions'][0]['data'][20:]
         unlock_eos_account(wallet_name, password)
         dates = json.dumps({'start': self.start_date, 'finish': self.stop_date})
-        print(dates, flush=True)
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
-            'mywishtest15', 'init', str(dates)
+            'mywishtest15', 'init', str(dates), '-j'
         ]
         print('command:', command, flush=True)
         init_data = implement_cleos_command(command)
@@ -601,7 +600,7 @@ class ContractDetailsEOSICO(CommonDetails):
             f.write(json.dumps(actions))
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
-            path.join(dest, 'deploy_params.json'),
+            path.join(dest, 'deploy_params.json'), '-j',
             '-p', acc_name, '-p', self.crowdsale_address # do we need -p token_addres if address diff from token_address?
         ]
         print('command:', command, flush=True)
@@ -625,7 +624,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
