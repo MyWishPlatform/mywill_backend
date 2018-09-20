@@ -38,13 +38,14 @@ def implement_cleos_command(command_list):
         print(stdout, stderr, flush=True)
         result = stdout.decode()
         if result:
-            json_result = json.loads(result)
+            if 'pack_action_data' not in command_list:
+                result = json.loads(result)
             break
     else:
         print('stderr', stderr, flush=True)
         raise Exception(
             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-    return json_result
+    return result
 
 
 class EOSContract(EthContract):
@@ -179,24 +180,9 @@ class ContractDetailsEOSAccount(CommonDetails):
         command1 = [
             'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
         ]
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = stdout.decode()
-            if result:
-                ram = json.loads(result)['rows'][0]
-                print('result', result, flush=True)
-                print('ram', ram, flush=True)
-                print('quote', ram['quote']['balance'].split(), flush=True)
-                print('base', ram['base']['balance'].split(), flush=True)
-                ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        result = implement_cleos_command(command1)
+        ram = result['rows'][0]
+        ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
         print('get ram price', flush=True)
         eos_cost = (
                 float(kwargs['buy_ram_kbytes']) * ram_price
@@ -486,7 +472,7 @@ class ContractDetailsEOSICO(CommonDetails):
         dates = json.dumps({'start': self.start_date, 'finish': self.stop_date})
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
-            'mywishtest15', 'init', str(dates), '-j'
+            'mywishtest15', 'init', str(dates)
         ]
         print('command:', command, flush=True)
         init_data = implement_cleos_command(command)
