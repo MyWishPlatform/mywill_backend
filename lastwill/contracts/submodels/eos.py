@@ -574,13 +574,13 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
-        token_address = NETWORKS[self.contract.network.name]['token_address']
         command = ['cleos', '-u', eos_url, 'push',  'action', acc_name,
                    '["{token}", "{max_supply} {token_short_name}"]'.format(
                        token=self.token_address,
                        max_supply=self.max_supply,
                        token_short_name=self.token_short_name
                    ), '-p', acc_name]
+        print('command', command)
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
 
@@ -594,5 +594,17 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 key=our_public_key, addr=self.token_address
             )), 'owner', '-p', self.token_address
         ]
+        print('command', command)
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
+        print('SUCCESS')
+
+        eos_contract_crowdsale = EOSContract()
+        eos_contract_crowdsale.contract = self.contract
+        eos_contract_crowdsale.original_contract = self.contract
+        eos_contract_crowdsale.tx_hash = result
+        eos_contract_crowdsale.save()
+        self.eos_contract_crowdsale = eos_contract_crowdsale
+        self.save()
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
