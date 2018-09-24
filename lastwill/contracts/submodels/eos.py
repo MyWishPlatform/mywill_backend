@@ -554,9 +554,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
     eos_contract = models.ForeignKey(EOSContract, null=True, default=None)
-    maximum_supply = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
     token_short_name = models.CharField(max_length=64)
 
     @staticmethod
@@ -591,7 +588,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         command = ['cleos', '-u', eos_url, 'push',  'action', acc_name,
-                   '["{token}", "{max_supply} {token_short_name}"]'.format(
+                   '["{token}", "{token_short_name}"]'.format(
                        token=self.token_address,
                        max_supply=self.max_supply,
                        token_short_name=self.token_short_name

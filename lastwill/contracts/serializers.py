@@ -1025,8 +1025,7 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAirdrop
         fields = (
-            'admin_address', 'token_address',
-            'token_short_name', 'maximum_supply'
+            'admin_address', 'token_address', 'token_short_name'
         )
 
     def to_representation(self, contract_details):
@@ -1048,7 +1047,7 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        check.is_eos_address(details['dmin_address'])
+        check.is_eos_address(details['admin_address'])
         check.is_eos_address(details['token_address'])
 
 
