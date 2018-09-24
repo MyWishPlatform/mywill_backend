@@ -1047,6 +1047,10 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         return super().update(details, kwargs)
 
+    def validate(self, details):
+        check.is_eos_address(details['dmin_address'])
+        check.is_eos_address(details['token_address'])
+
 
 class EOSAirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
