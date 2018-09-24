@@ -206,7 +206,8 @@ class ContractSerializer(serializers.ModelSerializer):
             9: ContractDetailsInvestmentPoolSerializer,
             10: ContractDetailsEOSTokenSerializer,
             11: ContractDetailsEOSAccountSerializer,
-            12: ContractDetailsEOSICOSerializer
+            12: ContractDetailsEOSICOSerializer,
+            13: ContractDetailsAirdropSerializer
         }[contract_type]
 
 
