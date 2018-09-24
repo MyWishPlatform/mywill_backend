@@ -1023,7 +1023,10 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = (
+            'admin_address', 'token_address',
+            'token_short_name', 'maximum_supply'
+        )
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
