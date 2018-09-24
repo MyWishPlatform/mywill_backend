@@ -590,7 +590,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         command = ['cleos', '-u', eos_url, 'push',  'action', acc_name,
                    '["{token}", "{token_short_name}"]'.format(
                        token=self.token_address,
-                       max_supply=self.max_supply,
                        token_short_name=self.token_short_name
                    ), '-p', acc_name]
         print('command', command)
