@@ -572,6 +572,18 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             return 0
         return int(250 * 10 ** 4)
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @classmethod
+    def min_cost_eos(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost_eos({}, network)
+        return cost
+
     def deploy(self):
         eos_url = 'http://%s:%s' % (
             str(NETWORKS[self.contract.network.name]['host']),
