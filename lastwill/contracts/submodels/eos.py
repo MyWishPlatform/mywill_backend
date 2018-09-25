@@ -621,7 +621,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
 
         command = [
             'cleos', '-u', eos_url, 'set', 'account', 'permission',
-            'mywishte1111', 'active', params, 'owner'
+            'mywishte1111', 'active', params, 'owner', '-j'
         ]
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
