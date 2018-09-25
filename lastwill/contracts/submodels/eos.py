@@ -587,7 +587,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
-
+        wallet_name = NETWORKS[self.contract.network.name]['wallet']
+        password = NETWORKS[self.contract.network.name]['eos_password']
+        unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'get', 'table', self.token_address,
             self.token_short_name, 'stat'
