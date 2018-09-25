@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.contracts.submodels.airdrop import *
 from lastwill.contracts.submodels.eos_json import *
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
 from exchange_API import to_wish, convert
@@ -535,15 +536,8 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.save()
 
 
-class EOSAirdropAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True)
-    address = models.CharField(max_length=50, db_index=True)
-    active = models.BooleanField(default=True)
-    state = models.CharField(max_length=10, default='added')
-    amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
-        db_index=True
-    )
+class EOSAirdropAddress(AirdropAddress):
+    pass
 
 
 class ContractDetailsEOSAirdrop(CommonDetails):
