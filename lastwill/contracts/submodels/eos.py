@@ -605,7 +605,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                        token=self.token_address,
                        decimals=decimals, admin=self.admin_address,
                        token_short_name=self.token_short_name
-                   ), '-p', 'mywishte1111']
+                   ), '-p', 'mywishte1111', '-j']
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
