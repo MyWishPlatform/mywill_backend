@@ -593,7 +593,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             self.token_short_name, 'stat'
         ]
         print('command', command)
-        result = implement_cleos_command(command)['row'][0]['supply']
+        result = implement_cleos_command(command)['rows'][0]['supply']
         print('result', result)
         decimals = len(result.split(' ')[0].split('.')[1])
         print('decimals', decimals)
