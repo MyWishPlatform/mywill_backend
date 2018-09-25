@@ -589,7 +589,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         our_public_key = NETWORKS[self.contract.network.name]['pub']
 
         command = [
-            'cleos', '-u', eos_url, 'get_table', self.token_address,
+            'cleos', '-u', eos_url, 'get', 'table', self.token_address,
             self.token_short_name, 'stat'
         ]
         print('command', command)
@@ -599,8 +599,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('decimals', decimals)
 
         command = ['cleos', '-u', eos_url, 'push',  'action', acc_name,
-                   '["{token}", "{token_short_name}"]'.format(
+                   '["{token}", "{decimals}, {token_short_name}"]'.format(
                        token=self.token_address,
+                       decimals=decimals,
                        token_short_name=self.token_short_name
                    ), '-p', acc_name]
         print('command', command)
