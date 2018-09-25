@@ -608,7 +608,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
 
-        params = {
+        params = json.dumps({
             "threshold": 1, "keys": [
                 {"key": "{key}".format(key=our_public_key),"weight": 1}
             ],
@@ -617,11 +617,11 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                      "actor": "mywishte1111","permission": "eosio.code"
                  }, "weight": 1}
              ]
-        }
+        })
 
         command = [
             'cleos', 'set', 'account', 'permission', 'mywishte1111',
-            'active', str(params), 'owner'
+            'active', params, 'owner'
         ]
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
