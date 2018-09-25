@@ -589,7 +589,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         our_public_key = NETWORKS[self.contract.network.name]['pub']
 
         command = [
-            'cleos', '-u', eos_url, 'get table', self.token_address,
+            'cleos', '-u', eos_url, 'get_table', self.token_address,
             self.token_short_name, 'stat'
         ]
         print('command', command)
