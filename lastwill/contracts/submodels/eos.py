@@ -587,6 +587,17 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
+
+        command = [
+            'cleos', '-u', eos_url, 'get table', self.token_address,
+            self.token_short_name, 'stat'
+        ]
+        print('command', command)
+        result = implement_cleos_command(command)['row'][0]['supply']
+        print('result', result)
+        decimals = len(result.split(' ')[0].split('.')[1])
+        print('decimals', decimals)
+
         command = ['cleos', '-u', eos_url, 'push',  'action', acc_name,
                    '["{token}", "{token_short_name}"]'.format(
                        token=self.token_address,
