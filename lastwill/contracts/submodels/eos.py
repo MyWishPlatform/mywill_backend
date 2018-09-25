@@ -607,25 +607,24 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
-
-        params = json.dumps({
-            "threshold": 1, "keys": [
-                {"key": "{key}".format(key=our_public_key),"weight": 1}
-            ],
-             "accounts": [
-                 {"permission": {
-                     "actor": "mywishte1111","permission": "eosio.code"
-                 }, "weight": 1}
-             ]
-        })
-
-        command = [
-            'cleos', '-u', eos_url, 'set', 'account', 'permission',
-            'mywishte1111', 'active', params, 'owner', '-j'
-        ]
-        print('command', command)
-        result = implement_cleos_command(command)['transaction_id']
-        print('result', result)
+        # params = json.dumps({
+        #     "threshold": 1, "keys": [
+        #         {"key": "{key}".format(key=our_public_key),"weight": 1}
+        #     ],
+        #      "accounts": [
+        #          {"permission": {
+        #              "actor": "mywishte1111","permission": "eosio.code"
+        #          }, "weight": 1}
+        #      ]
+        # })
+        #
+        # command = [
+        #     'cleos', '-u', eos_url, 'set', 'account', 'permission',
+        #     'mywishte1111', 'active', params, 'owner', '-j'
+        # ]
+        # print('command', command)
+        # result = implement_cleos_command(command)['transaction_id']
+        # print('result', result)
         print('SUCCESS')
 
         eos_contract_crowdsale = EOSContract()
