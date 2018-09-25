@@ -599,9 +599,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('decimals', decimals)
 
         command = ['cleos', '-u', eos_url, 'push',  'action', 'mywishte1111', 'create',
-                   '["{token}", "{decimals},{token_short_name}"]'.format(
+                   '["{admin}", "{token}", "{decimals},{token_short_name}"]'.format(
                        token=self.token_address,
-                       decimals=decimals,
+                       decimals=decimals, admin=self.admin_address,
                        token_short_name=self.token_short_name
                    ), '-p', 'mywishte1111']
         print('command', command)
