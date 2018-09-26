@@ -52,7 +52,7 @@ def create_eos_json(
                         }
                     }, {
                         "account": token_address,
-                        "name": "create",
+                        "name": "create" if is_transferable_at_once else "createlocked",
                         "authorization": [{
                             "actor": token_address,
                             "permission": "active"
