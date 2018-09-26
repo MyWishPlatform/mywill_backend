@@ -536,15 +536,15 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.save()
 
 
-# class EOSAirdropAddress(models.Model):
-#     contract = models.ForeignKey(Contract, null=True)
-#     address = models.CharField(max_length=50, default=None)
-#     active = models.BooleanField(default=True)
-#     state = models.CharField(max_length=10, default='added')
-#     amount = models.DecimalField(
-#         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
-#         db_index=True
-#     )
+class EOSAirdropAddress(models.Model):
+    contract = models.ForeignKey(Contract, null=True)
+    address = models.CharField(max_length=50, default=None)
+    active = models.BooleanField(default=True)
+    state = models.CharField(max_length=10, default='added')
+    amount = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
+        db_index=True
+    )
 
 
 class ContractDetailsEOSAirdrop(CommonDetails):
