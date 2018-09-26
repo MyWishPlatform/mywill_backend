@@ -61,3 +61,58 @@ class ContractDetailsAirdrop(CommonDetails):
 
     def get_gaslimit(self):
         return 3000000
+
+    def airdrop(self, message):
+        new_state = {
+            'COMMITTED': 'sent',
+            'PENDING': 'processing',
+            'REJECTED': 'added'
+        }[message['status']]
+
+        old_state = {
+            'COMMITTED': 'processing',
+            'PENDING': 'added',
+            'REJECTED': 'processing'
+        }[message['status']]
+
+        ids = []
+
+        for js in message['airdroppedAddresses']:
+            address = js['address']
+            amount = js['value']
+
+            addr = AirdropAddress.objects.filter(
+                address=address,
+                amount=amount,
+                contract=self.contract,
+                active=True,
+                state=old_state,
+            ).exclude(id__in=ids).first()
+
+            # in case 'pending' msg was lost or dropped, but 'commited' is there
+            if addr is None and message['status'] == 'COMMITTED':
+                old_state = 'added'
+                addr = AirdropAddress.objects.filter(
+                    address=address,
+                    amount=amount,
+                    contract=self.contract,
+                    active=True,
+                    state=old_state
+                ).exclude(id__in=ids).first()
+            if addr is None:
+                continue
+
+            ids.append(addr.id)
+
+        if len(message['airdroppedAddresses']) != len(ids):
+            print('=' * 40, len(message['airdroppedAddresses']), len(ids),
+                  flush=True)
+
+        print('changing state for', ids, 'to', new_state, flush=True)
+
+        AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
+
+        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
+                                              active=True).count() == 0:
+            self.contract.state = 'ENDED'
+            self.contract.save()
