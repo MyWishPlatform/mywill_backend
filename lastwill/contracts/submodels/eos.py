@@ -538,7 +538,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
 class EOSAirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
-    address = models.CharField(max_length=50, db_index=True)
+    address = models.CharField(max_length=50, db_index=True, default=None)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
     amount = models.DecimalField(
@@ -550,10 +550,10 @@ class EOSAirdropAddress(models.Model):
 class ContractDetailsEOSAirdrop(CommonDetails):
 
     contract = models.ForeignKey(Contract, null=True)
-    admin_address = models.CharField(max_length=50, default=None)
-    token_address = models.CharField(max_length=50, default=None)
+    admin_address = models.CharField(max_length=50)
+    token_address = models.CharField(max_length=50)
     eos_contract = models.ForeignKey(EOSContract, null=True, default=None)
-    token_short_name = models.CharField(max_length=64, default=None)
+    token_short_name = models.CharField(max_length=64)
 
     @staticmethod
     def calc_cost(kwargs, network):
