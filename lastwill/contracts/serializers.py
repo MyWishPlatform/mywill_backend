@@ -25,7 +25,7 @@ from lastwill.contracts.models import (
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
-        ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
+        ContractDetailsEOSAccount, ContractDetailsEOSICO,
         ContractDetailsEOSAirdrop
 )
 from lastwill.contracts.decorators import *
@@ -1051,7 +1051,7 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
         check.is_eos_address(details['token_address'])
 
 
-class EOSAirdropAddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EOSAirdropAddress
-        fields = ('address', 'amount', 'state')
+# class EOSAirdropAddressSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EOSAirdropAddress
+#         fields = ('address', 'amount', 'state')
