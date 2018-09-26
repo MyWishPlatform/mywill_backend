@@ -623,6 +623,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+    @logging
     def airdrop(self, message):
         new_state = {
             'COMMITTED': 'sent',
