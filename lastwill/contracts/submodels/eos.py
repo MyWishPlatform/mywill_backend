@@ -550,10 +550,10 @@ class EOSAirdropAddress(models.Model):
 class ContractDetailsEOSAirdrop(CommonDetails):
 
     contract = models.ForeignKey(Contract, null=True)
-    admin_address = models.CharField(max_length=50)
-    token_address = models.CharField(max_length=50)
+    admin_address = models.CharField(max_length=50, default=None)
+    token_address = models.CharField(max_length=50, default=None)
     eos_contract = models.ForeignKey(EOSContract, null=True, default=None)
-    token_short_name = models.CharField(max_length=64)
+    token_short_name = models.CharField(max_length=64, default=None)
 
     @staticmethod
     def calc_cost(kwargs, network):
