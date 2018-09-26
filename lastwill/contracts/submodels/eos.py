@@ -580,6 +580,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         cost = cls.calc_cost_eos({}, network)
         return cost
 
+    @logging
+    @blocking
+    @postponable
     def deploy(self):
         eos_url = 'http://%s:%s' % (
             str(NETWORKS[self.contract.network.name]['host']),
