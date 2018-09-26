@@ -608,24 +608,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
-        # params = json.dumps({
-        #     "threshold": 1, "keys": [
-        #         {"key": "{key}".format(key=our_public_key),"weight": 1}
-        #     ],
-        #      "accounts": [
-        #          {"permission": {
-        #              "actor": "mywishte1111","permission": "eosio.code"
-        #          }, "weight": 1}
-        #      ]
-        # })
-        #
-        # command = [
-        #     'cleos', '-u', eos_url, 'set', 'account', 'permission',
-        #     'mywishte1111', 'active', params, 'owner', '-j'
-        # ]
-        # print('command', command)
-        # result = implement_cleos_command(command)['transaction_id']
-        # print('result', result)
         print('SUCCESS')
 
         eos_contract_crowdsale = EOSContract()
@@ -655,7 +637,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         for js in message['airdroppedAddresses']:
             address = js['address']
             amount = js['value']
-
             addr = EOSAirdropAddress.objects.filter(
                 address=address,
                 amount=amount,
@@ -663,7 +644,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 active=True,
                 state=old_state,
             ).exclude(id__in=ids).first()
-
             # in case 'pending' msg was lost or dropped, but 'commited' is there
             if addr is None and message['status'] == 'COMMITTED':
                 old_state = 'added'
@@ -678,11 +658,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 continue
 
             ids.append(addr.id)
-
         if len(message['airdroppedAddresses']) != len(ids):
             print('=' * 40, len(message['airdroppedAddresses']), len(ids),
                   flush=True)
-
         EOSAirdropAddress.objects.filter(id__in=ids).update(state=new_state)
         if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
                                               active=True).count() == 0:
