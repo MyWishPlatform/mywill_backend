@@ -670,3 +670,8 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                                               active=True).count() == 0:
             self.contract.state = 'ENDED'
             self.contract.save()
+
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        take_off_blocking(self.contract.network.name)
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
