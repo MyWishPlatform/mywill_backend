@@ -29,7 +29,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_cost_all_contracts, neo_crowdsale_finalize,
                                     WhitelistAddressViewSet, AirdropAddressViewSet,
                                     load_airdrop, get_contract_for_link,
-                                    get_invest_balance_day, check_status, get_eos_cost)
+                                    get_invest_balance_day, check_status,
+                                    get_eos_cost, EOSAirdropAddressViewSet)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -39,6 +40,7 @@ router.register(r'contracts', ContractViewSet)
 router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
+router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
 
 
 urlpatterns = [
