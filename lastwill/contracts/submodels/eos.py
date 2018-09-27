@@ -587,8 +587,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         eos_url = 'http://%s:%s' % (
             str(NETWORKS[self.contract.network.name]['host']),
             str(NETWORKS[self.contract.network.name]['port']))
-        acc_name = NETWORKS[self.contract.network.name]['address']
-        our_public_key = NETWORKS[self.contract.network.name]['pub']
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -613,12 +611,12 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('result', result)
         print('SUCCESS')
 
-        eos_contract_crowdsale = EOSContract()
-        eos_contract_crowdsale.contract = self.contract
-        eos_contract_crowdsale.original_contract = self.contract
-        eos_contract_crowdsale.tx_hash = result
-        eos_contract_crowdsale.save()
-        self.eos_contract_crowdsale = eos_contract_crowdsale
+        eos_contract = EOSContract()
+        eos_contract.contract = self.contract
+        eos_contract.original_contract = self.contract
+        eos_contract.tx_hash = result
+        eos_contract.save()
+        self.eos_contract = eos_contract
         self.save()
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
@@ -671,7 +669,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             self.contract.state = 'ENDED'
             self.contract.save()
 
-    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+    def msg_deployed(self, message):
         take_off_blocking(self.contract.network.name)
         self.contract.state = 'ACTIVE'
         self.contract.save()
