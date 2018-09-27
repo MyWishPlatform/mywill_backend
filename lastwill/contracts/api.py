@@ -25,12 +25,12 @@ from lastwill.parint import *
 from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 import lastwill.check as check
 from exchange_API import to_wish, convert
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -480,23 +480,52 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         return result
 
 
+class EOSAirdropAddressViewSet(viewsets.ModelViewSet):
+    queryset = EOSAirdropAddress.objects.all()
+    serializer_class = EOSAirdropAddressSerializer
+    permission_classes = (ReadOnly,)
+
+    def get_queryset(self):
+        result = self.queryset
+        contract_id = self.request.query_params.get('contract', None)
+        if not contract_id:
+            raise ValidationError()
+        contract = Contract.objects.get(id=contract_id)
+        if contract.user != self.request.user:
+            raise ValidationError({'result': 2}, code=403)
+        result = result.filter(contract=contract, active=True)
+        state = self.request.query_params.get('state', None)
+        if state:
+            result = result.filter(state=state)
+        result = result.order_by('id')
+        return result
+
+
 @api_view(http_method_names=['POST'])
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.contract_type != 8 or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13] or contract.state != 'ACTIVE':
         raise PermissionDenied
-    if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
-        raise PermissionDenied
-    print('air deleting', flush=True)
-    contract.airdropaddress_set.all().delete()
-    print('air inserting', flush=True)
-    addresses = request.data.get('addresses')
-    AirdropAddress.objects.bulk_create([AirdropAddress(
-            contract=contract,
-            address=x['address'].lower(),
-            amount=x['amount']
-    ) for x in addresses])
-    print('air ok', flush=True)
+    if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
+        if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
+            raise PermissionDenied
+        contract.airdropaddress_set.all().delete()
+        addresses = request.data.get('addresses')
+        AirdropAddress.objects.bulk_create([AirdropAddress(
+                contract=contract,
+                address=x['address'].lower(),
+                amount=x['amount']
+        ) for x in addresses])
+    else:
+        if contract.eosairdropaddress_set.filter(state__in=('processing', 'sent')).count():
+            raise PermissionDenied
+        contract.eosairdropaddress_set.all().delete()
+        addresses = request.data.get('addresses')
+        EOSAirdropAddress.objects.bulk_create([EOSAirdropAddress(
+                contract=contract,
+                address=x['address'].lower(),
+                amount=x['amount']
+        ) for x in addresses])
     return JsonResponse({'result': 'ok'})
 
 
