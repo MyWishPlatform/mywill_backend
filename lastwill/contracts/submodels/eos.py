@@ -589,6 +589,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             str(NETWORKS[self.contract.network.name]['port']))
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
+        airdrop_address = NETWORKS[self.contract.network.name]['airdrop_address']
         unlock_eos_account(wallet_name, password)
         command = [
             'cleos', '-u', eos_url, 'get', 'table', self.token_address,
@@ -600,12 +601,12 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         decimals = len(result.split(' ')[0].split('.')[1])
         print('decimals', decimals)
 
-        command = ['cleos', '-u', eos_url, 'push',  'action', 'mywishte1111', 'create',
+        command = ['cleos', '-u', eos_url, 'push',  'action', airdrop_address, 'create',
                    '["{admin}", "{token}", "{decimals},{token_short_name}"]'.format(
                        token=self.token_address,
                        decimals=decimals, admin=self.admin_address,
                        token_short_name=self.token_short_name
-                   ), '-p', 'mywishte1111', '-j']
+                   ), '-p', airdrop_address, '-j']
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
         print('result', result)
