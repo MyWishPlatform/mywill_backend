@@ -669,6 +669,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
             self.contract.state = 'ENDED'
             self.contract.save()
 
+    @blocking
+    @postponable
+    @check_transaction
     def msg_deployed(self, message):
         take_off_blocking(self.contract.network.name)
         self.contract.state = 'ACTIVE'
