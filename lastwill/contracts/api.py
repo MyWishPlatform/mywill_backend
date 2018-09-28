@@ -1,5 +1,4 @@
 import datetime
-import time
 from os import path
 from subprocess import Popen, PIPE
 
@@ -19,16 +18,14 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, EOS_ATTEMPTS_COUNT
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
-from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-import lastwill.check as check
 from exchange_API import to_wish, convert
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
 
@@ -98,6 +95,7 @@ def test_comp(request):
     contract.get_details().compile()
     contract.save()
     return Response({'result': 'ok'})
+
 
 @api_view()
 def get_token_contracts(request):
@@ -365,6 +363,7 @@ def get_statistics(request):
 
     return JsonResponse(answer)
 
+
 @api_view(http_method_names=['GET'])
 def get_statistics_landing(request):
     now = datetime.datetime.now()
@@ -421,6 +420,7 @@ def get_cost_all_contracts(request):
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
     return JsonResponse(answer)
+
 
 @api_view(http_method_names=['POST'])
 def neo_crowdsale_finalize(request):
@@ -538,6 +538,7 @@ def get_contract_for_link(request):
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
 
+
 @api_view(http_method_names=['GET'])
 def get_invest_balance_day(request):
     contract = Contract.objects.get(id=request.query_params['id'])
@@ -605,25 +606,10 @@ def get_eos_cost(request):
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
     ]
-    for attempt in range(EOS_ATTEMPTS_COUNT):
-        print('attempt', attempt, flush=True)
-        stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
-                               stderr=PIPE).communicate()
-        print(stdout, stderr, flush=True)
-        result = stdout.decode()
-        if result:
-            ram = json.loads(result)['rows'][0]
-            print('result', result, flush=True)
-            print('ram', ram, flush=True)
-            print('quote', ram['quote']['balance'].split(), flush=True)
-            print('base', ram['base']['balance'].split(), flush=True)
-            ram_price = float(ram['quote']['balance'].split()[0]) / float(
-                ram['base']['balance'].split()[0]) * 1024
-            break
-    else:
-        print('stderr', stderr, flush=True)
-        raise Exception(
-            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    result = implement_cleos_command(command1)
+    ram = result['rows'][0]
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(
+        ram['base']['balance'].split()[0]) * 1024
     print('get ram price', flush=True)
     ram = request.query_params['buy_ram_kbytes']
     net = request.query_params['stake_net_value']
