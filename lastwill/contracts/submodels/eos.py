@@ -2,9 +2,11 @@ import json
 
 from django.db import models
 from django.utils import timezone
+from django.core.mail import send_mail
 from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.contracts.submodels.eos_json import *
@@ -675,5 +677,17 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         take_off_blocking(self.contract.network.name)
+        network = self.contract.network.name
+        network_name = MAIL_NETWORK[network]
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                eos_airdrop_subject,
+                eos_airdrop_message.format(
+                    network_name=network_name,
+                    hash=self.eos_contract.tx_hash
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
