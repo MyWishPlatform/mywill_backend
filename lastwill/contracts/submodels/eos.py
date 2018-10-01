@@ -618,6 +618,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         eos_contract.contract = self.contract
         eos_contract.original_contract = self.contract
         eos_contract.tx_hash = result
+        eos_contract.address = airdrop_address
         eos_contract.save()
         self.eos_contract = eos_contract
         self.save()
