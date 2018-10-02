@@ -597,7 +597,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
         cost = cls.calc_cost_eos({'address_count': 1}, network)
-        return cost
+        return cost * 10**4
 
     @logging
     @blocking
