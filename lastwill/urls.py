@@ -30,7 +30,7 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     WhitelistAddressViewSet, AirdropAddressViewSet,
                                     load_airdrop, get_contract_for_link,
                                     get_invest_balance_day, check_status,
-                                    get_eos_cost, EOSAirdropAddressViewSet)
+                                    get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -86,6 +86,7 @@ urlpatterns = [
     url(r'^api/get_invest_balance_day/$', get_invest_balance_day),
     url(r'^api/check_status/$', check_status),
     url(r'^api/get_eos_cost/$', get_eos_cost),
+    url(r'^api/get_eos_airdrop_cost/$', get_eos_airdrop_cost),
 
 ]
 

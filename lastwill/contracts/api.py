@@ -624,3 +624,30 @@ def get_eos_cost(request):
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
     })
+
+
+@api_view(http_method_names=['POST', 'GET'])
+def get_eos_airdrop_cost(request):
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port'])
+    )
+
+    command1 = [
+        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
+        'rammarket'
+    ]
+    result = implement_cleos_command(command1)
+    ram = result['rows'][0]
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(
+        ram['base']['balance'].split()[0])
+    count = request.query_params['address_count']
+    eos_cost = int(ram_price * 240 * count * 1.2) * 10 ** 4
+
+    return JsonResponse({
+        'EOS': str(eos_cost),
+        'EOSISH': str(eos_cost * 10),
+        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
+        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
+        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+    })
