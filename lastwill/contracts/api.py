@@ -642,7 +642,7 @@ def get_eos_airdrop_cost(request):
     ram_price = float(ram['quote']['balance'].split()[0]) / float(
         ram['base']['balance'].split()[0])
     count = float(request.query_params['address_count'])
-    eos_cost = int(ram_price * 240 * count * 1.2 * 10 ** 4)
+    eos_cost = round(250 + ram_price * 240 * count * 1.2, 4)
 
     return JsonResponse({
         'EOS': str(eos_cost),
