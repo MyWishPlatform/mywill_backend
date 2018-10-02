@@ -585,7 +585,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         ram = result['rows'][0]
         ram_price = float(ram['quote']['balance'].split()[0]) / float(
             ram['base']['balance'].split()[0])
-        return round(250 + ram_price * 240 * kwargs['address_count'] * 1.2, 4)
+        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4)
 
     @classmethod
     def min_cost(cls):
