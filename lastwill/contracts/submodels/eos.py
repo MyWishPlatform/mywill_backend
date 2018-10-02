@@ -563,8 +563,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs,
-                                                           network) / 10 ** 4
+        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network)
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         return round(cost, 2) * 10 ** 18
 
