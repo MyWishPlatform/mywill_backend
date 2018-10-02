@@ -1025,8 +1025,11 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAirdrop
         fields = (
-            'admin_address', 'token_address', 'token_short_name'
+            'admin_address', 'token_address', 'token_short_name', 'address_count'
         )
+        extra_kwargs = {
+            'link': {'memo': True},
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
