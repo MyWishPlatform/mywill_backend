@@ -563,25 +563,40 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 2.5 * 10**18
-        return cost
+        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs,
+                                                           network) / 10 ** 4
+        cost = eos_cost * convert('EOS', 'ETH')['ETH']
+        return round(cost, 2) * 10 ** 18
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(250 * 10 ** 4)
+        eos_url = 'http://%s:%s' % (
+            str(NETWORKS[network.name]['host']),
+            str(NETWORKS[network.name]['port'])
+        )
+
+        command1 = [
+            'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
+            'rammarket'
+        ]
+        result = implement_cleos_command(command1)
+        ram = result['rows'][0]
+        ram_price = float(ram['quote']['balance'].split()[0]) / float(
+            ram['base']['balance'].split()[0])
+        return int(ram_price * 240 * kwargs['address_count'] * 1.2) * 10 ** 4
 
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost({}, network)
+        cost = cls.calc_cost({'address_count': 1}, network)
         return cost
 
     @classmethod
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
-        cost = cls.calc_cost_eos({}, network)
+        cost = cls.calc_cost_eos({'address_count': 1}, network)
         return cost
 
     @logging
