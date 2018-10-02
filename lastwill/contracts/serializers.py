@@ -1037,6 +1037,7 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
         res['added_count'] = contract_details.contract.eosairdropaddress_set.filter(state='added', active=True).count()
         res['processing_count'] = contract_details.contract.eosairdropaddress_set.filter(state='processing', active=True).count()
         res['sent_count'] = contract_details.contract.eosairdropaddress_set.filter(state='sent', active=True).count()
+        res['failed'] = contract_details.contract.eosairdropaddress_set.filter(state='failed', active=True).count()
         return res
 
     def create(self, contract, contract_details):

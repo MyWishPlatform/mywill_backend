@@ -689,6 +689,13 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                                               active=True).count() == 0:
             self.contract.state = 'ENDED'
             self.contract.save()
+        if message['errorAddresses']:
+            self.contract.state = 'POSTPONED'
+            self.contract.save()
+            for error in message['errorAddresses']:
+                error_address = EOSAirdropAddress.objects.get(address=error['address'])
+                error_address.state='failed'
+                error_address.save()
 
     @blocking
     @postponable
@@ -709,3 +716,5 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        self.memo = message['externalId']
+        self.save()
