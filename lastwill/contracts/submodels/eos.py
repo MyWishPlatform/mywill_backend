@@ -519,9 +519,13 @@ class ContractDetailsEOSICO(CommonDetails):
         unlock_eos_account(wallet_name, password)
         dates = json.dumps({'start': self.start_date, 'finish': self.stop_date})
         print(dates, flush=True)
+        if self.contract.network.name == 'EOS_MAINNET':
+            contract_addr = 'dubravaleriy'
+        else:
+            contract_addr = 'mywishtest15'
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
-            'mywishtest15', 'init', str(dates)
+            contract_addr, 'init', str(dates)
         ]
         print('command:', command, flush=True)
         for attempt in range(EOS_ATTEMPTS_COUNT):
