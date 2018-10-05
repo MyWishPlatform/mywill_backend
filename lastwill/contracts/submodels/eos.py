@@ -582,8 +582,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         ]
         result = implement_cleos_command(command1)
         ram = result['rows'][0]
-        ram_price = float(ram['quote']['balance'].split()[0]) / float(
-            ram['base']['balance'].split()[0])
+        ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0])
         return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4)
 
     @classmethod
@@ -620,10 +619,13 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('decimals', decimals)
 
         command = ['cleos', '-u', eos_url, 'push',  'action', airdrop_address, 'create',
-                   '["{admin}", "{token}", "{decimals},{token_short_name}"]'.format(
+                   '["{pk}", "{admin}", "{token}", "{decimals},{token_short_name}", "{addr_count}"]'.format(
+                       pk=self.contract.id,
+                       admin=self.admin_address,
                        token=self.token_address,
-                       decimals=decimals, admin=self.admin_address,
-                       token_short_name=self.token_short_name
+                       decimals=decimals,
+                       token_short_name=self.token_short_name,
+                       addr_count=self.address_count,
                    ), '-p', airdrop_address, '-j']
         print('command', command)
         result = implement_cleos_command(command)['transaction_id']
@@ -681,20 +683,29 @@ class ContractDetailsEOSAirdrop(CommonDetails):
 
             ids.append(addr.id)
         if len(message['airdroppedAddresses']) != len(ids):
-            print('=' * 40, len(message['airdroppedAddresses']), len(ids),
-                  flush=True)
+            print('=' * 40, len(message['airdroppedAddresses']), len(ids), flush=True)
+
         EOSAirdropAddress.objects.filter(id__in=ids).update(state=new_state)
-        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
-                                              active=True).count() == 0:
-            self.contract.state = 'ENDED'
-            self.contract.save()
-        if message['errorAddresses']:
+
+        if message.get('errorAddresses'):
             self.contract.state = 'POSTPONED'
             self.contract.save()
-            for error in message['errorAddresses']:
-                error_address = EOSAirdropAddress.objects.get(address=error['address'])
-                error_address.state='failed'
-                error_address.save()
+            ids = []
+            for js in message['errorAddresses']:
+                addr = EOSAirdropAddress.objects.filter(
+                     address=js['address'],
+                     amount=js['value'],
+                     contract=self.contract,
+                     active=True,
+                ).exclude(id__in=ids).first()
+                ids.append(addr.id)
+            EOSAirdropAddress.objects.filter(id__in=ids).update(state='failed')
+        elif self.contract.airdropaddress_set.filter(
+                state__in=('added', 'processing'),
+                active=True
+        ).count() == 0:
+            self.contract.state = 'ENDED'
+            self.contract.save()
 
     @blocking
     @postponable
@@ -715,5 +726,4 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        self.memo = message['externalId']
         self.save()

@@ -1,6 +1,7 @@
 import datetime
 from os import path
 from subprocess import Popen, PIPE
+import requests
 
 from django.utils import timezone
 from django.db.models import F
@@ -651,3 +652,23 @@ def get_eos_airdrop_cost(request):
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
     })
+
+
+@api_view(http_method_names=['POST'])
+def check_eos_accounts_exists(request):
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port'])
+    )
+
+    # del this
+#     eos_url = 'http://127.0.0.1:8886'
+
+    accounts = request.data['accounts']
+    response =requests.post(
+            eos_url+'/v1/chain-ext/get_accounts',
+            json={'verbose': False, 'accounts': accounts}
+    ).json()
+    print(accounts, flush=True)
+    print(response, flush=True)
+    return JsonResponse({'not_exists': [x[0] for x in zip(accounts, response) if not x[1]]})
