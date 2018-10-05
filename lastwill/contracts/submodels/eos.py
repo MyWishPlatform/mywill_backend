@@ -1,13 +1,15 @@
-import re
-import binascii
-from os import path
+import json
 
 from django.db import models
 from django.utils import timezone
+from django.core.mail import send_mail
 from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.contracts.submodels.common import *
+from lastwill.contracts.submodels.airdrop import *
+from lastwill.contracts.submodels.eos_json import *
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
 from exchange_API import to_wish, convert
 
@@ -28,6 +30,24 @@ def unlock_eos_account(wallet_name, password):
 
     ):
         raise Exception('unlock command error')
+
+
+def implement_cleos_command(command_list):
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        stdout, stderr = Popen(command_list, stdin=PIPE, stdout=PIPE,
+                               stderr=PIPE).communicate()
+        print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            if 'pack_action_data' not in command_list:
+                result = json.loads(result)
+            break
+    else:
+        print('stderr', stderr, flush=True)
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    return result
 
 
 class EOSContract(EthContract):
@@ -113,23 +133,11 @@ class ContractDetailsEOSToken(CommonDetails):
                 acc_name=self.admin_address,
                 max_sup=max_supply,
                 token=self.token_short_name
-            ), '-p',
-            acc_name
+            ), '-p', acc_name, '-j'
         ]
         print('command = ', command)
 
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})', stderr.decode())
-            if result:
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-        tx_hash = result.group(1)
+        tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
         eos_contract = EOSContract()
         eos_contract.tx_hash = tx_hash
@@ -174,24 +182,9 @@ class ContractDetailsEOSAccount(CommonDetails):
         command1 = [
             'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
         ]
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = stdout.decode()
-            if result:
-                ram = json.loads(result)['rows'][0]
-                print('result', result, flush=True)
-                print('ram', ram, flush=True)
-                print('quote', ram['quote']['balance'].split(), flush=True)
-                print('base', ram['base']['balance'].split(), flush=True)
-                ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        result = implement_cleos_command(command1)
+        ram = result['rows'][0]
+        ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
         print('get ram price', flush=True)
         eos_cost = (
                 float(kwargs['buy_ram_kbytes']) * ram_price
@@ -251,23 +244,10 @@ class ContractDetailsEOSAccount(CommonDetails):
             self.active_public_key, '--stake-net', str(self.stake_net_value) + ' EOS',
             '--stake-cpu', str(self.stake_cpu_value) + ' EOS',
             '--buy-ram-kbytes', str(self.buy_ram_kbytes),
-            '--transfer',
+            '--transfer', '-j'
         ]
         print('command:', command, flush=True)
-        
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})', stderr.decode())
-            if result:
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-        tx_hash = result.group(1)
+        tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
         eos_contract = EOSContract()
         eos_contract.tx_hash = tx_hash
@@ -450,25 +430,10 @@ class ContractDetailsEOSICO(CommonDetails):
             acc_name, self.crowdsale_address, our_public_key, our_public_key,
             '--stake-net', net,
             '--stake-cpu', cpu,
-            '--buy-ram-kbytes', ram, '--transfer',
+            '--buy-ram-kbytes', ram, '--transfer', '-j'
         ]
         print('command:', command, flush=True)
-
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            print(stdout, stderr, flush=True)
-            result = re.search('executed transaction: ([\da-f]{64})',
-                               stderr.decode())
-            if result:
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'create account cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-        tx_hash = result.group(1)
+        tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
         print('account for eos ico created', flush=True)
         self.eos_contract_crowdsale.tx_hash = tx_hash
@@ -496,7 +461,6 @@ class ContractDetailsEOSICO(CommonDetails):
                 max_supply = str(total_supply)[:-self.decimals] + '.' + str(total_supply)[-self.decimals:]
         else:
             max_supply = str(total_supply)
-        print('total supply', max_supply, flush=True)
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -505,17 +469,7 @@ class ContractDetailsEOSICO(CommonDetails):
             path.join(dest, 'crowdsale/crowdsale.abi'), '-jd', '-s'
         ]
         print('command:', command, flush=True)
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-             print('attempt', attempt, flush=True)
-             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                    stderr=PIPE).communicate()
-             abi = json.loads(stdout.decode())['actions'][0]['data'][20:]
-             if abi:
-                 break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
+        abi = implement_cleos_command(command)['actions'][0]['data'][20:]
         unlock_eos_account(wallet_name, password)
         dates = json.dumps({'start': self.start_date, 'finish': self.stop_date})
         print(dates, flush=True)
@@ -528,163 +482,26 @@ class ContractDetailsEOSICO(CommonDetails):
             contract_addr, 'init', str(dates)
         ]
         print('command:', command, flush=True)
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-             print('attempt', attempt, flush=True)
-             stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                    stderr=PIPE).communicate()
-             init_data = stdout.decode().replace('\n', '')
-             print('init_data', init_data)
-             if init_data:
-                 break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception('cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        init_data = implement_cleos_command(command)
 
-        actions = {
-                    "actions": [
-                        {
-                        "account": "eosio",
-                        "name": "updateauth",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                         "data": {
-                             "account": self.crowdsale_address,
-                             "permission": "active", "parent": "owner",
-                             "auth": {"threshold": 1, "keys":
-                                      [{
-                                        "key": our_public_key,
-                                        "weight": 1}],
-                                        "accounts": [{"permission": {
-                                        "actor": self.crowdsale_address,
-                                        "permission": "eosio.code"},
-                                                "weight": 1}],
-                                    "waits": []}}},
+        actions = create_eos_json(
+            self.crowdsale_address, our_public_key,
+            self.eos_contract_crowdsale.bytecode,
+            abi, token_address, max_supply, self.token_short_name,
+            self.is_transferable_at_once, init_data
+        )
 
-                        {
-                        "account": "eosio",
-                        "name": "setcode",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "vmtype": 0,
-                            "vmversion": 0,
-                            "code": self.eos_contract_crowdsale.bytecode
-                        }
-                    }, {
-                        "account": "eosio",
-                        "name": "setabi",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "abi": abi
-                        }
-                    }, {
-                        "account": token_address,
-                        "name": "create",
-                        "authorization": [{
-                            "actor": token_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "issuer": self.crowdsale_address,
-                            "maximum_supply": max_supply + " " + self.token_short_name,
-                            "lock": not self.is_transferable_at_once
-                        }
-                    },
-                    {
-                        "account": self.crowdsale_address,
-                        "name": "init",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": init_data
-                    },
-                    {
-                        "account": "eosio",
-                        "name": "updateauth",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "owner"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "permission": "owner",
-                            "parent": "",
-                            "auth": {
-                                "threshold": 1,
-                                "keys": [],
-                                "accounts": [{
-                                    "permission": {
-                                        "actor": self.crowdsale_address,
-                                        "permission": "owner"
-                                    },
-                                    "weight": 1
-                                }],
-                                "waits": []
-                            }
-                        }
-                    }, {
-                        "account": "eosio",
-                        "name": "updateauth",
-                        "authorization": [{
-                            "actor": self.crowdsale_address,
-                            "permission": "active"
-                        }],
-                        "data": {
-                            "account": self.crowdsale_address,
-                            "permission": "active",
-                            "parent": "owner",
-                            "auth": {
-                                "threshold": 1,
-                                "keys": [],
-                                "accounts": [{
-                                    "permission": {
-                                        "actor": self.crowdsale_address,
-                                        "permission": "eosio.code"
-                                    },
-                                    "weight": 1
-                                }],
-                                "waits": []
-                            }
-                        }
-                    }]
-                }
-
-        print(type(actions))
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
-            path.join(dest, 'deploy_params.json'),
+            path.join(dest, 'deploy_params.json'), '-j',
             '-p', acc_name, '-p', self.crowdsale_address # do we need -p token_addres if address diff from token_address?
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))
 
-        for attempt in range(EOS_ATTEMPTS_COUNT):
-            print('attempt', attempt, flush=True)
-            stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE,
-                                   stderr=PIPE).communicate()
-            # print(stdout, stderr, flush=True)
-            print(type(stdout), len(stdout), flush=True)
-            result = stdout.decode()
-            if result:
-                result = json.loads(stdout.decode())['transaction_id']
-                print(result)
-                break
-        else:
-            print('stderr', stderr, flush=True)
-            raise Exception(
-                'push transaction cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+        result = implement_cleos_command(command)['transaction_id']
         print('SUCCESS')
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
@@ -702,7 +519,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
@@ -726,9 +542,10 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.state = 'DONE'
         self.contract.save()
 
+
 class EOSAirdropAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
-    address = models.CharField(max_length=50, db_index=True)
+    address = models.CharField(max_length=50, default=None)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
     amount = models.DecimalField(
@@ -742,4 +559,176 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     contract = models.ForeignKey(Contract, null=True)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eos_contract = models.ForeignKey(EOSContract, null=True, default=None)
+    token_short_name = models.CharField(max_length=64)
+    address_count = models.IntegerField()
+    memo = models.CharField(max_length=50, default='')
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network)
+        cost = eos_cost * convert('EOS', 'ETH')['ETH']
+        return round(cost, 2) * 10 ** 18
+
+    @staticmethod
+    def calc_cost_eos(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        eos_url = 'http://%s:%s' % (
+            str(NETWORKS[network.name]['host']),
+            str(NETWORKS[network.name]['port'])
+        )
+
+        command1 = [
+            'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
+            'rammarket'
+        ]
+        result = implement_cleos_command(command1)
+        ram = result['rows'][0]
+        ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0])
+        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4)
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost({'address_count': 1}, network)
+        return cost
+
+    @classmethod
+    def min_cost_eos(cls):
+        network = Network.objects.get(name='EOS_MAINNET')
+        cost = cls.calc_cost_eos({'address_count': 1}, network)
+        return cost * 10**4
+
+    @logging
+    @blocking
+    @postponable
+    def deploy(self):
+        eos_url = 'http://%s:%s' % (
+            str(NETWORKS[self.contract.network.name]['host']),
+            str(NETWORKS[self.contract.network.name]['port']))
+        wallet_name = NETWORKS[self.contract.network.name]['wallet']
+        password = NETWORKS[self.contract.network.name]['eos_password']
+        airdrop_address = NETWORKS[self.contract.network.name]['airdrop_address']
+        unlock_eos_account(wallet_name, password)
+        command = [
+            'cleos', '-u', eos_url, 'get', 'table', self.token_address,
+            self.token_short_name, 'stat'
+        ]
+        print('command', command)
+        result = implement_cleos_command(command)['rows'][0]['supply']
+        print('result', result)
+        decimals = len(result.split(' ')[0].split('.')[1])
+        print('decimals', decimals)
+
+        command = ['cleos', '-u', eos_url, 'push',  'action', airdrop_address, 'create',
+                   '["{pk}", "{admin}", "{token}", "{decimals},{token_short_name}", "{addr_count}"]'.format(
+                       pk=self.contract.id,
+                       admin=self.admin_address,
+                       token=self.token_address,
+                       decimals=decimals,
+                       token_short_name=self.token_short_name,
+                       addr_count=self.address_count,
+                   ), '-p', airdrop_address, '-j']
+        print('command', command)
+        result = implement_cleos_command(command)['transaction_id']
+        print('result', result)
+        print('SUCCESS')
+
+        eos_contract = EOSContract()
+        eos_contract.contract = self.contract
+        eos_contract.original_contract = self.contract
+        eos_contract.tx_hash = result
+        eos_contract.address = airdrop_address
+        eos_contract.save()
+        self.eos_contract = eos_contract
+        self.save()
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
+
+    @logging
+    def airdrop(self, message):
+        new_state = {
+            'COMMITTED': 'sent',
+            'PENDING': 'processing',
+            'REJECTED': 'added'
+        }[message['status']]
+
+        old_state = {
+            'COMMITTED': 'processing',
+            'PENDING': 'added',
+            'REJECTED': 'processing'
+        }[message['status']]
+
+        ids = []
+        for js in message['airdroppedAddresses']:
+            address = js['address']
+            amount = js['value']
+            addr = EOSAirdropAddress.objects.filter(
+                address=address,
+                amount=amount,
+                contract=self.contract,
+                active=True,
+                state=old_state,
+            ).exclude(id__in=ids).first()
+            # in case 'pending' msg was lost or dropped, but 'commited' is there
+            if addr is None and message['status'] == 'COMMITTED':
+                old_state = 'added'
+                addr = EOSAirdropAddress.objects.filter(
+                    address=address,
+                    amount=amount,
+                    contract=self.contract,
+                    active=True,
+                    state=old_state
+                ).exclude(id__in=ids).first()
+            if addr is None:
+                continue
+
+            ids.append(addr.id)
+        if len(message['airdroppedAddresses']) != len(ids):
+            print('=' * 40, len(message['airdroppedAddresses']), len(ids), flush=True)
+
+        EOSAirdropAddress.objects.filter(id__in=ids).update(state=new_state)
+
+        if message.get('errorAddresses'):
+            self.contract.state = 'POSTPONED'
+            self.contract.save()
+            ids = []
+            for js in message['errorAddresses']:
+                addr = EOSAirdropAddress.objects.filter(
+                     address=js['address'],
+                     amount=js['value'],
+                     contract=self.contract,
+                     active=True,
+                ).exclude(id__in=ids).first()
+                ids.append(addr.id)
+            EOSAirdropAddress.objects.filter(id__in=ids).update(state='failed')
+        elif self.contract.airdropaddress_set.filter(
+                state__in=('added', 'processing'),
+                active=True
+        ).count() == 0:
+            self.contract.state = 'ENDED'
+            self.contract.save()
+
+    @blocking
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        take_off_blocking(self.contract.network.name)
+        network = self.contract.network.name
+        network_name = MAIL_NETWORK[network]
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                eos_airdrop_subject,
+                eos_airdrop_message.format(
+                    network_name=network_name,
+                    hash=self.eos_contract.tx_hash
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
+        self.save()

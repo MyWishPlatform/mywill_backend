@@ -1,7 +1,7 @@
 import datetime
-import time
 from os import path
 from subprocess import Popen, PIPE
+import requests
 
 from django.utils import timezone
 from django.db.models import F
@@ -19,18 +19,16 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, EOS_ATTEMPTS_COUNT
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
-from lastwill.profile.models import Profile
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-import lastwill.check as check
 from exchange_API import to_wish, convert
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -98,6 +96,7 @@ def test_comp(request):
     contract.get_details().compile()
     contract.save()
     return Response({'result': 'ok'})
+
 
 @api_view()
 def get_token_contracts(request):
@@ -365,6 +364,7 @@ def get_statistics(request):
 
     return JsonResponse(answer)
 
+
 @api_view(http_method_names=['GET'])
 def get_statistics_landing(request):
     now = datetime.datetime.now()
@@ -421,6 +421,7 @@ def get_cost_all_contracts(request):
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
     return JsonResponse(answer)
+
 
 @api_view(http_method_names=['POST'])
 def neo_crowdsale_finalize(request):
@@ -480,23 +481,52 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         return result
 
 
+class EOSAirdropAddressViewSet(viewsets.ModelViewSet):
+    queryset = EOSAirdropAddress.objects.all()
+    serializer_class = EOSAirdropAddressSerializer
+    permission_classes = (ReadOnly,)
+
+    def get_queryset(self):
+        result = self.queryset
+        contract_id = self.request.query_params.get('contract', None)
+        if not contract_id:
+            raise ValidationError()
+        contract = Contract.objects.get(id=contract_id)
+        if contract.user != self.request.user:
+            raise ValidationError({'result': 2}, code=403)
+        result = result.filter(contract=contract, active=True)
+        state = self.request.query_params.get('state', None)
+        if state:
+            result = result.filter(state=state)
+        result = result.order_by('id')
+        return result
+
+
 @api_view(http_method_names=['POST'])
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.contract_type != 8 or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13] or contract.state != 'ACTIVE':
         raise PermissionDenied
-    if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
-        raise PermissionDenied
-    print('air deleting', flush=True)
-    contract.airdropaddress_set.all().delete()
-    print('air inserting', flush=True)
-    addresses = request.data.get('addresses')
-    AirdropAddress.objects.bulk_create([AirdropAddress(
-            contract=contract,
-            address=x['address'].lower(),
-            amount=x['amount']
-    ) for x in addresses])
-    print('air ok', flush=True)
+    if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
+        if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
+            raise PermissionDenied
+        contract.airdropaddress_set.all().delete()
+        addresses = request.data.get('addresses')
+        AirdropAddress.objects.bulk_create([AirdropAddress(
+                contract=contract,
+                address=x['address'].lower(),
+                amount=x['amount']
+        ) for x in addresses])
+    else:
+        if contract.eosairdropaddress_set.filter(state__in=('processing', 'sent')).count():
+            raise PermissionDenied
+        contract.eosairdropaddress_set.all().delete()
+        addresses = request.data.get('addresses')
+        EOSAirdropAddress.objects.bulk_create([EOSAirdropAddress(
+                contract=contract,
+                address=x['address'].lower(),
+                amount=x['amount']
+        ) for x in addresses])
     return JsonResponse({'result': 'ok'})
 
 
@@ -508,6 +538,7 @@ def get_contract_for_link(request):
     )
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
+
 
 @api_view(http_method_names=['GET'])
 def get_invest_balance_day(request):
@@ -576,25 +607,10 @@ def get_eos_cost(request):
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
     ]
-    for attempt in range(EOS_ATTEMPTS_COUNT):
-        print('attempt', attempt, flush=True)
-        stdout, stderr = Popen(command1, stdin=PIPE, stdout=PIPE,
-                               stderr=PIPE).communicate()
-        print(stdout, stderr, flush=True)
-        result = stdout.decode()
-        if result:
-            ram = json.loads(result)['rows'][0]
-            print('result', result, flush=True)
-            print('ram', ram, flush=True)
-            print('quote', ram['quote']['balance'].split(), flush=True)
-            print('base', ram['base']['balance'].split(), flush=True)
-            ram_price = float(ram['quote']['balance'].split()[0]) / float(
-                ram['base']['balance'].split()[0]) * 1024
-            break
-    else:
-        print('stderr', stderr, flush=True)
-        raise Exception(
-            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    result = implement_cleos_command(command1)
+    ram = result['rows'][0]
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(
+        ram['base']['balance'].split()[0]) * 1024
     print('get ram price', flush=True)
     ram = request.query_params['buy_ram_kbytes']
     net = request.query_params['stake_net_value']
@@ -609,3 +625,50 @@ def get_eos_cost(request):
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
     })
+
+
+@api_view(http_method_names=['POST', 'GET'])
+def get_eos_airdrop_cost(request):
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port'])
+    )
+
+    command1 = [
+        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
+        'rammarket'
+    ]
+    result = implement_cleos_command(command1)
+    ram = result['rows'][0]
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(
+        ram['base']['balance'].split()[0])
+    count = float(request.query_params['address_count'])
+    eos_cost = round(250 + ram_price * 240 * count * 1.2, 4)
+
+    return JsonResponse({
+        'EOS': str(eos_cost),
+        'EOSISH': str(eos_cost * 10),
+        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
+        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
+        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+    })
+
+
+@api_view(http_method_names=['POST'])
+def check_eos_accounts_exists(request):
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port'])
+    )
+
+    # del this
+#     eos_url = 'http://127.0.0.1:8886'
+
+    accounts = request.data['accounts']
+    response =requests.post(
+            eos_url+'/v1/chain-ext/get_accounts',
+            json={'verbose': False, 'accounts': accounts}
+    ).json()
+    print(accounts, flush=True)
+    print(response, flush=True)
+    return JsonResponse({'not_exists': [x[0] for x in zip(accounts, response) if not x[1]]})

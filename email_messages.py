@@ -109,3 +109,15 @@ Please contact support@mywish.io if you have any questions.
 Best wishes,
 MyWish Team.
 '''
+
+eos_airdrop_subject = """Your contract is ready"""
+eos_airdrop_message = """Hello,
+
+We are happy to inform you that your contract was successfully created and deployed on {network_name}.
+Tx hash: {hash}
+
+Please contact support@mywish.io if you have any questions.
+
+Best wishes,
+MyWish Team.
+"""

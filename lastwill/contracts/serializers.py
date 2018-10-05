@@ -206,7 +206,8 @@ class ContractSerializer(serializers.ModelSerializer):
             9: ContractDetailsInvestmentPoolSerializer,
             10: ContractDetailsEOSTokenSerializer,
             11: ContractDetailsEOSAccountSerializer,
-            12: ContractDetailsEOSICOSerializer
+            12: ContractDetailsEOSICOSerializer,
+            13: ContractDetailsEOSAirdropSerializer
         }[contract_type]
 
 
@@ -1023,14 +1024,20 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = (
+            'admin_address', 'token_address', 'token_short_name', 'address_count'
+        )
+        extra_kwargs = {
+            'link': {'memo': True},
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
+        res['eos_contract'] = EOSContractSerializer().to_representation(contract_details.eos_contract)
+        res['added_count'] = contract_details.contract.eosairdropaddress_set.filter(state='added', active=True).count()
         res['processing_count'] = contract_details.contract.eosairdropaddress_set.filter(state='processing', active=True).count()
         res['sent_count'] = contract_details.contract.eosairdropaddress_set.filter(state='sent', active=True).count()
+        res['failed'] = contract_details.contract.eosairdropaddress_set.filter(state='failed', active=True).count()
         return res
 
     def create(self, contract, contract_details):
@@ -1042,6 +1049,10 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
+
+    def validate(self, details):
+        check.is_eos_address(details['admin_address'])
+        check.is_eos_address(details['token_address'])
 
 
 class EOSAirdropAddressSerializer(serializers.ModelSerializer):
