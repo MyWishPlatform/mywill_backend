@@ -1,4 +1,6 @@
 import json
+import time
+from threading import Timer
 
 from django.db import models
 from django.utils import timezone
@@ -10,7 +12,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.contracts.submodels.eos_json import *
-from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT
+from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from exchange_API import to_wish, convert
 
 
@@ -35,18 +37,24 @@ def unlock_eos_account(wallet_name, password):
 def implement_cleos_command(command_list):
     for attempt in range(EOS_ATTEMPTS_COUNT):
         print('attempt', attempt, flush=True)
-        stdout, stderr = Popen(command_list, stdin=PIPE, stdout=PIPE,
-                               stderr=PIPE).communicate()
+        proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        timer = Timer(CLEOS_TIME_LIMIT, proc.kill)
+        try:
+            timer.start()
+            stdout, stderr = proc.communicate()
+        finally:
+            timer.cancel()
         print(stdout, stderr, flush=True)
         result = stdout.decode()
         if result:
-            if 'pack_action_data' not in command_list:
-                result = json.loads(result)
             break
+        time.sleep(CLEOS_TIME_COOLDOWN)
     else:
         print('stderr', stderr, flush=True)
         raise Exception(
             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    if 'pack_action_data' not in command_list:
+        result = json.loads(result)
     return result
 
 

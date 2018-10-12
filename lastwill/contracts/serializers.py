@@ -26,7 +26,7 @@ from lastwill.contracts.models import (
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
-        ContractDetailsEOSAirdrop
+        ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -207,7 +207,8 @@ class ContractSerializer(serializers.ModelSerializer):
             10: ContractDetailsEOSTokenSerializer,
             11: ContractDetailsEOSAccountSerializer,
             12: ContractDetailsEOSICOSerializer,
-            13: ContractDetailsEOSAirdropSerializer
+            13: ContractDetailsEOSAirdropSerializer,
+            14: ContractDetailsEOSTokenSASerializer,
         }[contract_type]
 
 
@@ -1059,3 +1060,39 @@ class EOSAirdropAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = EOSAirdropAddress
         fields = ('address', 'amount', 'state')
+
+
+class ContractDetailsEOSTokenSASerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsEOSTokenSA
+        fields = ('token_short_name', 'token_account', 'admin_address', 'decimals', 'maximum_supply')
+
+    def validate(self, details):
+        check.is_eos_address(details['admin_address'])
+        check.is_eos_address(details['token_account'])
+        if details['decimals'] < 0 or details['decimals'] > 15:
+            raise ValidationError
+        details['maximum_supply'] = int(details['maximum_supply'])
+        if any([x in string.punctuation for x in details['token_short_name']]):
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eos_contract'] = EOSContractSerializer().to_representation(contract_details.eos_contract)
+        if contract_details.contract.network.name == 'EOS_TESTNET':
+            res['eos_contract']['source_code'] = ''
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+
+ 
