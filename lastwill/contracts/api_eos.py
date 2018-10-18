@@ -23,6 +23,7 @@ from lastwill.settings import CONTRACTS_DIR, BASE_DIR
 import lastwill.check as check
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.serializers import *
+from lastwill.contracts.models import *
 
 
 # def validate_params(request):
@@ -44,14 +45,15 @@ def create_eos_token(request):
     decimals, maximum_supply
     :return: ok
     '''
-    contract = {
-        "id": None,
-        "address": None,
-        "source_code": None,
-        "abi": None,
-        "bytecode": None,
-        "compiler_version": None,
-        "constructor_arguments": None}
+    contract = Contract(
+        address=None,
+        source_code=None,
+        abi=None,
+        bytecode=None,
+        compiler_version=None,
+        constructor_arguments=None
+    )
+    contract.save()
     ContractDetailsEOSTokenSASerializer().create(contract, request.data)
     return Response('ok')
 
