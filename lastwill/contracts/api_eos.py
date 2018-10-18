@@ -46,12 +46,10 @@ def create_eos_token(request):
     :return: ok
     '''
     contract = Contract(
-        address=None,
-        source_code=None,
-        abi=None,
-        bytecode=None,
-        compiler_version=None,
-        constructor_arguments=None
+        state='CREATED',
+        name='Contract',
+        contract_type=14,
+        network=10,
     )
     contract.save()
     ContractDetailsEOSTokenSASerializer().create(contract, request.data)
