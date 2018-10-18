@@ -44,7 +44,15 @@ def create_eos_token(request):
     decimals, maximum_supply
     :return: ok
     '''
-    ContractDetailsEOSTokenSASerializer().create(request.data)
+    contract = {
+        "id": None,
+        "address": None,
+        "source_code": None,
+        "abi": None,
+        "bytecode": None,
+        "compiler_version": None,
+        "constructor_arguments": None}
+    ContractDetailsEOSTokenSASerializer().create(contract, request.data)
     return Response('ok')
 
 
