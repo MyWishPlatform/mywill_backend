@@ -55,6 +55,8 @@ def create_eos_token(request):
         user_id=32
     )
     contract.save()
+    request.data['decimals'] = int(request.data['decimals'])
+    request.data['maximum_supply'] = int(request.data['maximum_supply'])
     ContractDetailsEOSTokenSASerializer().create(contract, request.data)
     return Response('ok')
 
