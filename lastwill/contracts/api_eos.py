@@ -1,0 +1,76 @@
+import datetime
+from os import path
+from subprocess import Popen, PIPE
+import requests
+
+from django.utils import timezone
+from django.db.models import F
+from django.http import Http404
+from django.http import JsonResponse
+from django.views.generic import View
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.response import Response
+from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR
+import lastwill.check as check
+from lastwill.contracts.models import send_in_queue
+from lastwill.contracts.serializers import *
+
+
+# def validate_params(request):
+#     data = request.data
+#     if 'admin_address' not in data:
+#         raise ValidationError({'result': 2}, code=403)
+#     check.is_eos_address(data['admin_address'])
+#     if 'token_account' not in data:
+#         raise ValidationError({'result': 2}, code=403)
+#     check.is_eos_address(data['token_account'])
+
+
+
+@api_view()
+def create_eos_token(request):
+    '''
+    view for create eos token
+    :param request: contain token_short_name, token_account,
+    decimals, maximum_supply
+    :return: ok
+    '''
+    ContractDetailsEOSTokenSASerializer().create(request.data)
+    return Response('ok')
+
+
+@api_view()
+def deploy_eos_token(request):
+    '''
+    view for deploy eos token
+    :param request: contain contract id
+    :return:
+    '''
+    contract = Contract.objects.get(id=request.data.get('id'))
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
+    contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.save()
+    queue = NETWORKS[contract.network.name]['queue']
+    send_in_queue(contract.id, 'launch', queue)
+
+
+@api_view()
+def show_eos_token(request):
+    '''
+    view for show eos token
+    :param request: contain contract id
+    :return:
+    '''
+    contract = Contract.objects.get(id=request.data.get('id'))
+    contract_details = contract.get_details()
+    return ContractDetailsEOSTokenSASerializer().to_representation(contract_details)
