@@ -45,11 +45,12 @@ def create_eos_token(request):
     decimals, maximum_supply
     :return: ok
     '''
+    network = Network.objects.get(id=10)
     contract = Contract(
         state='CREATED',
         name='Contract',
         contract_type=14,
-        network=10,
+        network=network,
     )
     contract.save()
     ContractDetailsEOSTokenSASerializer().create(contract, request.data)
