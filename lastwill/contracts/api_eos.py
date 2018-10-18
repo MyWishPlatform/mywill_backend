@@ -51,6 +51,7 @@ def create_eos_token(request):
         name='Contract',
         contract_type=14,
         network=network,
+        cost=0
     )
     contract.save()
     ContractDetailsEOSTokenSASerializer().create(contract, request.data)
