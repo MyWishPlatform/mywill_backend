@@ -49,7 +49,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 1 # ? convert?
+        return 190 * 10 ** 4
 
     def compile(self):
         if self.temp_directory:
