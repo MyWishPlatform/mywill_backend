@@ -35,6 +35,7 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
+from lastwill.snapshot.api import snapshot_get_value
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -89,6 +90,7 @@ urlpatterns = [
     url(r'^api/get_eos_cost/$', get_eos_cost),
     url(r'^api/get_eos_airdrop_cost/$', get_eos_airdrop_cost),
     url(r'^api/check_eos_accounts_exists/$', check_eos_accounts_exists),
+    url(r'^api/snapshot_get_value/$', snapshot_get_value),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
