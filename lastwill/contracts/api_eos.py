@@ -55,12 +55,22 @@ def create_eos_token(request):
         user_id=32
     )
     contract.save()
+    eos_contract = EOSContract(
+        address=None,
+        source_code=None,
+        abi=None,
+        bytecode=None,
+        compiler_versio=None,
+        constructor_arguments=None
+    )
+    eos_contract.save()
     token_params = {}
     token_params['decimals'] = int(request.query_params['decimals'])
     token_params['maximum_supply'] = int(request.query_params['maximum_supply'])
     token_params['token_short_name'] = request.query_params['token_short_name']
     token_params['token_account'] = request.query_params['token_account']
     token_params['admin_address'] = request.query_params['admin_address']
+    token_params['eos_contract'] = eos_contract
     ContractDetailsEOSTokenSASerializer().create(contract, token_params)
     return Response('ok')
 
