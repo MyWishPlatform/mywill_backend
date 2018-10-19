@@ -82,7 +82,7 @@ def deploy_eos_token(request):
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=request.query_params.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -98,6 +98,6 @@ def show_eos_token(request):
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=request.query_params.get('id'))
     contract_details = contract.get_details()
     return ContractDetailsEOSTokenSASerializer().to_representation(contract_details)
