@@ -59,9 +59,9 @@ def create_eos_token(request):
         address=None,
         source_code='',
         abi=None,
-        bytecode=None,
+        bytecode='',
         compiler_version=None,
-        constructor_arguments=None
+        constructor_arguments=''
     )
     eos_contract.save()
     token_params = {}
