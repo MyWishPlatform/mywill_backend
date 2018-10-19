@@ -83,6 +83,8 @@ def deploy_eos_token(request):
     :return:
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
