@@ -60,7 +60,7 @@ def create_eos_token(request):
         source_code=None,
         abi=None,
         bytecode=None,
-        compiler_versio=None,
+        compiler_version=None,
         constructor_arguments=None
     )
     eos_contract.save()
