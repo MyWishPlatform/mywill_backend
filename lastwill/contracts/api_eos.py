@@ -104,4 +104,6 @@ def show_eos_token(request):
     contract = Contract.objects.get(id=request.query_params.get('id'))
     contract_details = contract.get_details()
     answer= {'state': contract.state, 'address': contract_details.token_account}
+    if contract_details.eos_contract.tx_hash:
+        answer['tx_hash'] = contract_details.eos_contract.tx_hash
     return JsonResponse(answer)
