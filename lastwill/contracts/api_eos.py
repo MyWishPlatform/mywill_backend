@@ -103,4 +103,5 @@ def show_eos_token(request):
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
     contract_details = contract.get_details()
-    return ContractDetailsEOSTokenSASerializer().to_representation(contract_details)
+    answer= {'state': contract.state, 'address': contract_details.token_account}
+    return JsonResponse(answer)
