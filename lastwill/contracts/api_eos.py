@@ -112,9 +112,18 @@ def create_eos_account(request):
     token_params['account_name'] = request.query_params['account_name']
     token_params['owner_public_key'] = request.query_params['owner_public_key']
     token_params['active_public_key'] = request.query_params['active_public_key']
-    token_params['stake_net_value'] = request.query_params['stake_net_value'] if request.query_params['stake_net_value'] else '0.01'
-    token_params['stake_cpu_value'] = request.query_params['stake_cpu_value'] if request.query_params['stake_cpu_value'] else '0.64'
-    token_params['buy_ram_kbytes'] = int(request.query_params['buy_ram_kbytes']) if request.query_params['buy_ram_kbytes'] else 4
+    if 'stake_net_value' in request.query_params:
+        token_params['stake_net_value'] = request.query_params['stake_net_value']
+    else:
+        token_params['stake_net_value'] = '0.01'
+    if 'stake_cpu_value' in  request.query_params:
+        token_params['stake_cpu_value'] = request.query_params['stake_cpu_value']
+    else:
+        token_params['stake_cpu_value'] = '0.64'
+    if 'buy_ram_kbytes' in request.query_params:
+        token_params['buy_ram_kbytes'] = int(request.query_params['buy_ram_kbytes'])
+    else:
+        token_params['buy_ram_kbytes'] = 4
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSAccountSerializer().create(contract, token_params)
     return Response('ok')
