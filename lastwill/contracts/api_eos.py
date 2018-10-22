@@ -1,40 +1,10 @@
-import datetime
-from os import path
-from subprocess import Popen, PIPE
-import requests
-
-from django.utils import timezone
-from django.db.models import F
-from django.http import Http404
 from django.http import JsonResponse
-from django.views.generic import View
-from django.contrib.auth.models import User
-from rest_framework import status
-from rest_framework import viewsets
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.permissions import BasePermission, SAFE_METHODS
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR
-import lastwill.check as check
-from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.serializers import *
 from lastwill.contracts.models import *
-
-
-# def validate_params(request):
-#     data = request.data
-#     if 'admin_address' not in data:
-#         raise ValidationError({'result': 2}, code=403)
-#     check.is_eos_address(data['admin_address'])
-#     if 'token_account' not in data:
-#         raise ValidationError({'result': 2}, code=403)
-#     check.is_eos_address(data['token_account'])
-
 
 
 @api_view()
@@ -103,7 +73,85 @@ def show_eos_token(request):
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
     contract_details = contract.get_details()
-    answer= {'state': contract.state, 'address': contract_details.token_account}
+    answer = {'state': contract.state, 'address': contract_details.token_account}
+    answer['decimals'] = contract_details.decimals
+    answer['admin_address'] = contract_details.admin_address
+    answer['token_short_name'] = contract_details.token_short_name
+    if contract_details.eos_contract.tx_hash:
+        answer['tx_hash'] = contract_details.eos_contract.tx_hash
+    return JsonResponse(answer)
+
+
+@api_view()
+def create_eos_account(request):
+    '''
+    view for create eos account
+    :param request: contain account_name, owner_public_key, active_public_key
+    :return: ok
+    '''
+    network = Network.objects.get(id=10)
+    contract = Contract(
+        state='CREATED',
+        name='Contract',
+        contract_type=11,
+        network=network,
+        cost=0,
+        user_id=32
+    )
+    contract.save()
+    eos_contract = EOSContract(
+        address=None,
+        source_code='',
+        abi={},
+        bytecode='',
+        compiler_version=None,
+        constructor_arguments=''
+    )
+    eos_contract.save()
+    token_params = {}
+    token_params['account_name'] = request.query_params['account_name']
+    token_params['owner_public_key'] = request.query_params['owner_public_key']
+    token_params['active_public_key'] = request.query_params['active_public_key']
+    token_params['stake_net_value'] = request.query_params['stake_net_value'] if request.query_params['stake_net_value'] else '0.01'
+    token_params['stake_cpu_value'] = request.query_params['stake_cpu_value'] if request.query_params['stake_cpu_value'] else '0.64'
+    token_params['buy_ram_kbytes'] = int(request.query_params['buy_ram_kbytes']) if request.query_params['buy_ram_kbytes'] else 4
+    token_params['eos_contract'] = eos_contract
+    ContractDetailsEOSAccountSerializer().create(contract, token_params)
+    return Response('ok')
+
+
+@api_view()
+def deploy_eos_account(request):
+    '''
+    view for deploy eos ac count
+    :param request: contain contract id
+    :return:
+    '''
+    contract = Contract.objects.get(id=request.query_params.get('id'))
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 2}, code=403)
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
+    contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.save()
+    queue = NETWORKS[contract.network.name]['queue']
+    send_in_queue(contract.id, 'launch', queue)
+    return Response('ok')
+
+
+@api_view()
+def show_eos_account(request):
+    '''
+    view for show eos account
+    :param request: contain contract id
+    :return:
+    '''
+    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract_details = contract.get_details()
+    answer = {'state': contract.state, 'address': contract_details.account_name}
+    answer['net'] = contract_details.stake_net_value
+    answer['cpu'] = contract_details.stake_cpu_value
+    answer['ram'] = contract_details.buy_ram_kbytes
     if contract_details.eos_contract.tx_hash:
         answer['tx_hash'] = contract_details.eos_contract.tx_hash
     return JsonResponse(answer)

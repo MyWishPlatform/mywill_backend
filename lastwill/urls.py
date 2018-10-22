@@ -32,7 +32,9 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_invest_balance_day, check_status,
                                     get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
                                     check_eos_accounts_exists)
-from lastwill.contracts.api_eos import create_eos_token, deploy_eos_token, show_eos_token
+from lastwill.contracts.api_eos import (create_eos_token, deploy_eos_token,
+                                        show_eos_token, create_eos_account,
+                                        deploy_eos_account, show_eos_account)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -95,6 +97,9 @@ urlpatterns = [
     url(r'^api/deploy_eos_token/$', deploy_eos_token),
     url(r'^api/show_eos_token/$', show_eos_token),
     url(r'^api/snapshot_get_value/$', snapshot_get_value),
+    url(r'^api/create_eos_account/$', create_eos_account),
+    url(r'^api/deploy_eos_account/$', deploy_eos_account),
+    url(r'^api/show_eos_account/$', show_eos_account),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
