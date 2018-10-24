@@ -1,3 +1,5 @@
+import requests
+
 from django.contrib.auth.models import User
 from django.db.models import F
 
@@ -16,7 +18,11 @@ def create_payment(uid, tx, currency, amount):
     if currency == 'EOSISH':
         value = amount
     elif currency == 'EOS':
-        value = amount * 10
+        eosish_exchange_rate = float(
+            requests.get('https://api.chaince.com/tickers/eosisheos/',
+                         headers={'accept-version': 'v1'}).json()['price']
+        )
+        value = amount * eosish_exchange_rate
     else:
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
@@ -38,7 +44,7 @@ def create_payment(uid, tx, currency, amount):
 
 
 def positive_payment(user, currency, value):
-    if currency == 'EOS':
+    if currency in ['EOS', 'EOSISH']:
         Profile.objects.select_for_update().filter(
             id=user.profile.id).update(
             eos_balance=F('eos_balance') + value)
@@ -49,7 +55,7 @@ def positive_payment(user, currency, value):
 
 
 def negative_payment(user, currency, value):
-    if currency != 'EOS':
+    if currency not in ['EOS', 'EOSISH']:
 
         if not Profile.objects.select_for_update().filter(
                 user=user, balance__gte=value

@@ -22,7 +22,7 @@ class memoize_timeout:
 
 # @memoize_timeout(10*60)
 def convert(fsym, tsyms):
-    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS'}
+    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH'}
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
         raise Exception('currency not allowed')
     print(fsym, tsyms)
