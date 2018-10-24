@@ -91,6 +91,8 @@ def edit_eos_token(request):
     :return:
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
     if 'decimals' in request.query_params:
         contract_details.decimals = int(request.query_params['decimals'])
@@ -199,6 +201,8 @@ def edit_eos_account(request):
     :return:
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
     if 'stake_net_value' in request.query_params:
         contract_details.stake_net_value = int(request.query_params['stake_net_value'])
