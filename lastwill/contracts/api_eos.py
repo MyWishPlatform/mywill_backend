@@ -83,6 +83,30 @@ def show_eos_token(request):
 
 
 @api_view()
+def edit_eos_token(request):
+    '''
+    view for edit params in  eos token
+    :param request: contain contract id, editable field
+    (decimals, max_supply, addresses or token_short_name)
+    :return:
+    '''
+    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract_details = contract.get_details()
+    if 'decimals' in request.query_params:
+        contract_details.decimals = int(request.query_params['decimals'])
+    if 'maximum_supply' in request.query_params:
+        contract_details.maximum_supply = int(request.query_params['maximum_supply'])
+    if 'token_short_name' in request.query_params:
+        contract_details.token_short_name = request.query_params['token_short_name']
+    if 'token_account' in request.query_params:
+        contract_details.token_account = request.query_params['token_account']
+    if 'admin_address' in request.query_params:
+        contract_details.admin_address = request.query_params['admin_address']
+    contract_details.save()
+    return Response('ok')
+
+
+@api_view()
 def create_eos_account(request):
     '''
     view for create eos account
@@ -164,3 +188,29 @@ def show_eos_account(request):
     if contract_details.eos_contract.tx_hash:
         answer['tx_hash'] = contract_details.eos_contract.tx_hash
     return JsonResponse(answer)
+
+
+@api_view()
+def edit_eos_account(request):
+    '''
+    view for edit params in  eos account
+    :param request: contain contract id, editable field
+    (account_name, public_key, cpu, net, ram)
+    :return:
+    '''
+    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract_details = contract.get_details()
+    if 'stake_net_value' in request.query_params:
+        contract_details.stake_net_value = int(request.query_params['stake_net_value'])
+    if 'stake_cpu_value' in request.query_params:
+        contract_details.stake_cpu_value = int(request.query_params['stake_cpu_value'])
+    if 'buy_ram_kbytes' in request.query_params:
+        contract_details.buy_ram_kbytes = request.query_params['buy_ram_kbytes']
+    if 'account_name' in request.query_params:
+        contract_details.account_name = request.query_params['account_name']
+    if 'owner_public_key' in request.query_params:
+        contract_details.owner_public_key = request.query_params['owner_public_key']
+    if 'active_public_key' in request.query_params:
+        contract_details.active_public_key = request.query_params['active_public_key']
+    contract_details.save()
+    return Response('ok')
