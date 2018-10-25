@@ -54,7 +54,7 @@ def deploy_eos_token(request):
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
     if contract.state != 'CREATED':
-        raise ValidationError({'result': 2}, code=403)
+        raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -164,7 +164,7 @@ def deploy_eos_account(request):
     '''
     contract = Contract.objects.get(id=request.query_params.get('id'))
     if contract.state != 'CREATED':
-        raise ValidationError({'result': 2}, code=403)
+        raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
