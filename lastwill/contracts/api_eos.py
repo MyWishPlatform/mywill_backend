@@ -7,7 +7,7 @@ from lastwill.contracts.serializers import *
 from lastwill.contracts.models import *
 
 
-@api_view()
+@api_view(http_method_names=['POST'])
 def create_eos_token(request):
     '''
     view for create eos token
@@ -64,7 +64,7 @@ def deploy_eos_token(request):
     return Response('ok')
 
 
-@api_view()
+@api_view(http_method_names=['GET'])
 def show_eos_token(request):
     '''
     view for show eos token
@@ -108,7 +108,7 @@ def edit_eos_token(request):
     return Response('ok')
 
 
-@api_view()
+@api_view(http_method_names=['POST'])
 def create_eos_account(request):
     '''
     view for create eos account
@@ -135,19 +135,19 @@ def create_eos_account(request):
     )
     eos_contract.save()
     token_params = {}
-    token_params['account_name'] = request.query_params['account_name']
-    token_params['owner_public_key'] = request.query_params['owner_public_key']
-    token_params['active_public_key'] = request.query_params['active_public_key']
-    if 'stake_net_value' in request.query_params:
-        token_params['stake_net_value'] = request.query_params['stake_net_value']
+    token_params['account_name'] = request.data['account_name']
+    token_params['owner_public_key'] = request.data['owner_public_key']
+    token_params['active_public_key'] = request.data['active_public_key']
+    if 'stake_net_value' in request.data:
+        token_params['stake_net_value'] = request.data['stake_net_value']
     else:
         token_params['stake_net_value'] = '0.01'
-    if 'stake_cpu_value' in  request.query_params:
-        token_params['stake_cpu_value'] = request.query_params['stake_cpu_value']
+    if 'stake_cpu_value' in  request.data:
+        token_params['stake_cpu_value'] = request.data['stake_cpu_value']
     else:
         token_params['stake_cpu_value'] = '0.64'
-    if 'buy_ram_kbytes' in request.query_params:
-        token_params['buy_ram_kbytes'] = int(request.query_params['buy_ram_kbytes'])
+    if 'buy_ram_kbytes' in request.data:
+        token_params['buy_ram_kbytes'] = int(request.data['buy_ram_kbytes'])
     else:
         token_params['buy_ram_kbytes'] = 4
     token_params['eos_contract'] = eos_contract
@@ -174,7 +174,7 @@ def deploy_eos_account(request):
     return Response('ok')
 
 
-@api_view()
+@api_view(http_method_names=['GET'])
 def show_eos_account(request):
     '''
     view for show eos account
