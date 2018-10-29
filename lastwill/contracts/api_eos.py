@@ -57,7 +57,7 @@ def deploy_eos_token(request):
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
@@ -76,7 +76,7 @@ def show_eos_token(request):
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract = Contract.objects.get(id=int(request.query_params.get('id')))
     contract_details = contract.get_details()
     answer = {'state': contract.state, 'address': contract_details.token_account}
     answer['decimals'] = contract_details.decimals
@@ -95,7 +95,7 @@ def edit_eos_token(request):
     (decimals, max_supply, addresses or token_short_name)
     :return:
     '''
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
@@ -170,7 +170,7 @@ def deploy_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
@@ -189,7 +189,7 @@ def show_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract = Contract.objects.get(id=int(request.query_params.get('id')))
     contract_details = contract.get_details()
     answer = {'state': contract.state, 'address': contract_details.account_name}
     answer['net'] = contract_details.stake_net_value
@@ -208,7 +208,7 @@ def edit_eos_account(request):
     (account_name, public_key, cpu, net, ram)
     :return:
     '''
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
