@@ -1,4 +1,6 @@
 from django.http import JsonResponse
+from django.contrib.auth.models import User
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
@@ -12,9 +14,12 @@ def create_eos_token(request):
     '''
     view for create eos token
     :param request: contain token_short_name, token_account,
-    decimals, maximum_supply
+    decimals, maximum_supply, user_id
     :return: ok
     '''
+    user = User.objects.filter(id=request.data['user_id']).first()
+    if not user:
+        raise ValidationError({'result': 'Invalid user id'}, code=404)
     network = Network.objects.get(id=10)
     contract = Contract(
         state='CREATED',
@@ -22,7 +27,7 @@ def create_eos_token(request):
         contract_type=14,
         network=network,
         cost=0,
-        user_id=32
+        user=user
     )
     contract.save()
     eos_contract = EOSContract(
@@ -112,9 +117,12 @@ def edit_eos_token(request):
 def create_eos_account(request):
     '''
     view for create eos account
-    :param request: contain account_name, owner_public_key, active_public_key
+    :param request: contain account_name, owner_public_key, active_public_key, user_id
     :return: ok
     '''
+    user = User.objects.filter(id=request.data['user_id']).first()
+    if not user:
+        raise ValidationError({'result': 'Invalid user id'}, code=404)
     network = Network.objects.get(id=10)
     contract = Contract(
         state='CREATED',
@@ -122,7 +130,7 @@ def create_eos_account(request):
         contract_type=11,
         network=network,
         cost=0,
-        user_id=32
+        user=user
     )
     contract.save()
     eos_contract = EOSContract(
