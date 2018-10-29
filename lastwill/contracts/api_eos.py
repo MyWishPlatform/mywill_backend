@@ -87,7 +87,7 @@ def show_eos_token(request):
     return JsonResponse(answer)
 
 
-@api_view(http_method_names=['PUT, PATCH'])
+@api_view(http_method_names=['PUT', 'PATCH'])
 def edit_eos_token(request):
     '''
     view for edit params in  eos token
@@ -200,7 +200,7 @@ def show_eos_account(request):
     return JsonResponse(answer)
 
 
-@api_view(http_method_names=['PUT, PATCH'])
+@api_view(http_method_names=['PUT', 'PATCH'])
 def edit_eos_account(request):
     '''
     view for edit params in  eos account
