@@ -7,12 +7,12 @@ def snapshot_get_value(request):
     address = request.query_params['address']
     if request.query_params['blockchain'] == 'eth':
         try:
-            return Response({'result': SnapshotRow.objects.get(eth_address=address.lower()).value})
+            return Response({'result': str(SnapshotRow.objects.get(eth_address=address.lower()).value)})
         except:
             return Response({'result': 0})
     elif request.query_params['blockchain'] == 'eos':
         try:
-            return Response({'result': SnapshotEOSRow.objects.get(eos_address=address).value})
+            return Response({'result': str(SnapshotEOSRow.objects.get(eos_address=address).value)})
         except:
             return Response({'result': 0})
     else:
