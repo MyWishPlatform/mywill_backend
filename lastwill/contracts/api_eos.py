@@ -35,24 +35,24 @@ def create_eos_token(request):
     )
     eos_contract.save()
     token_params = {}
-    token_params['decimals'] = int(request.query_params['decimals'])
-    token_params['maximum_supply'] = int(request.query_params['maximum_supply'])
-    token_params['token_short_name'] = request.query_params['token_short_name']
-    token_params['token_account'] = request.query_params['token_account']
-    token_params['admin_address'] = request.query_params['admin_address']
+    token_params['decimals'] = int(request.data['decimals'])
+    token_params['maximum_supply'] = int(request.data['maximum_supply'])
+    token_params['token_short_name'] = request.data['token_short_name']
+    token_params['token_account'] = request.data['token_account']
+    token_params['admin_address'] = request.data['admin_address']
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSTokenSASerializer().create(contract, token_params)
     return Response('ok')
 
 
-@api_view()
+@api_view(http_method_names=['POST'])
 def deploy_eos_token(request):
     '''
     view for deploy eos token
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract = Contract.objects.get(id=request.data.get('id'))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
@@ -82,7 +82,7 @@ def show_eos_token(request):
     return JsonResponse(answer)
 
 
-@api_view()
+@api_view(http_method_names=['PUT, PATCH'])
 def edit_eos_token(request):
     '''
     view for edit params in  eos token
@@ -90,20 +90,20 @@ def edit_eos_token(request):
     (decimals, max_supply, addresses or token_short_name)
     :return:
     '''
-    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract = Contract.objects.get(id=request.data.get('id'))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
-    if 'decimals' in request.query_params:
-        contract_details.decimals = int(request.query_params['decimals'])
-    if 'maximum_supply' in request.query_params:
-        contract_details.maximum_supply = int(request.query_params['maximum_supply'])
-    if 'token_short_name' in request.query_params:
-        contract_details.token_short_name = request.query_params['token_short_name']
-    if 'token_account' in request.query_params:
-        contract_details.token_account = request.query_params['token_account']
-    if 'admin_address' in request.query_params:
-        contract_details.admin_address = request.query_params['admin_address']
+    if 'decimals' in request.data:
+        contract_details.decimals = int(request.data['decimals'])
+    if 'maximum_supply' in request.data:
+        contract_details.maximum_supply = int(request.data['maximum_supply'])
+    if 'token_short_name' in request.data:
+        contract_details.token_short_name = request.data['token_short_name']
+    if 'token_account' in request.data:
+        contract_details.token_account = request.data['token_account']
+    if 'admin_address' in request.data:
+        contract_details.admin_address = request.data['admin_address']
     contract_details.save()
     return Response('ok')
 
@@ -155,14 +155,14 @@ def create_eos_account(request):
     return Response('ok')
 
 
-@api_view()
+@api_view(http_method_names=['POST'])
 def deploy_eos_account(request):
     '''
     view for deploy eos ac count
     :param request: contain contract id
     :return:
     '''
-    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract = Contract.objects.get(id=request.data.get('id'))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
@@ -192,7 +192,7 @@ def show_eos_account(request):
     return JsonResponse(answer)
 
 
-@api_view()
+@api_view(http_method_names=['PUT, PATCH'])
 def edit_eos_account(request):
     '''
     view for edit params in  eos account
@@ -200,21 +200,21 @@ def edit_eos_account(request):
     (account_name, public_key, cpu, net, ram)
     :return:
     '''
-    contract = Contract.objects.get(id=request.query_params.get('id'))
+    contract = Contract.objects.get(id=request.data.get('id'))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
     contract_details = contract.get_details()
-    if 'stake_net_value' in request.query_params:
-        contract_details.stake_net_value = int(request.query_params['stake_net_value'])
-    if 'stake_cpu_value' in request.query_params:
-        contract_details.stake_cpu_value = int(request.query_params['stake_cpu_value'])
-    if 'buy_ram_kbytes' in request.query_params:
-        contract_details.buy_ram_kbytes = request.query_params['buy_ram_kbytes']
-    if 'account_name' in request.query_params:
-        contract_details.account_name = request.query_params['account_name']
-    if 'owner_public_key' in request.query_params:
-        contract_details.owner_public_key = request.query_params['owner_public_key']
-    if 'active_public_key' in request.query_params:
-        contract_details.active_public_key = request.query_params['active_public_key']
+    if 'stake_net_value' in request.data:
+        contract_details.stake_net_value = int(request.data['stake_net_value'])
+    if 'stake_cpu_value' in request.data:
+        contract_details.stake_cpu_value = int(request.data['stake_cpu_value'])
+    if 'buy_ram_kbytes' in request.data:
+        contract_details.buy_ram_kbytes = request.data['buy_ram_kbytes']
+    if 'account_name' in request.data:
+        contract_details.account_name = request.data['account_name']
+    if 'owner_public_key' in request.data:
+        contract_details.owner_public_key = request.data['owner_public_key']
+    if 'active_public_key' in request.data:
+        contract_details.active_public_key = request.data['active_public_key']
     contract_details.save()
     return Response('ok')
