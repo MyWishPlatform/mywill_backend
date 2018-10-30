@@ -208,7 +208,7 @@ def edit_eos_account(request):
     (account_name, public_key, cpu, net, ram)
     :return:
     '''
-    print(request.body)
+    print(request.body, flush=True)
     params = json.loads(request.body)
     contract = Contract.objects.get(id=int(params['id']))
     if contract.state != 'CREATED':
