@@ -20,7 +20,7 @@ def check_auth(user_id, user_secret_key):
     ex_service = ExternalService.objects.filter(user=user).first()
     if not ex_service:
         raise ValidationError({'result': 'This service is not allowed'}, code=404)
-    hash = hmac.new(ex_service.secret, ex_service.old_hmac, hashlib.sha256)
+    hash = hmac.new(ex_service.secret.encode(), ex_service.old_hmac.encode(), hashlib.sha256)
     secret_key = hash.hexdigest()
     if secret_key == user_secret_key:
         ex_service.old_hmac = secret_key
