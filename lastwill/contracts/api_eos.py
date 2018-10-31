@@ -13,14 +13,19 @@ from lastwill.contracts.models import *
 from lastwill.other.models import *
 
 
-def check_auth(user_id, user_secret_key):
+def check_auth(user_id, user_secret_key, params):
     user = User.objects.filter(id=user_id).first()
     if not user:
         raise ValidationError({'result': 'Invalid user id'}, code=404)
     ex_service = ExternalService.objects.filter(user=user).first()
     if not ex_service:
         raise ValidationError({'result': 'This service is not allowed'}, code=404)
-    hash = hmac.new(ex_service.secret.encode(), ex_service.old_hmac.encode(), hashlib.sha256)
+    str_params = '?' + '&'.join([k + '=' + v for k, v in params.items()])
+    hash = hmac.new(
+        ex_service.secret.encode(),
+        (ex_service.old_hmac + str_params).encode(),
+        hashlib.sha256
+    )
     secret_key = hash.hexdigest()
     if secret_key == user_secret_key:
         ex_service.old_hmac = secret_key
@@ -42,7 +47,7 @@ def create_eos_token(request):
     user_secret_key = request.data['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.data)
     network = Network.objects.get(id=10)
     contract = Contract(
         state='CREATED',
@@ -84,7 +89,7 @@ def deploy_eos_token(request):
     user_secret_key = request.data['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.data)
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
@@ -109,7 +114,7 @@ def show_eos_token(request):
     user_secret_key = request.query_params['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.query_params)
     contract = Contract.objects.get(id=int(request.query_params.get('id')))
     contract_details = contract.get_details()
     answer = {'state': contract.state, 'address': contract_details.token_account}
@@ -133,7 +138,7 @@ def edit_eos_token(request):
     user_secret_key = request.data['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.data)
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
@@ -163,7 +168,7 @@ def create_eos_account(request):
     user_secret_key = request.data['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.data)
     network = Network.objects.get(id=10)
     contract = Contract(
         state='CREATED',
@@ -215,7 +220,7 @@ def deploy_eos_account(request):
     user_secret_key = request.data['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.data)
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
@@ -239,7 +244,7 @@ def show_eos_account(request):
     user_secret_key = request.query_params['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.query_params)
     contract = Contract.objects.get(id=int(request.query_params.get('id')))
     contract_details = contract.get_details()
     answer = {'state': contract.state, 'address': contract_details.account_name}
@@ -263,7 +268,7 @@ def edit_eos_account(request):
     user_secret_key = request.data['secret_key']
     if not user_secret_key:
         raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key)
+    check_auth(user_id, user_secret_key, request.data)
     params = json.loads(request.body)
     contract = Contract.objects.get(id=int(params['id']))
     if contract.state != 'CREATED':
