@@ -20,7 +20,7 @@ def check_auth(user_id, user_secret_key, params):
     ex_service = ExternalService.objects.filter(user=user).first()
     if not ex_service:
         raise ValidationError({'result': 'This service is not allowed'}, code=404)
-    str_params = '?' + '&'.join([k + '=' + v for k, v in params.items()])
+    str_params = '?' + '&'.join([k + '=' + v for k, v in params.items() if k != 'secret_key'])
     hash = hmac.new(
         ex_service.secret.encode(),
         (ex_service.old_hmac + str_params).encode(),
