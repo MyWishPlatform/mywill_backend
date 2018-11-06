@@ -2,6 +2,7 @@ import hashlib
 import hmac
 
 from django.http import JsonResponse
+from django.db.models import F
 from django.contrib.auth.models import User
 
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.serializers import *
 from lastwill.contracts.models import *
 from lastwill.other.models import *
+from lastwill.profile.models import *
 
 
 def check_auth(user_id, user_secret_key, params):
@@ -93,6 +95,10 @@ def deploy_eos_token(request):
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
+    if not Profile.objects.select_for_update().filter(
+            user_id=user_id, balance__gte=20000 *10**18
+    ).update(balance=F('balance') - 20000 *10**18):
+        raise Exception('no money')
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
@@ -176,7 +182,7 @@ def create_eos_account(request):
         contract_type=11,
         network=network,
         cost=0,
-        user=user
+        user_id=user_id
     )
     contract.save()
     eos_contract = EOSContract(
@@ -224,6 +230,10 @@ def deploy_eos_account(request):
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
+    if not Profile.objects.select_for_update().filter(
+            user_id=user_id, balance__gte=200 *10**18
+    ).update(balance=F('balance') - 200 *10**18):
+        raise Exception('no money')
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
