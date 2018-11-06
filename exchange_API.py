@@ -30,10 +30,12 @@ def convert(fsym, tsyms):
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
     )
-        if fsym == 'EOSIS':
+        if fsym == 'EOSISH':
             fsym = 'EOS'
         else:
             tsyms = 'EOS'
+            if tsyms == fsym:
+                return {'EOSISH': 1 / eosish_factor}
             revesre_convert = True
             eosish_factor = 1 / eosish_factor
 
