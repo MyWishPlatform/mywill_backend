@@ -596,7 +596,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         result = implement_cleos_command(command1)
         ram = result['rows'][0]
         ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0])
-        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4)
+        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4) * 10 ** 4
 
     @classmethod
     def min_cost(cls):
@@ -608,7 +608,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     def min_cost_eos(cls):
         network = Network.objects.get(name='EOS_MAINNET')
         cost = cls.calc_cost_eos({'address_count': 1}, network)
-        return cost * 10**4
+        return cost
 
     @logging
     @blocking

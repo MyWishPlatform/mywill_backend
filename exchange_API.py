@@ -32,6 +32,8 @@ def convert(fsym, tsyms):
         )
         if fsym == 'EOSISH':
             fsym = 'EOS'
+        if tsyms == fsym:
+            return {'EOS': eosish_factor}
         else:
             tsyms = 'EOS'
             if tsyms == fsym:
