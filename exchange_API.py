@@ -29,7 +29,7 @@ def convert(fsym, tsyms):
         eosish_factor = float(
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
-    )
+        )
         if fsym == 'EOSISH':
             fsym = 'EOS'
         else:
