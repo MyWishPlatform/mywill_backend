@@ -19,17 +19,19 @@ def check_all():
     for contract in Contract.objects.filter(
             contract_type__in=(0, 1, 2), state='ACTIVE'
     ):
+        details = contract.get_details()
         if contract.contract_type == 2:
-            details = contract.get_details()
             if details.date < timezone.now():
                 send_in_pika(contract)
-        details = contract.get_details()
-        if details.active_to < timezone.now():
-            contract.state='EXPIRED'
-            contract.save()
-        elif details.next_check and details.next_check <= timezone.now():
-            send_in_pika(contract)
-        send_reminders(contract)
+                contract.state = 'DONE'
+                contract.save()
+        else:
+            if details.active_to < timezone.now():
+                contract.state='EXPIRED'
+                contract.save()
+            elif details.next_check and details.next_check <= timezone.now():
+                send_in_pika(contract)
+            send_reminders(contract)
     print('checked all', flush=True)
 
 
