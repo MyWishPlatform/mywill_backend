@@ -74,7 +74,7 @@ class ContractViewSet(ModelViewSet):
         if eos is not None:
             eos = int(eos)
             if eos:
-                result = result.filter(contract_type__in=(10, 11, 12, 13))
+                result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
             else:
                 result = result.exclude(contract_type__in=(10, 12))
         if self.request.user.is_staff:
@@ -620,7 +620,7 @@ def get_eos_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(eos_cost * 10),
+        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
         'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
@@ -647,7 +647,7 @@ def get_eos_airdrop_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(eos_cost * 10),
+        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
         'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
