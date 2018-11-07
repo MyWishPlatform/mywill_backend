@@ -17,35 +17,18 @@ import email_messages
 def check_all():
     print('check_all method', flush=True)
     for contract in Contract.objects.filter(
-            contract_type__in=(0,1), state='ACTIVE'
+            contract_type__in=(0, 1, 2), state='ACTIVE'
     ):
+        if contract.contract_type == 2:
+            details = contract.get_details()
+            if details.date < timezone.now():
+                send_in_pika(contract)
         details = contract.get_details()
         if details.active_to < timezone.now():
             contract.state='EXPIRED'
             contract.save()
         elif details.next_check and details.next_check <= timezone.now():
-            print('checking contract', contract.id, flush=True)
-            connection = pika.BlockingConnection(pika.ConnectionParameters(
-                'localhost',
-                5672,
-                'mywill',
-                pika.PlainCredentials('java', 'java'),
-            ))
-
-            queue = NETWORKS[contract.network.name]['queue']
-            channel = connection.channel()
-            channel.queue_declare(queue=queue, durable=True, auto_delete=False,
-                                  exclusive=False)
-
-            channel.basic_publish(
-                exchange='',
-                routing_key=queue,
-                body=json.dumps(
-                    {'status': 'COMMITTED', 'contractId': contract.id}),
-                properties=pika.BasicProperties(type='check_contract'),
-            )
-            print('send check contract')
-            connection.close()
+            send_in_pika(contract)
         send_reminders(contract)
     print('checked all', flush=True)
 
@@ -81,6 +64,29 @@ def send_reminders(contract):
                         DEFAULT_FROM_EMAIL,
                         [contract.user.email]
                     )
+
+
+def send_in_pika(contract):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        'localhost',
+        5672,
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
+    queue = NETWORKS[contract.network.name]['queue']
+    channel = connection.channel()
+    channel.queue_declare(queue=queue, durable=True,
+                          auto_delete=False,
+                          exclusive=False)
+    channel.basic_publish(
+        exchange='',
+        routing_key=queue,
+        body=json.dumps(
+            {'status': 'COMMITTED', 'contractId': contract.id}),
+        properties=pika.BasicProperties(type='check_contract'),
+    )
+    print('send check contract')
+    connection.close()
 
 
 if __name__ == '__main__':
