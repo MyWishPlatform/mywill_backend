@@ -22,7 +22,7 @@ def create_payment(uid, tx, currency, amount):
             requests.get('https://api.chaince.com/tickers/eosisheos/',
                          headers={'accept-version': 'v1'}).json()['price']
         )
-        value = amount * eosish_exchange_rate
+        value = amount / eosish_exchange_rate
     else:
         value = amount if currency == 'WISH' else to_wish(
             currency, amount

@@ -44,7 +44,7 @@ def implement_cleos_command(command_list):
             stdout, stderr = proc.communicate()
         finally:
             timer.cancel()
-        print(stdout, stderr, flush=True)
+#        print(stdout, stderr, flush=True)
         result = stdout.decode()
         if result:
             break
@@ -198,7 +198,7 @@ class ContractDetailsEOSAccount(CommonDetails):
                 float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
                  + float(kwargs['stake_cpu_value'])
-        ) * 2 + 0.9
+        ) * 2 + 0.3
         print('eos cost', eos_cost, flush=True)
         return round(eos_cost, 0) * 10 ** 4
 
