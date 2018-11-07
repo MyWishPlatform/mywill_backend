@@ -49,6 +49,7 @@ def convert(fsym, tsyms):
     ).content.decode())
     if revesre_convert:
         answer = {'EOSISH': answer['EOS']}
+        tsyms = 'EOSISH'
     answer[tsyms] = answer[tsyms] * eosish_factor
     return answer
 
