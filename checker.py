@@ -21,8 +21,9 @@ def check_all():
     ):
         details = contract.get_details()
         if contract.contract_type == 2:
-            if details.date < timezone.now():
-                send_in_pika(contract)
+            # if details.date < timezone.now():
+            #     send_in_pika(contract)
+            pass
         else:
             if details.active_to < timezone.now():
                 contract.state='EXPIRED'
