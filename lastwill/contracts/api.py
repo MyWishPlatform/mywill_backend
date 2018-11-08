@@ -232,6 +232,10 @@ def get_currency_statistics():
     eth_info = json.loads(requests.get(
         'https://api.coinmarketcap.com/v1/ticker/ethereum/'
     ).content.decode())[0]
+    eosish_info = float(
+        requests.get('https://api.chaince.com/tickers/eosisheos/',
+                     headers={'accept-version': 'v1'}).json()['price']
+        )
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -261,7 +265,9 @@ def get_currency_statistics():
     'eos_rank': eos_info['rank'],
     'mywish_rank': mywish_info['rank'],
     'bitcoin_rank': btc_info['rank'],
-    'eth_rank': eth_info['rank']
+    'eth_rank': eth_info['rank'],
+    'eosish_price_eos': eosish_info,
+    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10)
     }
     return answer
 

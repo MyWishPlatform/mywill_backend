@@ -23,8 +23,6 @@ def check_all():
         if contract.contract_type == 2:
             if details.date < timezone.now():
                 send_in_pika(contract)
-                contract.state = 'DONE'
-                contract.save()
         else:
             if details.active_to < timezone.now():
                 contract.state='EXPIRED'
