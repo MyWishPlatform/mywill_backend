@@ -236,6 +236,7 @@ def get_currency_statistics():
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
         )
+
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -258,7 +259,7 @@ def get_currency_statistics():
         float(eth_info['percent_change_24h']), 10
     ),
     'eos_price_usd':  round(
-        float(eos_info['price_usd'])),
+        float(eos_info['price_usd']), 10),
     'eos_percent_change_24h': round(
         float(eos_info['percent_change_24h']), 10
         ),
