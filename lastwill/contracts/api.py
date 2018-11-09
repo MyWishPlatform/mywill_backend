@@ -236,18 +236,18 @@ def get_currency_statistics():
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
         )
-    eth_account_balance = json.loads(requests.get(
+    eth_account_balance = float(json.loads(requests.get(
         'https://api.etherscan.io/api?module=account&action=balance'
         '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
         '&tag=latest'
         '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
-                                    )['result']/10**18
-    eth_test_account_balance = json.loads(requests.get(
+                                    )['result']) / 10 ** 18
+    eth_test_account_balance = float(json.loads(requests.get(
         'https://api-ropsten.etherscan.io/api?module=account&action=balance'
         '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
         '&tag=latest'
         '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
-                                     )['result'] / 10 ** 18
+                                     )['result']) / 10 ** 18
     eos_account_balance = json.loads(requests.get(
         'https://api.eospark.com/api?module=account&action=get_account_balance'
         '&apikey={api_key}'
