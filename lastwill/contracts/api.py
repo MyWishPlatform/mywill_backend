@@ -19,12 +19,12 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -236,6 +236,65 @@ def get_currency_statistics():
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
         )
+    eth_account_balance = json.loads(requests.get(
+        'https://api.etherscan.io/api?module=account&action=balance'
+        '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
+        '&tag=latest'
+        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+                                    )['result']/10**18
+    eth_test_account_balance = json.loads(requests.get(
+        'https://api-ropsten.etherscan.io/api?module=account&action=balance'
+        '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
+        '&tag=latest'
+        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+                                     )['result'] / 10 ** 18
+    eos_account_balance = json.loads(requests.get(
+        'https://api.eospark.com/api?module=account&action=get_account_balance'
+        '&apikey={api_key}'
+        '&account=deploymywish'.format(api_key=EOSPARK_API_KEY)).content.decode()
+                                     )['data']['balance']
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_TESTNET']['host']),
+        str(NETWORKS['EOS_TESTNET']['port']))
+    wallet_name = NETWORKS['EOS_TESTNET']['wallet']
+    password = NETWORKS['EOS_TESTNET']['eos_password']
+    unlock_eos_account(wallet_name, password)
+    command = [
+        'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token', 'mywishiotest'
+    ]
+    print('command', command)
+
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        # print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            eos_test_account_balance = float(result.split('\n')[0].split(' ')[0])
+            break
+    else:
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+    command = [
+        'cleos', '-u', eos_url, 'get', 'account', 'mywishtokens' '-j'
+    ]
+    builder_params = implement_cleos_command(command)
+    eos_cpu_test_builder = builder_params['cpu_limit']['available']
+    eos_net_test_builder = builder_params['net_limit']['available']
+    eos_ram_test_builder = builder_params['ram_quota'] - builder_params['ram_usage']
+
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port']))
+    command = [
+        'cleos', '-u', eos_url, 'get', 'account', 'buildertoken' '-j'
+    ]
+    builder_params = implement_cleos_command(command)
+    eos_cpu_builder = builder_params['cpu_limit']['available']
+    eos_net_builder = builder_params['net_limit']['available']
+    eos_ram_builder = builder_params['ram_quota'] - builder_params['ram_usage']
 
     answer = {
         'wish_price_usd': round(
@@ -268,7 +327,17 @@ def get_currency_statistics():
     'bitcoin_rank': btc_info['rank'],
     'eth_rank': eth_info['rank'],
     'eosish_price_eos': eosish_info,
-    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10)
+    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
+    'eth_account_balance': eth_account_balance,
+    'eth_test_account_balance': eth_test_account_balance,
+    'eos_account_balance':  eos_account_balance,
+    'eos_test_account_balance': eos_test_account_balance,
+    'eos_cpu_test_builder': eos_cpu_test_builder,
+    'eos_net_test_builder': eos_net_test_builder,
+    'eos_ram_test_builder': eos_ram_test_builder,
+    'eos_cpu_builder': eos_cpu_builder,
+    'eos_net_builder': eos_net_builder,
+    'eos_ram_builder': eos_ram_builder
     }
     return answer
 
