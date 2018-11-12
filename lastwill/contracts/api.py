@@ -274,6 +274,17 @@ def get_currency_statistics():
 
 
 def get_balances_statistics():
+    neo_info = json.loads(requests.get(
+        'https://neoscan-testnet.io/api/test_net/v1/get_balance/'
+        '{address}'.format(address=NETWORKS['NEO_TESTNET']['address'])
+    ).content.decode())
+    neo_balance = 0.0
+    gas_balance = 0.0
+    for curr in neo_info['balance']:
+        if curr['asset'] == 'GAS':
+            gas_balance = curr['amount']
+        if curr['asset'] == 'NEO':
+            neo_balance = curr['amount']
     eth_account_balance = float(json.loads(requests.get(
         'https://api.etherscan.io/api?module=account&action=balance'
         '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
@@ -387,7 +398,9 @@ def get_balances_statistics():
     'eos_ram_test_builder': eos_ram_test_builder,
     'eos_cpu_builder': eos_cpu_builder,
     'eos_net_builder': eos_net_builder,
-    'eos_ram_builder': eos_ram_builder
+    'eos_ram_builder': eos_ram_builder,
+    'neo_test_balance': neo_balance,
+    'gas_test_balance': gas_balance
     }
 
 
