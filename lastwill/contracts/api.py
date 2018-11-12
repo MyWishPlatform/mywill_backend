@@ -281,9 +281,21 @@ def get_currency_statistics():
     ]
     time.sleep(CLEOS_TIME_COOLDOWN)
     builder_params = implement_cleos_command(command)
-    eos_cpu_test_builder = builder_params['cpu_limit']['available']
-    eos_net_test_builder = builder_params['net_limit']['available']
-    eos_ram_test_builder = builder_params['ram_quota'] - builder_params['ram_usage']
+    if builder_params['cpu_limit']['used'] == 0:
+        eos_cpu_test_builder = 0
+    else:
+        eos_cpu_test_builder = (
+                builder_params['cpu_limit']['max']/builder_params['cpu_limit']['used'] * 100.0
+        )
+    if builder_params['net_limit']['used'] == 0:
+        eos_net_test_builder = 0
+    else:
+        eos_net_test_builder = (
+            builder_params['net_limit']['max']/builder_params['net_limit']['used'] * 100.0
+        )
+    eos_ram_test_builder = (
+                builder_params['ram_quota'] - builder_params['ram_usage']
+    ) / 1024
 
     eos_url = 'http://%s:%s' % (
         str(NETWORKS['EOS_MAINNET']['host']),
@@ -298,9 +310,21 @@ def get_currency_statistics():
     password = NETWORKS['EOS_MAINNET']['eos_password']
     unlock_eos_account(wallet_name, password)
     builder_params = implement_cleos_command(command)
-    eos_cpu_builder = builder_params['cpu_limit']['available']
-    eos_net_builder = builder_params['net_limit']['available']
-    eos_ram_builder = builder_params['ram_quota'] - builder_params['ram_usage']
+    if builder_params['cpu_limit']['used'] == 0:
+        eos_cpu_builder = 0
+    else:
+        eos_cpu_builder = (
+                builder_params['cpu_limit']['max']/builder_params['cpu_limit']['used'] * 100.0
+        )
+    if builder_params['net_limit']['used'] == 0:
+        eos_net_builder = 0
+    else:
+        eos_net_builder = (
+            builder_params['net_limit']['max']/builder_params['net_limit']['used'] * 100.0
+        )
+    eos_ram_builder = (
+            builder_params['ram_quota'] - builder_params['ram_usage']
+    ) / 1024
     command = [
         'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
         account
