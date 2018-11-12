@@ -274,7 +274,7 @@ def get_currency_statistics():
             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
 
     command = [
-        'cleos', '-u', eos_url, 'get', 'account', 'mywishtokens' '-j'
+        'cleos', '-u', eos_url, 'get', 'account', 'mywishtokens', '-j'
     ]
     time.sleep(CLEOS_TIME_COOLDOWN)
     builder_params = implement_cleos_command(command)
