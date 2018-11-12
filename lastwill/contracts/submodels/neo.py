@@ -75,7 +75,7 @@ class ContractDetailsNeo(CommonDetails):
         }}
         for th in token_holders:
             preproc_params["constants"]["D_PREMINT_SCRIPT_HASHES"].append(
-                list(binascii.unhexlify(address_to_scripthash(th.address)))
+                list(binascii.unhexlify(address_to_scripthash(th.address)))[::-1]
             )
             amount = [
                 int(x) for x in int(th.amount).to_bytes(
@@ -303,7 +303,7 @@ class ContractDetailsNeoICO(CommonDetails):
         }}
         for th in token_holders:
             preproc_params["constants"]["D_PREMINT_SCRIPT_HASHES"].append(
-                list(binascii.unhexlify(address_to_scripthash(th.address)))
+                list(binascii.unhexlify(address_to_scripthash(th.address)))[::-1]
             )
             amount = [
                 int(x) for x in int(th.amount).to_bytes(
