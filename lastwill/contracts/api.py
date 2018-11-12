@@ -248,11 +248,6 @@ def get_currency_statistics():
         '&tag=latest'
         '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
                                      )['result']) / 10 ** 18
-    eos_account_balance = json.loads(requests.get(
-        'https://api.eospark.com/api?module=account&action=get_account_balance'
-        '&apikey={api_key}'
-        '&account=deploymywish'.format(api_key=EOSPARK_API_KEY)).content.decode()
-                                     )['data']['balance']
     eos_url = 'http://%s:%s' % (
         str(NETWORKS['EOS_TESTNET']['host']),
         str(NETWORKS['EOS_TESTNET']['port']))
@@ -291,11 +286,32 @@ def get_currency_statistics():
     command = [
         'cleos', '-u', eos_url, 'get', 'account', 'buildertoken' '-j'
     ]
+    wallet_name = NETWORKS['EOS_MAINNET']['wallet']
+    password = NETWORKS['EOS_MAINNET']['eos_password']
+    unlock_eos_account(wallet_name, password)
     builder_params = implement_cleos_command(command)
     eos_cpu_builder = builder_params['cpu_limit']['available']
     eos_net_builder = builder_params['net_limit']['available']
     eos_ram_builder = builder_params['ram_quota'] - builder_params['ram_usage']
+    command = [
+        'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
+        'deploymywish'
+    ]
+    print('command', command)
 
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        # print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            eos_account_balance = float(
+                result.split('\n')[0].split(' ')[0])
+            break
+    else:
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
