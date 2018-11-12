@@ -1,3 +1,4 @@
+import time
 import datetime
 from os import path
 from subprocess import Popen, PIPE
@@ -19,7 +20,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
@@ -275,6 +276,7 @@ def get_currency_statistics():
     command = [
         'cleos', '-u', eos_url, 'get', 'account', 'mywishtokens' '-j'
     ]
+    time.sleep(CLEOS_TIME_COOLDOWN)
     builder_params = implement_cleos_command(command)
     eos_cpu_test_builder = builder_params['cpu_limit']['available']
     eos_net_test_builder = builder_params['net_limit']['available']
