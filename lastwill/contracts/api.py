@@ -282,10 +282,10 @@ def get_currency_statistics():
     time.sleep(CLEOS_TIME_COOLDOWN)
     builder_params = implement_cleos_command(command)
     eos_cpu_test_builder = (
-                builder_params['cpu_limit']['user'] * 100.0 / builder_params['cpu_limit']['max']
+                builder_params['cpu_limit']['used'] * 100.0 / builder_params['cpu_limit']['max']
         )
     eos_net_test_builder = (
-            builder_params['net_limit']['user'] * 100.0 / builder_params['net_limit']['max']
+            builder_params['net_limit']['used'] * 100.0 / builder_params['net_limit']['max']
         )
     eos_ram_test_builder = (
                 builder_params['ram_quota'] - builder_params['ram_usage']
@@ -305,10 +305,10 @@ def get_currency_statistics():
     unlock_eos_account(wallet_name, password)
     builder_params = implement_cleos_command(command)
     eos_cpu_builder = (
-                builder_params['cpu_limit']['user'] * 100.0 / builder_params['cpu_limit']['max']
+                builder_params['cpu_limit']['used'] * 100.0 / builder_params['cpu_limit']['max']
         )
     eos_net_builder = (
-            builder_params['net_limit']['user'] * 100.0 / builder_params['net_limit']['max']
+            builder_params['net_limit']['used'] * 100.0 / builder_params['net_limit']['max']
         )
     eos_ram_builder = (
             builder_params['ram_quota'] - builder_params['ram_usage']
