@@ -286,7 +286,7 @@ def get_currency_statistics():
         str(NETWORKS['EOS_MAINNET']['host']),
         str(NETWORKS['EOS_MAINNET']['port']))
     command = [
-        'cleos', '-u', eos_url, 'get', 'account', 'buildertoken' '-j'
+        'cleos', '-u', eos_url, 'get', 'account', 'buildertoken', '-j'
     ]
     wallet_name = NETWORKS['EOS_MAINNET']['wallet']
     password = NETWORKS['EOS_MAINNET']['eos_password']
