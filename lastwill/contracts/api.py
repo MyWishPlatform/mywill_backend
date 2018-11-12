@@ -237,101 +237,6 @@ def get_currency_statistics():
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
         )
-    eth_account_balance = float(json.loads(requests.get(
-        'https://api.etherscan.io/api?module=account&action=balance'
-        '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
-        '&tag=latest'
-        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
-                                    )['result']) / 10 ** 18
-    eth_test_account_balance = float(json.loads(requests.get(
-        'https://api-ropsten.etherscan.io/api?module=account&action=balance'
-        '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
-        '&tag=latest'
-        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
-                                     )['result']) / 10 ** 18
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_TESTNET']['host']),
-        str(NETWORKS['EOS_TESTNET']['port'])
-    )
-    wallet_name = NETWORKS['EOS_TESTNET']['wallet']
-    password = NETWORKS['EOS_TESTNET']['eos_password']
-    account = NETWORKS['EOS_TESTNET']['address']
-    token = NETWORKS['EOS_TESTNET']['token_address']
-    unlock_eos_account(wallet_name, password)
-    command = [
-        'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token', account
-    ]
-    print('command', command)
-
-    for attempt in range(EOS_ATTEMPTS_COUNT):
-        print('attempt', attempt, flush=True)
-        proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = proc.communicate()
-        # print(stdout, stderr, flush=True)
-        result = stdout.decode()
-        if result:
-            eos_test_account_balance = float(result.split('\n')[0].split(' ')[0])
-            break
-    else:
-        raise Exception(
-            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
-
-    command = [
-        'cleos', '-u', eos_url, 'get', 'account', token, '-j'
-    ]
-    time.sleep(CLEOS_TIME_COOLDOWN)
-    builder_params = implement_cleos_command(command)
-    eos_cpu_test_builder = (
-                builder_params['cpu_limit']['used'] * 100.0 / builder_params['cpu_limit']['max']
-        )
-    eos_net_test_builder = (
-            builder_params['net_limit']['used'] * 100.0 / builder_params['net_limit']['max']
-        )
-    eos_ram_test_builder = (
-                builder_params['ram_quota'] - builder_params['ram_usage']
-    ) / 1024
-
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
-    )
-    account = NETWORKS['EOS_MAINNET']['address']
-    token = NETWORKS['EOS_MAINNET']['token_address']
-    command = [
-        'cleos', '-u', eos_url, 'get', 'account', token, '-j'
-    ]
-    wallet_name = NETWORKS['EOS_MAINNET']['wallet']
-    password = NETWORKS['EOS_MAINNET']['eos_password']
-    unlock_eos_account(wallet_name, password)
-    builder_params = implement_cleos_command(command)
-    eos_cpu_builder = (
-                builder_params['cpu_limit']['used'] * 100.0 / builder_params['cpu_limit']['max']
-        )
-    eos_net_builder = (
-            builder_params['net_limit']['used'] * 100.0 / builder_params['net_limit']['max']
-        )
-    eos_ram_builder = (
-            builder_params['ram_quota'] - builder_params['ram_usage']
-    ) / 1024
-    command = [
-        'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
-        account
-    ]
-    print('command', command)
-
-    for attempt in range(EOS_ATTEMPTS_COUNT):
-        print('attempt', attempt, flush=True)
-        proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = proc.communicate()
-        # print(stdout, stderr, flush=True)
-        result = stdout.decode()
-        if result:
-            eos_account_balance = float(
-                result.split('\n')[0].split(' ')[0])
-            break
-    else:
-        raise Exception(
-            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -363,7 +268,116 @@ def get_currency_statistics():
     'bitcoin_rank': btc_info['rank'],
     'eth_rank': eth_info['rank'],
     'eosish_price_eos': eosish_info,
-    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
+    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10)
+    }
+    return answer
+
+
+def get_balances_statistics():
+    eth_account_balance = float(json.loads(requests.get(
+        'https://api.etherscan.io/api?module=account&action=balance'
+        '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
+        '&tag=latest'
+        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+                                           )['result']) / 10 ** 18
+    eth_test_account_balance = float(json.loads(requests.get(
+        'https://api-ropsten.etherscan.io/api?module=account&action=balance'
+        '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
+        '&tag=latest'
+        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+                                                )['result']) / 10 ** 18
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_TESTNET']['host']),
+        str(NETWORKS['EOS_TESTNET']['port'])
+    )
+    wallet_name = NETWORKS['EOS_TESTNET']['wallet']
+    password = NETWORKS['EOS_TESTNET']['eos_password']
+    account = NETWORKS['EOS_TESTNET']['address']
+    token = NETWORKS['EOS_TESTNET']['token_address']
+    unlock_eos_account(wallet_name, password)
+    command = [
+        'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
+        account
+    ]
+    print('command', command)
+
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        # print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            eos_test_account_balance = float(
+                result.split('\n')[0].split(' ')[0])
+            break
+    else:
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+
+    command = [
+        'cleos', '-u', eos_url, 'get', 'account', token, '-j'
+    ]
+    time.sleep(CLEOS_TIME_COOLDOWN)
+    builder_params = implement_cleos_command(command)
+    eos_cpu_test_builder = (
+            builder_params['cpu_limit']['used'] * 100.0 /
+            builder_params['cpu_limit']['max']
+    )
+    eos_net_test_builder = (
+            builder_params['net_limit']['used'] * 100.0 /
+            builder_params['net_limit']['max']
+    )
+    eos_ram_test_builder = (
+                                   builder_params['ram_quota'] - builder_params[
+                               'ram_usage']
+                           ) / 1024
+
+    eos_url = 'http://%s:%s' % (
+        str(NETWORKS['EOS_MAINNET']['host']),
+        str(NETWORKS['EOS_MAINNET']['port'])
+    )
+    account = NETWORKS['EOS_MAINNET']['address']
+    token = NETWORKS['EOS_MAINNET']['token_address']
+    command = [
+        'cleos', '-u', eos_url, 'get', 'account', token, '-j'
+    ]
+    wallet_name = NETWORKS['EOS_MAINNET']['wallet']
+    password = NETWORKS['EOS_MAINNET']['eos_password']
+    unlock_eos_account(wallet_name, password)
+    builder_params = implement_cleos_command(command)
+    eos_cpu_builder = (
+            builder_params['cpu_limit']['used'] * 100.0 /
+            builder_params['cpu_limit']['max']
+    )
+    eos_net_builder = (
+            builder_params['net_limit']['used'] * 100.0 /
+            builder_params['net_limit']['max']
+    )
+    eos_ram_builder = (
+                              builder_params['ram_quota'] - builder_params[
+                          'ram_usage']
+                      ) / 1024
+    command = [
+        'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
+        account
+    ]
+    print('command', command)
+
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+        print('attempt', attempt, flush=True)
+        proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        # print(stdout, stderr, flush=True)
+        result = stdout.decode()
+        if result:
+            eos_account_balance = float(
+                result.split('\n')[0].split(' ')[0])
+            break
+    else:
+        raise Exception(
+            'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    return {
     'eth_account_balance': eth_account_balance,
     'eth_test_account_balance': eth_test_account_balance,
     'eos_account_balance':  eos_account_balance,
@@ -375,7 +389,6 @@ def get_currency_statistics():
     'eos_net_builder': eos_net_builder,
     'eos_ram_builder': eos_ram_builder
     }
-    return answer
 
 
 def get_contracts_for_network(net, all_contracts, now, day):
@@ -457,7 +470,8 @@ def get_statistics(request):
 
     answer = {
         'user_statistics': {'users': len(users), 'new_users': len(new_users)},
-        'currency_statistics': get_currency_statistics()
+        'currency_statistics': get_currency_statistics(),
+        'balances_statistics': get_balances_statistics()
     }
     networks = Network.objects.all()
     contracts = Contract.objects.all().exclude(
