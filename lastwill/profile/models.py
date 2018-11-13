@@ -24,3 +24,6 @@ class SubSite(models.Model):
 class UserSiteBalance(models.Model):
     user = models.ForeignKey(User)
     subsite = models.ForeignKey(SubSite)
+    balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    eth_address = models.CharField(max_length=50, null=True, default=None)
+    btc_address = models.CharField(max_length=50, null=True, default=None)
