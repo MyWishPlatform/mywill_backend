@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+
+from lastwill.profile.models import SubSite
 from lastwill.consts import MAX_WEI_DIGITS
 
 class InternalPayment(models.Model):
@@ -9,6 +11,7 @@ class InternalPayment(models.Model):
     datetime = models.DateTimeField(auto_now=True)
     original_currency = models.CharField(max_length=66, null=True, default='')
     original_delta = models.CharField(max_length=66, null=True, default='')
+    site = models.ForeignKey(SubSite)
 
 class BTCAccount(models.Model):
     address = models.CharField(max_length=50)

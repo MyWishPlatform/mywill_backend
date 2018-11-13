@@ -4,12 +4,12 @@ from django.contrib.auth.models import User
 from django.db.models import F
 
 from lastwill.payments.models import InternalPayment
-from lastwill.profile.models import Profile
+from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import test_logger
 from exchange_API import to_wish, convert
 
 
-def create_payment(uid, tx, currency, amount):
+def create_payment(uid, tx, currency, amount, site_id):
     amount = float(amount)
     if amount == 0.0:
         return
@@ -28,9 +28,9 @@ def create_payment(uid, tx, currency, amount):
             currency, amount
         )
     if amount < 0.0:
-        negative_payment(user, currency, -value)
+        negative_payment(user, currency, -value, site_id)
     else:
-        positive_payment(user, currency, value)
+        positive_payment(user, currency, value, site_id)
 
     payment = InternalPayment(
         user_id=uid,
@@ -43,7 +43,7 @@ def create_payment(uid, tx, currency, amount):
     print('payment created')
 
 
-def positive_payment(user, currency, value):
+def positive_payment(user, currency, value, site_id):
     if currency in ['EOS', 'EOSISH']:
         Profile.objects.select_for_update().filter(
             id=user.profile.id).update(
@@ -54,7 +54,7 @@ def positive_payment(user, currency, value):
             balance=F('balance') + value)
 
 
-def negative_payment(user, currency, value):
+def negative_payment(user, currency, value, site_id):
     if currency not in ['EOS', 'EOSISH']:
 
         if not Profile.objects.select_for_update().filter(

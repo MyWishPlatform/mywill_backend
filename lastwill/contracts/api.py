@@ -146,14 +146,16 @@ def deploy(request):
     if eos:
         cost = contract_details.calc_cost_eos(contract_details, contract.network)
         currency = 'EOS'
+        site_id = 2
     else:
         cost = contract.cost
         currency = 'ETH'
+        site_id = 1
     promo_str = request.data.get('promo', None)
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
-    create_payment(request.user.id, '', currency, -cost)
+    create_payment(request.user.id, '', currency, -cost, site_id)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']

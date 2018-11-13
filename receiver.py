@@ -64,7 +64,7 @@ class Receiver(threading.Thread):
         print('message["amount"]', message['amount'])
         test_logger.info('RECEIVER: payment message with value %d' %message['amount'])
         print('payment ok', flush=True)
-        create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'])
+        create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'], message['siteId'])
 
     def deployed(self, message):
         print('deployed message received', flush=True)
