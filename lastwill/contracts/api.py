@@ -275,7 +275,7 @@ def get_currency_statistics():
 
 def get_balances_statistics():
     neo_info = json.loads(requests.get(
-        'https://neoscan-testnet.io/api/test_net/v1/get_balance/'
+        'http://neoscan.mywish.io/api/test_net/v1/get_balance/'
         '{address}'.format(address=NETWORKS['NEO_TESTNET']['address'])
     ).content.decode())
     neo_balance = 0.0
