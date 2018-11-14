@@ -39,6 +39,7 @@ def profile_view(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
     site = SubSite.objects.get(site_name=request.META['HTTP_HOST'])
+    print(request.user.id)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
     answer = {
             'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
