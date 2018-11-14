@@ -14,7 +14,7 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import ROOT_PUBLIC_KEY_WISH, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS
+from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS
 from lastwill.profile.helpers import valid_totp
 
 def init_profile(user, is_social=False, lang='en'):
@@ -23,7 +23,7 @@ def init_profile(user, is_social=False, lang='en'):
     m.update(memo_str)
     memo_str = binascii.hexlify(memo_str + m.digest()[0:2])
 
-    wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_WISH, public=True)
+    wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
 
     btc_address1 = wish_key.ChildKey(user.id).Address()
