@@ -15,7 +15,7 @@ def create_payment(uid, tx, currency, amount, site_id):
         return
     print('create payment')
     user = User.objects.get(id=uid)
-    if SubSite.objects.get(id=site_id).site_name == 'wish':
+    if SubSite.objects.get(id=site_id).site_name == 'dev.mywish.io':
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )

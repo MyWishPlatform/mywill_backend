@@ -18,7 +18,7 @@ class Profile(models.Model):
 
 class SubSite(models.Model):
     site_name = models.CharField(max_length=35, null=True, default=None)
-    currencies = models.CharField(max_length=50, null=True, default=None)
+    currencies = models.CharField(max_length=80, null=True, default=None)
 
 
 class UserSiteBalance(models.Model):
