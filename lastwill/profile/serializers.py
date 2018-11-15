@@ -28,8 +28,8 @@ def init_profile(user, is_social=False, lang='en'):
 
     btc_address1 = wish_key.ChildKey(user.id).Address()
     btc_address2 = eosish_key.ChildKey(user.id).Address()
-    eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address()
-    eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address()
+    eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
+    eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
     wish = SubSite.objects.get(site_name='dev.mywish.io')
     eosish = SubSite.objects.get(site_name='deveos.mywish.io')
