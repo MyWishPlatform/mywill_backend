@@ -40,7 +40,7 @@ def create_payment(uid, tx, currency, amount, site_id):
 
 
 def positive_payment(user, value, site_id):
-    UserSiteBalance.select_for_update().filter(
+    UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
 
