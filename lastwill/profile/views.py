@@ -51,7 +51,7 @@ def profile_view(request):
             'is_social': request.user.profile.is_social,
             'id': request.user.id,
             'lang': request.user.profile.lang,
-            'memo': request.user.profile.memo,
+            'memo': user_balance.memo,
             'eos_address': 'mywishcoming'
     }
     return Response(answer)
