@@ -48,5 +48,5 @@ def positive_payment(user, value, site_id):
 def negative_payment(user, value, site_id):
     if not UserSiteBalance.objects.select_for_update().filter(
             user=user, subsite__id=site_id, balance__gte=value
-    ).update(eos_balance=F('balance') - value):
+    ).update(balance=F('balance') - value):
         raise Exception('no money')
