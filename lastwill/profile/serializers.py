@@ -19,9 +19,12 @@ from lastwill.profile.helpers import valid_totp
 
 def init_profile(user, is_social=False, lang='en'):
     m = hashlib.sha256()
-    memo_str = os.urandom(8)
-    m.update(memo_str)
-    memo_str = binascii.hexlify(memo_str + m.digest()[0:2])
+    memo_str1 = os.urandom(8)
+    memo_str2 = os.urandom(8)
+    m.update(memo_str1)
+    memo_str1 = binascii.hexlify(memo_str1 + m.digest()[0:2])
+    m.update(memo_str2)
+    memo_str2 = binascii.hexlify(memo_str2 + m.digest()[0:2])
 
     wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
@@ -34,16 +37,18 @@ def init_profile(user, is_social=False, lang='en'):
     wish = SubSite.objects.get(site_name='dev.mywish.io')
     eosish = SubSite.objects.get(site_name='deveos.mywish.io')
 
-    Profile(user=user, is_social=is_social, lang=lang, memo=memo_str).save()
+    Profile(user=user, is_social=is_social, lang=lang).save()
     UserSiteBalance(
         user=user, subsite=wish,
         eth_address=eth_address1,
-        btc_address=btc_address1
+        btc_address=btc_address1,
+        memo=memo_str1
     ).save()
     UserSiteBalance(
         user=user, subsite=eosish,
         eth_address=eth_address2,
-        btc_address=btc_address2
+        btc_address=btc_address2,
+        memo=memo_str2
     ).save()
     requests.post(
         BITCOIN_URLS['main'],
