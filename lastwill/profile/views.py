@@ -12,6 +12,7 @@ from allauth.account.views import ConfirmEmailView
 
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
+from lastwill.profile.models import SubSite, UserSiteBalance
 
 
 class UserConfirmEmailView(ConfirmEmailView):
@@ -37,19 +38,23 @@ class UserConfirmEmailView(ConfirmEmailView):
 def profile_view(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
-    return Response({
+    site = SubSite.objects.get(site_name=request.META['HTTP_HOST'])
+    print(request.user.id, flush=True)
+    user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
+    answer = {
             'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
             'contracts': Contract.objects.filter(user=request.user).count(),
-            'balance': str(request.user.profile.balance),
-            'internal_address': request.user.profile.internal_address,
-            'internal_btc_address': getattr(request.user.btcaccount_set.first(), 'address', None),
+            'balance': str(user_balance.balance),
+            'internal_address': user_balance.eth_address,
+            'internal_btc_address': user_balance.btc_address,
             'use_totp': request.user.profile.use_totp,
             'is_social': request.user.profile.is_social,
             'id': request.user.id,
             'lang': request.user.profile.lang,
-            'memo': request.user.profile.memo,
-            'eos_balance': str(request.user.profile.eos_balance),
-    })
+            'memo': user_balance.memo,
+            'eos_address': 'mywishcoming'
+    }
+    return Response(answer)
 
 
 @api_view(http_method_names=['POST'])
