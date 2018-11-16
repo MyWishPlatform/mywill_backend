@@ -20,6 +20,8 @@ def create_payment(uid, tx, currency, amount, site_id):
             currency, amount
         )
     else:
+        if currency in ['ETH', 'BTC']:
+            amount = amount / 10 ** 18
         value = amount * convert(currency, 'EOSISH')['EOSISH']
 
     if amount < 0.0:
