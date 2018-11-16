@@ -14,7 +14,7 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS
+from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL
 from lastwill.profile.helpers import valid_totp
 
 def init_profile(user, is_social=False, lang='en'):
@@ -34,8 +34,8 @@ def init_profile(user, is_social=False, lang='en'):
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
-    wish = SubSite.objects.get(site_name='dev.mywish.io')
-    eosish = SubSite.objects.get(site_name='deveos.mywish.io')
+    wish = SubSite.objects.get(site_name=MY_WISH_URL)
+    eosish = SubSite.objects.get(site_name=EOSISH_URL)
 
     Profile(user=user, is_social=is_social, lang=lang).save()
     UserSiteBalance(

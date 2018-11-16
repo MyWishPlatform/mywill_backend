@@ -1,11 +1,9 @@
-import requests
-
 from django.contrib.auth.models import User
 from django.db.models import F
 
 from lastwill.payments.models import InternalPayment
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import test_logger
+from lastwill.settings import MY_WISH_URL
 from exchange_API import to_wish, convert
 
 
@@ -15,7 +13,7 @@ def create_payment(uid, tx, currency, amount, site_id):
         return
     print('create payment')
     user = User.objects.get(id=uid)
-    if SubSite.objects.get(id=site_id).site_name == 'dev.mywish.io':
+    if SubSite.objects.get(id=site_id).site_name == MY_WISH_URL:
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
