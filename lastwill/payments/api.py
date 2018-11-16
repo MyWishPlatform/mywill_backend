@@ -20,7 +20,7 @@ def create_payment(uid, tx, currency, amount, site_id):
             currency, amount
         )
     else:
-        value = amount * convert(currency, 'EOSISH')
+        value = amount * convert(currency, 'EOSISH')['EOSISH']
 
     if amount < 0.0:
         negative_payment(user, -value, site_id)
