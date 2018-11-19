@@ -80,6 +80,8 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             json.dump(data, outfile)
         with open((path.join(EOS_TEST_FOLDER, 'config.h')), 'w') as f:
             f.write('''#define ADMIN {admin}'''.format(admin=self.admin_address))
+        if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_FOLDER)):
+            raise Exception('make in test folder error')
         if os.system(
                 "/bin/bash -c 'cd {dest} && {env} {command}'".format(
                     dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
