@@ -68,7 +68,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             bytecode = binascii.hexlify(f.read()).decode("utf-8")
         with open(path.join(dest, 'eosio.token.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        data = {"maximum_supply": self.maximum_supply,"decimals": self.decimals,"symbol": self.token_short_name}
+        data = {"maximum_supply": self.maximum_supply,"decimals": int(self.decimals),"symbol": self.token_short_name}
         with open(path.join(dest, 'deploy_data.json'), 'w') as outfile:
             json.dump(data, outfile)
         if os.system(
