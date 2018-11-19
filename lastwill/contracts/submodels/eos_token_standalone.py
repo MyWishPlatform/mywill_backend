@@ -3,7 +3,7 @@ import json
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.eos import *
 from lastwill.contracts.submodels.eos_json_token import create_eos_token_sa_json
-from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV
+from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
 from lastwill.consts import MAX_WEI_DIGITS
 
 class ContractDetailsEOSTokenSA(CommonDetails):
@@ -76,6 +76,10 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         print('data', data, flush=True)
         with open(path.join(dest, 'deploy_data.json'), 'w') as outfile:
             json.dump(data, outfile)
+        with open(path.join(EOS_TEST_FOLDER, 'deploy_data.json'), 'w') as outfile:
+            json.dump(data, outfile)
+        with open((path.join(EOS_TEST_FOLDER, 'config.h')), 'w') as f:
+            f.write('''#define ADMIN {admin}'''.format(admin=self.admin_address))
         if os.system(
                 "/bin/bash -c 'cd {dest} && {env} {command}'".format(
                     dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
