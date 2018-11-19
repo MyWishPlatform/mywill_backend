@@ -1,7 +1,9 @@
+import json
+
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.eos import *
 from lastwill.contracts.submodels.eos_json_token import create_eos_token_sa_json
-
+from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV
 from lastwill.consts import MAX_WEI_DIGITS
 
 class ContractDetailsEOSTokenSA(CommonDetails):
@@ -66,6 +68,15 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             bytecode = binascii.hexlify(f.read()).decode("utf-8")
         with open(path.join(dest, 'eosio.token.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
+        data = {"maximum_supply": self.maximum_supply,"decimals": self.decimals,"symbol": self.token_short_name}
+        with open(path.join(dest, 'deploy_data.json'), 'w') as outfile:
+            json.dump(data, outfile)
+        if os.system(
+                "/bin/bash -c 'cd {dest} && {env} {command}'".format(
+                    dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
+
+        ):
+            raise Exception('compiler error token standalone')
         eos_contract = EOSContract()
         eos_contract.abi = abi
         eos_contract.bytecode = bytecode
