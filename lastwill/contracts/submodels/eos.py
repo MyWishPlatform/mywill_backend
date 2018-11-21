@@ -399,6 +399,8 @@ class ContractDetailsEOSICO(CommonDetails):
             sour=path.join(dest, 'config.h'),
             dest=EOS_TEST_ICO_FOLDER
         )
+        if os.system(command):
+            raise Exception('error cp config')
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
