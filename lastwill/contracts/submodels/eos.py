@@ -13,6 +13,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.contracts.submodels.eos_json import *
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.settings import EOS_TEST_URL_ENV, EOS_TEST_ICO_FOLDER, EOS_TEST_ICO_URL
 from exchange_API import to_wish, convert
 
 
@@ -399,6 +400,15 @@ class ContractDetailsEOSICO(CommonDetails):
                     dest=dest)
         ):
             raise Exception('compiler error while deploying')
+
+        if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_ICO_FOLDER)):
+            raise Exception('make in test folder error')
+        if os.system(
+                "/bin/bash -c 'cd {dest} && {env} {command}'".format(
+                    dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_ICO_URL)
+
+        ):
+            raise Exception('compiler error ico')
 
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
             abi = binascii.hexlify(f.read()).decode('utf-8')
