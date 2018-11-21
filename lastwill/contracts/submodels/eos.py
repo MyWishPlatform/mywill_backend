@@ -401,6 +401,12 @@ class ContractDetailsEOSICO(CommonDetails):
         )
         if os.system(command):
             raise Exception('error cp config')
+        command = (
+            "/bin/bash -c 'cd {dest} && ./enable-debug.sh' ".format(
+                dest=EOS_TEST_ICO_FOLDER
+            ))
+        if os.system(command):
+            raise Exception('error enable debug')
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
