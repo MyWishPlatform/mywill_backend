@@ -394,7 +394,29 @@ class ContractDetailsEOSICO(CommonDetails):
         print('command = ', command, flush=True)
         if os.system(command):
             raise Exception('error generate config')
-
+        command = (
+            "/bin/bash -c 'cd {dest} && ./configure.sh "
+            "--issuer {issuer} --symbol {symbol} --decimals {decimals} "
+            "--softcap {soft_cap} --hardcap {hard_cap} "
+            "--whitelist {whitelist} --contract {acc_name} "
+            "--transferable {transferable} --rate {rate} --ratedenom 1 "
+            "--mincontrib {min_wei} --maxcontrib {max_wei} "
+            " {mint} > {dest}/config.h' ").format(
+            acc_name=token_address,
+            dest=(path.join(EOS_TEST_ICO_FOLDER, 'config.h')),
+            # address=self.crowdsale_address,
+            symbol=self.token_short_name,
+            decimals=self.decimals,
+            whitelist="true" if self.whitelist else "false",
+            transferable="true" if self.is_transferable_at_once else "false",
+            rate=self.rate,
+            min_wei=self.min_wei if self.min_wei else 0,
+            max_wei=self.max_wei if self.max_wei else 0,
+            soft_cap=self.soft_cap,
+            hard_cap=self.hard_cap,
+            issuer=self.admin_address,
+            mint=mint
+        )
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
