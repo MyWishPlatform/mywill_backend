@@ -69,7 +69,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         with open(path.join(dest, 'eosio.token.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         data = {
-            "maximum_supply": int(self.maximum_supply) / 10 ** self.decimals,
+            "maximum_supply": int(self.maximum_supply / 10 ** self.decimals),
             "decimals": self.decimals,
             "symbol": self.token_short_name
         }
