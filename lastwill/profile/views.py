@@ -38,7 +38,10 @@ class UserConfirmEmailView(ConfirmEmailView):
 def profile_view(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
-    site = SubSite.objects.get(site_name=request.META['HTTP_HOST'])
+    site_name = request.META['HTTP_HOST']
+    if site_name.startswith('cn'):
+        site_name = site_name[2:]
+    site = SubSite.objects.get(site_name=site_name)
     print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
     answer = {

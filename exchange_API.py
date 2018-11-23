@@ -20,7 +20,7 @@ class memoize_timeout:
         return func
 
 
-# @memoize_timeout(10*60)
+@memoize_timeout(10*60)
 def convert(fsym, tsyms):
     eosish_factor = 1.0
     revesre_convert = False
