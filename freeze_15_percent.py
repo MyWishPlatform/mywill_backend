@@ -11,6 +11,7 @@ from lastwill.contracts.models import Contract, implement_cleos_command, unlock_
 
 
 def freeze_wish():
+    address_to = '0x2246Bf20f536cbf9ab9a7bC8B3518276Ae40b2F6'
     pass
 
 
@@ -23,7 +24,7 @@ def freeze_eosish():
         'cleos', 'push', 'action', 'eosio.token', 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} EOSISH", "m" ]'.format(
             address_from='',
-            address_to='',
+            address_to='eosishfreeze',
             amount=FREEZE_THRESHOLD_EOSISH
         ),
         '-p', public_key
