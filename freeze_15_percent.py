@@ -260,12 +260,17 @@ def freeze_eosish():
     password = NETWORKS['EOS_MAINNET']['eos_password']
     our_public_key = NETWORKS['EOS_MAINNET']['pub']
     unlock_eos_account(wallet_name, password)
+    threshold_with_decimals = (
+            str(FREEZE_THRESHOLD_EOSISH)[0:len(str(FREEZE_THRESHOLD_EOSISH))-4]
+            + '.'
+            + str(FREEZE_THRESHOLD_EOSISH)[len(str(FREEZE_THRESHOLD_EOSISH))-4:len(str(FREEZE_THRESHOLD_EOSISH))]
+    )
     command_list = [
         'cleos', 'push', 'action', 'eosio.token', 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} EOSISH", "m" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
-            amount=str(FREEZE_THRESHOLD_EOSISH) + '.0000'
+            amount=threshold_with_decimals
         ),
         '-p', our_public_key
     ]
