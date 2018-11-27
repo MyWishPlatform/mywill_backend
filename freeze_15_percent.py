@@ -264,7 +264,7 @@ def freeze_eosish():
         '[ "{address_from}", "{address_to}", "{amount} EOSISH", "m" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
-            amount=FREEZE_THRESHOLD_EOSISH
+            amount=str(FREEZE_THRESHOLD_EOSISH) + '.0000'
         ),
         '-p', our_public_key
     ]
