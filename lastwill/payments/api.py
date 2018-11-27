@@ -48,11 +48,11 @@ def positive_payment(user, value, site_id):
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
     if site_id == 1:
-        FreezeBalance.objects.select_for_update().first().update(
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + value * 0.15
         )
     else:
-        FreezeBalance.objects.select_for_update().first().update(
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value * 0.15
         )
 
