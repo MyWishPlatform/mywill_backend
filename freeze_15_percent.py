@@ -238,8 +238,7 @@ def freeze_wish():
 ]
     tr = abi.ContractTranslator(abi)
     par_int = ParInt('ETHEREUM_MAINNET')
-    address = NETWORKS['ETHEREUM_MAINNET']['address']
-    nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+    nonce = int(par_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
     signed_data = sign_transaction(
       UPDATE_WISH_ADDRESS, nonce,
       100000,
