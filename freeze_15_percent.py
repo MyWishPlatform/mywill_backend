@@ -1,6 +1,7 @@
 import time
 import os
 import binascii
+from ethereum import abi
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
@@ -14,7 +15,7 @@ from lastwill.contracts.submodels.common import *
 
 
 def freeze_wish():
-    abi = [
+    abi_dict = [
   {
     "constant": True,
     "inputs": [],
@@ -236,7 +237,7 @@ def freeze_wish():
     "type": "event"
   }
 ]
-    tr = abi.ContractTranslator(abi)
+    tr = abi.ContractTranslator(abi_dict)
     par_int = ParInt('ETHEREUM_MAINNET')
     nonce = int(par_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
     signed_data = sign_transaction(
