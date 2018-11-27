@@ -70,6 +70,9 @@ class Receiver(threading.Thread):
         print('deployed message received', flush=True)
         test_logger.info('RECEIVER: deployed message')
         contract = EthContract.objects.get(id=message['contractId']).contract
+        if contract.state == 'ACTIVE':
+            print('ignored because already active', flush=True)
+            return
         contract.get_details().msg_deployed(message)
         print('deployed ok!', flush=True)
         test_logger.info('RECEIVER: deployed ok')
@@ -102,6 +105,9 @@ class Receiver(threading.Thread):
         test_logger.info('RECEIVER: repeat check ok')
 
     def check_contract(self, message):
+        print('ignored',flush=True)
+        return
+
         print('check contract message', flush=True)
         test_logger.info('RECEIVER: check contract message')
         contract = Contract.objects.get(id=message['contractId'])
@@ -326,6 +332,9 @@ class Receiver(threading.Thread):
 
     def newAccount(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
+        if contract.state == 'ACTIVE':
+            print('ignored because already active', flush=True)
+            return
         details = contract.get_details()
         details.newAccount(message)
 

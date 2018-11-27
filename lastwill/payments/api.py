@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db.models import F
 
-from lastwill.payments.models import InternalPayment
+from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import MY_WISH_URL
 from exchange_API import to_wish, convert
@@ -18,8 +18,10 @@ def create_payment(uid, tx, currency, amount, site_id):
             currency, amount
         )
     else:
-        if currency in ['ETH', 'BTC']:
+        if currency in ['ETH']:
             amount = amount / 10 ** 18
+        if currency in ['BTC']:
+            amount = amount / 10 ** 8
         # if currency == 'EOS':
         #     amount = amount / 10 ** 4
         value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH']
@@ -28,7 +30,7 @@ def create_payment(uid, tx, currency, amount, site_id):
         negative_payment(user, -value, site_id)
     else:
         positive_payment(user, value, site_id)
-    site = SubSite.objects.get(id = site_id)
+    site = SubSite.objects.get(id=site_id)
     payment = InternalPayment(
         user_id=uid,
         delta=value,
@@ -45,7 +47,14 @@ def positive_payment(user, value, site_id):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
-
+    if site_id == 1:
+        FreezeBalance.objects.select_for_update().first().update(
+            wish=F('wish') + value * 0.15
+        )
+    else:
+        FreezeBalance.objects.select_for_update().first().update(
+            eosish=F('eosish') + value * 0.15
+        )
 
 def negative_payment(user, value, site_id):
     if not UserSiteBalance.objects.select_for_update().filter(
