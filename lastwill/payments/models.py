@@ -23,5 +23,5 @@ class BTCAccount(models.Model):
 
 
 class FreezeBalance(models.Model):
-    eos = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
-    eth = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    eosish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    wish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
