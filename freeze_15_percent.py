@@ -8,7 +8,7 @@ django.setup()
 
 from django.utils import timezone
 from lastwill.payments.models import *
-from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS
+from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS
 from lastwill.contracts.models import Contract, implement_cleos_command, unlock_eos_account
 from lastwill.contracts.submodels.common import *
@@ -238,12 +238,12 @@ def freeze_wish():
   }
 ]
     tr = abi.ContractTranslator(abi_dict)
-    par_int = ParInt('ETHEREUM_MAINNET')
+    par_int = ParInt(NETWORK_SIGN_TRANSACTION_WISH)
     nonce = int(par_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
     signed_data = sign_transaction(
       UPDATE_WISH_ADDRESS, nonce,
       100000,
-      'ETHEREUM_MAINNET',
+      NETWORK_SIGN_TRANSACTION_WISH,
       dest=MYWISH_ADDRESS,
       contract_data=binascii.hexlify(
         tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, FREEZE_THRESHOLD_WISH])
@@ -256,9 +256,9 @@ def freeze_wish():
 
 
 def freeze_eosish():
-    wallet_name = NETWORKS['EOS_MAINNET']['wallet']
-    password = NETWORKS['EOS_MAINNET']['eos_password']
-    our_public_key = NETWORKS['EOS_MAINNET']['pub']
+    wallet_name = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['wallet']
+    password = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['eos_password']
+    our_public_key = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['pub']
     unlock_eos_account(wallet_name, password)
     threshold_with_decimals = (
             str(FREEZE_THRESHOLD_EOSISH)[0:len(str(FREEZE_THRESHOLD_EOSISH))-4]
