@@ -8,7 +8,6 @@ django.setup()
 from django.utils import timezone
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS
-from lastwill.settings import EOSISH_ACTIVE_KEY, EOSISH_WALLET_NAME, EOSISH_WALLET_PASSWORD
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS
 from lastwill.contracts.models import Contract, implement_cleos_command, unlock_eos_account
 from lastwill.contracts.submodels.common import *
@@ -256,7 +255,10 @@ def freeze_wish():
 
 
 def freeze_eosish():
-    unlock_eos_account(EOSISH_WALLET_NAME, EOSISH_WALLET_PASSWORD)
+    wallet_name = NETWORKS['EOS_MAINNET']['wallet']
+    password = NETWORKS['EOS_MAINNET']['eos_password']
+    our_public_key = NETWORKS['EOS_MAINNET']['pub']
+    unlock_eos_account(wallet_name, password)
     command_list = [
         'cleos', 'push', 'action', 'eosio.token', 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} EOSISH", "m" ]'.format(
@@ -264,7 +266,7 @@ def freeze_eosish():
             address_to=COLD_EOSISH_ADDRESS,
             amount=FREEZE_THRESHOLD_EOSISH
         ),
-        '-p', EOSISH_ACTIVE_KEY
+        '-p', our_public_key
     ]
     implement_cleos_command(command_list)
 
