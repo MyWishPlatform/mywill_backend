@@ -17,6 +17,8 @@ def create_payment(uid, tx, currency, amount, site_id):
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
+        if currency == 'BTC':
+            value = value * 10 ** 18 / 10 ** 8
     else:
         if currency in ['ETH']:
             amount = amount / 10 ** 18
