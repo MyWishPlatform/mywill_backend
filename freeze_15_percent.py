@@ -259,6 +259,7 @@ def freeze_eosish():
     wallet_name = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['wallet']
     password = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['eos_password']
     our_public_key = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['pub']
+    print(wallet_name, password, flush=True)
     unlock_eos_account(wallet_name, password)
     threshold_with_decimals = (
             str(FREEZE_THRESHOLD_EOSISH)[0:len(str(FREEZE_THRESHOLD_EOSISH))-4]
