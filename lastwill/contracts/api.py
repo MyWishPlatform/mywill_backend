@@ -77,7 +77,7 @@ class ContractViewSet(ModelViewSet):
             if eos:
                 result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
             else:
-                result = result.exclude(contract_type__in=(10, 12))
+                result = result.exclude(contract_type__in=(10, 11, 12, 13, 14))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
