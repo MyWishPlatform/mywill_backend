@@ -294,4 +294,5 @@ def check_payments():
 if __name__ == '__main__':
     while 1:
         check_payments()
-        time.sleep(60 * 5)
+        time.sleep(60 * 50)
+
