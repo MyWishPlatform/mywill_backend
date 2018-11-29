@@ -273,7 +273,7 @@ def freeze_eosish():
             address_to=COLD_EOSISH_ADDRESS,
             amount=threshold_with_decimals
         ),
-        '-p', our_public_key
+        '-p', UPDATE_EOSISH_ADDRESS
     ]
     result = implement_cleos_command(command_list)
     print('result', result, flush=True)
