@@ -2,6 +2,7 @@ import time
 import os
 import binascii
 from ethereum import abi
+from threading import Timer
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
@@ -9,7 +10,7 @@ django.setup()
 from django.utils import timezone
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH
-from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS
+from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.contracts.models import Contract, implement_cleos_command, unlock_eos_account
 from lastwill.contracts.submodels.common import *
 
@@ -277,7 +278,23 @@ def freeze_eosish():
         ),
         '-p', UPDATE_EOSISH_ADDRESS
     ]
-    result = implement_cleos_command(command_list)
+    for attempt in range(EOS_ATTEMPTS_COUNT):
+      print('attempt', attempt, flush=True)
+      proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+      timer = Timer(CLEOS_TIME_LIMIT, proc.kill)
+      try:
+        timer.start()
+        stdout, stderr = proc.communicate()
+      finally:
+        timer.cancel()
+      result = stdout.decode()
+      if result:
+        break
+      time.sleep(CLEOS_TIME_COOLDOWN)
+    else:
+      print('stderr', stderr, flush=True)
+      raise Exception(
+        'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
     print('result', result, flush=True)
 
 
