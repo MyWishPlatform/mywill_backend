@@ -269,7 +269,7 @@ def freeze_eosish():
             + str(FREEZE_THRESHOLD_EOSISH)[len(str(FREEZE_THRESHOLD_EOSISH))-4:len(str(FREEZE_THRESHOLD_EOSISH))]
     )
     command_list = [
-        'cleos', '-u', eos_url, 'push', 'action', 'eosio.token', 'transfer',
+        'cleos', '-u', eos_url, 'push', 'action', 'mywishtokens', 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} TEOSISH" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
