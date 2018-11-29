@@ -278,6 +278,7 @@ def freeze_eosish():
         ),
         '-p', UPDATE_EOSISH_ADDRESS
     ]
+    print('commend list=', command_list, flush=True)
     for attempt in range(EOS_ATTEMPTS_COUNT):
       print('attempt', attempt, flush=True)
       proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
