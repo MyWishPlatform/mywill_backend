@@ -270,7 +270,7 @@ def freeze_eosish():
     )
     command_list = [
         'cleos', '-u', eos_url, 'push', 'action', 'mywishtokens', 'transfer',
-        '[ "{address_from}", "{address_to}", "{amount} TEOSISH" ]'.format(
+        '[ "{address_from}", "{address_to}", "{amount} TEOSISH", "m" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
             amount=threshold_with_decimals
