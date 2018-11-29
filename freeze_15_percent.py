@@ -247,7 +247,7 @@ def freeze_wish(amount):
       NETWORK_SIGN_TRANSACTION_WISH,
       dest=MYWISH_ADDRESS,
       contract_data=binascii.hexlify(
-        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, amount / 10 ** 18])
+        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, int(amount / 10 ** 18)])
       ).decode()
     )
     tx_hash = par_int.eth_sendRawTransaction(
@@ -266,8 +266,7 @@ def freeze_eosish(amount):
       str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['port']))
     amount_with_decimals = (
             str(amount)[0:len(str(amount))-4]
-            + '.'
-            + str(amount)[len(str(amount))-4:len(str(amount))]
+            + '.0000'
     )
     command_list = [
         'cleos', '-u', eos_url, 'push', 'action', 'mywishtokens', 'transfer',
