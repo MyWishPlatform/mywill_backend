@@ -15,7 +15,7 @@ from lastwill.contracts.models import Contract, implement_cleos_command, unlock_
 from lastwill.contracts.submodels.common import *
 
 
-def freeze_wish():
+def freeze_wish(amount):
     abi_dict = [
   {
     "constant": True,
@@ -247,7 +247,7 @@ def freeze_wish():
       NETWORK_SIGN_TRANSACTION_WISH,
       dest=MYWISH_ADDRESS,
       contract_data=binascii.hexlify(
-        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, FREEZE_THRESHOLD_WISH])
+        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, amount / 10 ** 18])
       ).decode()
     )
     tx_hash = par_int.eth_sendRawTransaction(
@@ -256,7 +256,7 @@ def freeze_wish():
     print('tx_hash=', tx_hash, flush=True)
 
 
-def freeze_eosish():
+def freeze_eosish(amount):
     wallet_name = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['wallet']
     password = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['eos_password']
     our_public_key = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['pub']
@@ -264,17 +264,17 @@ def freeze_eosish():
     eos_url = 'http://%s:%s' % (
       str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['host']),
       str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['port']))
-    threshold_with_decimals = (
-            str(FREEZE_THRESHOLD_EOSISH)[0:len(str(FREEZE_THRESHOLD_EOSISH))-4]
+    amount_with_decimals = (
+            str(amount)[0:len(str(amount))-4]
             + '.'
-            + str(FREEZE_THRESHOLD_EOSISH)[len(str(FREEZE_THRESHOLD_EOSISH))-4:len(str(FREEZE_THRESHOLD_EOSISH))]
+            + str(amount)[len(str(amount))-4:len(str(amount))]
     )
     command_list = [
         'cleos', '-u', eos_url, 'push', 'action', 'mywishtokens', 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} TEOSISH", "m" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
-            amount=threshold_with_decimals
+            amount=amount_with_decimals
         ),
         '-p', UPDATE_EOSISH_ADDRESS
     ]
@@ -302,11 +302,11 @@ def freeze_eosish():
 def check_payments():
     freeze_balance = FreezeBalance.objects.all().first()
     if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
-        freeze_eosish()
+        freeze_eosish(freeze_balance.eosish)
         freeze_balance.eosish = freeze_balance.eosish - FREEZE_THRESHOLD_EOSISH
         freeze_balance.save()
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
-        freeze_wish()
+        freeze_wish(freeze_balance.wish)
         freeze_balance.wish = freeze_balance.wish - FREEZE_THRESHOLD_WISH
         freeze_balance.save()
 
