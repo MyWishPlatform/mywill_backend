@@ -55,7 +55,7 @@ def positive_payment(user, value, site_id):
         )
     else:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            eosish=F('eosish') + value * 0.15
+            eosish=F('eosish') + (value * 0.15) * 10 ** 4
         )
 
 def negative_payment(user, value, site_id):
