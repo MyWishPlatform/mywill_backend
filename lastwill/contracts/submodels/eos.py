@@ -394,33 +394,33 @@ class ContractDetailsEOSICO(CommonDetails):
         print('command = ', command, flush=True)
         if os.system(command):
             raise Exception('error generate config')
-        command = (
-            "/bin/bash -c 'cp {sour} {dest}'").format(
-            sour=path.join(dest, 'config.h'),
-            dest=EOS_TEST_ICO_FOLDER
-        )
-        if os.system(command):
-            raise Exception('error cp config')
-        command = (
-            "/bin/bash -c 'cd {dest} && ./enable-debug.sh' ".format(
-                dest=EOS_TEST_ICO_FOLDER
-            ))
-        if os.system(command):
-            raise Exception('error enable debug')
+        # command = (
+        #     "/bin/bash -c 'cp {sour} {dest}'").format(
+        #     sour=path.join(dest, 'config.h'),
+        #     dest=EOS_TEST_ICO_FOLDER
+        # )
+        # if os.system(command):
+        #     raise Exception('error cp config')
+        # command = (
+        #     "/bin/bash -c 'cd {dest} && ./enable-debug.sh' ".format(
+        #         dest=EOS_TEST_ICO_FOLDER
+        #     ))
+        # if os.system(command):
+        #     raise Exception('error enable debug')
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
         ):
             raise Exception('compiler error while deploying')
-
-        if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_ICO_FOLDER)):
-            raise Exception('make in test folder error')
-        if os.system(
-                "/bin/bash -c 'cd {dest} && {env} {command}'".format(
-                    dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_ICO_URL)
-
-        ):
-            raise Exception('compiler error ico')
+        #
+        # if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_ICO_FOLDER)):
+        #     raise Exception('make in test folder error')
+        # if os.system(
+        #         "/bin/bash -c 'cd {dest} && {env} {command}'".format(
+        #             dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_ICO_URL)
+        #
+        # ):
+        #     raise Exception('compiler error ico')
 
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
             abi = binascii.hexlify(f.read()).decode('utf-8')
