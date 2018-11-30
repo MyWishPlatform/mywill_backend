@@ -1,17 +1,14 @@
-import time
 import os
-import binascii
 from ethereum import abi
 from threading import Timer
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
 
-from django.utils import timezone
 from lastwill.payments.models import *
-from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH
+from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
-from lastwill.contracts.models import Contract, implement_cleos_command, unlock_eos_account
+from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 
 
@@ -259,7 +256,6 @@ def freeze_wish(amount):
 def freeze_eosish(amount):
     wallet_name = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['wallet']
     password = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['eos_password']
-    our_public_key = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['pub']
     unlock_eos_account(wallet_name, password)
     eos_url = 'http://%s:%s' % (
       str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['host']),
@@ -270,10 +266,11 @@ def freeze_eosish(amount):
     )
     command_list = [
         'cleos', '-u', eos_url, 'push', 'action', 'mywishtokens', 'transfer',
-        '[ "{address_from}", "{address_to}", "{amount} TEOSISH", "m" ]'.format(
+        '[ "{address_from}", "{address_to}", "{amount} {token_name}", "m" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
-            amount=amount_with_decimals
+            amount=amount_with_decimals,
+            token_name=COLD_TOKEN_SYMBOL
         ),
         '-p', UPDATE_EOSISH_ADDRESS
     ]
