@@ -31,7 +31,7 @@ def create_payment(uid, tx, currency, amount, site_id):
     if amount < 0.0:
         negative_payment(user, -value, site_id)
     else:
-        positive_payment(user, value, site_id)
+        positive_payment(user, value, site_id, currency)
     site = SubSite.objects.get(id=site_id)
     payment = InternalPayment(
         user_id=uid,
@@ -45,7 +45,7 @@ def create_payment(uid, tx, currency, amount, site_id):
     print('payment created')
 
 
-def positive_payment(user, value, site_id):
+def positive_payment(user, value, site_id, currency):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
@@ -54,9 +54,14 @@ def positive_payment(user, value, site_id):
             wish=F('wish') + value * 0.15
         )
     else:
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            eosish=F('eosish') + (value * 0.15) * 10 ** 4
-        )
+        if currency != 'EOS':
+            FreezeBalance.objects.select_for_update().filter(id=1).update(
+                eosish=F('eosish') + (value * 0.15) * 10 ** 4
+            )
+        else:
+            FreezeBalance.objects.select_for_update().filter(id=1).update(
+                eosish=F('eosish') + (value * 0.15)
+            )
 
 def negative_payment(user, value, site_id):
     if not UserSiteBalance.objects.select_for_update().filter(
