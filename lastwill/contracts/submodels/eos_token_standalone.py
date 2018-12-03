@@ -3,7 +3,7 @@ import json
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.eos import *
 from lastwill.contracts.submodels.eos_json_token import create_eos_token_sa_json
-# from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
+from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
 from lastwill.consts import MAX_WEI_DIGITS
 
 class ContractDetailsEOSTokenSA(CommonDetails):
