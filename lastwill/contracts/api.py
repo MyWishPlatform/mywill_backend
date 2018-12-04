@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
+from lastwill.settings import MY_WISH_URL, EOSISH_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
@@ -74,12 +75,10 @@ class ContractViewSet(ModelViewSet):
         eos = self.request.query_params.get('eos', None)
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
-        if eos is not None:
-            eos = int(eos)
-            if eos:
-                result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
-            else:
-                result = result.exclude(contract_type__in=(10, 11, 12, 13, 14))
+        if host == MY_WISH_URL:
+            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14))
+        if host == EOSISH_URL:
+            result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -137,6 +136,7 @@ def get_token_contracts(request):
 @api_view(http_method_names=['POST'])
 def deploy(request):
     eos = request.data.get('eos', False)
+    host = request.META['HTTP_HOST']
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
@@ -145,7 +145,7 @@ def deploy(request):
         raise PermissionDenied
 
     # TODO: if type==4 check token contract is not at active crowdsale
-    if eos:
+    if host == EOSISH_URL:
         kwargs = ContractSerializer().get_details_serializer(
             contract.contract_type
         )().to_representation(contract_details)
