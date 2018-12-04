@@ -68,26 +68,26 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             bytecode = binascii.hexlify(f.read()).decode("utf-8")
         with open(path.join(dest, 'eosio.token.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        # data = {
-        #     "maximum_supply": int(self.maximum_supply / 10 ** self.decimals),
-        #     "decimals": self.decimals,
-        #     "symbol": self.token_short_name
-        # }
-        # print('data', data, flush=True)
-        # with open(path.join(dest, 'deploy_data.json'), 'w') as outfile:
-        #     json.dump(data, outfile)
-        # with open(path.join(EOS_TEST_FOLDER, 'deploy_data.json'), 'w') as outfile:
-        #     json.dump(data, outfile)
-        # with open((path.join(EOS_TEST_FOLDER, 'config.h')), 'w') as f:
-        #     f.write('''#define ADMIN {admin}'''.format(admin=self.admin_address))
-        # if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_FOLDER)):
-        #     raise Exception('make in test folder error')
-        # if os.system(
-        #         "/bin/bash -c 'cd {dest} && {env} {command}'".format(
-        #             dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
-        #
-        # ):
-        #     raise Exception('compiler error token standalone')
+        data = {
+            "maximum_supply": int(self.maximum_supply / 10 ** self.decimals),
+            "decimals": self.decimals,
+            "symbol": self.token_short_name
+        }
+        print('data', data, flush=True)
+        with open(path.join(dest, 'deploy_data.json'), 'w') as outfile:
+            json.dump(data, outfile)
+        with open(path.join(EOS_TEST_FOLDER, 'deploy_data.json'), 'w') as outfile:
+            json.dump(data, outfile)
+        with open((path.join(EOS_TEST_FOLDER, 'config.h')), 'w') as f:
+            f.write('''#define ADMIN {admin}'''.format(admin=self.admin_address))
+        if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_FOLDER)):
+            raise Exception('make in test folder error')
+        if os.system(
+                "/bin/bash -c 'cd {dest} && {env} {command}'".format(
+                    dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
+
+        ):
+            raise Exception('compiler error token standalone')
         eos_contract = EOSContract()
         eos_contract.abi = abi
         eos_contract.bytecode = bytecode
