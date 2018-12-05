@@ -334,7 +334,7 @@ class ContractDetailsToken(CommonDetails):
     )
     future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
-    
+
     authio = models.BooleanField(default=False)
     authio_email = models.CharField(max_length=200, null=True)
     authio_date_payment = models.DateField(null=True, default=None)
