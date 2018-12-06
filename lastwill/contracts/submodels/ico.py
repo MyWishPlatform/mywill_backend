@@ -3,13 +3,13 @@ import datetime
 from ethereum import abi
 
 from django.db import models
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
+from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, CONTRACTS_TEMP_DIR
 from email_messages import *
 
 
@@ -425,15 +425,17 @@ class ContractDetailsToken(CommonDetails):
             self.authio_date_payment = datetime.datetime.now().date()
             self.authio_date_getting = self.authio_date_payment + datetime.timedelta(days=3)
             self.save()
-            send_mail(
-                authio_subject,
-                authio_message.format(
+            mail = EmailMessage(
+                subject=authio_subject,
+                body=authio_message.format(
                     address=self.eth_contract_token.address,
                     email=self.authio_email
                 ),
-                DEFAULT_FROM_EMAIL,
-                [AUTHIO_EMAIL, SUPPORT_EMAIL]
+                from_email=DEFAULT_FROM_EMAIL,
+                to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
             )
+            mail.attach_file(path.join(CONTRACTS_TEMP_DIR, self.temp_directory, 'build/MainToken.sol'))
+            mail.send()
         return res
 
     @logging

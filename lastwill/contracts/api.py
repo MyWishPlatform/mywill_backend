@@ -10,7 +10,7 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.views.generic import View
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 
 from rest_framework import status
 from rest_framework import viewsets
@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
@@ -844,13 +844,16 @@ def buy_brand_report(request):
     details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
             days=3)
     details.save()
-    send_mail(
-        authio_subject,
-        authio_message.format(
+    mail = EmailMessage(
+        subject=authio_subject,
+        body=authio_message.format(
             address=details.eth_contract_token.address,
             email=details.authio_email
         ),
-        DEFAULT_FROM_EMAIL,
-        [AUTHIO_EMAIL, SUPPORT_EMAIL]
-        )
+        from_email=DEFAULT_FROM_EMAIL,
+        to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
+    )
+    mail.attach_file(path.join(CONTRACTS_TEMP_DIR, details.temp_directory,
+                               'build/MainToken.sol'))
+    mail.send()
     return Response('ok')
