@@ -10,6 +10,8 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.views.generic import View
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
+
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
@@ -21,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
-from lastwill.settings import MY_WISH_URL, EOSISH_URL
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
@@ -30,6 +32,7 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
+from email_messages import authio_message, authio_subject
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
 
 
@@ -818,3 +821,34 @@ def check_eos_accounts_exists(request):
     print(accounts, flush=True)
     print(response, flush=True)
     return JsonResponse({'not_exists': [x[0] for x in zip(accounts, response) if not x[1]]})
+
+
+@api_view(http_method_names=['POST'])
+def buy_brand_report(request):
+    contract = Contract.objects.get(id=request.data.get('id'))
+    host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE'):
+        raise PermissionDenied
+    if contract.contract_type != 5:
+        raise PermissionDenied
+    details = contract.get_details()
+    if host != MY_WISH_URL:
+        raise PermissionDenied
+    cost = 3 * 10**18
+    currency = 'ETH'
+    site_id = 1
+    create_payment(request.user.id, '', currency, -cost, site_id)
+    details.authio_date_payment = datetime.datetime.now().date()
+    details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
+            days=3)
+    details.save()
+    send_mail(
+        authio_subject,
+        authio_message.format(
+            address=details.eth_contract_token.address,
+            email=details.authio_email
+        ),
+        DEFAULT_FROM_EMAIL,
+        [AUTHIO_EMAIL, SUPPORT_EMAIL]
+        )
+    return Response('ok')
