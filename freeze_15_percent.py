@@ -244,7 +244,7 @@ def freeze_wish(amount):
       NETWORK_SIGN_TRANSACTION_WISH,
       dest=MYWISH_ADDRESS,
       contract_data=binascii.hexlify(
-        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, int(amount / 10 ** 18)])
+        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, int(amount)])
       ).decode()
     )
     tx_hash = par_int.eth_sendRawTransaction(
