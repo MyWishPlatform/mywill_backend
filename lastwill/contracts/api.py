@@ -831,6 +831,8 @@ def buy_brand_report(request):
         raise PermissionDenied
     if contract.contract_type != 5:
         raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
     details = contract.get_details()
     if host != MY_WISH_URL:
         raise PermissionDenied
