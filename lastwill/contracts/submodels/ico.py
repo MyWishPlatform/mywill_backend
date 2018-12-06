@@ -1,3 +1,5 @@
+import datetime
+
 from ethereum import abi
 
 from django.db import models
@@ -7,6 +9,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from email_messages import *
 
 
@@ -358,7 +361,10 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(2.99 * 10 ** 18)
+        result = int(2.99 * 10 ** 18)
+        if 'authio' in kwargs and kwargs['authio']:
+            result = int(5.99 * 10 ** 18)
+        return result
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -415,6 +421,19 @@ class ContractDetailsToken(CommonDetails):
         if not self.future_minting:
             self.contract.state = 'ENDED'
             self.contract.save()
+        if self.authio and self.authio_email:
+            self.authio_date_payment = datetime.datetime.now().date()
+            self.authio_date_getting = self.authio_date_payment + datetime.timedelta(days=3)
+            self.save()
+            send_mail(
+                authio_subject,
+                authio_message.format(
+                    address=self.eth_contract_token.address,
+                    email=self.authio_email
+                ),
+                DEFAULT_FROM_EMAIL,
+                [AUTHIO_EMAIL, SUPPORT_EMAIL]
+            )
         return res
 
     @logging

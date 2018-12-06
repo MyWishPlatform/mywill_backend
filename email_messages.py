@@ -121,3 +121,10 @@ Please contact support@mywish.io if you have any questions.
 Best wishes,
 MyWish Team.
 """
+
+authio_subject = """New contract for Branded report Authio"""
+authio_message = """Hello,
+Contract address {address}
+User's email {email}
+Source code
+"""
