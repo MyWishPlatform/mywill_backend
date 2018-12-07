@@ -859,7 +859,8 @@ def buy_brand_report(request):
             token_short_name=details.token_short_name,
             token_type=details.token_type,
             decimals=details.decimals,
-            mint_info=mint_info if mint_info else 'No'
+            mint_info=mint_info if mint_info else 'No',
+            admin_address=details.admin_address
         ),
         from_email=DEFAULT_FROM_EMAIL,
         to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
