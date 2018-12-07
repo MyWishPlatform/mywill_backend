@@ -123,8 +123,23 @@ MyWish Team.
 """
 
 authio_subject = """New contract for Branded report Authio"""
-authio_message = """Hello,
-Contract address {address}
-User's email {email}
-Source code
+authio_message = """Hello!
+
+We want to inform you that the user {email} has created a request to check 
+the smart contract created on the MyWish platform and get a branded report.
+
+Contract parameters (Source code):
+
+1) Token address: {address}
+2)Token name: {token_name}
+3) Token symbol: {token_short_name}
+4) Decimals: {decimals}
+5) Type of Token: {token_type}
+6) Token Owner: 
+7) Mint/Freeze tokens: {mint_info}
+
+Please contact support@mywish.io if you have any questions.
+
+Best wishes,
+MyWish Team.
 """

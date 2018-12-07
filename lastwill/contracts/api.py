@@ -844,11 +844,22 @@ def buy_brand_report(request):
     details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
             days=3)
     details.save()
+    mint_info = ''
+    token_holders = contract.tokenholder_set.all()
+    for th in token_holders:
+        mint_info = mint_info + th.address + '\n'
+        mint_info = mint_info + th.amount + '\n'
+        mint_info = mint_info + th.freeze_date + '\n\n'
     mail = EmailMessage(
         subject=authio_subject,
         body=authio_message.format(
             address=details.eth_contract_token.address,
-            email=details.authio_email
+            email=details.authio_email,
+            token_name=details.token_name,
+            token_short_name=details.token_short_name,
+            token_type=details.token_type,
+            decimals=details.decimals,
+            mint_info=mint_info if mint_info else 'No'
         ),
         from_email=DEFAULT_FROM_EMAIL,
         to=[AUTHIO_EMAIL, SUPPORT_EMAIL]

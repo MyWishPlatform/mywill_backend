@@ -425,11 +425,22 @@ class ContractDetailsToken(CommonDetails):
             self.authio_date_payment = datetime.datetime.now().date()
             self.authio_date_getting = self.authio_date_payment + datetime.timedelta(days=3)
             self.save()
+            mint_info = ''
+            token_holders = self.contract.tokenholder_set.all()
+            for th in token_holders:
+                mint_info = mint_info + th.address + '\n'
+                mint_info = mint_info + th.amount + '\n'
+                mint_info = mint_info + th.freeze_date + '\n\n'
             mail = EmailMessage(
                 subject=authio_subject,
                 body=authio_message.format(
                     address=self.eth_contract_token.address,
-                    email=self.authio_email
+                    email=self.authio_email,
+                    token_name=self.token_name,
+                    token_short_name=self.token_short_name,
+                    token_type=self.token_type,
+                    decimals=self.decimals,
+                    mint_info=mint_info if mint_info else 'No'
                 ),
                 from_email=DEFAULT_FROM_EMAIL,
                 to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
