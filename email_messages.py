@@ -122,7 +122,7 @@ Best wishes,
 MyWish Team.
 """
 
-authio_subject = """New contract for Branded report Authio"""
+authio_subject = """MyWish - Request for brand report"""
 authio_message = """Hello!
 
 We want to inform you that the user {email} has created a request to check 
