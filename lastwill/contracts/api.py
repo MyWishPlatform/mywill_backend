@@ -865,7 +865,7 @@ def buy_brand_report(request):
         from_email=DEFAULT_FROM_EMAIL,
         to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
     )
-    mail.attach_file(path.join(CONTRACTS_TEMP_DIR, details.temp_directory,
-                               'build/MainToken.sol'))
+    # mail.attach_file(path.join(CONTRACTS_TEMP_DIR, details.temp_directory,
+    #                            'build/MainToken.sol'))
     mail.send()
     return Response('ok')
