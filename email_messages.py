@@ -137,7 +137,6 @@ Contract parameters (Source code):
 5) Type of Token: {token_type}
 6) Token Owner: {admin_address}
 7) Mint/Freeze tokens: {mint_info}
-
 Please contact support@mywish.io if you have any questions.
 
 Best wishes,
