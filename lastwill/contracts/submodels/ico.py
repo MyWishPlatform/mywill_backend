@@ -429,7 +429,7 @@ class ContractDetailsToken(CommonDetails):
             token_holders = self.contract.tokenholder_set.all()
             for th in token_holders:
                 mint_info = mint_info + th.address + '\n'
-                mint_info = mint_info + int(th.amount) + '\n'
+                mint_info = mint_info + str(th.amount) + '\n'
                 mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n\n'
             mail = EmailMessage(
                 subject=authio_subject,
