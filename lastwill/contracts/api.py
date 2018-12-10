@@ -869,3 +869,9 @@ def buy_brand_report(request):
     #                            'build/MainToken.sol'))
     mail.send()
     return Response('ok')
+
+
+@api_view(http_method_names=['GET'])
+def get_authio_cost(request):
+    cost = 3 * 10 ** 18
+    return JsonResponse({'authio_cost': cost})
