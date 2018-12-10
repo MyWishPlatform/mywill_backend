@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.db.models import F
 
+from rest_framework.exceptions import ValidationError
+
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import MY_WISH_URL
@@ -69,4 +71,4 @@ def negative_payment(user, value, site_id):
     if not UserSiteBalance.objects.select_for_update().filter(
             user=user, subsite__id=site_id, balance__gte=value
     ).update(balance=F('balance') - value):
-        raise Exception('no money')
+        raise ValidationError({'result': 3}, code=400)
