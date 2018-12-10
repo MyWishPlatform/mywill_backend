@@ -517,6 +517,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                 'admin_address', 'token_type', 'future_minting',
                 'authio', 'authio_email'
         )
+        extra_kwargs = {
+            'last_check': {'authio_date_payment': True},
+            'next_check': {'authio_date_getting': True},
+        }
 
     def create(self, contract, contract_details):
         token_holders = contract_details.pop('token_holders')
