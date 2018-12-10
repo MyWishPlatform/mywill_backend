@@ -518,8 +518,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                 'authio', 'authio_email'
         )
         extra_kwargs = {
-            'last_check': {'authio_date_payment': True},
-            'next_check': {'authio_date_getting': True},
+            'authio_date_payment': {'read_only': True},
+            'authio_date_getting': {'read_only': True},
         }
 
     def create(self, contract, contract_details):
