@@ -31,7 +31,7 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     load_airdrop, get_contract_for_link,
                                     get_invest_balance_day, check_status,
                                     get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
-                                    check_eos_accounts_exists, buy_brand_report)
+                                    check_eos_accounts_exists, buy_brand_report, get_authio_cost)
 from lastwill.other.api import SentenceViewSet
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -92,6 +92,7 @@ urlpatterns = [
     url(r'^api/check_eos_accounts_exists/$', check_eos_accounts_exists),
     url(r'^api/snapshot_get_value/$', snapshot_get_value),
     url(r'^api/buy_brand_report/$', buy_brand_report),
+    url(r'^api/get_authio_cost/$', get_authio_cost),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
