@@ -825,7 +825,7 @@ def check_eos_accounts_exists(request):
 
 @api_view(http_method_names=['POST'])
 def buy_brand_report(request):
-    contract = Contract.objects.get(id=request.data.get('id'))
+    contract = Contract.objects.get(id=request.data.get('contract_id'))
     authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE'):
