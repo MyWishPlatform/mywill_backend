@@ -515,7 +515,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         fields = (
                 'token_name', 'token_short_name', 'decimals',
                 'admin_address', 'token_type', 'future_minting',
-                'authio', 'authio_email'
+                'authio', 'authio_email', 'authio_date_payment',
+                'authio_date_getting'
         )
         extra_kwargs = {
             'authio_date_payment': {'read_only': True},
