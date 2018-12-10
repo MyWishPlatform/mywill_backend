@@ -826,6 +826,7 @@ def check_eos_accounts_exists(request):
 @api_view(http_method_names=['POST'])
 def buy_brand_report(request):
     contract = Contract.objects.get(id=request.data.get('id'))
+    authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE'):
         raise PermissionDenied
@@ -843,6 +844,8 @@ def buy_brand_report(request):
     details.authio_date_payment = datetime.datetime.now().date()
     details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
             days=3)
+    details.authio_email = authio_email
+    details.authio = True
     details.save()
     mint_info = ''
     token_holders = contract.tokenholder_set.all()
@@ -854,7 +857,7 @@ def buy_brand_report(request):
         subject=authio_subject,
         body=authio_message.format(
             address=details.eth_contract_token.address,
-            email=details.authio_email,
+            email=authio_email,
             token_name=details.token_name,
             token_short_name=details.token_short_name,
             token_type=details.token_type,
@@ -873,5 +876,7 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    cost = 3 * 10 ** 18
-    return JsonResponse({'authio_cost': cost})
+    eth_cost = str(3 * 10 ** 18)
+    wish_cost = str(int(to_wish('ETH', int(eth_cost))))
+    btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+    return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
