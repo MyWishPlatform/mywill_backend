@@ -551,9 +551,9 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             if th['freeze_date'] is not None and th['freeze_date'] < now:
                 test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
-        # if details['authio']:
-        #     if not details['authio_email']:
-        #         raise ValidationError
+        if details['authio']:
+            if not details['authio_email']:
+                raise ValidationError
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
