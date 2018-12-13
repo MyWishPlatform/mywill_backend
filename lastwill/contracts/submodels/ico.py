@@ -446,8 +446,13 @@ class ContractDetailsToken(CommonDetails):
                 from_email=DEFAULT_FROM_EMAIL,
                 to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
             )
-            # mail.attach_file(path.join(CONTRACTS_TEMP_DIR, self.temp_directory, 'build/MainToken.sol'))
             mail.send()
+            send_mail(
+                authio_google_subject,
+                authio_google_message,
+                DEFAULT_FROM_EMAIL,
+                [self.authio_email]
+            )
         return res
 
     @logging
