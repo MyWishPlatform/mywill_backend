@@ -143,18 +143,16 @@ Best wishes,
 MyWish Team.
 """
 
-authio_google_subject = """MyWish - Branded Audit Report Request"""
+authio_google_subject = """Branded Audit Report: Project details request"""
 authio_google_message = """Hello!
 
 Thank you for using our service.
 
-Your contract has been sent to Authio to prepare a Branded report.
+Your contract is ready for the report preparation. 
 
-Please fill out the report form Branded Audit Report. (ссылка https://docs.google.com/forms/d/e/1FAIpQLSeHf20iCRocWgnpBwHlSIrvzVeP571EgnBdd2j0tmPpVgFbsg/viewform)    
-
+Please fill out the request form - https://goo.gl/BnMeSi
 If you have questions? you can send them to us at support@mywish.io. We will contact you as soon as possible.
 
--- 
-Best wishes,
-MyWish team
+Thank you,
+MyWish Team
 """
