@@ -32,7 +32,7 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
-from email_messages import authio_message, authio_subject
+from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
 
 
@@ -868,9 +868,13 @@ def buy_brand_report(request):
         from_email=DEFAULT_FROM_EMAIL,
         to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
     )
-    # mail.attach_file(path.join(CONTRACTS_TEMP_DIR, details.temp_directory,
-    #                            'build/MainToken.sol'))
     mail.send()
+    send_mail(
+        authio_google_subject,
+        authio_google_message,
+        DEFAULT_FROM_EMAIL,
+        [authio_email]
+    )
     return Response('ok')
 
 
