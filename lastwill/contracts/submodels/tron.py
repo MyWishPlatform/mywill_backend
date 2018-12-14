@@ -16,7 +16,7 @@ class TRONContract(EthContract):
 
 
 @contract_details('Token contract')
-class ContractDetailsToken(CommonDetails):
+class ContractDetailsTRONToken(CommonDetails):
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
