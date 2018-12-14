@@ -21,12 +21,12 @@ from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
         NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
         ContractDetailsToken, ContractDetailsICO,
-        ContractDetailsAirdrop, AirdropAddress,
+        ContractDetailsAirdrop, AirdropAddress, TRONContract,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
-        ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
+        ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA, ContractDetailsTRONToken
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -1106,5 +1106,81 @@ class ContractDetailsEOSTokenSASerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
 
+class TRONContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TRONContract
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
 
- 
+
+class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTRONToken
+        fields = (
+            'token_name', 'token_short_name', 'decimals',
+            'admin_address', 'token_type', 'future_minting',
+        )
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def validate(self, details):
+        now = timezone.now().timestamp() + 600
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details[
+            'token_short_name']:
+            raise ValidationError
+        if not (0 <= details['decimals'] <= 50):
+            raise ValidationError
+        for th in details['token_holders']:
+            th['amount'] = int(th['amount'])
+        if 'admin_address' not in details or 'token_holders' not in details:
+            raise ValidationError
+        if details['token_name'] == '' or details['token_short_name'] == '':
+            raise ValidationError
+        check.is_address(details['admin_address'])
+        for th in details['token_holders']:
+            check.is_address(th['address'])
+            if th['amount'] <= 0:
+                raise ValidationError
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                test_logger.error('Error freeze date in token serializer')
+                raise ValidationError({'result': 2}, code=400)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th)
+                                for th in
+                                contract_details.contract.tokenholder_set.order_by(
+                                    'id').all()]
+        res['tron_contract_token'] = TRONContractSerializer().to_representation(
+            contract_details.tron_contract_token)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN',
+                                                      'RSK_TESTNET']:
+            res['tron_contract_token']['source_code'] = ''
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('tron_contract_token', None)
+        return super().update(details, kwargs)
