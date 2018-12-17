@@ -30,6 +30,7 @@ def convert(fsym, tsyms):
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
         )
+        print('eosish factor', eosish_factor, flush=True)
         if fsym == 'EOSISH':
             fsym = 'EOS'
             if tsyms == fsym:
@@ -44,9 +45,10 @@ def convert(fsym, tsyms):
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
         raise Exception('currency not allowed')
     print(fsym, tsyms)
-    answer =  json.loads(requests.get(
+    answer = json.loads(requests.get(
         'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)
     ).content.decode())
+    print('currency_proxi answer', answer, flush=True)
     if revesre_convert:
         answer = {'EOSISH': answer['EOS']}
         tsyms = 'EOSISH'
