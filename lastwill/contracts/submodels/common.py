@@ -332,7 +332,7 @@ class Contract(models.Model):
         eos_ico = apps.get_model('contracts', 'ContractDetailsEOSICO')
         eos_airdrop = apps.get_model('contracts', 'ContractDetailsEOSAirdrop')
         eos_token_standalone = apps.get_model('contracts', 'ContractDetailsEOSTokenSA')
-        tron_token = apps.get_model('contracts', 'ContractDetailsTRONToken')
+        # tron_token = apps.get_model('contracts', 'ContractDetailsTRONToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
