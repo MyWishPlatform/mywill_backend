@@ -66,19 +66,23 @@ class ContractDetailsTRONToken(CommonDetails):
         dest, preproc_config = create_directory(self)
         self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
+        for th in token_holders:
+            if th.address.startswith('41'):
+                th.address = '0x' + th.address[2:]
+                th.save()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
         preproc_params['constants'] = add_token_params(
             preproc_params['constants'], self, token_holders,
             False, self.future_minting
         )
-        preproc_params['constants']['D_CONTRACTS_OWNER'] = '0x' + self.admin_address[2:]
+        preproc_params['constants']['D_CONTRACTS_OWNER'] = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile-token'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
-            token_json = json.loads(f.read().decode('utf-8-sig'))
+            token_json = json.loads(f.read().decode('utf-8-sig'))   
         with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         tron_contract_token = TRONContract()

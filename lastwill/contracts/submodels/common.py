@@ -52,7 +52,7 @@ def add_token_params(params, details, token_holders, pause, cont_mint):
     params["D_PAUSE_TOKENS"] = pause
     params["D_PREMINT_COUNT"] = len(token_holders)
     params["D_PREMINT_ADDRESSES"] = ','.join(map(
-        lambda th: 'address(%s)' % '0x' + th.address[2:], token_holders
+        lambda th: 'address(%s)' % th.address, token_holders
     ))
     params["D_PREMINT_AMOUNTS"] = ','.join(map(
         lambda th: 'uint(%s)' % th.amount, token_holders
