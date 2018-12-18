@@ -2,8 +2,8 @@ import datetime
 
 from ethereum import abi
 
-from tronapi import Tron
-from solc import compile_source
+# from tronapi import Tron
+# from solc import compile_source
 
 from django.db import models
 from django.core.mail import send_mail, EmailMessage
