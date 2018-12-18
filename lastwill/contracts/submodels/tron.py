@@ -71,9 +71,7 @@ class ContractDetailsTRONToken(CommonDetails):
             preproc_params['constants'], self, token_holders,
             False, self.future_minting
         )
-        test_token_params(preproc_config, preproc_params, dest)
-        self.lgr.append(('prepoc params', preproc_params))
-        preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
+        preproc_params['constants']['D_CONTRACTS_OWNER'] = '0x' + self.admin_address[2:]
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile-token'.format(dest=dest)):
