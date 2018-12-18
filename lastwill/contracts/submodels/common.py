@@ -350,7 +350,7 @@ class Contract(models.Model):
         contract_details_types[12] = {'name': 'EOS ICO', 'model': eos_ico}
         contract_details_types[13] = {'name': 'EOS Airdrop', 'model': eos_airdrop}
         contract_details_types[14] = {'name': 'EOS Token standalone', 'model': eos_token_standalone}
-        contract_details_types[15] = {'name': 'TRON Token', 'model': tron_token}
+        # contract_details_types[15] = {'name': 'TRON Token', 'model': tron_token}
         return contract_details_types
 
     @classmethod
