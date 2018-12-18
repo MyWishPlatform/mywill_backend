@@ -211,6 +211,7 @@ class ContractSerializer(serializers.ModelSerializer):
             12: ContractDetailsEOSICOSerializer,
             13: ContractDetailsEOSAirdropSerializer,
             14: ContractDetailsEOSTokenSASerializer,
+            15: ContractDetailsTRONToken
         }[contract_type]
 
 
@@ -1167,9 +1168,6 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
                                     'id').all()]
         res['tron_contract_token'] = TRONContractSerializer().to_representation(
             contract_details.tron_contract_token)
-        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN',
-                                                      'RSK_TESTNET']:
-            res['tron_contract_token']['source_code'] = ''
         return res
 
     def update(self, contract, details, contract_details):
