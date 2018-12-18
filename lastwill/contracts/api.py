@@ -561,11 +561,11 @@ def get_statistics_landing(request):
 
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
-    eos = request.query_params.get('eos', False)
+    host = request.META['HTTP_HOST']
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
-        if i > 9 and eos:
+        if host == EOSISH_URL:
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18

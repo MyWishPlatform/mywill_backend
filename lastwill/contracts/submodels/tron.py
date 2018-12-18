@@ -2,6 +2,9 @@ import datetime
 
 from ethereum import abi
 
+from tronapi import Tron
+from solc import compile_source
+
 from django.db import models
 from django.core.mail import send_mail, EmailMessage
 from django.contrib.postgres.fields import JSONField
@@ -82,7 +85,7 @@ class ContractDetailsTRONToken(CommonDetails):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
-            token_json = json.loads(f.read().decode('utf-8-sig'))   
+            token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         tron_contract_token = TRONContract()
@@ -93,11 +96,29 @@ class ContractDetailsTRONToken(CommonDetails):
         tron_contract_token.original_contract = self.contract
         tron_contract_token.source_code = source_code
         tron_contract_token.save()
-        self.tron_contract_token_contract_token = tron_contract_token
+        self.tron_contract_token = tron_contract_token
         self.save()
 
     @blocking
     @postponable
     @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
-        pass
+        print('deploy tron token')
+        full_node = 'https://api.trongrid.io'
+        solidity_node = 'https://api.trongrid.io'
+        event_server = 'https://api.trongrid.io'
+
+        tron = Tron(full_node=full_node,
+                    solidity_node=solidity_node,
+                    event_server=event_server)
+        contract = tron.trx.contract(
+            abi=self.tron_contract_token.abi,
+            bytecode=self.tron_contract_token.bytecode
+        )
+        tx = contract.deploy(
+            fee_limit=10 ** 9,
+            call_value=0,
+            consume_user_resource_percent=1,
+            owner_address='',
+            origin_energy_limit=0
+        )
