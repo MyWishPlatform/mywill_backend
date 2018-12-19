@@ -1150,9 +1150,7 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['token_name'] == '' or details['token_short_name'] == '':
             raise ValidationError
-        check.is_address(details['admin_address'])
         for th in details['token_holders']:
-            check.is_address(th['address'])
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
