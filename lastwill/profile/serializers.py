@@ -14,28 +14,37 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL
+from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL, ROOT_PUBLIC_KEY_TRON
 from lastwill.profile.helpers import valid_totp
 
 def init_profile(user, is_social=False, lang='en'):
     m = hashlib.sha256()
     memo_str1 = os.urandom(8)
     memo_str2 = os.urandom(8)
+    memo_str3 = os.urandom(8)
+
     m.update(memo_str1)
     memo_str1 = binascii.hexlify(memo_str1 + m.digest()[0:2])
     m.update(memo_str2)
     memo_str2 = binascii.hexlify(memo_str2 + m.digest()[0:2])
+    m.update(memo_str3)
+    memo_str3 = binascii.hexlify(memo_str3 + m.digest()[0:2])
 
     wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
+    tron_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_TRON, public=True)
+
 
     btc_address1 = wish_key.ChildKey(user.id).Address()
     btc_address2 = eosish_key.ChildKey(user.id).Address()
+    btc_address3 = tron_key.ChildKey(user.id).Address()
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
+    eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
     wish = SubSite.objects.get(site_name=MY_WISH_URL)
     eosish = SubSite.objects.get(site_name=EOSISH_URL)
+    tron = SubSite.objects.get(site_name=TRON_URL)
 
     Profile(user=user, is_social=is_social, lang=lang).save()
     UserSiteBalance(
@@ -50,6 +59,12 @@ def init_profile(user, is_social=False, lang='en'):
         btc_address=btc_address2,
         memo=memo_str2
     ).save()
+    UserSiteBalance(
+        user=user, subsite=tron,
+        eth_address=eth_address3,
+        btc_address=btc_address3,
+        memo=memo_str3
+    ).save()
     requests.post(
         BITCOIN_URLS['main'],
         json={
@@ -63,6 +78,14 @@ def init_profile(user, is_social=False, lang='en'):
         json={
             'method': 'importaddress',
             'params': [btc_address2, btc_address2, False],
+            'id': 1, 'jsonrpc': '1.0'
+        }
+    )
+    requests.post(
+        BITCOIN_URLS['main'],
+        json={
+            'method': 'importaddress',
+            'params': [btc_address3, btc_address3, False],
             'id': 1, 'jsonrpc': '1.0'
         }
     )
