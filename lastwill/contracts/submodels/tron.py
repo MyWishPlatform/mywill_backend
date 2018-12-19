@@ -66,7 +66,7 @@ class ContractDetailsTRONToken(CommonDetails):
             print('already compiled')
             self.lgr.append('already compiled')
             return
-        dest, preproc_config = create_directory(self)
+        dest, preproc_config = create_directory(self, sour_path='lastwill/tron-token/*')
         self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
         for th in token_holders:
