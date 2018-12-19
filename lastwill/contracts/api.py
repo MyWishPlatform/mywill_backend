@@ -83,7 +83,7 @@ class ContractViewSet(ModelViewSet):
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
-            result = result.filter(contract_type__in=(15))
+            result = result.filter(contract_type=15)
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
