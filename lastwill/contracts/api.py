@@ -79,7 +79,7 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14))
+            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15))
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
