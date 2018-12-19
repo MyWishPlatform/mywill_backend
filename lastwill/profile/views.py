@@ -41,6 +41,8 @@ def profile_view(request):
     site_name = request.META['HTTP_HOST']
     if site_name.startswith('cn'):
         site_name = site_name[2:]
+    if site_name.startswith('local'):
+        site_name = site_name[5:]
     site = SubSite.objects.get(site_name=site_name)
     print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
