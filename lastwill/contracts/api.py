@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
@@ -82,6 +82,8 @@ class ContractViewSet(ModelViewSet):
             result = result.exclude(contract_type__in=(10, 11, 12, 13, 14))
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
+        if host == TRON_URL:
+            result = result.filter(contract_type__in=(15))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -138,7 +140,6 @@ def get_token_contracts(request):
 
 @api_view(http_method_names=['POST'])
 def deploy(request):
-    eos = request.data.get('eos', False)
     host = request.META['HTTP_HOST']
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
@@ -155,10 +156,17 @@ def deploy(request):
         cost = contract_details.calc_cost_eos(kwargs, contract.network)
         currency = 'EOS'
         site_id = 2
-    else:
+    elif host == MY_WISH_URL:
         cost = contract.cost
         currency = 'ETH'
         site_id = 1
+    else:
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost(kwargs, contract.network)
+        currency = 'TRON'
+        site_id = 3
     promo_str = request.data.get('promo', None)
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
