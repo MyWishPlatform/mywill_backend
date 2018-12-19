@@ -1,4 +1,6 @@
 import datetime
+import binascii
+import base58
 
 from ethereum import abi
 
@@ -12,6 +14,13 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+
+
+def convert_address_to_hex(address):
+    short_addresss = address[1:]
+    decode_address = base58.b58decode(short_addresss)[0:21]
+    hex_address = binascii.hexlify(decode_address)
+    return hex_address
 
 
 class TRONContract(EthContract):
@@ -73,12 +82,16 @@ class ContractDetailsTRONToken(CommonDetails):
             if th.address.startswith('41'):
                 th.address = '0x' + th.address[2:]
                 th.save()
+            else:
+                th.address = convert_address_to_hex(th.address)
+                th.save()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
         preproc_params['constants'] = add_token_params(
             preproc_params['constants'], self, token_holders,
             False, self.future_minting
         )
-        preproc_params['constants']['D_CONTRACTS_OWNER'] = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else self.admin_address
+        owner = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
+        preproc_params['constants']['D_CONTRACTS_OWNER'] = owner
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile-token'.format(dest=dest)):
