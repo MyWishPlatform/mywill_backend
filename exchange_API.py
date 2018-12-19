@@ -24,12 +24,13 @@ class memoize_timeout:
 def convert(fsym, tsyms):
     eosish_factor = 1.0
     revesre_convert = False
-    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH'}
+    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
         requests.get('https://api.chaince.com/tickers/eosisheos/',
                      headers={'accept-version': 'v1'}).json()['price']
         )
+        print('eosish factor', eosish_factor, flush=True)
         if fsym == 'EOSISH':
             fsym = 'EOS'
             if tsyms == fsym:
@@ -44,9 +45,10 @@ def convert(fsym, tsyms):
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
         raise Exception('currency not allowed')
     print(fsym, tsyms)
-    answer =  json.loads(requests.get(
+    answer = json.loads(requests.get(
         'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)
     ).content.decode())
+    print('currency_proxi answer', answer, flush=True)
     if revesre_convert:
         answer = {'EOSISH': answer['EOS']}
         tsyms = 'EOSISH'

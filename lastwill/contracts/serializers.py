@@ -1182,3 +1182,4 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
         kwargs.pop('tron_contract_token', None)
         return super().update(details, kwargs)
+
