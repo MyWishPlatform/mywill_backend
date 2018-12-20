@@ -39,9 +39,11 @@ def profile_view(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
     site_name = request.META['HTTP_HOST']
+    print('site name is', site_name)
     if site_name.startswith('cn'):
         site_name = site_name[2:]
     if site_name.startswith('local'):
+        print('cut local')
         site_name = site_name[5:]
     site = SubSite.objects.get(site_name=site_name)
     print(request.user.id, flush=True)
