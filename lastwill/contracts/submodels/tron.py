@@ -21,7 +21,7 @@ def convert_address_to_hex(address):
     short_addresss = address[1:]
     decode_address = base58.b58decode(short_addresss)[0:21]
     hex_address = binascii.hexlify(decode_address)
-    hex_address = '0x' + hex_address.decode("utf-8")
+    hex_address = '0x' + hex_address.decode("utf-8")[2:]
     return hex_address
 
 
