@@ -131,7 +131,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 10000000
         }
         print('deploy_params', deploy_params)
-        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', params=deploy_params)
         print(result.status_code)
         print('<' * 50)
