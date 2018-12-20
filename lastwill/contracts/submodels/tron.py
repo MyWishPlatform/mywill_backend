@@ -123,7 +123,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'consume_user_resource_percent': 0,
             'fee_limit': 0,
             'call_value': 0,
-            'owner_address': convert_address_to_hex(NETWORKS[self.contract.network]['address']),
+            'owner_address': convert_address_to_hex(NETWORKS[self.contract.network.name]['address']),
             'origin_energy_limit': 10000000
         }
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
