@@ -134,7 +134,7 @@ class ContractDetailsTRONToken(CommonDetails):
         result = requests.post(tron_url + '/wallet/deploycontract', params=deploy_params)
         print(result.json)
         print('<' * 50)
-        print(result.content)
+        print(result.body)
         # result = requests.post(tron_url + '/wallet/gettransactionsign', params=result.json)
         # print(result)
         # result = requests.post(tron_url + '/wallet/broadcasttransaction', params=result.json)
