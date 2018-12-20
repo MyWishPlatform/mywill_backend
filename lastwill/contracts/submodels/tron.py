@@ -1,5 +1,6 @@
 import datetime
 import binascii
+import requests
 import base58
 
 from ethereum import abi
@@ -117,21 +118,15 @@ class ContractDetailsTRONToken(CommonDetails):
     @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         print('deploy tron token')
-        full_node = 'https://api.trongrid.io'
-        solidity_node = 'https://api.trongrid.io'
-        event_server = 'https://api.trongrid.io'
-
-        tron = Tron(full_node=full_node,
-                    solidity_node=solidity_node,
-                    event_server=event_server)
-        contract = tron.trx.contract(
-            abi=self.tron_contract_token.abi,
-            bytecode=self.tron_contract_token.bytecode
-        )
-        tx = contract.deploy(
-            fee_limit=10 ** 9,
-            call_value=0,
-            consume_user_resource_percent=1,
-            owner_address='',
-            origin_energy_limit=0
-        )
+        deploy_params = {
+            'abi': self.tron_contract_token.abi,
+            'bytecode': self.tron_contract_token.bytecode,
+            'consume_user_resource_percent': 0,
+            'fee_limit': 0,
+            'call_value': 0,
+            'owner_address': convert_address_to_hex(NETWORKS[self.contract.network]['address']),
+            'origin_energy_limit': 10000000
+        }
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        result = requests.post(tron_url, params=deploy_params)
+        print(result)
