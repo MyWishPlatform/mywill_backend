@@ -130,11 +130,12 @@ class ContractDetailsTRONToken(CommonDetails):
             'owner_address': convert_address_to_hex(NETWORKS[self.contract.network.name]['address']),
             'origin_energy_limit': 10000000
         }
+        print('deploy_params', deploy_params)
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', params=deploy_params)
-        print(result.json)
+        print(result.status_code)
         print('<' * 50)
-        print(result.body)
+        print(result.content)
         # result = requests.post(tron_url + '/wallet/gettransactionsign', params=result.json)
         # print(result)
         # result = requests.post(tron_url + '/wallet/broadcasttransaction', params=result.json)
