@@ -113,9 +113,6 @@ class ContractDetailsTRONToken(CommonDetails):
         self.tron_contract_token = tron_contract_token
         self.save()
 
-    @blocking
-    @postponable
-    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         self.compile()
         print('deploy tron token')
