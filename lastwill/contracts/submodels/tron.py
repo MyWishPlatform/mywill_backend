@@ -19,9 +19,9 @@ from lastwill.contracts.submodels.common import *
 
 def convert_address_to_hex(address):
     short_addresss = address[1:]
-    decode_address = base58.b58decode(short_addresss)[0:21]
+    decode_address = base58.b58decode(short_addresss)[1:21]
     hex_address = binascii.hexlify(decode_address)
-    hex_address = '0x' + hex_address.decode("utf-8")[2:]
+    hex_address = '0x' + hex_address.decode("utf-8")
     return hex_address
 
 
@@ -127,5 +127,5 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 10000000
         }
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        result = requests.post(tron_url, params=deploy_params)
+        result = requests.post(tron_url + '/wallet/deploycontract', params=deploy_params)
         print(result)
