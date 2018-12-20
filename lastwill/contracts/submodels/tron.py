@@ -132,9 +132,11 @@ class ContractDetailsTRONToken(CommonDetails):
         }
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', params=deploy_params)
-        print(result.json())
-        result = requests.post(tron_url + '/wallet/gettransactionsign', params=result.json())
-        print(result)
-        result = requests.post(tron_url + '/wallet/broadcasttransaction', params=result.json())
-        print(result)
+        print(result.json)
+        print('<' * 50)
+        print(result.content)
+        # result = requests.post(tron_url + '/wallet/gettransactionsign', params=result.json)
+        # print(result)
+        # result = requests.post(tron_url + '/wallet/broadcasttransaction', params=result.json)
+        # print(result)
 
