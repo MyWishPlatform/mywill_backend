@@ -39,7 +39,7 @@ def profile_view(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
     site_name = request.META['HTTP_HOST']
-    print('site name is', site_name)
+    # print('site name is', site_name)
     print('requests meta', request.META)
     if site_name.startswith('cn'):
         site_name = site_name[2:]
