@@ -40,6 +40,7 @@ def profile_view(request):
         raise PermissionDenied()
     site_name = request.META['HTTP_HOST']
     print('site name is', site_name)
+    print('requests meta', request.META)
     if site_name.startswith('cn'):
         site_name = site_name[2:]
     if site_name.startswith('local'):
