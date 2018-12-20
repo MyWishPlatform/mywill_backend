@@ -118,8 +118,9 @@ class ContractDetailsTRONToken(CommonDetails):
         self.compile()
         print('deploy tron token')
         deploy_params = {
-            'abi': self.tron_contract_token.abi,
-            'bytecode': self.tron_contract_token.bytecode,
+            'abi': '[]', 'bytecode': '00',
+            # 'abi': self.tron_contract_token.abi,
+            # 'bytecode': self.tron_contract_token.bytecode,
             'consume_user_resource_percent': 0,
             'fee_limit': 0,
             'call_value': 0,
