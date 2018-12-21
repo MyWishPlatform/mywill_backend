@@ -144,6 +144,7 @@ class ContractDetailsTRONToken(CommonDetails):
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         # print(result.content)
         trx = json.dumps(result.content.decode())
+        print(type(trx), trx)
         result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
         print(result.content)
 
