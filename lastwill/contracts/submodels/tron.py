@@ -140,6 +140,7 @@ class ContractDetailsTRONToken(CommonDetails):
         print(type(trx_info), flush=True)
         trx_info['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info)
+        print('trx=', trx)
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         print(result.content)
         # result = requests.post(tron_url + '/wallet/broadcasttransaction', params=result.json)
