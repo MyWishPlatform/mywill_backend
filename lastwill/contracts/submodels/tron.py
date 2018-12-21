@@ -137,7 +137,7 @@ class ContractDetailsTRONToken(CommonDetails):
         tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         trx_info = json.loads(result.content.decode())
-        trx_info = {"txID":"1ad06c31dd7e43b60a512120f82c08f5c30bf12d93db304ae703f1b037f6f38b","contract_address":"413a0eb976c568fd57db8db50243e72f9cccfc3f9e","raw_data":{"contract":[{"parameter":{"value":{"new_contract":{"bytecode":"00","abi":{}}},"type_url":"type.googleapis.com/protocol.CreateSmartContract"},"type":"CreateSmartContract"}],"ref_block_bytes":"46ad","ref_block_hash":"1ad05121fb3610c1","expiration":1545393678000,"timestamp":1545393619993}}
+        trx_info = {"txID":"1ad06c31dd7e43b60a512120f82c08f5c30bf12d93db304ae703f1b037f6f38b","contract_address":"413a0eb976c568fd57db8db50243e72f9cccfc3f9e","raw_data":{"contract":[{"parameter":{"value":{"new_contract":{"bytecode":"00","abi":{}}},"type_url":"type.googleapis.com/protocol.CreateSmartContract"},"type":"CreateSmartContract"}],"ref_block_bytes":"46ad","ref_block_hash":"1ad05121fb3610c1","expiration":1545393678000,"timestamp":1545393619993, 'owner_address': convert_address_to_hex(NETWORKS[self.contract.network.name]['address']), 'origin_address': convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])}}
         trx_info['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info)
         print('trx=', trx, flush=True)
