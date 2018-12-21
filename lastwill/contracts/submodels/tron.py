@@ -1,6 +1,7 @@
 import datetime
 import binascii
 import requests
+import json
 import base58
 
 from ethereum import abi
@@ -130,6 +131,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'owner_address': convert_address_to_hex(NETWORKS[self.contract.network.name]['address']),
             'origin_energy_limit': 10000000
         }
+        deploy_params = json.dumps(deploy_params)
         print('deploy_params', deploy_params)
         tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
