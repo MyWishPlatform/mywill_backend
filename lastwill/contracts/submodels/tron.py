@@ -133,14 +133,13 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 10000000
         }
         deploy_params = json.dumps(deploy_params)
-        print('deploy_params', deploy_params)
+        # print('deploy_params', deploy_params)
         tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
-        print(result.status_code)
-        print('<' * 50)
+        trx = json.dumps(result.content.decode())
+        trx['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
+        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         print(result.content)
-        # result = requests.post(tron_url + '/wallet/gettransactionsign', params=result.json)
-        # print(result)
         # result = requests.post(tron_url + '/wallet/broadcasttransaction', params=result.json)
         # print(result)
 
