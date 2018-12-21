@@ -136,7 +136,7 @@ class ContractDetailsTRONToken(CommonDetails):
         # print('deploy_params', deploy_params)
         tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
-        trx_info = json.dumps(result.content.decode())
+        trx_info = json.loads(result.content.decode())
         print(type(trx_info), flush=True)
         trx_info['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info)
