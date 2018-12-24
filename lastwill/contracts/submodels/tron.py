@@ -152,10 +152,11 @@ class ContractDetailsTRONToken(CommonDetails):
         # print(result.content)
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
-        print(type(trx), trx)
-        # result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
-        # print(result.content)
+        # print(type(trx), trx)
+        result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
+        print(result.content)
         self.tron_contract_token.tx_hash = trx_info2['txID']
+        print('tx_hash=', trx_info2['txID'], flush=True)
         self.tron_contract_token.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
