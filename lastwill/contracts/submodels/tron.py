@@ -143,17 +143,20 @@ class ContractDetailsTRONToken(CommonDetails):
         # print('deploy_params', deploy_params)
         tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
-        trx_info = json.loads(result.content.decode())
-        trx_info = {'transaction': trx_info}
-        trx_info['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
-        trx = json.dumps(trx_info)
+        trx_info1 = json.loads(result.content.decode())
+        trx_info1 = {'transaction': trx_info1}
+        trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
+        trx = json.dumps(trx_info1)
         # print('trx=', trx, flush=True)
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         # print(result.content)
-        trx = json.dumps(json.loads(result.content.decode()))
+        trx_info2 = json.loads(result.content.decode())
+        trx = json.dumps(trx_info2)
         print(type(trx), trx)
-        result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
-        print(result.content)
+        # result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
+        # print(result.content)
+        self.tron_contract_token.tx_hash = trx_info2['txID']
+        self.tron_contract_token.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
