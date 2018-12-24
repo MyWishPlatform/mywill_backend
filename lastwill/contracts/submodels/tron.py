@@ -26,6 +26,13 @@ def convert_address_to_hex(address):
     return hex_address
 
 
+def convert_address_to_wif(address):
+    short_address = address[2:]
+    encode_address = binascii.unhexlify(short_address.encode())
+    wif_address = base58.b58encode(encode_address)
+    return wif_address
+
+
 class TRONContract(EthContract):
     pass
 
