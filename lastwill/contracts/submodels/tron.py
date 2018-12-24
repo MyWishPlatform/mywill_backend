@@ -122,6 +122,8 @@ class ContractDetailsTRONToken(CommonDetails):
         self.tron_contract_token = tron_contract_token
         self.save()
 
+    @blocking
+    @postponable
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         self.compile()
         print('deploy tron token')
@@ -162,7 +164,11 @@ class ContractDetailsTRONToken(CommonDetails):
             self.tron_contract_token.save()
             params = {'value': trx_info2['txID']}
             result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-            print('transaction', result.content, flush=True)
+            ret = json.loads(result.content.decode())
+            # print('transaction', result.content.decode(), flush=True)
+            if ret:
+                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
