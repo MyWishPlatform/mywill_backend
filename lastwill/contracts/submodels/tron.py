@@ -137,7 +137,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'call_value': 0,
             'bandwidth_limit': 1000000,
             'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            'origin_energy_limit': 10000000
+            'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
         # print('deploy_params', deploy_params)
@@ -155,9 +155,11 @@ class ContractDetailsTRONToken(CommonDetails):
         # print(type(trx), trx)
         result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
         print(result.content)
-        self.tron_contract_token.tx_hash = trx_info2['txID']
-        print('tx_hash=', trx_info2['txID'], flush=True)
-        self.tron_contract_token.save()
+        answer = json.loads(result.content.decode())
+        if answer['result']:
+            self.tron_contract_token.tx_hash = trx_info2['txID']
+            print('tx_hash=', trx_info2['txID'], flush=True)
+            self.tron_contract_token.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
