@@ -155,3 +155,6 @@ class ContractDetailsTRONToken(CommonDetails):
         result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
         print(result.content)
 
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        self.contract.state = 'DONE'
+        self.contract.save()
