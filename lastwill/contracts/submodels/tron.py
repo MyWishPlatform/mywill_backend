@@ -22,7 +22,7 @@ def convert_address_to_hex(address):
     # short_addresss = address[1:]
     decode_address = base58.b58decode(address)[1:21]
     hex_address = binascii.hexlify(decode_address)
-    hex_address = '41' + hex_address.decode("utf-8")
+    hex_address = '0x' + hex_address.decode("utf-8")
     return hex_address
 
 
@@ -136,7 +136,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'fee_limit': 0,
             'call_value': 0,
             'bandwidth_limit': 1000000,
-            'owner_address': convert_address_to_hex(NETWORKS[self.contract.network.name]['address']),
+            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
             'origin_energy_limit': 10000000
         }
         deploy_params = json.dumps(deploy_params)
