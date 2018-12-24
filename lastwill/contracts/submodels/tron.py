@@ -22,7 +22,7 @@ def convert_address_to_hex(address):
     # short_addresss = address[1:]
     decode_address = base58.b58decode(address)[1:21]
     hex_address = binascii.hexlify(decode_address)
-    hex_address = '0x' + hex_address.decode("utf-8")
+    hex_address = '41' + hex_address.decode("utf-8")
     return hex_address
 
 
