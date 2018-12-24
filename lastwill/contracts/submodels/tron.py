@@ -133,7 +133,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'abi': str(abi),
             'bytecode': self.tron_contract_token.bytecode,
             'consume_user_resource_percent': 0,
-            'fee_limit': 0,
+            'fee_limit': 1000000000,
             'call_value': 0,
             'bandwidth_limit': 1000000,
             'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
@@ -160,6 +160,9 @@ class ContractDetailsTRONToken(CommonDetails):
             self.tron_contract_token.tx_hash = trx_info2['txID']
             print('tx_hash=', trx_info2['txID'], flush=True)
             self.tron_contract_token.save()
+            params = {'value': trx_info2['txID']}
+            result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+            print('transaction', result.content, flush=True)
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
