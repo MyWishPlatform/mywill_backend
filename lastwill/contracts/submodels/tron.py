@@ -156,5 +156,5 @@ class ContractDetailsTRONToken(CommonDetails):
         print(result.content)
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        self.contract.state = 'DONE'
+        self.contract.state = 'ACTIVE'
         self.contract.save()
