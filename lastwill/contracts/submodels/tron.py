@@ -167,6 +167,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        take_off_blocking(self.contract.network.name)
 
     def ownershipTransferred(self, message):
         if self.eth_contract_token.original_contract.state not in (
