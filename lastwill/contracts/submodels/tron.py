@@ -146,7 +146,7 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
         trx_info1 = json.loads(result.content.decode())
