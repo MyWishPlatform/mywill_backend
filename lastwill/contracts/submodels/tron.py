@@ -35,8 +35,8 @@ def convert_address_to_wif(address):
     m.update(first_part)
     control_sum = m.digest()
     address_with_sum = binascii.hexlify(first_part + control_sum[0:4])
-    encode_address = address_with_sum.encode()
-    wif_address = base58.b58encode(encode_address)
+    # encode_address = address_with_sum.encode()
+    wif_address = base58.b58encode(address_with_sum)
     return wif_address
 
 
