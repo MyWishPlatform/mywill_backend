@@ -2,6 +2,7 @@ import datetime
 import binascii
 import requests
 import json
+import hashlib
 import base58
 
 from ethereum import abi
@@ -27,8 +28,12 @@ def convert_address_to_hex(address):
 
 
 def convert_address_to_wif(address):
-    short_address = address[2:]
-    encode_address = binascii.unhexlify(short_address.encode())
+    short_address = '0x41' + address[2:]
+    m = hashlib.sha256()
+    first_part = m.update(short_address.encode()).digest()
+    control_sum = m.update(first_part).digest()
+    address_with_sum = binascii.hexlify(first_part + control_sum[0:4])
+    encode_address = address_with_sum.encode()
     wif_address = base58.b58encode(encode_address)
     return wif_address
 
