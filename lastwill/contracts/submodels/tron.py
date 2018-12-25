@@ -30,8 +30,10 @@ def convert_address_to_hex(address):
 def convert_address_to_wif(address):
     short_address = '0x41' + address[2:]
     m = hashlib.sha256()
-    first_part = m.update(short_address.encode()).digest()
-    control_sum = m.update(first_part).digest()
+    m.update(short_address.encode())
+    first_part = m.digest()
+    m.update(first_part)
+    control_sum = m.digest()
     address_with_sum = binascii.hexlify(first_part + control_sum[0:4])
     encode_address = address_with_sum.encode()
     wif_address = base58.b58encode(encode_address)
