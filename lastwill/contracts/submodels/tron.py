@@ -160,6 +160,7 @@ class ContractDetailsTRONToken(CommonDetails):
         result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
         print(result.content)
         answer = json.loads(result.content.decode())
+        print('answer=', answer, flush=True)
         if answer['result']:
             self.tron_contract_token.tx_hash = trx_info2['txID']
             print('tx_hash=', trx_info2['txID'], flush=True)
