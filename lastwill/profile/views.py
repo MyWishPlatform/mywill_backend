@@ -12,6 +12,7 @@ from allauth.account.views import ConfirmEmailView
 
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
+from lastwill.settings import TRON_URL, MY_WISH_URL
 from lastwill.profile.models import SubSite, UserSiteBalance
 
 
@@ -46,6 +47,8 @@ def profile_view(request):
     if site_name.startswith('local'):
         print('cut local')
         site_name = site_name[5:]
+    if site_name == TRON_URL:
+        site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
     print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
