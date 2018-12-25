@@ -165,8 +165,8 @@ def deploy(request):
             contract.contract_type
         )().to_representation(contract_details)
         cost = contract_details.calc_cost(kwargs, contract.network)
-        currency = 'TRON'
-        site_id = 3
+        currency = 'ETH'
+        site_id = 1
     promo_str = request.data.get('promo', None)
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
