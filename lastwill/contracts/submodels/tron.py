@@ -129,9 +129,6 @@ class ContractDetailsTRONToken(CommonDetails):
         print('deploy tron token')
         abi = json.dumps(self.tron_contract_token.abi)
         deploy_params = {
-            # 'abi': '[]', 'bytecode': '00',
-            # "abi": "[{\"constant\":false,\"inputs\":[{\"name\":\"key\",\"type\":\"uint256\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"key\",\"type\":\"uint256\"}],\"name\":\"get\",\"outputs\":[{\"name\":\"value\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
-            # "bytecode": "608060405234801561001057600080fd5b5060de8061001f6000396000f30060806040526004361060485763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631ab06ee58114604d5780639507d39a146067575b600080fd5b348015605857600080fd5b506065600435602435608e565b005b348015607257600080fd5b50607c60043560a0565b60408051918252519081900360200190f35b60009182526020829052604090912055565b600090815260208190526040902054905600a165627a7a72305820fdfe832221d60dd582b4526afa20518b98c2e1cb0054653053a844cf265b25040029",
             'abi': str(abi),
             'bytecode': self.tron_contract_token.bytecode,
             'consume_user_resource_percent': 0,
@@ -142,19 +139,17 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        # print('deploy_params', deploy_params)
         tron_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
+        print('transaction created')
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
-        # print('trx=', trx, flush=True)
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
-        # print(result.content)
+        print('transaction sign')
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
-        # print(type(trx), trx)
         result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
         print(result.content)
         answer = json.loads(result.content.decode())
@@ -165,7 +160,6 @@ class ContractDetailsTRONToken(CommonDetails):
             params = {'value': trx_info2['txID']}
             result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
             ret = json.loads(result.content.decode())
-            # print('transaction', result.content.decode(), flush=True)
             if ret:
                 self.contract.state = 'WAITING_FOR_DEPLOYMENT'
                 self.contract.save()
@@ -173,3 +167,26 @@ class ContractDetailsTRONToken(CommonDetails):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+
+    def ownershipTransferred(self, message):
+        if self.eth_contract_token.original_contract.state not in (
+                'UNDER_CROWDSALE', 'ENDED'
+        ):
+            self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
+            self.eth_contract_token.original_contract.save()
+
+    def finalized(self, message):
+        if self.eth_contract_token.original_contract.state != 'ENDED':
+            self.eth_contract_token.original_contract.state = 'ENDED'
+            self.eth_contract_token.original_contract.save()
+        if (self.eth_contract_token.original_contract.id !=
+                self.eth_contract_token.contract.id and
+                self.eth_contract_token.contract.state != 'ENDED'):
+            self.eth_contract_token.contract.state = 'ENDED'
+            self.eth_contract_token.contract.save()
+
+    def check_contract(self):
+        pass
+
+    def initialized(self, message):
+        pass
