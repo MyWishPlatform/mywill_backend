@@ -157,13 +157,14 @@ class ContractDetailsTRONToken(CommonDetails):
         self.tron_contract_token.save()
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
+        print('before', trx)
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         print('transaction sign')
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
-        print('trx_info:')
+        print('after', trx)
         # print(trx)
-        for i in range (5):
+        for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
             print(result.content)
