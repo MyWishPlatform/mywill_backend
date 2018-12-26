@@ -129,6 +129,11 @@ class ContractDetailsTRONToken(CommonDetails):
         tron_contract_token.save()
         self.tron_contract_token = tron_contract_token
         self.save()
+        token_holders = self.contract.tokenholder_set.all()
+        for th in token_holders:
+            if th.address.startswith('0x'):
+                th.address = '41' + th.address[2:]
+                th.save()
 
     @blocking
     @postponable
