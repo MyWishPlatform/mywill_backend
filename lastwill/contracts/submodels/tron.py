@@ -80,7 +80,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(2.99 * 10 ** 18)
+        result = int(5 * 10 ** 18)
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -157,12 +157,12 @@ class ContractDetailsTRONToken(CommonDetails):
         self.tron_contract_token.save()
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
-        print('before', trx)
+        # print('before', trx)
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         print('transaction sign')
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
-        print('after', trx)
+        # print('after', trx)
         # print(trx)
         for i in range(5):
             print('attempt=', i)
