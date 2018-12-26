@@ -14,7 +14,7 @@ from rest_auth.serializers import (
 )
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL, ROOT_PUBLIC_KEY_TRON
+from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL
 from lastwill.profile.helpers import valid_totp
 
 def init_profile(user, is_social=False, lang='en'):
@@ -32,15 +32,11 @@ def init_profile(user, is_social=False, lang='en'):
 
     wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
-    tron_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_TRON, public=True)
-
 
     btc_address1 = wish_key.ChildKey(user.id).Address()
     btc_address2 = eosish_key.ChildKey(user.id).Address()
-    btc_address3 = tron_key.ChildKey(user.id).Address()
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
-    eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
     wish = SubSite.objects.get(site_name=MY_WISH_URL)
     eosish = SubSite.objects.get(site_name=EOSISH_URL)
@@ -59,12 +55,6 @@ def init_profile(user, is_social=False, lang='en'):
         btc_address=btc_address2,
         memo=memo_str2
     ).save()
-    UserSiteBalance(
-        user=user, subsite=tron,
-        eth_address=eth_address3,
-        btc_address=btc_address3,
-        memo=memo_str3
-    ).save()
     requests.post(
         BITCOIN_URLS['main'],
         json={
@@ -81,14 +71,7 @@ def init_profile(user, is_social=False, lang='en'):
             'id': 1, 'jsonrpc': '1.0'
         }
     )
-    requests.post(
-        BITCOIN_URLS['main'],
-        json={
-            'method': 'importaddress',
-            'params': [btc_address3, btc_address3, False],
-            'id': 1, 'jsonrpc': '1.0'
-        }
-    )
+
 
 class UserRegisterSerializer(RegisterSerializer):
     def save(self, request):
