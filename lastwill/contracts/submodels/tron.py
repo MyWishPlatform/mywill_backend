@@ -2,6 +2,7 @@ import datetime
 import binascii
 import requests
 import json
+import time
 import hashlib
 import base58
 
@@ -151,6 +152,7 @@ class ContractDetailsTRONToken(CommonDetails):
         print('transaction created')
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
+        print('trx info', trx_info1)
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
@@ -158,21 +160,26 @@ class ContractDetailsTRONToken(CommonDetails):
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         print('trx_info:')
-        print(trx)
-        result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
-        print(result.content)
-        answer = json.loads(result.content.decode())
-        print('answer=', answer, flush=True)
-        if answer['result']:
-            self.tron_contract_token.tx_hash = trx_info2['txID']
-            print('tx_hash=', trx_info2['txID'], flush=True)
-            self.tron_contract_token.save()
-            params = {'value': trx_info2['txID']}
-            result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-            ret = json.loads(result.content.decode())
-            if ret:
-                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-                self.contract.save()
+        # print(trx)
+        for i in range (5):
+            result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
+            print(result.content)
+            answer = json.loads(result.content.decode())
+            print('answer=', answer, flush=True)
+            if answer['result']:
+                params = {'value': trx_info2['txID']}
+                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+                ret = json.loads(result.content.decode())
+                if ret:
+                    self.tron_contract_token.tx_hash = trx_info2['txID']
+                    print('tx_hash=', trx_info2['txID'], flush=True)
+                    self.tron_contract_token.save()
+                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                    self.contract.save()
+                    return
+            time.sleep(5)
+        else:
+                raise ValidationError({'result': 1}, code=400)
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
