@@ -26,7 +26,8 @@ from lastwill.contracts.models import (
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
-        ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA, ContractDetailsTRONToken
+        ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
+        ContractDetailsTRONToken, ContractDetailsGameAssets
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -211,7 +212,8 @@ class ContractSerializer(serializers.ModelSerializer):
             12: ContractDetailsEOSICOSerializer,
             13: ContractDetailsEOSAirdropSerializer,
             14: ContractDetailsEOSTokenSASerializer,
-            15: ContractDetailsTRONTokenSerializer
+            15: ContractDetailsTRONTokenSerializer,
+            16: ContractDetailsGameAssetsSerializer
         }[contract_type]
 
 
@@ -1181,3 +1183,38 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
         kwargs.pop('tron_contract_token', None)
         return super().update(details, kwargs)
 
+
+class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsGameAssets
+        fields = (
+            'token_name', 'token_short_name', 'admin_address',
+        )
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def validate(self, details):
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details[
+            'token_short_name']:
+            raise ValidationError
+        if 'admin_address' not in details:
+            raise ValidationError
+        if details['token_name'] == '' or details['token_short_name'] == '':
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['tron_contract_token'] = TRONContractSerializer().to_representation(
+            contract_details.tron_contract_token)
+        return res
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('tron_contract_token', None)
+        return super().update(details, kwargs)

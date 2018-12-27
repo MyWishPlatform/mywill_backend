@@ -79,11 +79,11 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15))
+            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16))
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
-            result = result.filter(contract_type=15)
+            result = result.filter(contract_type__in=(15, 16))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
