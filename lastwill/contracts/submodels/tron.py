@@ -206,7 +206,7 @@ class ContractDetailsTRONToken(CommonDetails):
         if self.tron_contract_token.original_contract.state != 'ENDED':
             self.tron_contract_token.original_contract.state = 'ENDED'
             self.tron_contract_token.original_contract.save()
-        if (self.tron_contract_token_contract_token.original_contract.id !=
+        if (self.tron_contract_token.original_contract.id !=
                 self.tron_contract_token.contract.id and
                 self.tron_contract_token.contract.state != 'ENDED'):
             self.tron_contract_token.contract.state = 'ENDED'
@@ -360,7 +360,7 @@ class ContractDetailsGameAssets(CommonDetails):
         if self.tron_contract_token.original_contract.state != 'ENDED':
             self.tron_contract_token.original_contract.state = 'ENDED'
             self.tron_contract_token.original_contract.save()
-        if (self.tron_contract_token_contract_token.original_contract.id !=
+        if (self.tron_contract_token.original_contract.id !=
                 self.tron_contract_token.contract.id and
                 self.tron_contract_token.contract.state != 'ENDED'):
             self.tron_contract_token.contract.state = 'ENDED'
