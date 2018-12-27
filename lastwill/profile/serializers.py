@@ -40,7 +40,6 @@ def init_profile(user, is_social=False, lang='en'):
 
     wish = SubSite.objects.get(site_name=MY_WISH_URL)
     eosish = SubSite.objects.get(site_name=EOSISH_URL)
-    tron = SubSite.objects.get(site_name=TRON_URL)
 
     Profile(user=user, is_social=is_social, lang=lang).save()
     UserSiteBalance(
