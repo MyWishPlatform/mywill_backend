@@ -224,6 +224,7 @@ class ContractDetailsGameAssets(CommonDetails):
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
+    temp_directory = models.CharField(max_length=36)
     tron_contract_token = models.ForeignKey(
         TRONContract,
         null=True,
