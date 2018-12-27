@@ -259,7 +259,7 @@ class ContractDetailsGameAssets(CommonDetails):
             print('already compiled')
             self.lgr.append('already compiled')
             return
-        dest, preproc_config = create_directory(self, sour_path='lastwill/tron-token/*')
+        dest, preproc_config = create_directory(self, sour_path='lastwill/game-assets-contract/*')
         self.lgr.append('dest %s' % dest)
         owner = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
         preproc_params = {"constants":
