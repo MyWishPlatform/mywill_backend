@@ -1188,7 +1188,7 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsGameAssets
         fields = (
-            'token_name', 'token_short_name', 'admin_address',
+            'token_name', 'token_short_name', 'admin_address', 'uri'
         )
 
     def create(self, contract, contract_details):

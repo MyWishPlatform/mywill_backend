@@ -225,6 +225,7 @@ class ContractDetailsGameAssets(CommonDetails):
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
     temp_directory = models.CharField(max_length=36)
+    uri = models.CharField(max_length=2000)
     tron_contract_token = models.ForeignKey(
         TRONContract,
         null=True,
@@ -266,7 +267,8 @@ class ContractDetailsGameAssets(CommonDetails):
             {
                 "D_NAME": self.token_name,
                 "D_SYMBOL": self.token_short_name,
-                "D_OWNER": owner
+                "D_OWNER": owner,
+                "D_URI": self.uri
             }
 }
         with open(preproc_config, 'w') as f:
