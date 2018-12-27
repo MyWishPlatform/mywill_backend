@@ -228,7 +228,7 @@ class ContractDetailsGameAssets(CommonDetails):
         TRONContract,
         null=True,
         default=None,
-        related_name='token_details',
+        related_name='game_asset_details',
         on_delete=models.SET_NULL
     )
 
