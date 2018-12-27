@@ -196,21 +196,21 @@ class ContractDetailsTRONToken(CommonDetails):
         take_off_blocking(self.contract.network.name)
 
     def ownershipTransferred(self, message):
-        if self.eth_contract_token.original_contract.state not in (
+        if self.tron_contract_token.original_contract.state not in (
                 'UNDER_CROWDSALE', 'ENDED'
         ):
-            self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
-            self.eth_contract_token.original_contract.save()
+            self.tron_contract_token.original_contract.state = 'UNDER_CROWDSALE'
+            self.tron_contract_token.original_contract.save()
 
     def finalized(self, message):
-        if self.eth_contract_token.original_contract.state != 'ENDED':
-            self.eth_contract_token.original_contract.state = 'ENDED'
-            self.eth_contract_token.original_contract.save()
-        if (self.eth_contract_token.original_contract.id !=
-                self.eth_contract_token.contract.id and
-                self.eth_contract_token.contract.state != 'ENDED'):
-            self.eth_contract_token.contract.state = 'ENDED'
-            self.eth_contract_token.contract.save()
+        if self.tron_contract_token.original_contract.state != 'ENDED':
+            self.tron_contract_token.original_contract.state = 'ENDED'
+            self.tron_contract_token.original_contract.save()
+        if (self.tron_contract_token.original_contract.id !=
+                self.tron_contract_token.contract.id and
+                self.tron_contract_token.contract.state != 'ENDED'):
+            self.tron_contract_token.contract.state = 'ENDED'
+            self.tron_contract_token.contract.save()
 
     def check_contract(self):
         pass
