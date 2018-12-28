@@ -127,6 +127,10 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'EOS'
             if network.name == 'EOS_TESTNET':
                 network_name = 'EOS Testnet'
+            if network.name == 'TRON_MAINNET':
+                network_name = 'TRON'
+            if network.name == 'TRON_TESTNET':
+                network_name = 'TRON Testnet'
             if contract.contract_type != 11:
                 send_mail(
                         email_messages.create_subject,
@@ -161,7 +165,8 @@ class ContractSerializer(serializers.ModelSerializer):
         res['cost'] = {
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
-            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
+            'TRX': str(int(eth_cost) * convert('ETH', 'TRX')['TRX'])
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
