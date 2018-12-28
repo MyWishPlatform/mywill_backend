@@ -247,7 +247,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(5 * 10 ** 18)
+        result = int(0.5 * 10 ** 18)
         return result
 
     def get_arguments(self, eth_contract_attr_name):
