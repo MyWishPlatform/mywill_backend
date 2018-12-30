@@ -63,7 +63,7 @@ def positive_payment(user, value, site_id, currency):
     else:
         if currency not in ['EOS', 'EOSISH']:
             FreezeBalance.objects.select_for_update().filter(id=1).update(
-                eosish=F('eosish') + (value * 0.15) * 10 ** 4
+                eosish=F('eosish') + (value * 0.15)
             )
         else:
             FreezeBalance.objects.select_for_update().filter(id=1).update(
