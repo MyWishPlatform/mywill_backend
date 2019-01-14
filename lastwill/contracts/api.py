@@ -169,7 +169,11 @@ def deploy(request):
         currency = 'ETH'
         site_id = 1
     promo_str = request.data.get('promo', None)
-    discount = Promo.objects.get(promo_str=promo_str).discount
+    promo = Promo.objects.filter(promo_str=promo_str).fisrt()
+    if promo:
+        discount = promo.discount
+    else:
+        discount = 0
     cost = cost - cost * discount / 100
     if UserSiteBalance.objects.get(user=requests.user, subsite__id=site_id).balance >= cost:
         cost = check_and_apply_promocode(
@@ -321,7 +325,7 @@ def get_balances_statistics():
         '&tag=latest'
         '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
                                                 )['result']) / 10 ** 18
-    eos_url = 'http://%s:%s' % (
+    eos_url = 'https://%s:%s' % (
         str(NETWORKS['EOS_TESTNET']['host']),
         str(NETWORKS['EOS_TESTNET']['port'])
     )
@@ -368,7 +372,7 @@ def get_balances_statistics():
                                'ram_usage']
                            ) / 1024
 
-    eos_url = 'http://%s:%s' % (
+    eos_url = 'https://%s:%s' % (
         str(NETWORKS['EOS_MAINNET']['host']),
         str(NETWORKS['EOS_MAINNET']['port'])
     )
