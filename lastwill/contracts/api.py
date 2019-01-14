@@ -3,6 +3,7 @@ import datetime
 from os import path
 from subprocess import Popen, PIPE
 import requests
+from threading import Timer
 
 from django.utils import timezone
 from django.db.models import F
@@ -24,6 +25,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
 from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL
+from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
@@ -335,12 +337,19 @@ def get_balances_statistics():
         print('attempt', attempt, flush=True)
         proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
+        timer = Timer(CLEOS_TIME_LIMIT, proc.kill)
+        try:
+            timer.start()
+            stdout, stderr = proc.communicate()
+        finally:
+            timer.cancel()
         # print(stdout, stderr, flush=True)
         result = stdout.decode()
         if result:
             eos_test_account_balance = float(
                 result.split('\n')[0].split(' ')[0])
             break
+        time.sleep(CLEOS_TIME_COOLDOWN)
     else:
         raise Exception(
             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
