@@ -28,6 +28,7 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo
 from lastwill.promo.api import check_and_get_discount
+from lastwill.profile.models import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
@@ -168,15 +169,20 @@ def deploy(request):
         currency = 'ETH'
         site_id = 1
     promo_str = request.data.get('promo', None)
-    cost = check_and_apply_promocode(
-        promo_str, request.user, cost, contract.contract_type, contract.id
-    )
-    create_payment(request.user.id, '', currency, -cost, site_id)
-    contract.state = 'WAITING_FOR_DEPLOYMENT'
-    contract.save()
-    queue = NETWORKS[contract.network.name]['queue']
-    send_in_queue(contract.id, 'launch', queue)
-    return Response('ok')
+    discount = Promo.objects.get(promo_str=promo_str).discount
+    cost = cost - cost * discount / 100
+    if UserSiteBalance.objects.get(user=requests.user, subsite__id=site_id).balance >= cost:
+        cost = check_and_apply_promocode(
+            promo_str, request.user, cost, contract.contract_type, contract.id
+        )
+        create_payment(request.user.id, '', currency, -cost, site_id)
+        contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.save()
+        queue = NETWORKS[contract.network.name]['queue']
+        send_in_queue(contract.id, 'launch', queue)
+        return Response('ok')
+    else:
+        raise ValidationError({'result': 3}, code=400)
 
 
 @api_view(http_method_names=['POST'])
