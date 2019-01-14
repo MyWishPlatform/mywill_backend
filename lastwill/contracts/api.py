@@ -169,7 +169,7 @@ def deploy(request):
         currency = 'ETH'
         site_id = 1
     promo_str = request.data.get('promo', None)
-    promo = Promo.objects.filter(promo_str=promo_str).fisrt()
+    promo = Promo.objects.filter(promo_str=promo_str).first()
     if promo:
         discount = promo.discount
     else:
