@@ -107,7 +107,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         unlock_eos_account(wallet_name, password)
         creator_account = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
-        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        eos_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [ 
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
@@ -133,7 +133,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         creator_account = NETWORKS[self.contract.network.name]['address']
-        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        eos_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
         
         if self.decimals != 0:
