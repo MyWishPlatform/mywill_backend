@@ -408,11 +408,18 @@ def get_balances_statistics():
         proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
         # print(stdout, stderr, flush=True)
+        timer = Timer(CLEOS_TIME_LIMIT, proc.kill)
+        try:
+            timer.start()
+            stdout, stderr = proc.communicate()
+        finally:
+            timer.cancel()
         result = stdout.decode()
         if result:
             eos_account_balance = float(
                 result.split('\n')[0].split(' ')[0])
             break
+        time.sleep(CLEOS_TIME_COOLDOWN)
     else:
         raise Exception(
             'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
