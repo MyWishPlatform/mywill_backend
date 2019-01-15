@@ -171,15 +171,22 @@ def deploy(request):
         currency = 'ETH'
         site_id = 1
     promo_str = request.data.get('promo', None)
-    cost = check_and_apply_promocode(
+    promo = Promo.objects.filter(promo_str=promo_str).first()
+    discount = promo.discount if promo else 0
+    cost = cost - cost * discount / 100
+    if UserSiteBalance.objects.get(user=requests.user,
+                                   subsite__id=site_id).balance >= cost:
+        cost = check_and_apply_promocode(
             promo_str, request.user, cost, contract.contract_type, contract.id
         )
-    create_payment(request.user.id, '', currency, -cost, site_id)
-    contract.state = 'WAITING_FOR_DEPLOYMENT'
-    contract.save()
-    queue = NETWORKS[contract.network.name]['queue']
-    send_in_queue(contract.id, 'launch', queue)
-    return Response('ok')
+        create_payment(request.user.id, '', currency, -cost, site_id)
+        contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.save()
+        queue = NETWORKS[contract.network.name]['queue']
+        send_in_queue(contract.id, 'launch', queue)
+        return Response('ok')
+    else:
+        raise ValidationError({'result': 3}, code=400)
 
 
 @api_view(http_method_names=['POST'])
