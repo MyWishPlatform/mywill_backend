@@ -174,7 +174,7 @@ def deploy(request):
     promo = Promo.objects.filter(promo_str=promo_str).first()
     discount = promo.discount if promo else 0
     cost = cost - cost * discount / 100
-    if UserSiteBalance.objects.get(user=requests.user,
+    if UserSiteBalance.objects.get(user=request.user,
                                    subsite__id=site_id).balance >= cost:
         cost = check_and_apply_promocode(
             promo_str, request.user, cost, contract.contract_type, contract.id
