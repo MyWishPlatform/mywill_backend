@@ -28,7 +28,7 @@ from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPO
 from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
-from lastwill.promo.models import Promo, User2Promo
+from lastwill.promo.models import Promo, User2Promo, Promo2ContractType
 from lastwill.promo.api import check_and_get_discount
 from lastwill.profile.models import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
@@ -172,7 +172,11 @@ def deploy(request):
         site_id = 1
     promo_str = request.data.get('promo', None)
     promo = Promo.objects.filter(promo_str=promo_str).first()
-    discount = promo.discount if promo else 0
+    if promo:
+        promo2contract = Promo2ContractType.objects.filter(promo=promo, contract_type=contract.contract_type).first()
+        discount = promo2contract.discount if promo2contract else 0
+    else:
+        discount = 0
     cost = cost - cost * discount / 100
     if UserSiteBalance.objects.get(user=request.user,
                                    subsite__id=site_id).balance >= cost:
