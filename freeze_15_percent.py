@@ -297,14 +297,14 @@ def freeze_eosish(amount):
 
 def check_payments():
     freeze_balance = FreezeBalance.objects.all().first()
-    if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
-        freeze_eosish(freeze_balance.eosish)
-        freeze_balance.eosish = 0
-        freeze_balance.save()
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
         freeze_wish(freeze_balance.wish)
         freeze_balance.wish = 0
         freeze_balance.save()
+    if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
+      freeze_eosish(freeze_balance.eosish)
+      freeze_balance.eosish = 0
+      freeze_balance.save()
 
 
 if __name__ == '__main__':
