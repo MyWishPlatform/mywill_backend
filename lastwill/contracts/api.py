@@ -133,7 +133,7 @@ def get_token_contracts(request):
             res.append({
                     'id': ec.id,
                     'address': ec.address,
-                    'token_name': details.token_name, 
+                    'token_name': details.token_name,
                     'token_short_name': details.token_short_name,
                     'decimals': details.decimals,
                     'state': state
@@ -191,7 +191,6 @@ def i_am_alive(request):
     if details.last_press_imalive:
         delta = timezone.now() - details.last_press_imalive
         if delta.days < 1:
-            test_logger.error('i am alive error')
             raise PermissionDenied(3000)
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'confirm_alive', queue)
@@ -772,7 +771,7 @@ def check_status(request):
             contract.save()
         elif details.is_transferable_at_once and now > result['finish'] and int(result['total_tokens']) >= details.soft_cap:
             contract.state = 'DONE'
-            contract.save()        
+            contract.save()
         elif details.is_transferable_at_once and int(result['total_tokens']) >= details.hard_cap:
             contract.state = 'DONE'
             contract.save()

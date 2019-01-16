@@ -20,7 +20,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     )
     temp_directory = models.CharField(max_length=36)
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
-    
+
     def predeploy_validate(self):
         now = timezone.now()
         token_holders = self.contract.eostokenholder_set.all()
@@ -97,7 +97,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.eos_contract = eos_contract
         self.save()
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -108,7 +107,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         creator_account = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         eos_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        command = [ 
+        command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
             our_public_key, '--stake-net', '10' + ' EOS',
@@ -126,7 +125,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.contract.save()
 
 
-    @logging
     @blocking
     @postponable
     def newAccount(self, message):
@@ -135,12 +133,12 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         creator_account = NETWORKS[self.contract.network.name]['address']
         eos_url = 'https://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
-        
+
         if self.decimals != 0:
             max_supply = str(self.maximum_supply)[:-self.decimals] + '.' + str(self.maximum_supply)[-self.decimals:]
         else:
             max_supply = str(self.maximum_supply)
-        
+
         raw_data = json.dumps({'maximum_supply': max_supply + ' ' + self.token_short_name, 'issuer': self.admin_address})
 
 
@@ -172,7 +170,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         )
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
-        command = [ 
+        command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
             path.join(dest, 'deploy_params.json'), '-j',
             '-p', self.token_account
@@ -184,10 +182,10 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.eos_contract.save()
 
 
-        
+
     def deployed(self, message):
         return
-       
+
     def setcode(self, message):
         return
 

@@ -154,7 +154,6 @@ def add_real_params(params, admin_address, address, wallet_address):
 
 def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name='c-preprocessor-config.json'):
     details.temp_directory = str(uuid.uuid4())
-    test_logger.info('temp directory = %s' % details.temp_directory)
     print(details.temp_directory, flush=True)
     sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
@@ -391,9 +390,7 @@ class CommonDetails(models.Model):
     class Meta:
         abstract = True
     contract = models.ForeignKey(Contract)
-    lgr =[]
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
         sol_path = self.sol_path
@@ -418,7 +415,6 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
-    @logging
     def deploy(self, eth_contract_attr_name='eth_contract'):
         if self.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
             print('launch message ignored because already deployed', flush=True)
@@ -503,7 +499,6 @@ class CommonDetails(models.Model):
     def get_value(self):
         return 0
 
-    @logging
     def tx_failed(self, message):
         self.contract.state = 'POSTPONED'
         self.contract.save()
@@ -523,7 +518,6 @@ class CommonDetails(models.Model):
         pass
 
     @blocking
-    @logging
     def check_contract(self):
         print('checking', self.contract.name)
         tr = abi.ContractTranslator(self.eth_contract.abi)

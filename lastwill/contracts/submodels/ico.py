@@ -89,7 +89,6 @@ class ContractDetailsICO(CommonDetails):
             return 0
         return int(4.99 * 10 ** 18)
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
         if self.temp_directory:
@@ -156,7 +155,6 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
         address = NETWORKS[self.contract.network.name]['address']
@@ -201,7 +199,6 @@ class ContractDetailsICO(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
@@ -217,7 +214,6 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
     #    @check_transaction
-    @logging
     def ownershipTransferred(self, message):
         address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
@@ -255,7 +251,6 @@ class ContractDetailsICO(CommonDetails):
     # crowdsale
     @postponable
     @check_transaction
-    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
@@ -286,7 +281,6 @@ class ContractDetailsICO(CommonDetails):
                 [self.contract.user.email]
             )
 
-    @logging
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'
@@ -298,7 +292,6 @@ class ContractDetailsICO(CommonDetails):
     def check_contract(self):
         pass
 
-    @logging
     def timesChanged(self, message):
         if 'startTime' in message and message['startTime']:
             self.start_date = message['startTime']
@@ -355,7 +348,6 @@ class ContractDetailsToken(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
         if self.temp_directory:
@@ -388,7 +380,6 @@ class ContractDetailsToken(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
 
@@ -397,7 +388,6 @@ class ContractDetailsToken(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         res = super().msg_deployed(message, 'eth_contract_token')
         if not self.future_minting:
@@ -437,7 +427,6 @@ class ContractDetailsToken(CommonDetails):
             )
         return res
 
-    @logging
     def ownershipTransferred(self, message):
         if self.eth_contract_token.original_contract.state not in (
                 'UNDER_CROWDSALE', 'ENDED'
@@ -445,7 +434,6 @@ class ContractDetailsToken(CommonDetails):
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
 
-    @logging
     def finalized(self, message):
         if self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'

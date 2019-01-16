@@ -88,7 +88,6 @@ class ContractDetailsLostKey(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(
@@ -96,7 +95,6 @@ class ContractDetailsLostKey(CommonDetails):
         self.save()
 
     @check_transaction
-    @logging
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -111,7 +109,6 @@ class ContractDetailsLostKey(CommonDetails):
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
-    @logging
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -146,6 +143,5 @@ class ContractDetailsLostKey(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         return super().deploy()

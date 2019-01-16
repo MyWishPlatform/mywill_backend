@@ -51,7 +51,6 @@ class ContractDetailsNeo(CommonDetails):
     def predeploy_validate(self):
         pass
 
-    @logging
     def compile(self):
         print('standalone token contract compile')
         if self.temp_directory:
@@ -116,7 +115,6 @@ class ContractDetailsNeo(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -169,7 +167,6 @@ class ContractDetailsNeo(CommonDetails):
     @blocking
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         neo_int = NeoInt(self.contract.network.name)
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -209,7 +206,6 @@ class ContractDetailsNeo(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def initialized(self, message):
         if self.contract.state  not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
             return
@@ -229,7 +225,6 @@ class ContractDetailsNeo(CommonDetails):
                     [self.contract.user.email]
             )
 
-    @logging
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
@@ -263,7 +258,6 @@ class ContractDetailsNeoICO(CommonDetails):
 
     reused_token = models.BooleanField(default=False)
 
-    @logging
     def compile(self):
         print('standalone token contract compile')
         if self.temp_directory:
@@ -350,7 +344,6 @@ class ContractDetailsNeoICO(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -404,7 +397,6 @@ class ContractDetailsNeoICO(CommonDetails):
     @blocking
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         neo_int = NeoInt(self.contract.network.name)
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -444,7 +436,6 @@ class ContractDetailsNeoICO(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
@@ -464,7 +455,6 @@ class ContractDetailsNeoICO(CommonDetails):
                     [self.contract.user.email]
             )
 
-    @logging
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()

@@ -86,7 +86,6 @@ class ContractDetailsTRONToken(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
         if self.temp_directory:
@@ -251,7 +250,6 @@ class ContractDetailsGameAssets(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
         if self.temp_directory:

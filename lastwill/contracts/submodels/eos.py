@@ -123,7 +123,6 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -240,7 +239,6 @@ class ContractDetailsEOSAccount(CommonDetails):
         }, network)
         return cost
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -441,7 +439,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -471,7 +468,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.tx_hash = tx_hash
         self.eos_contract_crowdsale.save()
 
-    @logging
     @blocking
     @postponable
     def newAccount(self, message):
@@ -569,7 +565,6 @@ class ContractDetailsEOSICO(CommonDetails):
             self.stop_date = message['endTime']
         self.save()
 
-    @logging
     def finalized(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
@@ -634,7 +629,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         cost = cls.calc_cost_eos({'address_count': 1}, network)
         return cost
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -680,7 +674,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    @logging
     def airdrop(self, message):
         new_state = {
             'COMMITTED': 'sent',

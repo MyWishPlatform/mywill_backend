@@ -38,7 +38,6 @@ class ContractDetailsLastwill(CommonDetails):
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
 
-    @logging
     def contractPayment(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
@@ -53,7 +52,6 @@ class ContractDetailsLastwill(CommonDetails):
         send_in_queue(self.contract.id, 'make_payment', queue)
 
     @blocking
-    @logging
     def make_payment(self, message):
         contract = self.contract
         par_int = ParInt(contract.network.name)
@@ -135,14 +133,12 @@ class ContractDetailsLastwill(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
     @check_transaction
-    @logging
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -155,7 +151,6 @@ class ContractDetailsLastwill(CommonDetails):
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
-    @logging
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -188,7 +183,6 @@ class ContractDetailsLastwill(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
             priv = os.urandom(32)
@@ -206,7 +200,6 @@ class ContractDetailsLastwill(CommonDetails):
         super().deploy()
 
     @blocking
-    @logging
     def i_am_alive(self, message):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
@@ -232,7 +225,6 @@ class ContractDetailsLastwill(CommonDetails):
         self.last_press_imalive = timezone.now()
 
     @blocking
-    @logging
     def cancel(self, message):
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt(self.contract.network.name)
@@ -250,7 +242,6 @@ class ContractDetailsLastwill(CommonDetails):
         )
         self.eth_contract.save()
 
-    @logging
     def fundsAdded(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return

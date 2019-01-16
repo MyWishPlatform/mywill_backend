@@ -22,7 +22,6 @@ class ContractDetailsAirdrop(CommonDetails):
     token_address = models.CharField(max_length=50)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
-    @logging
     def get_arguments(self, *args, **kwargs):
         return [
             self.admin_address,
@@ -43,7 +42,6 @@ class ContractDetailsAirdrop(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         return super().deploy()
 

@@ -55,7 +55,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
-    @logging
     def get_arguments(self, *args, **kwargs):
         return [
                 self.admin_address,
@@ -108,7 +107,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         return super().deploy()
 

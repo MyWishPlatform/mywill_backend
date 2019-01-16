@@ -40,14 +40,12 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
 
     def checked(self, message):
         pass
 
-    @logging
     def triggered(self, message):
         link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
         if self.recepient_email:
@@ -83,6 +81,5 @@ class ContractDetailsDelayedPayment(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         return super().deploy()
