@@ -65,17 +65,14 @@ class ContractDetailsInvestmentPool(CommonDetails):
         ]
 
     def compile(self, _=''):
-        self.lgr.append('compile %d' % self.contract.id)
         print('investment pool contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(
             self, sour_path='lastwill/investment-pool/*',
             config_name='investment-pool-config.json'
         )
-        self.lgr.append('dest %s' % dest)
         preproc_params = {'constants': {}}
 
         preproc_params["constants"]["D_SOFT_CAP_WEI"] = str(self.soft_cap)

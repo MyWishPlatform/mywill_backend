@@ -55,7 +55,6 @@ class ContractDetailsLastwill(CommonDetails):
     @blocking
     @logging
     def make_payment(self, message):
-        self.lgr.append('make payments id %d' %self.contract.id)
         contract = self.contract
         par_int = ParInt(contract.network.name)
         wl_address = NETWORKS[self.contract.network.name]['address']
@@ -77,8 +76,6 @@ class ContractDetailsLastwill(CommonDetails):
             dest=contract.get_details().eth_contract.address,
             gas_price=gas_price
         )
-        self.lgr.append('nonce = %d' %nonce)
-        self.lgr.append('signed_data %s' %signed_data)
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
             '0x' + signed_data)
         self.eth_contract.save()
@@ -193,7 +190,6 @@ class ContractDetailsLastwill(CommonDetails):
     @postponable
     @logging
     def deploy(self):
-        self.lgr.append('deploy contract id %d' %self.contract.id)
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
             priv = os.urandom(32)
             if self.contract.network.name == 'RSK_MAINNET':
