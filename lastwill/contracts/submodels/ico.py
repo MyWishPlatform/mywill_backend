@@ -91,14 +91,11 @@ class ContractDetailsICO(CommonDetails):
 
     @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
-        self.lgr.append('compile %d' % self.contract.id)
         print('ico_contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(self)
-        self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
         amount_bonuses = add_amount_bonuses(self)
         time_bonuses = add_time_bonuses(self)
@@ -124,7 +121,6 @@ class ContractDetailsICO(CommonDetails):
             preproc_params, self.admin_address,
             address, self.cold_wallet_address
         )
-        self.lgr.append(('prepoc params', preproc_params))
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system(
@@ -163,7 +159,6 @@ class ContractDetailsICO(CommonDetails):
     @logging
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
-        self.lgr.append('msg_deployed method of the ico contract')
         address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             take_off_blocking(self.contract.network.name)
@@ -175,7 +170,6 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.save()
             take_off_blocking(self.contract.network.name)
             print('status changed to waiting activation')
-            self.lgr.append('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
@@ -189,8 +183,6 @@ class ContractDetailsICO(CommonDetails):
             nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
             print('nonce', nonce)
             print('transferOwnership message signed')
-            self.lgr.append('nonce %d' % nonce)
-            self.lgr.append('transferOwnership message signed')
             signed_data = sign_transaction(
                 address, nonce, 100000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
@@ -203,7 +195,6 @@ class ContractDetailsICO(CommonDetails):
             )
             self.eth_contract_token.save()
             print('transferOwnership message sended')
-            self.lgr.append('transferOwnership message sended')
 
     def get_gaslimit(self):
         return 3200000
@@ -245,9 +236,7 @@ class ContractDetailsICO(CommonDetails):
         par_int = ParInt(self.contract.network.name)
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
-        self.lgr.append('nonce %d' % nonce)
         print('init message signed')
-        self.lgr.append('init message signed')
         signed_data = sign_transaction(
             address, nonce,
             100000 + 80000 * self.contract.tokenholder_set.all().count(),
@@ -262,7 +251,6 @@ class ContractDetailsICO(CommonDetails):
         )
         self.eth_contract_crowdsale.save()
         print('init message sended')
-        self.lgr.append('init message sended')
 
     # crowdsale
     @postponable
@@ -270,12 +258,10 @@ class ContractDetailsICO(CommonDetails):
     @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            self.lgr.append('contract had wrong status')
             return
         take_off_blocking(self.contract.network.name)
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
-            self.lgr.append('ignored')
             return
         self.contract.state = 'ACTIVE'
         self.contract.save()
@@ -371,14 +357,11 @@ class ContractDetailsToken(CommonDetails):
 
     @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
-        self.lgr.append('standalone token contract compile')
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(self)
-        self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
         preproc_params['constants'] = add_token_params(
@@ -386,7 +369,6 @@ class ContractDetailsToken(CommonDetails):
             False, self.future_minting
         )
         test_token_params(preproc_config, preproc_params, dest)
-        self.lgr.append(('prepoc params', preproc_params))
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))

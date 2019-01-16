@@ -395,7 +395,6 @@ class CommonDetails(models.Model):
 
     @logging
     def compile(self, eth_contract_attr_name='eth_contract'):
-        self.lgr.append('compile for %d' %self.contract.id)
         print('compiling', flush=True)
         sol_path = self.sol_path
         if getattr(self, eth_contract_attr_name):
@@ -421,11 +420,9 @@ class CommonDetails(models.Model):
 
     @logging
     def deploy(self, eth_contract_attr_name='eth_contract'):
-        self.lgr.append(' deploy %d' %self.contract.id)
         if self.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
-            self.lgr.append('launch message ignored because already deployed')
             return
         self.compile(eth_contract_attr_name)
         eth_contract = getattr(self, eth_contract_attr_name)
@@ -438,7 +435,6 @@ class CommonDetails(models.Model):
         par_int = ParInt(self.contract.network.name)
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
-        self.lgr.append('nonce = %d' %nonce)
         print('nonce', nonce, flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
@@ -448,8 +444,6 @@ class CommonDetails(models.Model):
             self.contract.network.name, value=self.get_value(),
             contract_data=data
         )
-        self.lgr.append((address, self.get_gaslimit(), self.get_value()))
-        self.lgr.append(' network = %s' %self.contract.network.name)
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
@@ -460,12 +454,10 @@ class CommonDetails(models.Model):
         )
         eth_contract.save()
         print('transaction sent', flush=True)
-        self.lgr.append('transaction sent')
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        self.lgr.append('msg deployd for contract %d' %self.contract.id)
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
@@ -513,7 +505,6 @@ class CommonDetails(models.Model):
 
     @logging
     def tx_failed(self, message):
-        self.lgr.append('tx failed for contract  %d' %self.contract.id)
         self.contract.state = 'POSTPONED'
         self.contract.save()
         send_mail(
@@ -527,8 +518,6 @@ class CommonDetails(models.Model):
         print('contract postponed due to transaction fail', flush=True)
         take_off_blocking(self.contract.network.name, self.contract.id)
         print('queue unlocked due to transaction fail', flush=True)
-        self.lgr.append('contract postponed due to transaction fail')
-        self.lgr.append('queue unlocked due to transaction fail')
 
     def predeploy_validate(self):
         pass
@@ -537,13 +526,11 @@ class CommonDetails(models.Model):
     @logging
     def check_contract(self):
         print('checking', self.contract.name)
-        self.lgr.append('check contract %d' %self.contract.id)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
-        self.lgr.append('nonce = %d' %nonce)
         signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
@@ -551,10 +538,8 @@ class CommonDetails(models.Model):
                 tr.encode_function_call('check', [])
             ).decode(),
         )
-        self.lgr.append('signed_data %s' %signed_data)
         print('signed_data', signed_data)
         par_int.eth_sendRawTransaction('0x' + signed_data)
-        self.lgr.append('check ok!')
         print('check ok!')
 
 
