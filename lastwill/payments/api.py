@@ -14,7 +14,6 @@ def create_payment(uid, tx, currency, amount, site_id):
     if amount == 0.0:
         return
     print('create payment')
-    user = User.objects.get(id=uid)
     if SubSite.objects.get(id=site_id).site_name in (MY_WISH_URL, TRON_URL):
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
@@ -28,7 +27,7 @@ def create_payment(uid, tx, currency, amount, site_id):
             amount = amount * 10 ** 18
         if currency in ['BTC']:
             amount = amount * 10 ** 8
-
+    user = User.objects.get(id=uid)
     if amount < 0.0:
         negative_payment(user, -value, site_id)
     else:
