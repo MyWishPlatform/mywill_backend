@@ -597,7 +597,6 @@ def get_cost_all_contracts(request):
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
-        # print('contract_details type', i, flush=True)
         if i in [10, 11, 12, 13, 14]:
             # answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
             answer[i] = 200

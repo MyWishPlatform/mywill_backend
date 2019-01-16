@@ -22,12 +22,7 @@ def create_payment(uid, tx, currency, amount, site_id):
         if currency == 'BTC':
             value = value * 10 ** 18 / 10 ** 8
     else:
-        if currency in ['ETH']:
-            amount = amount / 10 ** 18
-        if currency in ['BTC']:
-            amount = amount / 10 ** 8
-        if currency in ['EOS']:
-            amount = amount / 10 ** 4
+        amount = calculate_decimals(currency, amount)
         value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH']* 10 ** 4
         if currency in ['ETH']:
             amount = amount * 10 ** 18
@@ -51,6 +46,16 @@ def create_payment(uid, tx, currency, amount, site_id):
     print('payment created')
 
 
+def calculate_decimals(currency, amount):
+    if currency in ['ETH']:
+        amount = amount / 10 ** 18
+    if currency in ['BTC']:
+        amount = amount / 10 ** 8
+    if currency in ['EOS']:
+        amount = amount / 10 ** 4
+    return amount
+
+
 def positive_payment(user, value, site_id, currency):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
@@ -60,14 +65,9 @@ def positive_payment(user, value, site_id, currency):
             wish=F('wish') + value * 0.15
         )
     else:
-        if currency not in ['EOS', 'EOSISH']:
-            FreezeBalance.objects.select_for_update().filter(id=1).update(
-                eosish=F('eosish') + (value * 0.15)
-            )
-        else:
-            FreezeBalance.objects.select_for_update().filter(id=1).update(
-                eosish=F('eosish') + (value * 0.15)
-            )
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            eosish=F('eosish') + (value * 0.15)
+        )
 
 def negative_payment(user, value, site_id):
     if not UserSiteBalance.objects.select_for_update().filter(
