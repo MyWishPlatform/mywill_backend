@@ -594,18 +594,14 @@ def get_statistics_landing(request):
 
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
-    host = request.META['HTTP_HOST']
     answer = {}
-    # print('host', host, flush=True)
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
         # print('contract_details type', i, flush=True)
         if i in [10, 11, 12, 13, 14]:
-            # print(host, EOSISH_URL, flush=True)
             # answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
             answer[i] = 200
         else:
-            # print('not eos', flush=True)
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
     return JsonResponse(answer)
 
@@ -747,7 +743,6 @@ def get_invest_balance_day(request):
             now_date.year, now_date.month,
             now_date.day, now_date.hour, 0, 0
         )
-    # date = datetime.datetime.now().date()
     invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
     balance = 0
     for inv in invests:
@@ -820,7 +815,6 @@ def get_eos_airdrop_cost(request):
         str(NETWORKS['EOS_MAINNET']['host']),
         str(NETWORKS['EOS_MAINNET']['port'])
     )
-
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
         'rammarket'
@@ -848,9 +842,6 @@ def check_eos_accounts_exists(request):
         str(NETWORKS['EOS_MAINNET']['port'])
     )
 
-    # del this
-#     eos_url = 'http://127.0.0.1:8886'
-
     accounts = request.data['accounts']
     response =requests.post(
             eos_url+'/v1/chain-ext/get_accounts',
@@ -859,6 +850,36 @@ def check_eos_accounts_exists(request):
     print(accounts, flush=True)
     print(response, flush=True)
     return JsonResponse({'not_exists': [x[0] for x in zip(accounts, response) if not x[1]]})
+
+
+def send_authio_info(contract, details, authio_email):
+    mint_info = ''
+    token_holders = contract.tokenholder_set.all()
+    for th in token_holders:
+        mint_info = mint_info + '\n' + th.address + '\n'
+        mint_info = mint_info + str(th.amount) + '\n'
+        mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+    EmailMessage(
+        subject=authio_subject,
+        body=authio_message.format(
+        address=details.eth_contract_token.address,
+        email=authio_email,
+        token_name=details.token_name,
+        token_short_name=details.token_short_name,
+        token_type=details.token_type,
+        decimals=details.decimals,
+        mint_info=mint_info if mint_info else 'No',
+        admin_address=details.admin_address
+        ),
+        from_email=DEFAULT_FROM_EMAIL,
+        to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
+    ).send()
+    send_mail(
+        authio_google_subject,
+        authio_google_message,
+        DEFAULT_FROM_EMAIL,
+        [authio_email]
+    )
 
 
 @api_view(http_method_names=['POST'])
@@ -875,7 +896,7 @@ def buy_brand_report(request):
     details = contract.get_details()
     if host != MY_WISH_URL:
         raise PermissionDenied
-    cost = 3 * 10**18
+    cost = 3 * 10 ** 18
     currency = 'ETH'
     site_id = 1
     create_payment(request.user.id, '', currency, -cost, site_id)
@@ -885,34 +906,7 @@ def buy_brand_report(request):
     details.authio_email = authio_email
     details.authio = True
     details.save()
-    mint_info = ''
-    token_holders = contract.tokenholder_set.all()
-    for th in token_holders:
-        mint_info = mint_info + '\n' + th.address + '\n'
-        mint_info = mint_info + str(th.amount) + '\n'
-        mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
-    mail = EmailMessage(
-        subject=authio_subject,
-        body=authio_message.format(
-            address=details.eth_contract_token.address,
-            email=authio_email,
-            token_name=details.token_name,
-            token_short_name=details.token_short_name,
-            token_type=details.token_type,
-            decimals=details.decimals,
-            mint_info=mint_info if mint_info else 'No',
-            admin_address=details.admin_address
-        ),
-        from_email=DEFAULT_FROM_EMAIL,
-        to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
-    )
-    mail.send()
-    send_mail(
-        authio_google_subject,
-        authio_google_message,
-        DEFAULT_FROM_EMAIL,
-        [authio_email]
-    )
+    send_authio_info(contract, details, authio_email)
     return Response('ok')
 
 
