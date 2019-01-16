@@ -4,7 +4,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.eos import *
 from lastwill.contracts.submodels.eos_json_token import create_eos_token_sa_json
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
-from lastwill.consts import MAX_WEI_DIGITS
+from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_ETH, CONTRACT_PRICE_EOS, NET_DECIMALS
 
 class ContractDetailsEOSTokenSA(CommonDetails):
     token_short_name = models.CharField(max_length=64)
@@ -45,13 +45,13 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(5 * 10**18)
+        return int(CONTRACT_PRICE_ETH['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['ETH'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 190 * 10 ** 4
+        return CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS']
 
     def compile(self):
         if self.temp_directory:

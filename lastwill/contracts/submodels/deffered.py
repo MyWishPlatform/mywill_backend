@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
 from email_messages import *
 
 
@@ -33,7 +34,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 25000000000000000
+        return CONTRACT_PRICE_ETH['DEFFERED'] * NET_DECIMALS['ETH']
 
     def fundsAdded(self, message):
         pass
