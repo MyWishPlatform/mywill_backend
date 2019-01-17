@@ -542,3 +542,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
                                               active=True).count() == 0:
             self.contract.state = 'ENDED'
             self.contract.save()
+
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
+        take_off_blocking(self.contract.network.name)
