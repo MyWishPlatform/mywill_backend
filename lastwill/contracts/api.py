@@ -3,6 +3,8 @@ import datetime
 from os import path
 from subprocess import Popen, PIPE
 import requests
+import binascii
+import base58
 from threading import Timer
 
 from django.utils import timezone
@@ -689,6 +691,14 @@ class EOSAirdropAddressViewSet(viewsets.ModelViewSet):
         return result
 
 
+def convert_airdrop_address_to_hex(address):
+    # short_addresss = address[1:]
+    decode_address = base58.b58decode(address)[1:21]
+    hex_address = binascii.hexlify(decode_address)
+    hex_address = '41' + hex_address.decode("utf-8")
+    return hex_address
+
+
 @api_view(http_method_names=['POST'])
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
@@ -699,6 +709,13 @@ def load_airdrop(request):
             raise PermissionDenied
         contract.airdropaddress_set.all().delete()
         addresses = request.data.get('addresses')
+        if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET']:
+            for x in addresses:
+                if x['address'].startswith('0x'):
+                    x['address'] = '41' + x['address'][2:]
+                else:
+                    if not x['address'].startswith('41'):
+                        x['address'] = convert_airdrop_address_to_hex(x['address'])
         AirdropAddress.objects.bulk_create([AirdropAddress(
                 contract=contract,
                 address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
