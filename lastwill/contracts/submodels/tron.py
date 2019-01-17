@@ -29,6 +29,12 @@ def convert_address_to_hex(address):
     return hex_address
 
 
+def replace_0x(message):
+    for mes in message:
+        mes['address'] = '41' + mes['address'][2:]
+    return message
+
+
 def convert_address_to_wif(address):
     short_address = '0x41' + address[2:]
     m = hashlib.sha256()
@@ -497,6 +503,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
                 raise ValidationError({'result': 1}, code=400)
 
     def airdrop(self, message):
+        message = replace_0x(message)
         new_state = {
             'COMMITTED': 'sent',
             'PENDING': 'processing',
