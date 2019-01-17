@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, LASTWILL_ALIVE_TIMEOUT
 
 
 @contract_details('Will contract')
@@ -57,8 +58,8 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt(contract.network.name)
         wl_address = NETWORKS[self.contract.network.name]['address']
         balance = int(par_int.eth_getBalance(wl_address), 16)
-        gas_limit = 50000
-        gas_price = 10 ** 9
+        gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_PAYMENT']
+        gas_price = NET_DECIMALS['ETH_GAS_PRICE']
         if balance < contract.get_details().btc_duty + gas_limit * gas_price:
             send_mail(
                 'RSK',
@@ -115,7 +116,7 @@ class ContractDetailsLastwill(CommonDetails):
         Cg = 780476
         CBg = 26561
         Tg = 22000
-        Gp = 60 * 10 ** 9
+        Gp = 60 * NET_DECIMALS['ETH_GAS_PRICE']
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -123,12 +124,12 @@ class ContractDetailsLastwill(CommonDetails):
         DxC = max(abs(
             (datetime.date.today() - active_to).total_seconds() / check_interval
         ), 1)
-        O = 25000 * 10 ** 9
+        O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
         result = 2 * int(
             Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC
         ) + 80000
         if network.name == 'RSK_MAINNET':
-            result += 2 * (10 ** 18)
+            result += 2 * NET_DECIMALS['ETH']
         return result
 
     @postponable
@@ -203,7 +204,7 @@ class ContractDetailsLastwill(CommonDetails):
     def i_am_alive(self, message):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
-            if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
+            if delta.days < 1 and delta.total_seconds() < LASTWILL_ALIVE_TIMEOUT:
                 take_off_blocking(
                     self.contract.network.name, address=self.contract.address
                 )
@@ -211,8 +212,9 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
-            address, nonce, 600000, self.contract.network.name,
+            address, nonce, gas_limit, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                     tr.encode_function_call('imAvailable', [])
@@ -230,8 +232,9 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
-            address, nonce,  600000, self.contract.network.name,
+            address, nonce,  gas_limit, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                     tr.encode_function_call('kill', [])
