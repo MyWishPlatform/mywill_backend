@@ -30,15 +30,14 @@ def create_payment(uid, tx, currency, amount, site_id):
     else:
         positive_payment(user, value, site_id, currency)
     site = SubSite.objects.get(id=site_id)
-    payment = InternalPayment(
+    InternalPayment(
         user_id=uid,
         delta=value,
         tx_hash=tx,
         original_currency=currency,
         original_delta=str(amount),
         site=site
-    )
-    payment.save()
+    ).save()
     print('payment created')
 
 
