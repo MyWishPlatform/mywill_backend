@@ -37,7 +37,7 @@ from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
-from lastwill.consts import URL_STATS_CURRENCY, URL_STATS_BALANCE, ETH_MAINNET_ADDRESS, ETH_TESTNET_ADDRESS, NET_DECIMALS
+from lastwill.consts import *
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -596,7 +596,7 @@ def get_cost_all_contracts(request):
             # answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
             answer[i] = 200
         else:
-            answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
+            answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
 
 
@@ -890,7 +890,7 @@ def buy_brand_report(request):
     details = contract.get_details()
     if host != MY_WISH_URL:
         raise PermissionDenied
-    cost = 3 * 10 ** 18
+    cost = BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
     currency = 'ETH'
     site_id = 1
     create_payment(request.user.id, '', currency, -cost, site_id)
@@ -906,7 +906,7 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    eth_cost = str(3 * 10 ** 18)
+    eth_cost = str(BRAND_REPORT_PRICE * NET_DECIMALS['ETH'])
     wish_cost = str(int(to_wish('ETH', int(eth_cost))))
     btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
     return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
