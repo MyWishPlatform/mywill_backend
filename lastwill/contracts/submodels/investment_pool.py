@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import NETWORKS
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 class InvestAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
@@ -124,7 +124,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
         return cost
 
     def get_gaslimit(self):
-        return 3000000
+        return CONTRACT_GAS_LIMIT['INVESTMENT_POOL']
 
     def fundsAdded(self, message):
         invest = InvestAddress(

@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, CONTRACTS_TEMP_DIR
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
@@ -196,7 +196,7 @@ class ContractDetailsICO(CommonDetails):
             print('transferOwnership message sended')
 
     def get_gaslimit(self):
-        return 3200000
+        return CONTRACT_GAS_LIMIT['ICO']
 
     @blocking
     @postponable
@@ -385,7 +385,7 @@ class ContractDetailsToken(CommonDetails):
         return super().deploy(eth_contract_attr_name)
 
     def get_gaslimit(self):
-        return 3200000
+        return CONTRACT_GAS_LIMIT['TOKEN']
 
     @postponable
     @check_transaction

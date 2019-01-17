@@ -1,7 +1,7 @@
 from django.db import models
 
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 
 class AirdropAddress(models.Model):
@@ -60,7 +60,7 @@ class ContractDetailsAirdrop(CommonDetails):
         return cost
 
     def get_gaslimit(self):
-        return 3000000
+        return CONTRACT_GAS_LIMIT['AIRDROP']
 
     def airdrop(self, message):
         new_state = {
