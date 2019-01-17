@@ -12,6 +12,7 @@ from lastwill.contracts.models import Contract
 from lastwill.parint import *
 from lastwill.settings import DEFAULT_FROM_EMAIL
 import email_messages
+from lastwill.consts import LASTWILL_ALIVE_TIMEOUT
 
 
 def check_all():
@@ -93,5 +94,5 @@ def send_in_pika(contract):
 if __name__ == '__main__':
     while 1:
         check_all()
-        time.sleep(60 * 60 * 24)
+        time.sleep(LASTWILL_ALIVE_TIMEOUT)
         # time.sleep(60 * 10)

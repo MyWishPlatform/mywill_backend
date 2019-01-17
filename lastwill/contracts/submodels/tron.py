@@ -18,6 +18,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
 
 
 def convert_address_to_hex(address):
@@ -80,7 +81,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(5 * 10 ** 18)
+        result = int(CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -244,7 +245,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * 10 ** 18)
+        result = int(CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):

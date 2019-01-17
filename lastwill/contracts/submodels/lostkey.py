@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
+from lastwill.consts import NET_DECIMALS
 
 
 @contract_details('Wallet contract (lost key)')
@@ -72,7 +73,7 @@ class ContractDetailsLostKey(CommonDetails):
         Cg = 1476117
         CBg = 28031
         Tg = 22000
-        Gp = 60 * 10 ** 9
+        Gp = 60 * NET_DECIMALS['ETH_GAS_PRICE']
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -80,7 +81,7 @@ class ContractDetailsLostKey(CommonDetails):
         DxC = max(abs((
                                   datetime.date.today() - active_to).total_seconds() / check_interval),
                   1)
-        O = 25000 * 10 ** 9
+        O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
         return 2 * int(
             Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (
                         Gp * Cc + O) * DxC

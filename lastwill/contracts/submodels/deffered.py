@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
@@ -78,7 +78,7 @@ class ContractDetailsDelayedPayment(CommonDetails):
         ]
 
     def get_gaslimit(self):
-        return 1700000
+        return CONTRACT_GAS_LIMIT['DEFFERED']
 
     @blocking
     @postponable

@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, CONTRACTS_TEMP_DIR
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
@@ -87,7 +88,7 @@ class ContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(4.99 * 10 ** 18)
+        return int(CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'])
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -195,7 +196,7 @@ class ContractDetailsICO(CommonDetails):
             print('transferOwnership message sended')
 
     def get_gaslimit(self):
-        return 3200000
+        return CONTRACT_GAS_LIMIT['ICO']
 
     @blocking
     @postponable
@@ -340,9 +341,9 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(2.99 * 10 ** 18)
+        result = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(5.99 * 10 ** 18)
+            result = int(CONTRACT_PRICE_ETH['TOKEN_AUTHIO'] * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -384,7 +385,7 @@ class ContractDetailsToken(CommonDetails):
         return super().deploy(eth_contract_attr_name)
 
     def get_gaslimit(self):
-        return 3200000
+        return CONTRACT_GAS_LIMIT['TOKEN']
 
     @postponable
     @check_transaction

@@ -15,6 +15,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
+from lastwill.consts import CONTRACT_PRICE_NEO
 
 
 class NeoContract(EthContract):
@@ -334,8 +335,8 @@ class ContractDetailsNeoICO(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if details.get('storage_area', False):
-            return 600
-        return 200
+            return CONTRACT_PRICE_NEO['WITH_STORAGE']
+        return CONTRACT_PRICE_NEO['NO_STORAGE']
 
     def predeploy_validate(self):
         now = timezone.now()
