@@ -34,6 +34,14 @@ def check_all():
             send_reminders(contract)
     print('checked all', flush=True)
 
+def create_reminder(contract, day):
+    print('{days} day message'.format(days=day), contract.id, flush=True)
+    send_mail(
+            email_messages.remind_subject,
+            email_messages.remind_message.format(days=day),
+            DEFAULT_FROM_EMAIL,
+            [contract.user.email]
+    )
 
 def send_reminders(contract):
     if contract.contract_type == 0:
@@ -43,29 +51,11 @@ def send_reminders(contract):
                 now = timezone.now()
                 delta = details.next_check - now
                 if delta.days <= 1:
-                    print('1 day message', contract.id, flush=True)
-                    send_mail(
-                        email_messages.remind_subject,
-                        email_messages.remind_message.format(days=1),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
+                    create_reminder(contract, 1)
                 if delta.days == 5:
-                    print('5 days message', contract.id, flush=True)
-                    send_mail(
-                        email_messages.remind_subject,
-                        email_messages.remind_message.format(days=5),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
+                    create_reminder(contract, 5)
                 if delta.days == 10:
-                    print('10 days message', contract.id, flush=True)
-                    send_mail(
-                        email_messages.remind_subject,
-                        email_messages.remind_message.format(days=10),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
+                    create_reminder(contract, 10)
 
 
 def send_in_pika(contract):
