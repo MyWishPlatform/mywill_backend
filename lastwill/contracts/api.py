@@ -701,7 +701,7 @@ def load_airdrop(request):
         addresses = request.data.get('addresses')
         AirdropAddress.objects.bulk_create([AirdropAddress(
                 contract=contract,
-                address=x['address'].lower(),
+                address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
                 amount=x['amount']
         ) for x in addresses])
     else:
