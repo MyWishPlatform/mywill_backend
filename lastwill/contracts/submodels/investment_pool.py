@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import NETWORKS
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
 
 class InvestAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
@@ -114,7 +115,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 0.5 * 10**18
+        return CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH']
 
     @classmethod
     def min_cost(cls):
