@@ -503,7 +503,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
                 raise ValidationError({'result': 1}, code=400)
 
     def airdrop(self, message):
-        message = replace_0x(message)
+        message['airdroppedAddresses'] = replace_0x(message['airdroppedAddresses'])
         new_state = {
             'COMMITTED': 'sent',
             'PENDING': 'processing',
