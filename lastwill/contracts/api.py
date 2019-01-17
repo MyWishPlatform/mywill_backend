@@ -37,6 +37,7 @@ from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
+from lastwill.consts import URL_STATS_CURRENCY, URL_STATS_BALANCE, ETH_MAINNET_ADDRESS, ETH_TESTNET_ADDRESS, NET_DECIMALS
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -234,27 +235,13 @@ def get_users(names):
 
 
 def get_currency_statistics():
-    mywish_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/mywish/'
-    ).content.decode())[0]
-
-    mywish_info_eth = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/mywish/?convert=ETH'
-    ).content.decode())[0]
-
-    btc_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/bitcoin/'
-    ).content.decode())[0]
-
-    eos_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/eos/'
-    ).content.decode())[0]
-
-    eth_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/ethereum/'
-    ).content.decode())[0]
+    mywish_info = json.loads(requests.get(URL_STATS_CURRENCY['MYWISH']).content.decode())[0]
+    mywish_info_eth = json.loads(requests.get(URL_STATS_CURRENCY['MYWISH_ETH']).content.decode())[0]
+    btc_info = json.loads(requests.get(URL_STATS_CURRENCY['BTC']).content.decode())[0]
+    eos_info = json.loads(requests.get(URL_STATS_CURRENCY['EOS']).content.decode())[0]
+    eth_info = json.loads(requests.get(URL_STATS_CURRENCY['ETH']).content.decode())[0]
     eosish_info = float(
-        requests.get('https://api.chaince.com/tickers/eosisheos/',
+        requests.get(URL_STATS_CURRENCY['EOSISH'],
                      headers={'accept-version': 'v1'}).json()['price']
         )
     answer = {
@@ -295,7 +282,7 @@ def get_currency_statistics():
 
 def get_balances_statistics():
     neo_info = json.loads(requests.get(
-        'http://neoscan.mywish.io/api/test_net/v1/get_balance/'
+        URL_STATS_BALANCE['NEO'] +
         '{address}'.format(address=NETWORKS['NEO_TESTNET']['address'])
     ).content.decode())
     neo_balance = 0.0
@@ -306,17 +293,26 @@ def get_balances_statistics():
         if curr['asset'] == 'NEO':
             neo_balance = curr['amount']
     eth_account_balance = float(json.loads(requests.get(
-        'https://api.etherscan.io/api?module=account&action=balance'
-        '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
-        '&tag=latest'
-        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
-                                           )['result']) / 10 ** 18
+        URL_STATS_BALANCE['ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
+            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY)
+        ).content.decode())['result']) / NET_DECIMALS['ETH']
     eth_test_account_balance = float(json.loads(requests.get(
-        'https://api-ropsten.etherscan.io/api?module=account&action=balance'
-        '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
-        '&tag=latest'
-        '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
-                                                )['result']) / 10 ** 18
+        URL_STATS_BALANCE['ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
+            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY)
+    ).content.decode())['result']) / NET_DECIMALS['ETH']
+
+    # eth_account_balance = float(json.loads(requests.get(
+    #     'https://api.etherscan.io/api?module=account&action=balance'
+    #     '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
+    #     '&tag=latest'
+    #     '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+    #                                        )['result']) / 10 ** 18
+    # eth_test_account_balance = float(json.loads(requests.get(
+    #     'https://api-ropsten.etherscan.io/api?module=account&action=balance'
+    #     '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
+    #     '&tag=latest'
+    #     '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+    #                                             )['result']) / 10 ** 18
     # eos_url = 'https://%s:%s' % (
     #     str(NETWORKS['EOS_TESTNET']['host']),
     #     str(NETWORKS['EOS_TESTNET']['port'])

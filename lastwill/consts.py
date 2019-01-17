@@ -1,3 +1,4 @@
+from lastwill.settings import ETHERSCAN_API_KEY
 MAX_WEI_DIGITS = len(str(2**256))
 MAIL_NETWORK = {
     'ETHEREUM_MAINNET': 'Ethereum',
@@ -53,5 +54,25 @@ NET_DECIMALS = {
     'ETH_GAS_PRICE': 10**9,
     'EOS': 10**4,
 }
+
+URL_STATS_CURRENCY_BODY = 'https://api.coinmarketcap.com/v1/ticker/'
+URL_STATS_CURRENCY = {
+    'MYWISH': URL_STATS_CURRENCY_BODY + "mywish/",
+    'MYWISH_ETH': URL_STATS_CURRENCY_BODY + "mywish/?convert=ETH",
+    'BTC': URL_STATS_CURRENCY_BODY + "bitcoin/",
+    'EOS': URL_STATS_CURRENCY_BODY + "eos/",
+    'ETH': URL_STATS_CURRENCY_BODY + "ethereum/",
+    'EOSISH': "https://api.chaince.com/tickers/eosisheos/",
+}
+
+URL_STATS_ETH_QUERY = 'api?module=account&action=balance&address='
+URL_STATS_BALANCE = {
+    'NEO': 'http://neoscan.mywish.io/api/test_net/v1/get_balance/',
+    'ETH': 'https://api.etherscan.io/' + URL_STATS_ETH_QUERY,
+    'ETH_ROPSTEN': 'https://api-ropsten.etherscan.io/' + URL_STATS_ETH_QUERY,
+}
+
+ETH_MAINNET_ADDRESS = '0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
+ETH_TESTNET_ADDRESS = '0x88dbD934eF3349f803E1448579F735BE8CAB410D'
 
 LASTWILL_ALIVE_TIMEOUT = 60 * 60 * 24
