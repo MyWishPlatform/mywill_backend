@@ -1232,7 +1232,7 @@ class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
         fields = ('admin_address', 'token_address')
 
     def to_representation(self, contract_details):
-        res = super().to_represtentation(contract_details)
+        res = super().to_representation(contract_details)
         res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
         res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
         res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing', active=True).count()
