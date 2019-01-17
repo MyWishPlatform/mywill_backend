@@ -232,11 +232,12 @@ class ContractDetailsICO(CommonDetails):
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         par_int = ParInt(self.contract.network.name)
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_limit = 100000 + 80000 * self.contract.tokenholder_set.all().count()
         print('nonce', nonce)
         print('init message signed')
         signed_data = sign_transaction(
             address, nonce,
-            100000 + 80000 * self.contract.tokenholder_set.all().count(),
+            gas_limit,
             self.contract.network.name,
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
