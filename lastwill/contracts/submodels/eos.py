@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, CONTRACT_PRICE_ETH, CONTRACT_PRICE_EOS, NET_DECIMALS
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.contracts.submodels.eos_json import *
@@ -105,13 +105,13 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(2.99 * 10 ** 18)
+        return int(CONTRACT_PRICE_ETH['EOS_TOKEN_ETH'] * NET_DECIMALS['ETH'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(150 * 10 ** 4)
+        return int(CONTRACT_PRICE_EOS['EOS_TOKEN_EOS'] * NET_DECIMALS['EOS'])
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -202,17 +202,17 @@ class ContractDetailsEOSAccount(CommonDetails):
                  + float(kwargs['stake_cpu_value'])
         ) * 2 + 0.3
         print('eos cost', eos_cost, flush=True)
-        return round(eos_cost, 0) * 10 ** 4
+        return round(eos_cost, 0) * NET_DECIMALS['EOS']
 
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / 10 ** 4
+        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         print('convert eos cost', cost, flush=True)
-        return round(cost, 2) * 10**18
+        return round(cost, 2) * NET_DECIMALS['ETH']
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -333,14 +333,14 @@ class ContractDetailsEOSICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 5 * 10**18
+        cost = CONTRACT_PRICE_ETH['EOS_ICO'] * NET_DECIMALS['ETH']
         return cost
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(250 * 10 ** 4)
+        return int(CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'])
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -595,9 +595,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network) /10**4
+        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
-        return round(cost, 2) * 10 ** 18
+        return round(cost, 2) * NET_DECIMALS['ETH']
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
@@ -615,7 +615,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         result = implement_cleos_command(command1)
         ram = result['rows'][0]
         ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0])
-        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4) * 10 ** 4
+        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4) * NET_DECIMALS['EOS']
 
     @classmethod
     def min_cost(cls):

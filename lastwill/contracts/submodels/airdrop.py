@@ -1,6 +1,7 @@
 from django.db import models
 
 from lastwill.contracts.submodels.common import *
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS
 
 
 class AirdropAddress(models.Model):
@@ -49,7 +50,8 @@ class ContractDetailsAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 0.5 * 10**18
+        #return 0.5 * 10**18
+        return CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH']
 
     @classmethod
     def min_cost(cls):
