@@ -219,7 +219,7 @@ class ContractSerializer(serializers.ModelSerializer):
             14: ContractDetailsEOSTokenSASerializer,
             15: ContractDetailsTRONTokenSerializer,
             16: ContractDetailsGameAssetsSerializer,
-            17:ContractDetailsTRONAirdrop
+            17: ContractDetailsTRONAirdropSerializer
         }[contract_type]
 
 
