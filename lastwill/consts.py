@@ -1,4 +1,3 @@
-from lastwill.settings import ETHERSCAN_API_KEY
 MAX_WEI_DIGITS = len(str(2**256))
 MAIL_NETWORK = {
     'ETHEREUM_MAINNET': 'Ethereum',
