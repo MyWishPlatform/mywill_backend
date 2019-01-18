@@ -786,7 +786,11 @@ def check_status(request):
     addr = details.crowdsale_address
     host = NETWORKS[contract.network.name]['host']
     port = NETWORKS[contract.network.name]['port']
-    command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
+    if contract.network.name == 'EOS_MAINNET':
+        command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table',
+                   addr, addr, 'state']
+    else:
+        command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
     if stdout:
         result = json.loads(stdout.decode())['rows'][0]
@@ -804,9 +808,8 @@ def check_status(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_cost(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
@@ -833,9 +836,8 @@ def get_eos_cost(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_airdrop_cost(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
 
     command1 = [
@@ -860,9 +862,8 @@ def get_eos_airdrop_cost(request):
 
 @api_view(http_method_names=['POST'])
 def check_eos_accounts_exists(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
 
     # del this
