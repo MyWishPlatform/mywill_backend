@@ -133,9 +133,8 @@ class ContractDetailsEOSToken(CommonDetails):
         builder = NETWORKS[self.contract.network.name]['tokensfather']
         acc_name = NETWORKS[self.contract.network.name]['address']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-            str(NETWORKS[self.contract.network.name]['host']),
-            str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         if self.decimals != 0:
@@ -191,9 +190,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-                str(NETWORKS[network.name]['host']),
-                str(NETWORKS[network.name]['port'])
+            eos_url = 'https://%s' % (
+                str(NETWORKS[network.name]['host'])
             )
         else:
             eos_url = 'http://%s:%s' % (
@@ -260,9 +258,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-            str(NETWORKS[self.contract.network.name]['host']),
-            str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [
@@ -468,9 +465,8 @@ class ContractDetailsEOSICO(CommonDetails):
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-                str(NETWORKS[self.contract.network.name]['host']),
-                str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+                str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (
             str(NETWORKS[self.contract.network.name]['host']),
@@ -497,9 +493,8 @@ class ContractDetailsEOSICO(CommonDetails):
     @postponable
     def newAccount(self, message):
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-                str(NETWORKS[self.contract.network.name]['host']),
-                str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+                str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (
             str(NETWORKS[self.contract.network.name]['host']),
@@ -635,9 +630,8 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-                str(NETWORKS[network.name]['host']),
-                str(NETWORKS[network.name]['port'])
+            eos_url = 'https://%s' % (
+                str(NETWORKS[network.name]['host'])
             )
         else:
             eos_url = 'http://%s:%s' % (
@@ -671,9 +665,8 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     @postponable
     def deploy(self):
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-                str(NETWORKS[self.contract.network.name]['host']),
-                str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+                str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (
                 str(NETWORKS[self.contract.network.name]['host']),

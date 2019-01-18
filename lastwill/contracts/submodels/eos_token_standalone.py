@@ -108,9 +108,8 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         creator_account = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-            str(NETWORKS[self.contract.network.name]['host']),
-            str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [ 
@@ -139,9 +138,8 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         creator_account = NETWORKS[self.contract.network.name]['address']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s:%s' % (
-            str(NETWORKS[self.contract.network.name]['host']),
-            str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
