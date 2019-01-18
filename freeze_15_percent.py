@@ -10,11 +10,12 @@ from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MY
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
-from lastwill.json_templates import FREEZE_WISH_ABI
+from lastwill.json_templates import get_freeze_wish_abi
 
 
 def freeze_wish(amount):
-    tr = abi.ContractTranslator(FREEZE_WISH_ABI)
+    abi_dict = get_freeze_wish_abi()
+    tr = abi.ContractTranslator(abi_dict)
     par_int = ParInt(NETWORK_SIGN_TRANSACTION_WISH)
     nonce = int(par_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
     signed_data = sign_transaction(
