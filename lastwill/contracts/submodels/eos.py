@@ -11,7 +11,6 @@ from rest_framework.exceptions import ValidationError
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, CONTRACT_PRICE_ETH, CONTRACT_PRICE_EOS, NET_DECIMALS
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import *
-# from lastwill.contracts.submodels.eos_json import *
 from lastwill.json_templates import create_eos_json
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 # from lastwill.settings import EOS_TEST_URL_ENV, EOS_TEST_ICO_FOLDER, EOS_TEST_ICO_URL
