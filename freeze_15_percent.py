@@ -12,6 +12,10 @@ from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 from lastwill.json_templates import get_freeze_wish_abi
 
+from django.core.mail import send_mail, EmailMessage
+from lastwill.settings import DEFAULT_FROM_EMAIL, SUPPORT_EMAIL
+from email_messages import freeze_15_failed_subject, freeze_15_failed_message
+
 
 def freeze_wish(amount):
     abi_dict = get_freeze_wish_abi()
@@ -78,13 +82,37 @@ def freeze_eosish(amount):
 def check_payments():
     freeze_balance = FreezeBalance.objects.all().first()
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
-        freeze_wish(freeze_balance.wish)
-        freeze_balance.wish = 0
-        freeze_balance.save()
+        try:
+            freeze_wish(freeze_balance.wish)
+            freeze_balance.wish = 0
+            freeze_balance.save()
+        except Exception as e:
+            print(e)
+            print('Freezing WISH failed')
+            send_failed_freezing("WISH")
     if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
-      freeze_eosish(freeze_balance.eosish)
-      freeze_balance.eosish = 0
-      freeze_balance.save()
+        try:
+            freeze_eosish(freeze_balance.eosish)
+            freeze_balance.eosish = 0
+            freeze_balance.save()
+        except Exception as e:
+            print(e)
+            print('Freezing EOSISH failed')
+            send_failed_freezing("EOSISH")
+
+
+def send_failed_freezing(token):
+    check_address = "ETH addresses" if token == "WISH" else "EOS accounts"
+    mail = EmailMessage(
+        subject=freeze_15_failed_subject,
+        body=freeze_15_failed_message.format(
+            token_type=token,
+            address_type=check_address
+        ),
+        from_email=DEFAULT_FROM_EMAIL,
+        to=SUPPORT_EMAIL
+    )
+    mail.send()
 
 
 if __name__ == '__main__':
