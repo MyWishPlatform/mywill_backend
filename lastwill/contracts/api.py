@@ -51,7 +51,7 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
            promo_str = None
         else:
            cost = cost - cost * discount / 100
-        promo_object = Promo.objects.get(promo_str=promo_str.upper())
+        # promo_object = Promo.objects.get(promo_str=promo_str.upper())
         # User2Promo(user=user, promo=promo_object, contract_id=cid).save()
         Promo.objects.select_for_update().filter(
                 promo_str=promo_str.upper()
@@ -165,7 +165,6 @@ def deploy(request):
     if contract.user != request.user or contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
         raise PermissionDenied
 
-    # TODO: if type==4 check token contract is not at active crowdsale
     if host == EOSISH_URL:
         kwargs = ContractSerializer().get_details_serializer(
             contract.contract_type
