@@ -88,7 +88,7 @@ def check_payments():
             freeze_balance.save()
         except Exception as e:
             print(e)
-            print('Freezing WISH failed')
+            print('Freezing WISH failed', freeze_balance.wish, e)
             send_failed_freezing("WISH")
     if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
         try:
@@ -98,16 +98,18 @@ def check_payments():
         except Exception as e:
             print(e)
             print('Freezing EOSISH failed')
-            send_failed_freezing("EOSISH")
+            send_failed_freezing("EOSISH", freeze_balance.eosish, e)
 
 
-def send_failed_freezing(token):
+def send_failed_freezing(token, balance, trace):
     check_address = "ETH addresses" if token == "WISH" else "EOS accounts"
     mail = EmailMessage(
         subject=freeze_15_failed_subject,
         body=freeze_15_failed_message.format(
             token_type=token,
-            address_type=check_address
+            address_type=check_address,
+            tx_balance=balance,
+            traceback=trace
         ),
         from_email=DEFAULT_FROM_EMAIL,
         to=SUPPORT_EMAIL
