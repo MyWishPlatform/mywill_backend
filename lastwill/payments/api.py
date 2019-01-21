@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import User
 from django.db.models import F
 
@@ -79,3 +81,7 @@ def negative_payment(user, value, site_id):
             user=user, subsite__id=site_id, balance__gte=value
     ).update(balance=F('balance') - value):
         raise ValidationError({'result': 3}, code=400)
+
+
+def get_payment_statistics(start, stop=None):
+    pass
