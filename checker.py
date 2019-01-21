@@ -36,8 +36,7 @@ def check_all():
 
 
 def create_reminder(contract, day):
-    if day <= 1:
-        day = 1
+    day = 1 if day <= 1 else day
     print('{days} day message'.format(days=day), contract.id, flush=True)
     send_mail(
             email_messages.remind_subject,
