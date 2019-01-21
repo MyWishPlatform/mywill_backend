@@ -142,6 +142,19 @@ def get_token_contracts(request):
     return Response(res)
 
 
+def check_error_promocode(promo_str, contract_type):
+    promo = Promo.objects.filter(promo_str=promo_str).first()
+    if promo:
+        promo2ct = Promo2ContractType.objects.filter(
+            promo=promo, contract_type=contract_type
+        ).first()
+        if not promo2ct:
+            promo_str = None
+    else:
+        promo_str = None
+    return promo_str
+
+
 @api_view(http_method_names=['POST'])
 def deploy(request):
     host = request.META['HTTP_HOST']
@@ -172,6 +185,8 @@ def deploy(request):
         currency = 'ETH'
         site_id = 1
     promo_str = request.data.get('promo', None)
+    promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
+
     cost = check_and_apply_promocode(
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
