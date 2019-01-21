@@ -155,6 +155,22 @@ def check_error_promocode(promo_str, contract_type):
     return promo_str
 
 
+def check_promocode(promo_str, user, cost, contract):
+    # check token with authio
+    if contract.contract_type == 5 and contract.authio:
+        price_without_brand_report = contract.cost - BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+        cost = check_and_apply_promocode(
+            promo_str, user, price_without_brand_report, contract.contract_type, contract.id
+        )
+        total_cost = cost + BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+    else:
+        # count discount
+        total_cost = check_and_apply_promocode(
+            promo_str, user, cost, contract.contract_type, contract.id
+        )
+    return total_cost
+
+
 @api_view(http_method_names=['POST'])
 def deploy(request):
     host = request.META['HTTP_HOST']
@@ -185,10 +201,7 @@ def deploy(request):
         site_id = 1
     promo_str = request.data.get('promo', None)
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
-
-    cost = check_and_apply_promocode(
-        promo_str, request.user, cost, contract.contract_type, contract.id
-    )
+    cost = check_promocode(promo_str, request.user, cost, contract)
     create_payment(request.user.id, '', currency, -cost, site_id)
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())

@@ -8,6 +8,8 @@ MAIL_NETWORK = {
     'NEO_MAINNET': 'NEO',
     'EOS_MAINNET': 'EOS',
     'EOS_TESTNET': 'EOS Testnet',
+    'TRON_MAINNET': 'TRON',
+    'TRON_TESTNET': 'TRON Testnet',
 }
 
 CONTRACT_PRICE_ETH = {
@@ -51,9 +53,10 @@ CONTRACT_GAS_LIMIT = {
 }
 
 NET_DECIMALS = {
-    'ETH': 10**18,
-    'ETH_GAS_PRICE': 10**9,
-    'EOS': 10**4,
+    'ETH': 10 ** 18,
+    'ETH_GAS_PRICE': 10 ** 9,
+    'EOS': 10 ** 4,
+    'WISH': 10 ** 18
 }
 
 URL_STATS_CURRENCY_BODY = 'https://api.coinmarketcap.com/v1/ticker/'
