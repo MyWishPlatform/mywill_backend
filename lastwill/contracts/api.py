@@ -52,7 +52,7 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
         else:
            cost = cost - cost * discount / 100
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=user, promo=promo_object, contract_id=cid).save()
+        # User2Promo(user=user, promo=promo_object, contract_id=cid).save()
         Promo.objects.select_for_update().filter(
                 promo_str=promo_str.upper()
         ).update(
@@ -191,6 +191,10 @@ def deploy(request):
         promo_str, request.user, cost, contract.contract_type, contract.id
     )
     create_payment(request.user.id, '', currency, -cost, site_id)
+    if promo_str:
+        promo_object = Promo.objects.get(promo_str=promo_str.upper())
+        User2Promo(user=request.user, promo=promo_object,
+                   contract_id=contract.id).save()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
