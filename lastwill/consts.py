@@ -56,7 +56,10 @@ NET_DECIMALS = {
     'ETH': 10 ** 18,
     'ETH_GAS_PRICE': 10 ** 9,
     'EOS': 10 ** 4,
-    'WISH': 10 ** 18
+    'WISH': 10 ** 18,
+    'EOSISH': 10 ** 4,
+    'BNB': 10 ** 18,
+    'BTC': 10 ** 8
 }
 
 URL_STATS_CURRENCY_BODY = 'https://api.coinmarketcap.com/v1/ticker/'

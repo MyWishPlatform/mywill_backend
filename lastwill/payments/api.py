@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import MY_WISH_URL, TRON_URL
+from lastwill.consts import NET_DECIMALS
 from exchange_API import to_wish, convert
 
 
@@ -84,4 +85,20 @@ def negative_payment(user, value, site_id):
 
 
 def get_payment_statistics(start, stop=None):
-    pass
+    if not stop:
+        stop = datetime.datetime.now().date()
+    payments = InternalPayment.objects.filter(
+        delta__gte=0, datetime__gte=start, datetime__lte=stop
+    )
+    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0}
+    for pay in payments:
+        print(
+            pay.datetime.date(),
+            pay.user,
+            float(pay.original_delta)/NET_DECIMALS[pay.original_currency],
+            pay.original_currency,
+            flush=True
+        )
+        total_payments[pay.original_currency] += float(pay.original_delta)/NET_DECIMALS[pay.original_currency]
+
+    print('total_payments', total_payments, flush=True)
