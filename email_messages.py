@@ -164,6 +164,12 @@ freeze_15_failed_message = """Hello!
 Please check the receipt of 15% of {token_type} tokens on {address_type} for freezing.
 Last payment can be failed due to an error.
 
+Freezed balance is:
+{tx_balance} {token_type}
+
+Error, which was encountered:
+{traceback}
+
 Best wishes,
 MyWish Team.
 """

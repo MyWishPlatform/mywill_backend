@@ -3,6 +3,8 @@ import datetime
 from os import path
 from subprocess import Popen, PIPE
 import requests
+import binascii
+import base58
 from threading import Timer
 
 from django.utils import timezone
@@ -83,11 +85,11 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16))
+            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16, 17))
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
-            result = result.filter(contract_type__in=(15, 16))
+            result = result.filter(contract_type__in=(15, 16, 17))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -710,19 +712,34 @@ class EOSAirdropAddressViewSet(viewsets.ModelViewSet):
         return result
 
 
+def convert_airdrop_address_to_hex(address):
+    # short_addresss = address[1:]
+    decode_address = base58.b58decode(address)[1:21]
+    hex_address = binascii.hexlify(decode_address)
+    hex_address = '41' + hex_address.decode("utf-8")
+    return hex_address
+
+
 @api_view(http_method_names=['POST'])
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.contract_type not in [8, 13] or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13, 17] or contract.state != 'ACTIVE':
         raise PermissionDenied
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
             raise PermissionDenied
         contract.airdropaddress_set.all().delete()
         addresses = request.data.get('addresses')
+        if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET']:
+            for x in addresses:
+                if x['address'].startswith('0x'):
+                    x['address'] = '41' + x['address'][2:]
+                else:
+                    if not x['address'].startswith('41'):
+                        x['address'] = convert_airdrop_address_to_hex(x['address'])
         AirdropAddress.objects.bulk_create([AirdropAddress(
                 contract=contract,
-                address=x['address'].lower(),
+                address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
                 amount=x['amount']
         ) for x in addresses])
     else:
@@ -789,7 +806,11 @@ def check_status(request):
     addr = details.crowdsale_address
     host = NETWORKS[contract.network.name]['host']
     port = NETWORKS[contract.network.name]['port']
-    command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
+    if contract.network.name == 'EOS_MAINNET':
+        command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table',
+                   addr, addr, 'state']
+    else:
+        command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
     if stdout:
         result = json.loads(stdout.decode())['rows'][0]
@@ -807,9 +828,8 @@ def check_status(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_cost(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
@@ -836,9 +856,8 @@ def get_eos_cost(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_airdrop_cost(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
@@ -862,9 +881,8 @@ def get_eos_airdrop_cost(request):
 
 @api_view(http_method_names=['POST'])
 def check_eos_accounts_exists(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
 
     accounts = request.data['accounts']

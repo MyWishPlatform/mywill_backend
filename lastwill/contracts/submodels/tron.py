@@ -18,7 +18,9 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
+
 
 
 def convert_address_to_hex(address):
@@ -27,6 +29,12 @@ def convert_address_to_hex(address):
     hex_address = binascii.hexlify(decode_address)
     hex_address = '0x' + hex_address.decode("utf-8")
     return hex_address
+
+
+def replace_0x(message):
+    for mes in message:
+        mes['address'] = '41' + mes['address'][2:]
+    return message
 
 
 def convert_address_to_wif(address):
@@ -368,3 +376,177 @@ class ContractDetailsGameAssets(CommonDetails):
 
     def initialized(self, message):
         pass
+
+
+@contract_details('Tron Airdrop contract')
+class ContractDetailsTRONAirdrop(CommonDetails):
+    contract = models.ForeignKey(Contract, null=True)
+    admin_address = models.CharField(max_length=50)
+    token_address = models.CharField(max_length=50)
+    temp_directory = models.CharField(max_length=36)
+    tron_contract = models.ForeignKey(
+        TRONContract,
+        null=True,
+        default=None,
+        related_name='tron_airdrop_details',
+        on_delete=models.SET_NULL
+    )
+
+    def get_arguments(self, *args, **kwargs):
+        return [
+            self.admin_address,
+            self.token_address
+        ]
+
+    def predeploy_validate(self):
+        pass
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='TRON_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(0.5 * 10 ** 18)
+        return result
+
+    def compile(self, eth_contract_attr_name='eth_contract_token'):
+        print('standalone token contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        dest, preproc_config = create_directory(self, sour_path='lastwill/tron-airdrop-contract/*')
+        owner = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
+        token = '0x' + self.token_address[2:] if self.token_address.startswith('41') else convert_address_to_hex(self.token_address)
+        preproc_params = {"constants": {"D_TOKEN": token, "D_TARGET": owner}}
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && yarn compile'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
+        with open(path.join(dest, 'build/contracts/AirDrop.json'), 'rb') as f:
+            token_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'build/AirDrop.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        tron_contract = TRONContract()
+        tron_contract.abi = token_json['abi']
+        tron_contract.bytecode = token_json['bytecode'][2:]
+        tron_contract.compiler_version = token_json['compiler']['version']
+        tron_contract.contract = self.contract
+        tron_contract.original_contract = self.contract
+        tron_contract.source_code = source_code
+        tron_contract.save()
+        self.tron_contract = tron_contract
+        self.save()
+
+    @blocking
+    @postponable
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        self.compile()
+        print('deploy tron token')
+        abi = json.dumps(self.tron_contract.abi)
+        deploy_params = {
+            'abi': str(abi),
+            'bytecode': self.tron_contract.bytecode,
+            'consume_user_resource_percent': 0,
+            'fee_limit': 1000000000,
+            'call_value': 0,
+            'bandwidth_limit': 1000000,
+            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            'origin_energy_limit': 100000000
+        }
+        deploy_params = json.dumps(deploy_params)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
+        print('transaction created')
+        trx_info1 = json.loads(result.content.decode())
+        trx_info1 = {'transaction': trx_info1}
+        # print('trx info', trx_info1)
+        self.tron_contract.address = trx_info1['transaction']['contract_address']
+        self.tron_contract.save()
+        trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
+        trx = json.dumps(trx_info1)
+        # print('before', trx)
+        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        print('transaction sign')
+        trx_info2 = json.loads(result.content.decode())
+        trx = json.dumps(trx_info2)
+        # print('after', trx)
+        # print(trx)
+        for i in range(5):
+            print('attempt=', i)
+            result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
+            print(result.content)
+            answer = json.loads(result.content.decode())
+            print('answer=', answer, flush=True)
+            if answer['result']:
+                params = {'value': trx_info2['txID']}
+                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+                ret = json.loads(result.content.decode())
+                if ret:
+                    self.tron_contract.tx_hash = trx_info2['txID']
+                    print('tx_hash=', trx_info2['txID'], flush=True)
+                    self.tron_contract.save()
+                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                    self.contract.save()
+                    return
+            time.sleep(5)
+        else:
+                raise ValidationError({'result': 1}, code=400)
+
+    def airdrop(self, message):
+        message['airdroppedAddresses'] = replace_0x(message['airdroppedAddresses'])
+        new_state = {
+            'COMMITTED': 'sent',
+            'PENDING': 'processing',
+            'REJECTED': 'added'
+        }[message['status']]
+        old_state = {
+            'COMMITTED': 'processing',
+            'PENDING': 'added',
+            'REJECTED': 'processing'
+        }[message['status']]
+
+        ids = []
+        for js in message['airdroppedAddresses']:
+            address = js['address']
+            amount = js['value']
+            addr = AirdropAddress.objects.filter(
+                address=address,
+                amount=amount,
+                contract=self.contract,
+                active=True,
+                state=old_state,
+            ).exclude(id__in=ids).first()
+            # in case 'pending' msg was lost or dropped, but 'commited' is there
+            if addr is None and message['status'] == 'COMMITTED':
+                old_state = 'added'
+                addr = AirdropAddress.objects.filter(
+                    address=address,
+                    amount=amount,
+                    contract=self.contract,
+                    active=True,
+                    state=old_state
+                ).exclude(id__in=ids).first()
+            if addr is None:
+                continue
+
+            ids.append(addr.id)
+
+        if len(message['airdroppedAddresses']) != len(ids):
+            print('=' * 40, len(message['airdroppedAddresses']), len(ids),
+                  flush=True)
+        AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
+        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
+                                              active=True).count() == 0:
+            self.contract.state = 'ENDED'
+            self.contract.save()
+
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
+        take_off_blocking(self.contract.network.name)

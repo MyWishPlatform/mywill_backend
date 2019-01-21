@@ -27,7 +27,7 @@ from lastwill.contracts.models import (
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
-        ContractDetailsTRONToken, ContractDetailsGameAssets
+        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -217,7 +217,8 @@ class ContractSerializer(serializers.ModelSerializer):
             13: ContractDetailsEOSAirdropSerializer,
             14: ContractDetailsEOSTokenSASerializer,
             15: ContractDetailsTRONTokenSerializer,
-            16: ContractDetailsGameAssetsSerializer
+            16: ContractDetailsGameAssetsSerializer,
+            17: ContractDetailsTRONAirdropSerializer
         }[contract_type]
 
 
@@ -1218,4 +1219,28 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         kwargs.pop('tron_contract_token', None)
+        return super().update(details, kwargs)
+
+
+class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTRONAirdrop
+        fields = ('admin_address', 'token_address')
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
+        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
+        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing', active=True).count()
+        res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent', active=True).count()
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
         return super().update(details, kwargs)
