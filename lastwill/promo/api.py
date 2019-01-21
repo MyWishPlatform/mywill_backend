@@ -5,6 +5,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from .models import *
 
+
 def check_and_get_discount(promo_str, contract_type, user):
     promo = Promo.objects.filter(promo_str=promo_str.upper()).first()
     if promo is None:
@@ -20,6 +21,7 @@ def check_and_get_discount(promo_str, contract_type, user):
     if not p2ct:
         raise PermissionDenied(2002)
     return p2ct.discount
+
 
 @api_view()
 def get_discount(request):
