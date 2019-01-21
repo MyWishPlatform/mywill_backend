@@ -604,8 +604,8 @@ def get_cost_all_contracts(request):
         # print('contract_details type', i, flush=True)
         if i in [10, 11, 12, 13, 14]:
             # print(host, EOSISH_URL, flush=True)
-            # answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
-            answer[i] = 200
+            answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
+            # answer[i] = 200
         else:
             # print('not eos', flush=True)
             answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
