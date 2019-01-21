@@ -19,6 +19,8 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
+
 
 
 def convert_address_to_hex(address):
@@ -87,21 +89,18 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(5 * 10 ** 18)
+        result = int(CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/tron-token/*')
-        self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
         for th in token_holders:
             if th.address.startswith('41'):
@@ -254,21 +253,18 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * 10 ** 18)
+        result = int(CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/game-assets-contract/*')
-        self.lgr.append('dest %s' % dest)
         owner = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
         preproc_params = {"constants":
             {

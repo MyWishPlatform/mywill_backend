@@ -12,6 +12,7 @@ from lastwill.contracts.models import Contract
 from lastwill.parint import *
 from lastwill.settings import DEFAULT_FROM_EMAIL
 import email_messages
+from lastwill.consts import LASTWILL_ALIVE_TIMEOUT
 
 
 def check_all():
@@ -34,6 +35,17 @@ def check_all():
     print('checked all', flush=True)
 
 
+def create_reminder(contract, day):
+    day = 1 if day <= 1 else day
+    print('{days} day message'.format(days=day), contract.id, flush=True)
+    send_mail(
+            email_messages.remind_subject,
+            email_messages.remind_message.format(days=day),
+            DEFAULT_FROM_EMAIL,
+            [contract.user.email]
+    )
+
+
 def send_reminders(contract):
     if contract.contract_type == 0:
         details = contract.get_details()
@@ -41,30 +53,8 @@ def send_reminders(contract):
             if details.next_check:
                 now = timezone.now()
                 delta = details.next_check - now
-                if delta.days <= 1:
-                    print('1 day message', contract.id, flush=True)
-                    send_mail(
-                        email_messages.remind_subject,
-                        email_messages.remind_message.format(days=1),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
-                if delta.days == 5:
-                    print('5 days message', contract.id, flush=True)
-                    send_mail(
-                        email_messages.remind_subject,
-                        email_messages.remind_message.format(days=5),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
-                if delta.days == 10:
-                    print('10 days message', contract.id, flush=True)
-                    send_mail(
-                        email_messages.remind_subject,
-                        email_messages.remind_message.format(days=10),
-                        DEFAULT_FROM_EMAIL,
-                        [contract.user.email]
-                    )
+                if delta.days <= 1 or delta.days in {5,10}:
+                    create_reminder(contract, delta.days)
 
 
 def send_in_pika(contract):
@@ -93,5 +83,5 @@ def send_in_pika(contract):
 if __name__ == '__main__':
     while 1:
         check_all()
-        time.sleep(60 * 60 * 24)
+        time.sleep(LASTWILL_ALIVE_TIMEOUT)
         # time.sleep(60 * 10)

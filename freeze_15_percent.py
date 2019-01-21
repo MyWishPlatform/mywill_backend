@@ -10,231 +10,15 @@ from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MY
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
+from lastwill.json_templates import get_freeze_wish_abi
+
+from django.core.mail import send_mail, EmailMessage
+from lastwill.settings import DEFAULT_FROM_EMAIL, SUPPORT_EMAIL
+from email_messages import freeze_15_failed_subject, freeze_15_failed_message
 
 
 def freeze_wish(amount):
-    abi_dict = [
-  {
-    "constant": True,
-    "inputs": [],
-    "name": "name",
-    "outputs": [
-      {
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": False,
-    "inputs": [
-      {
-        "name": "_spender",
-        "type": "address"
-      },
-      {
-        "name": "_value",
-        "type": "uint256"
-      }
-    ],
-    "name": "approve",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": True,
-    "inputs": [],
-    "name": "totalSupply",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": False,
-    "inputs": [
-      {
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "name": "_value",
-        "type": "uint256"
-      }
-    ],
-    "name": "transferFrom",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": True,
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": True,
-    "inputs": [
-      {
-        "name": "_owner",
-        "type": "address"
-      }
-    ],
-    "name": "balanceOf",
-    "outputs": [
-      {
-        "name": "balance",
-        "type": "uint256"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": True,
-    "inputs": [],
-    "name": "symbol",
-    "outputs": [
-      {
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": False,
-    "inputs": [
-      {
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "name": "_value",
-        "type": "uint256"
-      }
-    ],
-    "name": "transfer",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": True,
-    "inputs": [
-      {
-        "name": "_owner",
-        "type": "address"
-      },
-      {
-        "name": "_spender",
-        "type": "address"
-      }
-    ],
-    "name": "allowance",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "payable": False,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "payable": True,
-    "stateMutability": "payable",
-    "type": "fallback"
-  },
-  {
-    "anonymous": False,
-    "inputs": [
-      {
-        "indexed": True,
-        "name": "owner",
-        "type": "address"
-      },
-      {
-        "indexed": True,
-        "name": "spender",
-        "type": "address"
-      },
-      {
-        "indexed": False,
-        "name": "value",
-        "type": "uint256"
-      }
-    ],
-    "name": "Approval",
-    "type": "event"
-  },
-  {
-    "anonymous": False,
-    "inputs": [
-      {
-        "indexed": True,
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": True,
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "indexed": False,
-        "name": "value",
-        "type": "uint256"
-      }
-    ],
-    "name": "Transfer",
-    "type": "event"
-  }
-]
+    abi_dict = get_freeze_wish_abi()
     tr = abi.ContractTranslator(abi_dict)
     par_int = ParInt(NETWORK_SIGN_TRANSACTION_WISH)
     nonce = int(par_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
@@ -298,13 +82,37 @@ def freeze_eosish(amount):
 def check_payments():
     freeze_balance = FreezeBalance.objects.all().first()
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
-        freeze_wish(freeze_balance.wish)
-        freeze_balance.wish = 0
-        freeze_balance.save()
+        try:
+            freeze_wish(freeze_balance.wish)
+            freeze_balance.wish = 0
+            freeze_balance.save()
+        except Exception as e:
+            print(e)
+            print('Freezing WISH failed')
+            send_failed_freezing("WISH")
     if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
-      freeze_eosish(freeze_balance.eosish)
-      freeze_balance.eosish = 0
-      freeze_balance.save()
+        try:
+            freeze_eosish(freeze_balance.eosish)
+            freeze_balance.eosish = 0
+            freeze_balance.save()
+        except Exception as e:
+            print(e)
+            print('Freezing EOSISH failed')
+            send_failed_freezing("EOSISH")
+
+
+def send_failed_freezing(token):
+    check_address = "ETH addresses" if token == "WISH" else "EOS accounts"
+    mail = EmailMessage(
+        subject=freeze_15_failed_subject,
+        body=freeze_15_failed_message.format(
+            token_type=token,
+            address_type=check_address
+        ),
+        from_email=DEFAULT_FROM_EMAIL,
+        to=SUPPORT_EMAIL
+    )
+    mail.send()
 
 
 if __name__ == '__main__':

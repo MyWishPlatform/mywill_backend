@@ -157,3 +157,13 @@ If you have any questions - please mail to support@mywish.io. We will contact yo
 Thank you,
 MyWish Team
 """
+
+freeze_15_failed_subject = """ MyWish - Freezing of 15% tokens failed """
+freeze_15_failed_message = """Hello!
+
+Please check the receipt of 15% of {token_type} tokens on {address_type} for freezing.
+Last payment can be failed due to an error.
+
+Best wishes,
+MyWish Team.
+"""
