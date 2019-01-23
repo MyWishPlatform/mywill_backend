@@ -80,6 +80,7 @@ def freeze_eosish(amount):
 
 
 def check_payments():
+    global attempt
     freeze_balance = FreezeBalance.objects.all().first()
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
         try:
@@ -87,18 +88,20 @@ def check_payments():
             freeze_balance.wish = 0
             freeze_balance.save()
         except Exception as e:
+            attempt += 1
             print(e)
-            print('Freezing WISH failed', freeze_balance.wish, e)
-            send_failed_freezing("WISH")
+            print('Freezing WISH failed')
+            send_mail_attempt("WISH", freeze_balance.wish, e)
     if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
         try:
             freeze_eosish(freeze_balance.eosish)
             freeze_balance.eosish = 0
             freeze_balance.save()
         except Exception as e:
+            attempt += 1
             print(e)
             print('Freezing EOSISH failed')
-            send_failed_freezing("EOSISH", freeze_balance.eosish, e)
+            send_mail_attempt("EOSISH", freeze_balance.eosish, e)
 
 
 def send_failed_freezing(token, balance, trace):
@@ -117,7 +120,15 @@ def send_failed_freezing(token, balance, trace):
     mail.send()
 
 
+def send_mail_attempt(token, balance, trace):
+    global attempt
+    if attempt >= 100:
+        send_failed_freezing(token, balance, trace)
+        attempt = 0
+
+
 if __name__ == '__main__':
+    attempt = 0
     while 1:
         check_payments()
         time.sleep(60 * 10)
