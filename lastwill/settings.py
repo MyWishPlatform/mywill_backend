@@ -247,6 +247,8 @@ CLEOS_TIME_LIMIT = 4
 
 SESSION_COOKIE_DOMAIN = '.mywish.io'
 
+UNBLOCKING_EMAIL = 'hello@rocknblock.io'
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
