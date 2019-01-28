@@ -55,6 +55,7 @@ def get_discount(request):
             cost = contract.cost * discount / 100
             if contract_type == 5:
                 if contract_details.authio:
+                    print('token with authio', flush=True)
                     cost = (contract.cost - 3 * NET_DECIMALS['ETH']) * discount / 100 + 3 * NET_DECIMALS['ETH']
             answer['discount_price'] = {
             'ETH': str(cost),
