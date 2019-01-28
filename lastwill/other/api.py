@@ -21,9 +21,10 @@ def send_unblocking_info(request):
     name = request.data.get('name')
     email = request.data.get('email')
     message = request.data.get('message')
+    page = request.data.get('page')
     send_mail(
         'Feedback form',
-        {'name': name, 'email': email, 'message': message},
+        {'name': name, 'email': email, 'message': message, 'page': page},
         DEFAULT_FROM_EMAIL,
         [UNBLOCKING_EMAIL]
     )
