@@ -53,7 +53,8 @@ def get_discount(request):
             }
         elif host == MY_WISH_URL:
             cost = contract.cost * discount / 100
-            if contract_type == 5:
+            if contract.contract_type == 5:
+                print('token token', flush=True)
                 if contract_details.authio:
                     print('token with authio', flush=True)
                     cost = (contract.cost - 3 * NET_DECIMALS['ETH']) * discount / 100 + 3 * NET_DECIMALS['ETH']
