@@ -25,6 +25,6 @@ def send_unblocking_info(request):
         'Feedback form',
         {'name': name, 'email': email, 'message': message},
         DEFAULT_FROM_EMAIL,
-        UNBLOCKING_EMAIL
+        [UNBLOCKING_EMAIL]
     )
     return Response({'result': 'ok'})
