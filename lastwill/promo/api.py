@@ -5,6 +5,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
+from lastwill.contracts.serializers import ContractSerializer
+from lastwill.settings import  MY_WISH_URL, EOSISH_URL, NET_DECIMALS
+from exchange_API import *
 from .models import *
 
 
@@ -37,6 +40,38 @@ def get_discount(request):
     answer = {'discount': discount}
     if 'contract_id' in request.query_params:
         contract = Contract.objects.get(id=request.query_params['contract_id'])
+        contract_details = contract.get_details()
+        if host == EOSISH_URL:
+            kwargs = ContractSerializer().get_details_serializer(
+                contract.contract_type
+            )().to_representation(contract_details)
+            cost = contract_details.calc_cost_eos(kwargs, contract.network) * discount / 100
+            answer['discount_price'] = {
+                'EOS': cost,
+                'EOSISH': str(float(cost) * convert('EOS', 'EOSISH')['EOSISH'])
+            }
+        elif host == MY_WISH_URL:
+            cost = contract.cost * discount / 100
+            if contract_type == 5:
+                if contract_details.authio:
+                    cost = (contract.cost - 3 * NET_DECIMALS['ETH']) * discount / 100 + 3 * NET_DECIMALS['ETH']
+            answer['discount_price'] = {
+            'ETH': str(cost),
+            'WISH': str(int(to_wish('ETH', int(cost)))),
+            'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
+            'TRX': str(int(cost) * convert('ETH', 'TRX')['TRX'])
+            }
+        else:
+            kwargs = ContractSerializer().get_details_serializer(
+                contract.contract_type
+            )().to_representation(contract_details)
+            cost = contract_details.calc_cost(kwargs, contract.network) * discount / 100
+            answer['discount_price'] = {
+                'ETH': str(cost),
+                'WISH': str(int(to_wish('ETH', int(cost)))),
+                'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
+                'TRX': str(int(cost) * convert('ETH', 'TRX')['TRX'])
+            }
 
     return Response(answer)
 
