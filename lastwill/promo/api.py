@@ -6,7 +6,8 @@ from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
-from lastwill.settings import  MY_WISH_URL, EOSISH_URL, NET_DECIMALS
+from lastwill.settings import  MY_WISH_URL, EOSISH_URL
+from lastwill.consts import NET_DECIMALS
 from exchange_API import *
 from .models import *
 
