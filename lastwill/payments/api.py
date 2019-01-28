@@ -22,10 +22,10 @@ def create_payment(uid, tx, currency, amount, site_id):
             currency, amount
         )
         if currency == 'BTC':
-            value = value * 10 ** 18 / 10 ** 8
+            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
     else:
         amount = calculate_decimals(currency, amount)
-        value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH']* 10 ** 4
+        value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']
         amount = add_decimals(currency, amount)
     user = User.objects.get(id=uid)
     if amount < 0.0:
@@ -47,20 +47,20 @@ def create_payment(uid, tx, currency, amount, site_id):
 def calculate_decimals(currency, amount):
     # count sum payments without decimals
     if currency in ['ETH']:
-        amount = amount / 10 ** 18
+        amount = amount / NET_DECIMALS['ETH']
     if currency in ['BTC']:
-        amount = amount / 10 ** 8
+        amount = amount / NET_DECIMALS['BTC']
     if currency in ['EOS']:
-        amount = amount / 10 ** 4
+        amount = amount / NET_DECIMALS['EOS']
     return amount
 
 
 def add_decimals(currency, amount):
     # add decimals for eth, btc
     if currency in ['ETH']:
-        amount = amount * 10 ** 18
+        amount = amount * NET_DECIMALS['ETH']
     if currency in ['BTC']:
-        amount = amount * 10 ** 8
+        amount = amount * NET_DECIMALS['BTC']
     return amount
 
 
