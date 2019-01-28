@@ -105,13 +105,13 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_ETH['EOS_TOKEN_ETH'] * NET_DECIMALS['ETH'])
+        return int(CONTRACT_PRICE_ETH['EOS_TOKEN'] * NET_DECIMALS['ETH'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_EOS['EOS_TOKEN_EOS'] * NET_DECIMALS['EOS'])
+        return int(CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'])
 
     def get_arguments(self, eth_contract_attr_name):
         return []
