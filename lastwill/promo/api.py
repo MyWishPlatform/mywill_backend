@@ -3,6 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+
+from lastwill.contracts.submodels.common import Contract
 from .models import *
 
 
@@ -27,11 +29,16 @@ def check_and_get_discount(promo_str, contract_type, user):
 def get_discount(request):
     if request.user.is_anonymous:
         raise PermissionDenied()
+    host = request.META['HTTP_HOST']
     user = request.user
     contract_type = request.query_params['contract_type']
     promo_str = request.query_params['promo']
     discount = check_and_get_discount(promo_str, contract_type, user)
-    return Response({'discount': discount})
+    answer = {'discount': discount}
+    if 'contract_id' in request.query_params:
+        contract = Contract.objects.get(id=request.query_params['contract_id'])
+
+    return Response(answer)
 
 
 def create_promocode(
