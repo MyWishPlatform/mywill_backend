@@ -22,9 +22,17 @@ def send_unblocking_info(request):
     email = request.data.get('email')
     message = request.data.get('message')
     page = request.data.get('page')
+    text = """
+    Name: {name}
+    E-mail: {email}
+    Message: {message}
+    Page: {page}
+    """.format(
+        name=name, email=email, message=message, page=page
+    )
     send_mail(
-        'Feedback form',
-        {'name': name, 'email': email, 'message': message, 'page': page},
+        'Request from rocknblock.io contact form',
+        text,
         DEFAULT_FROM_EMAIL,
         [UNBLOCKING_EMAIL]
     )
