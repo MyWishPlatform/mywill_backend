@@ -4,6 +4,7 @@ import hmac
 from django.http import JsonResponse
 from django.db.models import F
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -19,8 +20,8 @@ from lastwill.consts import *
 
 
 def get_user_for_token(token):
-    user = APIToken.objects.get_object_or_404(token=token).user
-    return user
+    api_token = get_object_or_404(APIToken, token=token)
+    return api_token.user
 
 
 def calc_eos_cost(cpu, net, ram):
@@ -281,7 +282,7 @@ def show_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get_object_or_404(id=int(request.query_params.get('id')))
+    contract = get_object_or_404(Contract, id=int(request.query_params.get('id')))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.user != user:
