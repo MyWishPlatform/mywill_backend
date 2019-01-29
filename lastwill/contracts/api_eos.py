@@ -430,13 +430,19 @@ def get_all_blockchains(request):
 @api_view(http_method_names=['GET'])
 def get_profile_info(request):
     '''
-    get all info abount user
+    get info abount user
     :param request: token only
-    :return: json with all info abount user
-    include balances and addresses
+    :return: json with info about user - username, contracts_count, id, lang
     '''
     token = request.data['token']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    pass
+    answer = {
+        'username': user.email if user.email else '{} {}'.format(
+            user.first_name, user.last_name),
+        'contracts': Contract.objects.filter(user=user).count(),
+        'id': user.id,
+        'lang': user.profile.lang,
+    }
+    return Response(answer)
