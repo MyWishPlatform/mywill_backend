@@ -15,6 +15,11 @@ from lastwill.other.models import *
 from lastwill.profile.models import *
 
 
+def get_user_for_token(token):
+    user = APIToken.objects.get_or_404(token=token).user
+    return user
+
+
 def check_auth(user_id, user_secret_key, params):
     user = User.objects.filter(id=user_id).first()
     if not user:
@@ -170,11 +175,10 @@ def create_eos_account(request):
     :param request: contain account_name, owner_public_key, active_public_key, user_id
     :return: ok
     '''
-    user_id = int(request.data['user_id'])
-    user_secret_key = request.data['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.data)
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
     network = Network.objects.get(id=10)
     contract = Contract(
         state='CREATED',
@@ -182,7 +186,7 @@ def create_eos_account(request):
         contract_type=11,
         network=network,
         cost=0,
-        user_id=user_id
+        user=user
     )
     contract.save()
     eos_contract = EOSContract(
@@ -222,16 +226,15 @@ def deploy_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    user_id = int(request.data['user_id'])
-    user_secret_key = request.data['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.data)
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     if not Profile.objects.select_for_update().filter(
-            user_id=user_id, balance__gte=200 *10**18
+            user=user, balance__gte=200 *10**18
     ).update(balance=F('balance') - 200 *10**18):
         raise Exception('no money')
     contract_details = contract.get_details()
@@ -250,12 +253,13 @@ def show_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    user_id = int(request.query_params['user_id'])
-    user_secret_key = request.query_params['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.query_params)
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.query_params.get('id')))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
     answer = {'state': contract.state, 'address': contract_details.account_name}
     answer['net'] = contract_details.stake_net_value
@@ -274,15 +278,16 @@ def edit_eos_account(request):
     (account_name, public_key, cpu, net, ram)
     :return:
     '''
-    user_id = int(request.data['user_id'])
-    user_secret_key = request.data['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.data)
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
     params = json.loads(request.body)
     contract = Contract.objects.get(id=int(params['id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
     if 'stake_net_value' in params:
         contract_details.stake_net_value = int(params['stake_net_value'])
@@ -308,6 +313,10 @@ def calculate_cost_eos_account(request):
     :param request: contain cpu, net, ram
     :return: cost
     '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    get_user_for_token(token)
     eos_url = 'https://%s' % (
         str(NETWORKS['EOS_MAINNET']['host'])
     )
@@ -342,7 +351,13 @@ def calculate_cost_eos_account_contract(request):
     :param request: contain contract_id
     :return: cost
     '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.query_params['contract_id']))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
     details = contract.get_details()
     network = Network.objects.get(name='EOS_MAINNET')
     eos_cost = details.calc_cost_eos(details, network)
