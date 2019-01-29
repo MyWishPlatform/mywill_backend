@@ -17,18 +17,48 @@ from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL
 from lastwill.profile.helpers import valid_totp
 
+
+def generate_memo(m):
+    memo_str = os.urandom(8)
+    m.update(memo_str)
+    memo_str = binascii.hexlify(memo_str + m.digest()[0:2])
+    return memo_str
+
+
+def registration_btc_address(btc_address):
+    requests.post(
+        BITCOIN_URLS['main'],
+        json={
+            'method': 'importaddress',
+            'params': [btc_address, btc_address, False],
+            'id': 1, 'jsonrpc': '1.0'
+        }
+    )
+
+
+def create_wish_balance(user, eth_address, btc_address, memo_str):
+    wish = SubSite.objects.get(site_name=MY_WISH_URL)
+    UserSiteBalance(
+        user=user, subsite=wish,
+        eth_address=eth_address,
+        btc_address=btc_address,
+        memo=memo_str
+    ).save()
+
+
+def create_eosish_balance(user, eth_address, btc_address, memo_str):
+    eosish = SubSite.objects.get(site_name=EOSISH_URL)
+    UserSiteBalance(
+        user=user, subsite=eosish,
+        eth_address=eth_address,
+        btc_address=btc_address,
+        memo=memo_str
+    ).save()
+
 def init_profile(user, is_social=False, lang='en'):
     m = hashlib.sha256()
-    memo_str1 = os.urandom(8)
-    memo_str2 = os.urandom(8)
-    memo_str3 = os.urandom(8)
-
-    m.update(memo_str1)
-    memo_str1 = binascii.hexlify(memo_str1 + m.digest()[0:2])
-    m.update(memo_str2)
-    memo_str2 = binascii.hexlify(memo_str2 + m.digest()[0:2])
-    m.update(memo_str3)
-    memo_str3 = binascii.hexlify(memo_str3 + m.digest()[0:2])
+    memo_str1 = generate_memo(m)
+    memo_str2 = generate_memo(m)
 
     wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
@@ -38,38 +68,11 @@ def init_profile(user, is_social=False, lang='en'):
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
-    wish = SubSite.objects.get(site_name=MY_WISH_URL)
-    eosish = SubSite.objects.get(site_name=EOSISH_URL)
-
     Profile(user=user, is_social=is_social, lang=lang).save()
-    UserSiteBalance(
-        user=user, subsite=wish,
-        eth_address=eth_address1,
-        btc_address=btc_address1,
-        memo=memo_str1
-    ).save()
-    UserSiteBalance(
-        user=user, subsite=eosish,
-        eth_address=eth_address2,
-        btc_address=btc_address2,
-        memo=memo_str2
-    ).save()
-    requests.post(
-        BITCOIN_URLS['main'],
-        json={
-            'method': 'importaddress',
-            'params': [btc_address1, btc_address1, False],
-            'id': 1, 'jsonrpc': '1.0'
-        }
-    )
-    requests.post(
-        BITCOIN_URLS['main'],
-        json={
-            'method': 'importaddress',
-            'params': [btc_address2, btc_address2, False],
-            'id': 1, 'jsonrpc': '1.0'
-        }
-    )
+    create_wish_balance(user, eth_address1, btc_address1, memo_str1)
+    create_eosish_balance(user, eth_address2, btc_address2, memo_str2)
+    registration_btc_address(btc_address1)
+    registration_btc_address(btc_address2)
 
 
 class UserRegisterSerializer(RegisterSerializer):

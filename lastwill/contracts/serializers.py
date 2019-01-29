@@ -15,7 +15,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
+from lastwill.settings import DEFAULT_FROM_EMAIL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -103,7 +103,6 @@ class ContractSerializer(serializers.ModelSerializer):
             details_serializer.create(contract, contract_details)
         except:
             transaction.rollback()
-            test_logger.error('Contract Serializer create except')
             raise
         else:
             transaction.commit()
@@ -457,7 +456,6 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             if th['amount'] < 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in ICO serializer')
                 raise ValidationError({'result': 2}, code=400)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
@@ -499,7 +497,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             res['eth_contract_crowdsale']['source_code'] = ''
         return res
 
-    def update(self, contract, details, contract_details): 
+    def update(self, contract, details, contract_details):
         token_id = contract_details.pop('token_id', None)
         contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
@@ -542,7 +540,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().create(kwargs)
-          
+
     def validate(self, details):
         now = timezone.now().timestamp() + 600
         if '"' in details['token_name'] or '\n' in details['token_name']:
@@ -563,7 +561,6 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
         if 'authio' in details:
             if details['authio']:
@@ -636,7 +633,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().create(kwargs)
-    
+
     def update(self, contract, details, contract_details):
         contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
@@ -1162,7 +1159,6 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
 
     def to_representation(self, contract_details):

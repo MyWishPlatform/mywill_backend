@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, CONTRACTS_TEMP_DIR
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
@@ -87,18 +88,14 @@ class ContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(4.99 * 10 ** 18)
+        return int(CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'])
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
-        self.lgr.append('compile %d' % self.contract.id)
         print('ico_contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(self)
-        self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
         amount_bonuses = add_amount_bonuses(self)
         time_bonuses = add_time_bonuses(self)
@@ -124,7 +121,6 @@ class ContractDetailsICO(CommonDetails):
             preproc_params, self.admin_address,
             address, self.cold_wallet_address
         )
-        self.lgr.append(('prepoc params', preproc_params))
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system(
@@ -160,10 +156,8 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
-        self.lgr.append('msg_deployed method of the ico contract')
         address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             take_off_blocking(self.contract.network.name)
@@ -175,7 +169,6 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.save()
             take_off_blocking(self.contract.network.name)
             print('status changed to waiting activation')
-            self.lgr.append('status changed to waiting activation')
             return
         if self.eth_contract_token.id == message['contractId']:
             self.eth_contract_token.address = message['address']
@@ -189,8 +182,6 @@ class ContractDetailsICO(CommonDetails):
             nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
             print('nonce', nonce)
             print('transferOwnership message signed')
-            self.lgr.append('nonce %d' % nonce)
-            self.lgr.append('transferOwnership message signed')
             signed_data = sign_transaction(
                 address, nonce, 100000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
@@ -203,14 +194,12 @@ class ContractDetailsICO(CommonDetails):
             )
             self.eth_contract_token.save()
             print('transferOwnership message sended')
-            self.lgr.append('transferOwnership message sended')
 
     def get_gaslimit(self):
-        return 3200000
+        return CONTRACT_GAS_LIMIT['ICO']
 
     @blocking
     @postponable
-    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
@@ -226,7 +215,6 @@ class ContractDetailsICO(CommonDetails):
     @blocking
     @postponable
     #    @check_transaction
-    @logging
     def ownershipTransferred(self, message):
         address = NETWORKS[self.contract.network.name]['address']
         if message['contractId'] != self.eth_contract_token.id:
@@ -244,13 +232,12 @@ class ContractDetailsICO(CommonDetails):
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         par_int = ParInt(self.contract.network.name)
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_limit = 100000 + 80000 * self.contract.tokenholder_set.all().count()
         print('nonce', nonce)
-        self.lgr.append('nonce %d' % nonce)
         print('init message signed')
-        self.lgr.append('init message signed')
         signed_data = sign_transaction(
             address, nonce,
-            100000 + 80000 * self.contract.tokenholder_set.all().count(),
+            gas_limit,
             self.contract.network.name,
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
@@ -262,20 +249,16 @@ class ContractDetailsICO(CommonDetails):
         )
         self.eth_contract_crowdsale.save()
         print('init message sended')
-        self.lgr.append('init message sended')
 
     # crowdsale
     @postponable
     @check_transaction
-    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            self.lgr.append('contract had wrong status')
             return
         take_off_blocking(self.contract.network.name)
         if message['contractId'] != self.eth_contract_crowdsale.id:
             print('ignored', flush=True)
-            self.lgr.append('ignored')
             return
         self.contract.state = 'ACTIVE'
         self.contract.save()
@@ -300,7 +283,6 @@ class ContractDetailsICO(CommonDetails):
                 [self.contract.user.email]
             )
 
-    @logging
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'
@@ -312,7 +294,6 @@ class ContractDetailsICO(CommonDetails):
     def check_contract(self):
         pass
 
-    @logging
     def timesChanged(self, message):
         if 'startTime' in message and message['startTime']:
             self.start_date = message['startTime']
@@ -361,24 +342,20 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(2.99 * 10 ** 18)
+        result = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(5.99 * 10 ** 18)
+            result = int(CONTRACT_PRICE_ETH['TOKEN_AUTHIO'] * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    @logging
     def compile(self, eth_contract_attr_name='eth_contract_token'):
-        self.lgr.append('standalone token contract compile')
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(self)
-        self.lgr.append('dest %s' % dest)
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
         preproc_params['constants'] = add_token_params(
@@ -386,7 +363,6 @@ class ContractDetailsToken(CommonDetails):
             False, self.future_minting
         )
         test_token_params(preproc_config, preproc_params, dest)
-        self.lgr.append(('prepoc params', preproc_params))
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -406,16 +382,14 @@ class ContractDetailsToken(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         return super().deploy(eth_contract_attr_name)
 
     def get_gaslimit(self):
-        return 3200000
+        return CONTRACT_GAS_LIMIT['TOKEN']
 
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         res = super().msg_deployed(message, 'eth_contract_token')
         if not self.future_minting:
@@ -455,7 +429,6 @@ class ContractDetailsToken(CommonDetails):
             )
         return res
 
-    @logging
     def ownershipTransferred(self, message):
         if self.eth_contract_token.original_contract.state not in (
                 'UNDER_CROWDSALE', 'ENDED'
@@ -463,7 +436,6 @@ class ContractDetailsToken(CommonDetails):
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
 
-    @logging
     def finalized(self, message):
         if self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'

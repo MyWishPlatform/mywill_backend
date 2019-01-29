@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, LASTWILL_ALIVE_TIMEOUT
 
 
 @contract_details('Will contract')
@@ -38,7 +39,6 @@ class ContractDetailsLastwill(CommonDetails):
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
 
-    @logging
     def contractPayment(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
@@ -53,15 +53,13 @@ class ContractDetailsLastwill(CommonDetails):
         send_in_queue(self.contract.id, 'make_payment', queue)
 
     @blocking
-    @logging
     def make_payment(self, message):
-        self.lgr.append('make payments id %d' %self.contract.id)
         contract = self.contract
         par_int = ParInt(contract.network.name)
         wl_address = NETWORKS[self.contract.network.name]['address']
         balance = int(par_int.eth_getBalance(wl_address), 16)
-        gas_limit = 50000
-        gas_price = 10 ** 9
+        gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_PAYMENT']
+        gas_price = NET_DECIMALS['ETH_GAS_PRICE']
         if balance < contract.get_details().btc_duty + gas_limit * gas_price:
             send_mail(
                 'RSK',
@@ -77,8 +75,6 @@ class ContractDetailsLastwill(CommonDetails):
             dest=contract.get_details().eth_contract.address,
             gas_price=gas_price
         )
-        self.lgr.append('nonce = %d' %nonce)
-        self.lgr.append('signed_data %s' %signed_data)
         self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
             '0x' + signed_data)
         self.eth_contract.save()
@@ -120,7 +116,7 @@ class ContractDetailsLastwill(CommonDetails):
         Cg = 780476
         CBg = 26561
         Tg = 22000
-        Gp = 60 * 10 ** 9
+        Gp = 60 * NET_DECIMALS['ETH_GAS_PRICE']
         Dg = 29435
         DBg = 9646
         B = heirs_num
@@ -128,24 +124,22 @@ class ContractDetailsLastwill(CommonDetails):
         DxC = max(abs(
             (datetime.date.today() - active_to).total_seconds() / check_interval
         ), 1)
-        O = 25000 * 10 ** 9
+        O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
         result = 2 * int(
             Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC
         ) + 80000
         if network.name == 'RSK_MAINNET':
-            result += 2 * (10 ** 18)
+            result += 2 * NET_DECIMALS['ETH']
         return result
 
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         super().msg_deployed(message)
         self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
     @check_transaction
-    @logging
     def checked(self, message):
         now = timezone.now()
         self.last_check = now
@@ -158,7 +152,6 @@ class ContractDetailsLastwill(CommonDetails):
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     @check_transaction
-    @logging
     def triggered(self, message):
         self.last_check = timezone.now()
         self.next_check = None
@@ -191,9 +184,7 @@ class ContractDetailsLastwill(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
-        self.lgr.append('deploy contract id %d' %self.contract.id)
         if self.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET'] and self.btc_key is None:
             priv = os.urandom(32)
             if self.contract.network.name == 'RSK_MAINNET':
@@ -210,11 +201,10 @@ class ContractDetailsLastwill(CommonDetails):
         super().deploy()
 
     @blocking
-    @logging
     def i_am_alive(self, message):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
-            if delta.days < 1 and delta.total_seconds() < 60 * 60 * 24:
+            if delta.days < 1 and delta.total_seconds() < LASTWILL_ALIVE_TIMEOUT:
                 take_off_blocking(
                     self.contract.network.name, address=self.contract.address
                 )
@@ -222,8 +212,9 @@ class ContractDetailsLastwill(CommonDetails):
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
-            address, nonce, 600000, self.contract.network.name,
+            address, nonce, gas_limit, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                     tr.encode_function_call('imAvailable', [])
@@ -236,14 +227,14 @@ class ContractDetailsLastwill(CommonDetails):
         self.last_press_imalive = timezone.now()
 
     @blocking
-    @logging
     def cancel(self, message):
         tr = abi.ContractTranslator(self.eth_contract.abi)
         par_int = ParInt(self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
-            address, nonce,  600000, self.contract.network.name,
+            address, nonce,  gas_limit, self.contract.network.name,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                     tr.encode_function_call('kill', [])
@@ -254,7 +245,6 @@ class ContractDetailsLastwill(CommonDetails):
         )
         self.eth_contract.save()
 
-    @logging
     def fundsAdded(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
