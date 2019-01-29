@@ -8,11 +8,12 @@ from django.core.mail import send_mail
 from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, CONTRACT_PRICE_ETH, CONTRACT_PRICE_EOS, NET_DECIMALS
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import *
-from lastwill.contracts.submodels.eos_json import *
+from lastwill.json_templates import create_eos_json
 from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+# from lastwill.settings import EOS_TEST_URL_ENV, EOS_TEST_ICO_FOLDER, EOS_TEST_ICO_URL
 from exchange_API import to_wish, convert
 
 
@@ -35,6 +36,7 @@ def unlock_eos_account(wallet_name, password):
 
 
 def implement_cleos_command(command_list):
+    print('command list', command_list, flush=True)
     for attempt in range(EOS_ATTEMPTS_COUNT):
         print('attempt', attempt, flush=True)
         proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -103,13 +105,13 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(2.99 * 10 ** 18)
+        return int(CONTRACT_PRICE_ETH['EOS_TOKEN'] * NET_DECIMALS['ETH'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(150 * 10 ** 4)
+        return int(CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'])
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -121,22 +123,26 @@ class ContractDetailsEOSToken(CommonDetails):
             'buy_ram_kbytes': 128
         }
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
-        acc_name = NETWORKS[self.contract.network.name]['token_address']
-        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        builder = NETWORKS[self.contract.network.name]['tokensfather']
+        acc_name = NETWORKS[self.contract.network.name]['address']
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         if self.decimals != 0:
             max_supply = str(self.maximum_supply)[:-self.decimals] + '.' + str(self.maximum_supply)[-self.decimals:]
         else:
             max_supply = str(self.maximum_supply)
         command = [
             'cleos', '-u', eos_url, 'push', 'action',
-            acc_name, 'create',
+            builder, 'create',
             '["{acc_name}","{max_sup} {token}"]'.format(
                 acc_name=self.admin_address,
                 max_sup=max_supply,
@@ -149,7 +155,7 @@ class ContractDetailsEOSToken(CommonDetails):
         print('tx_hash:', tx_hash, flush=True)
         eos_contract = EOSContract()
         eos_contract.tx_hash = tx_hash
-        eos_contract.address = acc_name
+        eos_contract.address = builder
         eos_contract.contract=self.contract
         eos_contract.save()
 
@@ -182,10 +188,15 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_url = 'http://%s:%s' % (
-            str(NETWORKS[network.name]['host']),
-            str(NETWORKS[network.name]['port'])
-        )
+        if network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+                str(NETWORKS[network.name]['host'])
+            )
+        else:
+            eos_url = 'http://%s:%s' % (
+                str(NETWORKS[network.name]['host']),
+                str(NETWORKS[network.name]['port'])
+            )
 
         command1 = [
             'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
@@ -200,17 +211,17 @@ class ContractDetailsEOSAccount(CommonDetails):
                  + float(kwargs['stake_cpu_value'])
         ) * 2 + 0.3
         print('eos cost', eos_cost, flush=True)
-        return round(eos_cost, 0) * 10 ** 4
+        return round(eos_cost, 0) * NET_DECIMALS['EOS']
 
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
         # cost = 0.05 *10**18
-        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / 10 ** 4
+        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         print('convert eos cost', cost, flush=True)
-        return round(cost, 2) * 10**18
+        return round(cost, 2) * NET_DECIMALS['ETH']
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -237,7 +248,6 @@ class ContractDetailsEOSAccount(CommonDetails):
         }, network)
         return cost
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -245,7 +255,11 @@ class ContractDetailsEOSAccount(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
-        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             acc_name, self.account_name, self.owner_public_key,
@@ -332,14 +346,14 @@ class ContractDetailsEOSICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 5 * 10**18
+        cost = CONTRACT_PRICE_ETH['EOS_ICO'] * NET_DECIMALS['ETH']
         return cost
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(250 * 10 ** 4)
+        return int(CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'])
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -392,12 +406,33 @@ class ContractDetailsEOSICO(CommonDetails):
         print('command = ', command, flush=True)
         if os.system(command):
             raise Exception('error generate config')
-
+        # command = (
+        #     "/bin/bash -c 'cp {sour} {dest}'").format(
+        #     sour=path.join(dest, 'config.h'),
+        #     dest=EOS_TEST_ICO_FOLDER
+        # )
+        # if os.system(command):
+        #     raise Exception('error cp config')
+        # command = (
+        #     "/bin/bash -c 'cd {dest} && ./enable-debug.sh' ".format(
+        #         dest=EOS_TEST_ICO_FOLDER
+        #     ))
+        # if os.system(command):
+        #     raise Exception('error enable debug')
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
         ):
             raise Exception('compiler error while deploying')
+        #
+        # if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_ICO_FOLDER)):
+        #     raise Exception('make in test folder error')
+        # if os.system(
+        #         "/bin/bash -c 'cd {dest} && {env} {command}'".format(
+        #             dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_ICO_URL)
+        #
+        # ):
+        #     raise Exception('compiler error ico')
 
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
             abi = binascii.hexlify(f.read()).decode('utf-8')
@@ -417,7 +452,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale = eos_contract_crowdsale
         self.save()
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -427,9 +461,13 @@ class ContractDetailsEOSICO(CommonDetails):
         unlock_eos_account(wallet_name, password)
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
-        eos_url = 'http://%s:%s' % (
-        str(NETWORKS[self.contract.network.name]['host']),
-        str(NETWORKS[self.contract.network.name]['port']))
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+                str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (
+            str(NETWORKS[self.contract.network.name]['host']),
+            str(NETWORKS[self.contract.network.name]['port']))
         net = NETWORKS[self.contract.network.name]['stake_net']
         cpu = NETWORKS[self.contract.network.name]['stake_cpu']
         ram = NETWORKS[self.contract.network.name]['ram']
@@ -447,13 +485,16 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_crowdsale.tx_hash = tx_hash
         self.eos_contract_crowdsale.save()
 
-    @logging
     @blocking
     @postponable
     def newAccount(self, message):
-        eos_url = 'http://%s:%s' % (
-        str(NETWORKS[self.contract.network.name]['host']),
-        str(NETWORKS[self.contract.network.name]['port']))
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+                str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (
+            str(NETWORKS[self.contract.network.name]['host']),
+            str(NETWORKS[self.contract.network.name]['port']))
         acc_name = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
         token_address = NETWORKS[self.contract.network.name]['token_address']
@@ -545,7 +586,6 @@ class ContractDetailsEOSICO(CommonDetails):
             self.stop_date = message['endTime']
         self.save()
 
-    @logging
     def finalized(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
@@ -576,18 +616,23 @@ class ContractDetailsEOSAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network) /10**4
+        eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
-        return round(cost, 2) * 10 ** 18
+        return round(cost, 2) * NET_DECIMALS['ETH']
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_url = 'http://%s:%s' % (
-            str(NETWORKS[network.name]['host']),
-            str(NETWORKS[network.name]['port'])
-        )
+        if network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+                str(NETWORKS[network.name]['host'])
+            )
+        else:
+            eos_url = 'http://%s:%s' % (
+                str(NETWORKS[network.name]['host']),
+                str(NETWORKS[network.name]['port'])
+            )
 
         command1 = [
             'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
@@ -596,7 +641,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         result = implement_cleos_command(command1)
         ram = result['rows'][0]
         ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0])
-        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4) * 10 ** 4
+        return round(250 + ram_price * 240 * float(kwargs['address_count']) * 1.2, 4) * NET_DECIMALS['EOS']
 
     @classmethod
     def min_cost(cls):
@@ -610,13 +655,16 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         cost = cls.calc_cost_eos({'address_count': 1}, network)
         return cost
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
-        eos_url = 'http://%s:%s' % (
-            str(NETWORKS[self.contract.network.name]['host']),
-            str(NETWORKS[self.contract.network.name]['port']))
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+                str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (
+                str(NETWORKS[self.contract.network.name]['host']),
+                str(NETWORKS[self.contract.network.name]['port']))
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         airdrop_address = NETWORKS[self.contract.network.name]['airdrop_address']
@@ -656,7 +704,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    @logging
     def airdrop(self, message):
         new_state = {
             'COMMITTED': 'sent',

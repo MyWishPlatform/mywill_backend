@@ -14,3 +14,17 @@ class Profile(models.Model):
     lang = models.CharField(max_length=2, default='en')
     last_used_totp = models.CharField(max_length=64, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
+
+
+class SubSite(models.Model):
+    site_name = models.CharField(max_length=35, null=True, default=None)
+    currencies = models.CharField(max_length=80, null=True, default=None)
+
+
+class UserSiteBalance(models.Model):
+    user = models.ForeignKey(User)
+    subsite = models.ForeignKey(SubSite)
+    balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    eth_address = models.CharField(max_length=50, null=True, default=None)
+    btc_address = models.CharField(max_length=50, null=True, default=None)
+    memo = models.CharField(max_length=25, null=True, default=None, unique=True)

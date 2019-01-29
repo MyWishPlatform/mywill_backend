@@ -1,7 +1,11 @@
+import time
 import datetime
 from os import path
 from subprocess import Popen, PIPE
 import requests
+import binascii
+import base58
+from threading import Timer
 
 from django.utils import timezone
 from django.db.models import F
@@ -9,6 +13,8 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.views.generic import View
 from django.contrib.auth.models import User
+from django.core.mail import send_mail, EmailMessage
+
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
@@ -19,16 +25,21 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR
+from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL
+from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.parint import *
-from lastwill.promo.models import Promo, User2Promo
+from lastwill.promo.models import Promo, User2Promo, Promo2ContractType
 from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
+from lastwill.profile.models import *
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
+from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
+from lastwill.consts import *
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -42,8 +53,8 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
            promo_str = None
         else:
            cost = cost - cost * discount / 100
-        promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=user, promo=promo_object, contract_id=cid).save()
+        # promo_object = Promo.objects.get(promo_str=promo_str.upper())
+        # User2Promo(user=user, promo=promo_object, contract_id=cid).save()
         Promo.objects.select_for_update().filter(
                 promo_str=promo_str.upper()
         ).update(
@@ -71,12 +82,14 @@ class ContractViewSet(ModelViewSet):
     def get_queryset(self):
         result = self.queryset.order_by('-created_date')
         eos = self.request.query_params.get('eos', None)
-        if eos is not None:
-            eos = int(eos)
-            if eos:
-                result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
-            else:
-                result = result.exclude(contract_type__in=(10, 12))
+        host = self.request.META['HTTP_HOST']
+        print('host is', host, flush=True)
+        if host == MY_WISH_URL:
+            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16, 17))
+        if host == EOSISH_URL:
+            result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
+        if host == TRON_URL:
+            result = result.filter(contract_type__in=(15, 16, 17))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -123,7 +136,7 @@ def get_token_contracts(request):
             res.append({
                     'id': ec.id,
                     'address': ec.address,
-                    'token_name': details.token_name, 
+                    'token_name': details.token_name,
                     'token_short_name': details.token_short_name,
                     'decimals': details.decimals,
                     'state': state
@@ -131,9 +144,38 @@ def get_token_contracts(request):
     return Response(res)
 
 
+def check_error_promocode(promo_str, contract_type):
+    promo = Promo.objects.filter(promo_str=promo_str).first()
+    if promo:
+        promo2ct = Promo2ContractType.objects.filter(
+            promo=promo, contract_type=contract_type
+        ).first()
+        if not promo2ct:
+            promo_str = None
+    else:
+        promo_str = None
+    return promo_str
+
+
+def check_promocode(promo_str, user, cost, contract, details):
+    # check token with authio
+    if contract.contract_type == 5 and details.authio:
+        price_without_brand_report = contract.cost - BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+        cost = check_and_apply_promocode(
+            promo_str, user, price_without_brand_report, contract.contract_type, contract.id
+        )
+        total_cost = cost + BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+    else:
+        # count discount
+        total_cost = check_and_apply_promocode(
+            promo_str, user, cost, contract.contract_type, contract.id
+        )
+    return total_cost
+
+
 @api_view(http_method_names=['POST'])
 def deploy(request):
-    eos = request.data.get('eos', False)
+    host = request.META['HTTP_HOST']
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
@@ -141,18 +183,32 @@ def deploy(request):
     if contract.user != request.user or contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
         raise PermissionDenied
 
-    # TODO: if type==4 check token contract is not at active crowdsale
-    if eos:
-        cost = contract_details.calc_cost_eos(contract_details, contract.network)
+    if host == EOSISH_URL:
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost_eos(kwargs, contract.network)
         currency = 'EOS'
-    else:
+        site_id = 2
+    elif host == MY_WISH_URL:
         cost = contract.cost
         currency = 'ETH'
+        site_id = 1
+    else:
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost(kwargs, contract.network)
+        currency = 'ETH'
+        site_id = 1
     promo_str = request.data.get('promo', None)
-    cost = check_and_apply_promocode(
-        promo_str, request.user, cost, contract.contract_type, contract.id
-    )
-    create_payment(request.user.id, '', currency, -cost)
+    promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
+    cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
+    create_payment(request.user.id, '', currency, -cost, site_id)
+    if promo_str:
+        promo_object = Promo.objects.get(promo_str=promo_str.upper())
+        User2Promo(user=request.user, promo=promo_object,
+                   contract_id=contract.id).save()
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
@@ -169,7 +225,6 @@ def i_am_alive(request):
     if details.last_press_imalive:
         delta = timezone.now() - details.last_press_imalive
         if delta.days < 1:
-            test_logger.error('i am alive error')
             raise PermissionDenied(3000)
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'confirm_alive', queue)
@@ -213,25 +268,15 @@ def get_users(names):
 
 
 def get_currency_statistics():
-    mywish_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/mywish/'
-    ).content.decode())[0]
-
-    mywish_info_eth = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/mywish/?convert=ETH'
-    ).content.decode())[0]
-
-    btc_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/bitcoin/'
-    ).content.decode())[0]
-
-    eos_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/eos/'
-    ).content.decode())[0]
-
-    eth_info = json.loads(requests.get(
-        'https://api.coinmarketcap.com/v1/ticker/ethereum/'
-    ).content.decode())[0]
+    mywish_info = json.loads(requests.get(URL_STATS_CURRENCY['MYWISH']).content.decode())[0]
+    mywish_info_eth = json.loads(requests.get(URL_STATS_CURRENCY['MYWISH_ETH']).content.decode())[0]
+    btc_info = json.loads(requests.get(URL_STATS_CURRENCY['BTC']).content.decode())[0]
+    eos_info = json.loads(requests.get(URL_STATS_CURRENCY['EOS']).content.decode())[0]
+    eth_info = json.loads(requests.get(URL_STATS_CURRENCY['ETH']).content.decode())[0]
+    eosish_info = float(
+        requests.get(URL_STATS_CURRENCY['EOSISH'],
+                     headers={'accept-version': 'v1'}).json()['price']
+        )
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -254,16 +299,181 @@ def get_currency_statistics():
         float(eth_info['percent_change_24h']), 10
     ),
     'eos_price_usd':  round(
-        float(eos_info['price_usd'])),
+        float(eos_info['price_usd']), 10),
     'eos_percent_change_24h': round(
         float(eos_info['percent_change_24h']), 10
         ),
     'eos_rank': eos_info['rank'],
     'mywish_rank': mywish_info['rank'],
     'bitcoin_rank': btc_info['rank'],
-    'eth_rank': eth_info['rank']
+    'eth_rank': eth_info['rank'],
+    'eosish_price_eos': eosish_info,
+    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10)
     }
     return answer
+
+
+def get_balances_statistics():
+    neo_info = json.loads(requests.get(
+        URL_STATS_BALANCE['NEO'] +
+        '{address}'.format(address=NETWORKS['NEO_TESTNET']['address'])
+    ).content.decode())
+    neo_balance = 0.0
+    gas_balance = 0.0
+    for curr in neo_info['balance']:
+        if curr['asset'] == 'GAS':
+            gas_balance = curr['amount']
+        if curr['asset'] == 'NEO':
+            neo_balance = curr['amount']
+    eth_account_balance = float(json.loads(requests.get(
+        URL_STATS_BALANCE['ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
+            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY)
+        ).content.decode())['result']) / NET_DECIMALS['ETH']
+    eth_test_account_balance = float(json.loads(requests.get(
+        URL_STATS_BALANCE['ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
+            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY)
+    ).content.decode())['result']) / NET_DECIMALS['ETH']
+
+    # eth_account_balance = float(json.loads(requests.get(
+    #     'https://api.etherscan.io/api?module=account&action=balance'
+    #     '&address=0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
+    #     '&tag=latest'
+    #     '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+    #                                        )['result']) / 10 ** 18
+    # eth_test_account_balance = float(json.loads(requests.get(
+    #     'https://api-ropsten.etherscan.io/api?module=account&action=balance'
+    #     '&address=0x88dbD934eF3349f803E1448579F735BE8CAB410D'
+    #     '&tag=latest'
+    #     '&apikey={api_key}'.format(api_key=ETHERSCAN_API_KEY)).content.decode()
+    #                                             )['result']) / 10 ** 18
+    # eos_url = 'https://%s:%s' % (
+    #     str(NETWORKS['EOS_TESTNET']['host']),
+    #     str(NETWORKS['EOS_TESTNET']['port'])
+    # )
+    # wallet_name = NETWORKS['EOS_TESTNET']['wallet']
+    # password = NETWORKS['EOS_TESTNET']['eos_password']
+    # account = NETWORKS['EOS_TESTNET']['address']
+    # token = NETWORKS['EOS_TESTNET']['token_address']
+    # unlock_eos_account(wallet_name, password)
+    # command = [
+    #     'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
+    #     account
+    # ]
+    # print('command', command)
+    #
+    # for attempt in range(EOS_ATTEMPTS_COUNT):
+    #     print('attempt', attempt, flush=True)
+    #     proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    #     stdout, stderr = proc.communicate()
+    #     timer = Timer(CLEOS_TIME_LIMIT, proc.kill)
+    #     try:
+    #         timer.start()
+    #         stdout, stderr = proc.communicate()
+    #     finally:
+    #         timer.cancel()
+    #     # print(stdout, stderr, flush=True)
+    #     result = stdout.decode()
+    #     if result:
+    #         eos_test_account_balance = float(
+    #             result.split('\n')[0].split(' ')[0])
+    #         break
+    #     time.sleep(CLEOS_TIME_COOLDOWN)
+    # else:
+    #     raise Exception(
+    #         'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    eos_test_account_balance = 0
+
+    # command = [
+    #     'cleos', '-u', eos_url, 'get', 'account', token, '-j'
+    # ]
+    # time.sleep(CLEOS_TIME_COOLDOWN)
+    # builder_params = implement_cleos_command(command)
+    # eos_cpu_test_builder = (
+    #         builder_params['cpu_limit']['used'] * 100.0 /
+    #         builder_params['cpu_limit']['max']
+    # )
+    # eos_net_test_builder = (
+    #         builder_params['net_limit']['used'] * 100.0 /
+    #         builder_params['net_limit']['max']
+    # )
+    # eos_ram_test_builder = (
+    #                                builder_params['ram_quota'] - builder_params[
+    #                            'ram_usage']
+    #                        ) / 1024
+    eos_cpu_test_builder = 0
+    eos_net_test_builder = 0
+    eos_ram_test_builder = 0
+
+    # eos_url = 'https://%s:%s' % (
+    #     str(NETWORKS['EOS_MAINNET']['host']),
+    #     str(NETWORKS['EOS_MAINNET']['port'])
+    # )
+    # account = NETWORKS['EOS_MAINNET']['address']
+    # token = NETWORKS['EOS_MAINNET']['token_address']
+    # command = [
+    #     'cleos', '-u', eos_url, 'get', 'account', token, '-j'
+    # ]
+    # wallet_name = NETWORKS['EOS_MAINNET']['wallet']
+    # password = NETWORKS['EOS_MAINNET']['eos_password']
+    # unlock_eos_account(wallet_name, password)
+    # builder_params = implement_cleos_command(command)
+    # eos_cpu_builder = (
+    #         builder_params['cpu_limit']['used'] * 100.0 /
+    #         builder_params['cpu_limit']['max']
+    # )
+    # eos_net_builder = (
+    #         builder_params['net_limit']['used'] * 100.0 /
+    #         builder_params['net_limit']['max']
+    # )
+    # eos_ram_builder = (
+    #                           builder_params['ram_quota'] - builder_params[
+    #                       'ram_usage']
+    #                   ) / 1024
+    eos_cpu_builder = 0
+    eos_net_builder = 0
+    eos_ram_builder = 0
+
+    # command = [
+    #     'cleos', '-u', eos_url, 'get', 'currency', 'balance', 'eosio.token',
+    #     account
+    # ]
+    # print('command', command)
+    #
+    # for attempt in range(EOS_ATTEMPTS_COUNT):
+    #     print('attempt', attempt, flush=True)
+    #     proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    #     stdout, stderr = proc.communicate()
+    #     # print(stdout, stderr, flush=True)
+    #     timer = Timer(CLEOS_TIME_LIMIT, proc.kill)
+    #     try:
+    #         timer.start()
+    #         stdout, stderr = proc.communicate()
+    #     finally:
+    #         timer.cancel()
+    #     result = stdout.decode()
+    #     if result:
+    #         eos_account_balance = float(
+    #             result.split('\n')[0].split(' ')[0])
+    #         break
+    #     time.sleep(CLEOS_TIME_COOLDOWN)
+    # else:
+    #     raise Exception(
+    #         'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
+    eos_account_balance = 0
+    return {
+    'eth_account_balance': eth_account_balance,
+    'eth_test_account_balance': eth_test_account_balance,
+    'eos_account_balance':  eos_account_balance,
+    'eos_test_account_balance': eos_test_account_balance,
+    'eos_cpu_test_builder': eos_cpu_test_builder,
+    'eos_net_test_builder': eos_net_test_builder,
+    'eos_ram_test_builder': eos_ram_test_builder,
+    'eos_cpu_builder': eos_cpu_builder,
+    'eos_net_builder': eos_net_builder,
+    'eos_ram_builder': eos_ram_builder,
+    'neo_test_balance': neo_balance,
+    'gas_test_balance': gas_balance
+    }
 
 
 def get_contracts_for_network(net, all_contracts, now, day):
@@ -345,7 +555,8 @@ def get_statistics(request):
 
     answer = {
         'user_statistics': {'users': len(users), 'new_users': len(new_users)},
-        'currency_statistics': get_currency_statistics()
+        'currency_statistics': get_currency_statistics(),
+        'balances_statistics': get_balances_statistics()
     }
     networks = Network.objects.all()
     contracts = Contract.objects.all().exclude(
@@ -412,14 +623,15 @@ def get_statistics_landing(request):
 
 @api_view(http_method_names=['GET'])
 def get_cost_all_contracts(request):
-    eos = request.query_params.get('eos', False)
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
-        if i > 9 and eos:
-            answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10**4
+        if i in [10, 11, 12, 13, 14]:
+            # print(host, EOSISH_URL, flush=True)
+            answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
+            # answer[i] = 200
         else:
-            answer[i] = contract_details_types[i]['model'].min_cost() / 10 ** 18
+            answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
 
 
@@ -502,19 +714,34 @@ class EOSAirdropAddressViewSet(viewsets.ModelViewSet):
         return result
 
 
+def convert_airdrop_address_to_hex(address):
+    # short_addresss = address[1:]
+    decode_address = base58.b58decode(address)[1:21]
+    hex_address = binascii.hexlify(decode_address)
+    hex_address = '41' + hex_address.decode("utf-8")
+    return hex_address
+
+
 @api_view(http_method_names=['POST'])
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.contract_type not in [8, 13] or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13, 17] or contract.state != 'ACTIVE':
         raise PermissionDenied
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
             raise PermissionDenied
         contract.airdropaddress_set.all().delete()
         addresses = request.data.get('addresses')
+        if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET']:
+            for x in addresses:
+                if x['address'].startswith('0x'):
+                    x['address'] = '41' + x['address'][2:]
+                else:
+                    if not x['address'].startswith('41'):
+                        x['address'] = convert_airdrop_address_to_hex(x['address'])
         AirdropAddress.objects.bulk_create([AirdropAddress(
                 contract=contract,
-                address=x['address'].lower(),
+                address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
                 amount=x['amount']
         ) for x in addresses])
     else:
@@ -560,7 +787,6 @@ def get_invest_balance_day(request):
             now_date.year, now_date.month,
             now_date.day, now_date.hour, 0, 0
         )
-    # date = datetime.datetime.now().date()
     invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
     balance = 0
     for inv in invests:
@@ -582,7 +808,11 @@ def check_status(request):
     addr = details.crowdsale_address
     host = NETWORKS[contract.network.name]['host']
     port = NETWORKS[contract.network.name]['port']
-    command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
+    if contract.network.name == 'EOS_MAINNET':
+        command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table',
+                   addr, addr, 'state']
+    else:
+        command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
     if stdout:
         result = json.loads(stdout.decode())['rows'][0]
@@ -591,7 +821,7 @@ def check_status(request):
             contract.save()
         elif details.is_transferable_at_once and now > result['finish'] and int(result['total_tokens']) >= details.soft_cap:
             contract.state = 'DONE'
-            contract.save()        
+            contract.save()
         elif details.is_transferable_at_once and int(result['total_tokens']) >= details.hard_cap:
             contract.state = 'DONE'
             contract.save()
@@ -600,9 +830,8 @@ def check_status(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_cost(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
@@ -629,11 +858,9 @@ def get_eos_cost(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_airdrop_cost(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
-
     command1 = [
         'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
         'rammarket'
@@ -656,13 +883,9 @@ def get_eos_airdrop_cost(request):
 
 @api_view(http_method_names=['POST'])
 def check_eos_accounts_exists(request):
-    eos_url = 'http://%s:%s' % (
-        str(NETWORKS['EOS_MAINNET']['host']),
-        str(NETWORKS['EOS_MAINNET']['port'])
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
     )
-
-    # del this
-#     eos_url = 'http://127.0.0.1:8886'
 
     accounts = request.data['accounts']
     response =requests.post(
@@ -672,3 +895,69 @@ def check_eos_accounts_exists(request):
     print(accounts, flush=True)
     print(response, flush=True)
     return JsonResponse({'not_exists': [x[0] for x in zip(accounts, response) if not x[1]]})
+
+
+def send_authio_info(contract, details, authio_email):
+    mint_info = ''
+    token_holders = contract.tokenholder_set.all()
+    for th in token_holders:
+        mint_info = mint_info + '\n' + th.address + '\n'
+        mint_info = mint_info + str(th.amount) + '\n'
+        mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+    EmailMessage(
+        subject=authio_subject,
+        body=authio_message.format(
+        address=details.eth_contract_token.address,
+        email=authio_email,
+        token_name=details.token_name,
+        token_short_name=details.token_short_name,
+        token_type=details.token_type,
+        decimals=details.decimals,
+        mint_info=mint_info if mint_info else 'No',
+        admin_address=details.admin_address
+        ),
+        from_email=DEFAULT_FROM_EMAIL,
+        to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
+    ).send()
+    send_mail(
+        authio_google_subject,
+        authio_google_message,
+        DEFAULT_FROM_EMAIL,
+        [authio_email]
+    )
+
+
+@api_view(http_method_names=['POST'])
+def buy_brand_report(request):
+    contract = Contract.objects.get(id=request.data.get('contract_id'))
+    authio_email = request.data.get('authio_email')
+    host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE'):
+        raise PermissionDenied
+    if contract.contract_type != 5:
+        raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
+    details = contract.get_details()
+    if host != MY_WISH_URL:
+        raise PermissionDenied
+    cost = BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+    currency = 'ETH'
+    site_id = 1
+    create_payment(request.user.id, '', currency, -cost, site_id)
+    details.authio_date_payment = datetime.datetime.now().date()
+    details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
+            days=3)
+    details.authio_email = authio_email
+    details.authio = True
+    details.save()
+    send_authio_info(contract, details, authio_email)
+    return Response('ok')
+
+
+@api_view(http_method_names=['GET'])
+def get_authio_cost(request):
+    eth_cost = str(BRAND_REPORT_PRICE * NET_DECIMALS['ETH'])
+    wish_cost = str(int(to_wish('ETH', int(eth_cost))))
+    btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+    return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})

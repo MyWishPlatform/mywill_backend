@@ -2,14 +2,10 @@ import requests
 import os
 import hashlib
 import binascii
-import string
-import random
 
 from bip32utils import BIP32Key
-from bip32utils import BIP32_HARDEN
 from eth_keys import keys
 
-from django.db import transaction
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
 from rest_auth.registration.serializers import RegisterSerializer
@@ -17,28 +13,19 @@ from rest_auth.serializers import (
     LoginSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer
 )
 
-from lastwill.profile.models import Profile
-from lastwill.settings import ROOT_PUBLIC_KEY, BITCOIN_URLS
-from lastwill.payments.models import BTCAccount
+from lastwill.profile.models import Profile, UserSiteBalance, SubSite
+from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL
 from lastwill.profile.helpers import valid_totp
 
-def init_profile(user, is_social=False, lang='en'):
 
-    key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
-    btc_address = key.ChildKey(user.id).Address()
-    m = hashlib.sha256()
+def generate_memo(m):
     memo_str = os.urandom(8)
     m.update(memo_str)
     memo_str = binascii.hexlify(memo_str + m.digest()[0:2])
+    return memo_str
 
-    btc_account = BTCAccount(address=btc_address)
-    btc_account.user = user
-    btc_account.save()
-    eth_address = keys.PublicKey(key.ChildKey(user.id).K.to_string()).to_checksum_address()
-    Profile(
-        user=user, internal_address=eth_address,
-        is_social=is_social, lang=lang, memo=memo_str
-    ).save()
+
+def registration_btc_address(btc_address):
     requests.post(
         BITCOIN_URLS['main'],
         json={
@@ -47,6 +34,45 @@ def init_profile(user, is_social=False, lang='en'):
             'id': 1, 'jsonrpc': '1.0'
         }
     )
+
+
+def create_wish_balance(user, eth_address, btc_address, memo_str):
+    wish = SubSite.objects.get(site_name=MY_WISH_URL)
+    UserSiteBalance(
+        user=user, subsite=wish,
+        eth_address=eth_address,
+        btc_address=btc_address,
+        memo=memo_str
+    ).save()
+
+
+def create_eosish_balance(user, eth_address, btc_address, memo_str):
+    eosish = SubSite.objects.get(site_name=EOSISH_URL)
+    UserSiteBalance(
+        user=user, subsite=eosish,
+        eth_address=eth_address,
+        btc_address=btc_address,
+        memo=memo_str
+    ).save()
+
+def init_profile(user, is_social=False, lang='en'):
+    m = hashlib.sha256()
+    memo_str1 = generate_memo(m)
+    memo_str2 = generate_memo(m)
+
+    wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
+    eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
+
+    btc_address1 = wish_key.ChildKey(user.id).Address()
+    btc_address2 = eosish_key.ChildKey(user.id).Address()
+    eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
+    eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
+
+    Profile(user=user, is_social=is_social, lang=lang).save()
+    create_wish_balance(user, eth_address1, btc_address1, memo_str1)
+    create_eosish_balance(user, eth_address2, btc_address2, memo_str2)
+    registration_btc_address(btc_address1)
+    registration_btc_address(btc_address2)
 
 
 class UserRegisterSerializer(RegisterSerializer):

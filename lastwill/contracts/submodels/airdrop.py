@@ -1,6 +1,7 @@
 from django.db import models
 
 from lastwill.contracts.submodels.common import *
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 
 class AirdropAddress(models.Model):
@@ -22,7 +23,6 @@ class ContractDetailsAirdrop(CommonDetails):
     token_address = models.CharField(max_length=50)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
-    @logging
     def get_arguments(self, *args, **kwargs):
         return [
             self.admin_address,
@@ -43,7 +43,6 @@ class ContractDetailsAirdrop(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         return super().deploy()
 
@@ -51,7 +50,8 @@ class ContractDetailsAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 0.5 * 10**18
+        #return 0.5 * 10**18
+        return CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH']
 
     @classmethod
     def min_cost(cls):
@@ -60,7 +60,7 @@ class ContractDetailsAirdrop(CommonDetails):
         return cost
 
     def get_gaslimit(self):
-        return 3000000
+        return CONTRACT_GAS_LIMIT['AIRDROP']
 
     def airdrop(self, message):
         new_state = {

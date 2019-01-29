@@ -1,8 +1,10 @@
+import json
+
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.eos import *
-from lastwill.contracts.submodels.eos_json_token import create_eos_token_sa_json
-
-from lastwill.consts import MAX_WEI_DIGITS
+from lastwill.json_templates import create_eos_token_sa_json
+from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
+from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_ETH, CONTRACT_PRICE_EOS, NET_DECIMALS
 
 class ContractDetailsEOSTokenSA(CommonDetails):
     token_short_name = models.CharField(max_length=64)
@@ -18,7 +20,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     )
     temp_directory = models.CharField(max_length=36)
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
-    
+
     def predeploy_validate(self):
         now = timezone.now()
         token_holders = self.contract.eostokenholder_set.all()
@@ -43,13 +45,13 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(5 * 10**18)
+        return int(CONTRACT_PRICE_ETH['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['ETH'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 190 * 10 ** 4
+        return CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS']
 
     def compile(self):
         if self.temp_directory:
@@ -66,6 +68,26 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             bytecode = binascii.hexlify(f.read()).decode("utf-8")
         with open(path.join(dest, 'eosio.token.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
+        data = {
+            "maximum_supply": int(self.maximum_supply / 10 ** self.decimals),
+            "decimals": self.decimals,
+            "symbol": self.token_short_name
+        }
+        print('data', data, flush=True)
+        with open(path.join(dest, 'deploy_data.json'), 'w') as outfile:
+            json.dump(data, outfile)
+        with open(path.join(EOS_TEST_FOLDER, 'deploy_data.json'), 'w') as outfile:
+            json.dump(data, outfile)
+        with open((path.join(EOS_TEST_FOLDER, 'config.h')), 'w') as f:
+            f.write('''#define ADMIN {admin}'''.format(admin=self.admin_address))
+        if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_FOLDER)):
+            raise Exception('make in test folder error')
+        if os.system(
+                "/bin/bash -c 'cd {dest} && {env} {command}'".format(
+                    dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
+
+        ):
+            raise Exception('compiler error token standalone')
         eos_contract = EOSContract()
         eos_contract.abi = abi
         eos_contract.bytecode = bytecode
@@ -75,7 +97,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.eos_contract = eos_contract
         self.save()
 
-    @logging
     @blocking
     @postponable
     def deploy(self):
@@ -85,7 +106,11 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         unlock_eos_account(wallet_name, password)
         creator_account = NETWORKS[self.contract.network.name]['address']
         our_public_key = NETWORKS[self.contract.network.name]['pub']
-        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         command = [ 
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
@@ -104,21 +129,24 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.contract.save()
 
 
-    @logging
     @blocking
     @postponable
     def newAccount(self, message):
         wallet_name = NETWORKS[self.contract.network.name]['wallet']
         password = NETWORKS[self.contract.network.name]['eos_password']
         creator_account = NETWORKS[self.contract.network.name]['address']
-        eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        if self.contract.network.name == 'EOS_MAINNET':
+            eos_url = 'https://%s' % (
+            str(NETWORKS[self.contract.network.name]['host']))
+        else:
+            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
-        
+
         if self.decimals != 0:
             max_supply = str(self.maximum_supply)[:-self.decimals] + '.' + str(self.maximum_supply)[-self.decimals:]
         else:
             max_supply = str(self.maximum_supply)
-        
+
         raw_data = json.dumps({'maximum_supply': max_supply + ' ' + self.token_short_name, 'issuer': self.admin_address})
 
 
@@ -150,7 +178,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         )
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
-        command = [ 
+        command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
             path.join(dest, 'deploy_params.json'), '-j',
             '-p', self.token_account
@@ -162,10 +190,10 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.eos_contract.save()
 
 
-        
+
     def deployed(self, message):
         return
-       
+
     def setcode(self, message):
         return
 

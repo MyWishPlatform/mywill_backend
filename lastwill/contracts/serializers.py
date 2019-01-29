@@ -15,18 +15,19 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL, test_logger
+from lastwill.settings import DEFAULT_FROM_EMAIL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
         NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
         ContractDetailsToken, ContractDetailsICO,
-        ContractDetailsAirdrop, AirdropAddress,
+        ContractDetailsAirdrop, AirdropAddress, TRONContract,
         ContractDetailsLastwill, ContractDetailsLostKey,
         ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
+        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -102,7 +103,6 @@ class ContractSerializer(serializers.ModelSerializer):
             details_serializer.create(contract, contract_details)
         except:
             transaction.rollback()
-            test_logger.error('Contract Serializer create except')
             raise
         else:
             transaction.commit()
@@ -127,6 +127,10 @@ class ContractSerializer(serializers.ModelSerializer):
                 network_name = 'EOS'
             if network.name == 'EOS_TESTNET':
                 network_name = 'EOS Testnet'
+            if network.name == 'TRON_MAINNET':
+                network_name = 'TRON'
+            if network.name == 'TRON_TESTNET':
+                network_name = 'TRON Testnet'
             if contract.contract_type != 11:
                 send_mail(
                         email_messages.create_subject,
@@ -161,7 +165,8 @@ class ContractSerializer(serializers.ModelSerializer):
         res['cost'] = {
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
-            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
+            'TRX': str(int(eth_cost) * convert('ETH', 'TRX')['TRX'])
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
@@ -211,6 +216,9 @@ class ContractSerializer(serializers.ModelSerializer):
             12: ContractDetailsEOSICOSerializer,
             13: ContractDetailsEOSAirdropSerializer,
             14: ContractDetailsEOSTokenSASerializer,
+            15: ContractDetailsTRONTokenSerializer,
+            16: ContractDetailsGameAssetsSerializer,
+            17: ContractDetailsTRONAirdropSerializer
         }[contract_type]
 
 
@@ -448,7 +456,6 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             if th['amount'] < 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in ICO serializer')
                 raise ValidationError({'result': 2}, code=400)
         amount_bonuses = details['amount_bonuses']
         min_amount = 0
@@ -490,7 +497,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             res['eth_contract_crowdsale']['source_code'] = ''
         return res
 
-    def update(self, contract, details, contract_details): 
+    def update(self, contract, details, contract_details):
         token_id = contract_details.pop('token_id', None)
         contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
@@ -515,7 +522,13 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         fields = (
                 'token_name', 'token_short_name', 'decimals',
                 'admin_address', 'token_type', 'future_minting',
+                'authio', 'authio_email', 'authio_date_payment',
+                'authio_date_getting'
         )
+        extra_kwargs = {
+            'authio_date_payment': {'read_only': True},
+            'authio_date_getting': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         token_holders = contract_details.pop('token_holders')
@@ -527,7 +540,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().create(kwargs)
-          
+
     def validate(self, details):
         now = timezone.now().timestamp() + 600
         if '"' in details['token_name'] or '\n' in details['token_name']:
@@ -548,8 +561,11 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
-                test_logger.error('Error freeze date in token serializer')
                 raise ValidationError({'result': 2}, code=400)
+        if 'authio' in details:
+            if details['authio']:
+                if not details['authio_email']:
+                    raise ValidationError
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
@@ -617,7 +633,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().create(kwargs)
-    
+
     def update(self, contract, details, contract_details):
         contract.tokenholder_set.all().delete()
         token_holders = contract_details.pop('token_holders')
@@ -1096,5 +1112,135 @@ class ContractDetailsEOSTokenSASerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
 
+class TRONContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TRONContract
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
 
- 
+
+class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTRONToken
+        fields = (
+            'token_name', 'token_short_name', 'decimals',
+            'admin_address', 'token_type', 'future_minting',
+        )
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def validate(self, details):
+        now = timezone.now().timestamp() + 600
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details[
+            'token_short_name']:
+            raise ValidationError
+        if not (0 <= details['decimals'] <= 50):
+            raise ValidationError
+        for th in details['token_holders']:
+            th['amount'] = int(th['amount'])
+        if 'admin_address' not in details or 'token_holders' not in details:
+            raise ValidationError
+        if details['token_name'] == '' or details['token_short_name'] == '':
+            raise ValidationError
+        for th in details['token_holders']:
+            if th['amount'] <= 0:
+                raise ValidationError
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                raise ValidationError({'result': 2}, code=400)
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th)
+                                for th in
+                                contract_details.contract.tokenholder_set.order_by(
+                                    'id').all()]
+        res['tron_contract_token'] = TRONContractSerializer().to_representation(
+            contract_details.tron_contract_token)
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('tron_contract_token', None)
+        return super().update(details, kwargs)
+
+
+class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsGameAssets
+        fields = (
+            'token_name', 'token_short_name', 'admin_address', 'uri'
+        )
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def validate(self, details):
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details[
+            'token_short_name']:
+            raise ValidationError
+        if 'admin_address' not in details:
+            raise ValidationError
+        if details['token_name'] == '' or details['token_short_name'] == '':
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['tron_contract_token'] = TRONContractSerializer().to_representation(
+            contract_details.tron_contract_token)
+        return res
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        kwargs.pop('tron_contract_token', None)
+        return super().update(details, kwargs)
+
+
+class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTRONAirdrop
+        fields = ('admin_address', 'token_address')
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
+        res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
+        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing', active=True).count()
+        res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent', active=True).count()
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
