@@ -308,7 +308,31 @@ def calculate_cost_eos_account(request):
     :param request: contain cpu, net, ram
     :return: cost
     '''
-    pass
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
+    )
+    command1 = [
+        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
+    ]
+    result = implement_cleos_command(command1)
+    ram = result['rows'][0]
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(
+        ram['base']['balance'].split()[0]) * 1024
+    print('get ram price', flush=True)
+    ram = request.query_params['buy_ram_kbytes']
+    net = request.query_params['stake_net_value']
+    cpu = request.query_params['stake_cpu_value']
+    eos_cost = round(
+        (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
+    print('eos cost', eos_cost, flush=True)
+
+    return JsonResponse({
+        'EOS': str(eos_cost),
+        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
+        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
+        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
+        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+    })
 
 
 @api_view(http_method_names=['GET'])
@@ -318,4 +342,16 @@ def calculate_cost_eos_account_contract(request):
     :param request: contain contract_id
     :return: cost
     '''
-    pass
+    contract = Contract.objects.get(id=int(request.query_params['contract_id']))
+    details = contract.get_details()
+    network = Network.objects.get(name='EOS_MAINNET')
+    eos_cost = details.calc_cost_eos(details, network)
+    print('eos cost', eos_cost, flush=True)
+
+    return JsonResponse({
+        'EOS': str(eos_cost),
+        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
+        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
+        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
+        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+    })
