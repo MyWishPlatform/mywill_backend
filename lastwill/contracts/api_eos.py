@@ -371,6 +371,8 @@ def calculate_cost_eos_account_contract(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.query_params['contract_id']))
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     details = contract.get_details()
