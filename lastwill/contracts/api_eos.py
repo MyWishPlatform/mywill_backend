@@ -19,7 +19,7 @@ from lastwill.consts import *
 
 
 def get_user_for_token(token):
-    user = APIToken.objects.get_or_404(token=token).user
+    user = APIToken.objects.get_object_or_404(token=token).user
     return user
 
 
@@ -281,7 +281,7 @@ def show_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get_or_404(id=int(request.query_params.get('id')))
+    contract = Contract.objects.get_object_or_404(id=int(request.query_params.get('id')))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.user != user:
@@ -412,7 +412,7 @@ def delete_eos_account_contract(request):
 def get_all_blockchains(request):
     '''
     get list of blockchains
-    :param request: no
+    :param request: token only
     :return: json with blockchain id and name
     '''
     token = request.data['token']
@@ -424,3 +424,18 @@ def get_all_blockchains(request):
     for net in nets:
         answer.append({'id': net.id, 'blockchain_name': API_NETWORK[net.name]})
     return JsonResponse({'networks': answer})
+
+
+@api_view(http_method_names=['GET'])
+def get_profile_info(request):
+    '''
+    get all info abount user
+    :param request: token only
+    :return: json with all info abount user
+    include balances and addresses
+    '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    pass
