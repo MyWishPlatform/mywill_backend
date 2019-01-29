@@ -257,7 +257,9 @@ def show_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.query_params.get('id')))
+    contract = Contract.objects.get_or_404(id=int(request.query_params.get('id')))
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
@@ -370,3 +372,22 @@ def calculate_cost_eos_account_contract(request):
         'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
         'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
     })
+
+
+@api_view(http_method_names=['POST', 'DELETE'])
+def delete_eos_account_contract(request):
+    '''
+    delete cost eos account
+    :param request: contain contract_id
+    :return: cost
+    '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = Contract.objects.get(id=int(request.query_params['contract_id']))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    contract.invisible = True
+    contract.save()
+    return Response('ok')
