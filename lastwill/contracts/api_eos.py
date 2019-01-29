@@ -298,3 +298,24 @@ def edit_eos_account(request):
         contract_details.active_public_key = params['active_public_key']
     contract_details.save()
     return Response('ok')
+
+
+@api_view(http_method_names=['GET'])
+def calculate_cost_eos_account(request):
+    '''
+    calculate cost eos account with getting params
+    cpu, net, ram
+    :param request: contain cpu, net, ram
+    :return: cost
+    '''
+    pass
+
+
+@api_view(http_method_names=['GET'])
+def calculate_cost_eos_account_contract(request):
+    '''
+    calculate cost eos account
+    :param request: contain contract_id
+    :return: cost
+    '''
+    pass
