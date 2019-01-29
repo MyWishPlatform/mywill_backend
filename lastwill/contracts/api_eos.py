@@ -13,11 +13,32 @@ from lastwill.contracts.serializers import *
 from lastwill.contracts.models import *
 from lastwill.other.models import *
 from lastwill.profile.models import *
+from lastwill.settings import EOSISH_URL
+from lastwill.deploy.models import *
+from lastwill.consts import *
 
 
 def get_user_for_token(token):
     user = APIToken.objects.get_or_404(token=token).user
     return user
+
+
+def calc_eos_cost(cpu, net, ram):
+    eos_url = 'https://%s' % (
+        str(NETWORKS['EOS_MAINNET']['host'])
+    )
+    command1 = [
+        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
+    ]
+    result = implement_cleos_command(command1)
+    ram_cost = result['rows'][0]
+    ram_price = float(ram_cost['quote']['balance'].split()[0]) / float(
+        ram_cost['base']['balance'].split()[0]) * 1024
+    print('get ram price', flush=True)
+
+    eos_cost = round(
+        (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
+    return eos_cost
 
 
 def check_auth(user_id, user_secret_key, params):
@@ -172,14 +193,14 @@ def edit_eos_token(request):
 def create_eos_account(request):
     '''
     view for create eos account
-    :param request: contain account_name, owner_public_key, active_public_key, user_id
+    :param request: contain account_name, owner_public_key, active_public_key, token, network_id
     :return: ok
     '''
     token = request.data['token']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    network = Network.objects.get(id=10)
+    network = Network.objects.get(id=int(request.data['network_id']))
     contract = Contract(
         state='CREATED',
         name='Contract',
@@ -233,12 +254,15 @@ def deploy_eos_account(request):
     contract = Contract.objects.get(id=int(request.data.get('id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
-    if not Profile.objects.select_for_update().filter(
-            user=user, balance__gte=200 *10**18
-    ).update(balance=F('balance') - 200 *10**18):
-        raise Exception('no money')
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
+    if contract.network.id == 10:
+        network = Network.objects.get(name='EOS_MAINNET')
+        eos_cost = contract_details.calc_cost_eos(contract_details, network)
+        if not UserSiteBalance.objects.select_for_update().filter(
+                user=user, subsite__site_name=EOSISH_URL, balance__gte=eos_cost
+        ).update(balance=F('balance') - eos_cost):
+            raise ValidationError({'result': 3}, code=400)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
@@ -319,22 +343,11 @@ def calculate_cost_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
-    eos_url = 'https://%s' % (
-        str(NETWORKS['EOS_MAINNET']['host'])
-    )
-    command1 = [
-        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
-    ]
-    result = implement_cleos_command(command1)
-    ram = result['rows'][0]
-    ram_price = float(ram['quote']['balance'].split()[0]) / float(
-        ram['base']['balance'].split()[0]) * 1024
-    print('get ram price', flush=True)
+
     ram = request.query_params['buy_ram_kbytes']
     net = request.query_params['stake_net_value']
     cpu = request.query_params['stake_cpu_value']
-    eos_cost = round(
-        (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
+    eos_cost = calc_eos_cost(cpu, net, ram)
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
@@ -391,3 +404,21 @@ def delete_eos_account_contract(request):
     contract.invisible = True
     contract.save()
     return Response('ok')
+
+
+@api_view(http_method_names=['GET'])
+def get_all_blockchains(request):
+    '''
+    get list of blockchains
+    :param request: no
+    :return: json with blockchain id and name
+    '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    get_user_for_token(token)
+    nets = Network.objects.all()
+    answer = []
+    for net in nets:
+        answer.append({'id': net.id, 'blockchain_name': API_NETWORK[net.name]})
+    return JsonResponse({'networks': answer})
