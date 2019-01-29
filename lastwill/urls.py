@@ -32,10 +32,10 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_invest_balance_day, check_status,
                                     get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
                                     check_eos_accounts_exists, buy_brand_report, get_authio_cost)
-from lastwill.contracts.api_eos import (create_eos_token, deploy_eos_token,
-                                        show_eos_token, create_eos_account,
-                                        deploy_eos_account, show_eos_account,
-                                        edit_eos_token, edit_eos_account)
+from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
+                                        show_eos_account, edit_eos_account,
+                                        calculate_cost_eos_account, calculate_cost_eos_account_contract,
+                                        delete_eos_account_contract, get_all_blockchains)
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -106,6 +106,10 @@ urlpatterns = [
     url(r'^api/buy_brand_report/$', buy_brand_report),
     url(r'^api/get_authio_cost/$', get_authio_cost),
     url(r'^api/send_unblocking_feedback/$', send_unblocking_info),
+    url(r'^api/calculate_cost_eos_account/$', calculate_cost_eos_account),
+    url(r'^api/calculate_cost_eos_account_contract/$', calculate_cost_eos_account_contract),
+    url(r'^api/delete_eos_account_contract/$', delete_eos_account_contract),
+    url(r'^api/get_all_blockchains/$', get_all_blockchains),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
