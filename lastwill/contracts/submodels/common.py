@@ -296,6 +296,8 @@ class Contract(models.Model):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
 
+    invisible = models.BooleanField(default=False)
+
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
