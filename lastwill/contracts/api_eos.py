@@ -283,7 +283,12 @@ def deploy_eos_account(request):
     contract_details.predeploy_validate()
     if contract.network.id == 10:
         network = Network.objects.get(name='EOS_MAINNET')
-        eos_cost = contract_details.calc_cost_eos(contract_details, network)
+        params = {
+            'stake_net_value': contract_details.stake_net_value,
+            'stake_cpu_value': contract_details.stake_cpu_value,
+            'buy_ram_kbytes': contract_details.buy_ram_kbytes
+        }
+        eos_cost = contract_details.calc_cost_eos(params, network)
         if not UserSiteBalance.objects.select_for_update().filter(
                 user=user, subsite__site_name=EOSISH_URL, balance__gte=eos_cost
         ).update(balance=F('balance') - eos_cost):
