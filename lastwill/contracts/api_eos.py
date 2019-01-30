@@ -401,7 +401,7 @@ def delete_eos_account_contract(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.query_params['contract_id']))
+    contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract.invisible = True
