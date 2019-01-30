@@ -345,9 +345,9 @@ def calculate_cost_eos_account(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
 
-    ram = request.query_params['buy_ram_kbytes']
-    net = request.query_params['stake_net_value']
-    cpu = request.query_params['stake_cpu_value']
+    ram = request.data['buy_ram_kbytes']
+    net = request.data['stake_net_value']
+    cpu = request.data['stake_cpu_value']
     eos_cost = calc_eos_cost(cpu, net, ram)
     print('eos cost', eos_cost, flush=True)
 
@@ -371,7 +371,7 @@ def calculate_cost_eos_account_contract(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.query_params['contract_id']))
+    contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     if contract.user != user:
