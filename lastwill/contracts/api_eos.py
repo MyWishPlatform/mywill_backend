@@ -489,7 +489,9 @@ def get_eos_contracts(request):
         limit = 8
     contracts = Contract.objects.filter(user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'])[0:limit]
     answer = {'contracts': []}
-    for c in contracts:
+    for contract in contracts:
+        c = dict(contract)
+        print('contract', c, flush=True)
         contract_info = {
             'id': c.id,
             'state': c.state,
