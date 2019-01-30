@@ -24,6 +24,24 @@ def get_user_for_token(token):
     return api_token.user
 
 
+def validate_account_name(name):
+    if len(name) != 12:
+        raise ValidationError({'result': 'Wrong lenght of account name'}, code=404)
+    for symb in name:
+        if symb.isupper():
+            raise ValidationError({'result': 'Upper case in account name'},
+                                  code=404)
+        if symb in ['6', '7', '8', '9', '0']:
+            raise ValidationError({'result': 'Wrong number in account name'},
+                                  code=404)
+
+
+def validate_eos_account_params(cpu, net, ram):
+    if cpu > 50 or net > 50 or ram > 50:
+        raise ValidationError({'result': 'Wrong value net, cpu or ram'},
+                              code=404)
+
+
 def calc_eos_cost(cpu, net, ram):
     eos_url = 'https://%s' % (
         str(NETWORKS['EOS_MAINNET']['host'])
@@ -222,6 +240,7 @@ def create_eos_account(request):
     eos_contract.save()
     token_params = {}
     token_params['account_name'] = request.data['account_name']
+    validate_account_name(request.data['account_name'])
     token_params['owner_public_key'] = request.data['owner_public_key']
     token_params['active_public_key'] = request.data['active_public_key']
     if 'stake_net_value' in request.data:
@@ -236,6 +255,11 @@ def create_eos_account(request):
         token_params['buy_ram_kbytes'] = int(request.data['buy_ram_kbytes'])
     else:
         token_params['buy_ram_kbytes'] = 4
+    validate_eos_account_params(
+        float(token_params['stake_cpu_value']),
+        float(token_params['stake_net_value']),
+        token_params['buy_ram_kbytes']
+    )
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSAccountSerializer().create(contract, token_params)
     return Response('Contract with id {id} created'.format(id=contract.id))
