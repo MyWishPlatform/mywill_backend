@@ -490,12 +490,11 @@ def get_eos_contracts(request):
     contracts = Contract.objects.filter(user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'])[0:limit]
     answer = {'contracts': []}
     for c in contracts:
-        details = json.dumps(c.get_details())
         contract_info = {
             'id': c.id,
             'state': c.state,
             'created_date': c.created_date,
-            'details': details
+            'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
     return JsonResponse(answer)
