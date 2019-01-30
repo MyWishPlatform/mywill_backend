@@ -374,11 +374,18 @@ def calculate_cost_eos_account_contract(request):
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=404)
+    if contract.contract_type != 11:
+        raise ValidationError({'result': 'Wrong contract_type'}, code=404)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     details = contract.get_details()
     network = Network.objects.get(name='EOS_MAINNET')
-    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(details, network)
+    params = {
+        'stake_net_value': details.stake_net_value,
+        'stake_cpu_value': details.stake_cpu_value,
+        'buy_ram_kbytes': details.buy_ram_kbytes
+    }
+    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network)
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
