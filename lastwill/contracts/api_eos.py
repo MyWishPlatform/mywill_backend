@@ -282,7 +282,7 @@ def show_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = get_object_or_404(Contract, id=int(request.query_params.get('contract_id')))
+    contract = get_object_or_404(Contract, id=int(request.data('contract_id')))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.user != user:
