@@ -309,25 +309,25 @@ def edit_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    params = json.loads(request.body)
-    contract = Contract.objects.get(id=int(params['contractid']))
+    # params = json.loads(request.body)
+    contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    if 'stake_net_value' in params:
-        contract_details.stake_net_value = int(params['stake_net_value'])
-    if 'stake_cpu_value' in params:
-        contract_details.stake_cpu_value = int(params['stake_cpu_value'])
-    if 'buy_ram_kbytes' in params:
-        contract_details.buy_ram_kbytes = params['buy_ram_kbytes']
-    if 'account_name' in params:
-        contract_details.account_name = params['account_name']
-    if 'owner_public_key' in params:
-        contract_details.owner_public_key = params['owner_public_key']
-    if 'active_public_key' in params:
-        contract_details.active_public_key = params['active_public_key']
+    if 'stake_net_value' in request.data:
+        contract_details.stake_net_value = int(request.data['stake_net_value'])
+    if 'stake_cpu_value' in request.data:
+        contract_details.stake_cpu_value = int(request.data['stake_cpu_value'])
+    if 'buy_ram_kbytes' in request.data:
+        contract_details.buy_ram_kbytes = request.data['buy_ram_kbytes']
+    if 'account_name' in request.data:
+        contract_details.account_name = request.data['account_name']
+    if 'owner_public_key' in request.data:
+        contract_details.owner_public_key = request.data['owner_public_key']
+    if 'active_public_key' in request.data:
+        contract_details.active_public_key = request.data['active_public_key']
     contract_details.save()
     return Response('Contract with id {id} edited'.format(id=contract.id))
 
