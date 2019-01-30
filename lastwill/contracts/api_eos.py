@@ -378,7 +378,7 @@ def calculate_cost_eos_account_contract(request):
         raise ValidationError({'result': 'Wrong token'}, code=404)
     details = contract.get_details()
     network = Network.objects.get(name='EOS_MAINNET')
-    eos_cost = details.calc_cost_eos(details, network)
+    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(details, network)
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
