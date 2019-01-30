@@ -385,7 +385,7 @@ def calculate_cost_eos_account_contract(request):
         'stake_cpu_value': details.stake_cpu_value,
         'buy_ram_kbytes': details.buy_ram_kbytes
     }
-    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network)
+    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network) /10 ** 4
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
