@@ -470,3 +470,31 @@ def get_balance_info(request):
     net = Network.objects.get(id=network_id)
     balance = UserSiteBalance.objects.get(user=user, subsite__id = NETWORK_SUBSITE[net.name]).balance
     return JsonResponse({'balance': balance})
+
+
+@api_view(http_method_names=['GET'])
+def get_eos_contracts(request):
+    '''
+    get info abount user's balance in getting blockchain
+    :param request: token, network_id
+    :return: balance
+    '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    if 'limit' in request.data:
+        limit = request.data['limit']
+    else:
+        limit = 8
+    contracts = Contract.objects.filter(user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'])[0:limit]
+    answer = {'contracts': []}
+    for c in contracts:
+        contract_info = {
+            'id': c.id,
+            'state': c.state,
+            'created_date': c.created_date,
+            'details': c.contract_details
+        }
+        answer['contracts'].append(contract_info)
+    return JsonResponse(answer)
