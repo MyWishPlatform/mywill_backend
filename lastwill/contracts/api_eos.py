@@ -292,7 +292,7 @@ def deploy_eos_account(request):
         if not UserSiteBalance.objects.select_for_update().filter(
                 user=user, subsite__site_name=EOSISH_URL, balance__gte=eos_cost
         ).update(balance=F('balance') - eos_cost):
-            raise ValidationError({'result': 3}, code=400)
+            raise ValidationError({'result': 'You have not money'}, code=400)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
@@ -341,7 +341,7 @@ def edit_eos_account(request):
     # params = json.loads(request.body)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
-        raise ValidationError({'result': 2}, code=403)
+        raise ValidationError({'result': 'Wrong status in contract'}, code=403)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
