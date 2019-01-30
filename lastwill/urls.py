@@ -35,7 +35,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
-                                        delete_eos_account_contract, get_all_blockchains, get_profile_info)
+                                        delete_eos_account_contract, get_all_blockchains,
+                                        get_profile_info, get_balance_info)
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -111,6 +112,7 @@ urlpatterns = [
     url(r'^api/delete_eos_account_contract/$', delete_eos_account_contract),
     url(r'^api/get_all_blockchains/$', get_all_blockchains),
     url(r'^api/get_profile_info/$', get_profile_info),
+    url(r'^api/get_balance_info/$', get_balance_info),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

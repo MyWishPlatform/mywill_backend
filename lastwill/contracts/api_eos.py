@@ -453,3 +453,20 @@ def get_profile_info(request):
         'lang': user.profile.lang,
     }
     return Response(answer)
+
+
+@api_view(http_method_names=['GET'])
+def get_balance_info(request):
+    '''
+    get info abount user's balance in getting blockchain
+    :param request: token, network_id
+    :return: balance
+    '''
+    token = request.data['token']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    network_id = request.data['network_id']
+    net = Network.objects.get(id=network_id)
+    balance = UserSiteBalance.objects.get(user=user, subsite__id = NETWORK_SUBSITE[net.name]).balance
+    return JsonResponse({'balance': balance})
