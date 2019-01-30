@@ -494,7 +494,7 @@ def get_eos_contracts(request):
             'id': c.id,
             'state': c.state,
             'created_date': c.created_date,
-            'details': c.contract_details
+            'details': c.get_details()
         }
         answer['contracts'].append(contract_info)
     return JsonResponse(answer)
