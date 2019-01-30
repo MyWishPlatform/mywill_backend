@@ -238,7 +238,7 @@ def create_eos_account(request):
         token_params['buy_ram_kbytes'] = 4
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSAccountSerializer().create(contract, token_params)
-    return Response('ok')
+    return Response('Contract with id {id} created'.format(id=contract.id))
 
 
 @api_view(http_method_names=['POST'])
@@ -252,7 +252,7 @@ def deploy_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.data.get('id')))
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
@@ -268,7 +268,7 @@ def deploy_eos_account(request):
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
-    return Response('ok')
+    return Response('Contract with id {id} send in queue on deploy'.format(id=contract.id))
 
 
 @api_view(http_method_names=['GET'])
@@ -282,7 +282,7 @@ def show_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = get_object_or_404(Contract, id=int(request.query_params.get('id')))
+    contract = get_object_or_404(Contract, id=int(request.query_params.get('contract_id')))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.user != user:
@@ -310,7 +310,7 @@ def edit_eos_account(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     params = json.loads(request.body)
-    contract = Contract.objects.get(id=int(params['id']))
+    contract = Contract.objects.get(id=int(params['contractid']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 2}, code=403)
     if contract.user != user:
@@ -329,7 +329,7 @@ def edit_eos_account(request):
     if 'active_public_key' in params:
         contract_details.active_public_key = params['active_public_key']
     contract_details.save()
-    return Response('ok')
+    return Response('Contract with id {id} edited'.format(id=contract.id))
 
 
 @api_view(http_method_names=['GET'])
@@ -406,7 +406,7 @@ def delete_eos_account_contract(request):
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract.invisible = True
     contract.save()
-    return Response('ok')
+    return Response('Contract with id {id} deleted'.format(id=contract.id))
 
 
 @api_view(http_method_names=['GET'])
