@@ -487,7 +487,7 @@ def get_eos_contracts(request):
         limit = request.data['limit']
     else:
         limit = 8
-    contracts = Contract.objects.filter(user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'])[0:limit]
+    contracts = Contract.objects.filter(user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'], invisible=False)[0:limit]
     answer = {'contracts': []}
     for c in contracts:
         contract_info = {
