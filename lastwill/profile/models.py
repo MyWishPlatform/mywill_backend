@@ -34,6 +34,7 @@ class APIToken(models.Model):
     user = models.ForeignKey(User)
     token = models.CharField(max_length=36)
     comment = models.CharField(max_length=50, null=True, default=None)
+    active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ("user", "token")

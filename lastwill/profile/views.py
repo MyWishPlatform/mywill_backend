@@ -145,7 +145,19 @@ def get_api_tokens(request):
     if user.is_anonymous:
         raise PermissionDenied()
     answer = {"tokens":[]}
-    tokens = APIToken.objects.filter(user=user)
+    tokens = APIToken.objects.filter(user=user, active=True)
     for token in tokens:
         answer["tokens"].append(token.token)
     return Response(answer)
+
+
+@api_view(http_method_names=['POST', 'DELETE'])
+def delete_api_tokens(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    token_str = request.date['token']
+    token = APIToken.objects.get(user=user, token=token_str)
+    token.active = False
+    token.save()
+    return Response({"result": "ok"})

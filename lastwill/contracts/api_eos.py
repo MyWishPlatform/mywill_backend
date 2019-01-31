@@ -23,6 +23,8 @@ from lastwill.consts import *
 
 def get_user_for_token(token):
     api_token = get_object_or_404(APIToken, token=token)
+    if not api_token.active:
+        raise ValidationError({'result': 'Your token is not active'}, code=404)
     return api_token.user
 
 
