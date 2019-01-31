@@ -152,7 +152,7 @@ def get_api_tokens(request):
 
 
 @api_view(http_method_names=['POST', 'DELETE'])
-def delete_api_tokens(request):
+def delete_api_token(request):
     user = request.user
     if user.is_anonymous:
         raise PermissionDenied()
