@@ -1,4 +1,5 @@
 import hashlib
+import datetime
 import hmac
 
 from django.http import JsonResponse
@@ -14,6 +15,7 @@ from lastwill.contracts.serializers import *
 from lastwill.contracts.models import *
 from lastwill.other.models import *
 from lastwill.profile.models import *
+from lastwill.promo.models import *
 from lastwill.settings import EOSISH_URL
 from lastwill.deploy.models import *
 from lastwill.consts import *
@@ -22,6 +24,30 @@ from lastwill.consts import *
 def get_user_for_token(token):
     api_token = get_object_or_404(APIToken, token=token)
     return api_token.user
+
+
+def check_promocode_in_api(promo_str, contract_type, user, balance, cid, cost):
+    promo = Promo.objects.filter(promo_str=promo_str).first()
+    if not promo:
+        raise ValidationError({'result': 'Wrong promocode'}, code=404)
+    now_date = datetime.datetime.now().date()
+    if now_date >= promo.start and now_date <= promo.stop:
+        p2c = Promo2ContractType.objects.filter(promo=promo, contract_type=contract_type).first()
+        if not p2c:
+            raise ValidationError({'result': 'Promocode is not valid for this type of contract'},
+                                  code=404)
+        u2p = User2Promo.objects.filter(user=user, promo=promo).first()
+        if u2p:
+            raise ValidationError({'result': 'Promocode already used'},
+                                  code=404)
+        discount = p2c.discount
+        if balance >= discount:
+            User2Promo(user=user, promo=promo, contract_id=cid).save()
+            cost = cost * discount / 100
+            return cost
+    else:
+        raise ValidationError({'result': 'Promocode is not valid'}, code=404)
+
 
 
 def validate_account_name(name):
@@ -289,6 +315,10 @@ def deploy_eos_account(request):
             'buy_ram_kbytes': contract_details.buy_ram_kbytes
         }
         eos_cost = contract_details.calc_cost_eos(params, network)
+        if 'promo' in request.data:
+            promo = request.data['promo'].upper()
+            user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=EOSISH_URL).balance
+            eos_cost = check_promocode_in_api(promo, 10, user, user_balance, contract.id, eos_cost)
         if not UserSiteBalance.objects.select_for_update().filter(
                 user=user, subsite__site_name=EOSISH_URL, balance__gte=eos_cost
         ).update(balance=F('balance') - eos_cost):
