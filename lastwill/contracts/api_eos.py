@@ -549,12 +549,14 @@ def get_eos_contracts(request):
     else:
         limit = 8
     contracts = Contract.objects.filter(user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'], invisible=False)[0:limit]
+    contracts.order_by('-created_date')
     answer = {'contracts': []}
     for c in contracts:
         contract_info = {
             'id': c.id,
             'state': c.state,
             'created_date': c.created_date,
+            'network': c.netwrok.name,
             'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
