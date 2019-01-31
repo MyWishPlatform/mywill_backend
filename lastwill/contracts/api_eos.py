@@ -343,7 +343,7 @@ def deploy_eos_account(request):
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
-    return Response('Contract with id {id} send in queue on deploy'.format(id=contract.id))
+    return Response({'id': contract.id, 'state': contract.state})
 
 
 @api_view(http_method_names=['GET'])
