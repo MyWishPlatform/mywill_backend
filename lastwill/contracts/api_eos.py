@@ -247,6 +247,9 @@ def create_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    token_params = {}
+    token_params['account_name'] = request.data['account_name']
+    validate_account_name(request.data['account_name'])
     network = Network.objects.get(id=int(request.data['network_id']))
     contract = Contract(
         state='CREATED',
@@ -266,20 +269,17 @@ def create_eos_account(request):
         constructor_arguments=''
     )
     eos_contract.save()
-    token_params = {}
-    token_params['account_name'] = request.data['account_name']
-    validate_account_name(request.data['account_name'])
     token_params['owner_public_key'] = request.data['owner_public_key']
     token_params['active_public_key'] = request.data['active_public_key']
-    if 'stake_net_value' in request.data:
+    if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
         token_params['stake_net_value'] = str(request.data['stake_net_value'])
     else:
         token_params['stake_net_value'] = '0.01'
-    if 'stake_cpu_value' in  request.data:
+    if 'stake_cpu_value' in  request.data and len(str(request.data['stake_cpu_value'])) > 0:
         token_params['stake_cpu_value'] = str(request.data['stake_cpu_value'])
     else:
         token_params['stake_cpu_value'] = '0.64'
-    if 'buy_ram_kbytes' in request.data:
+    if 'buy_ram_kbytes' in request.data and request.data['buy_ram_kbytes'] != '':
         token_params['buy_ram_kbytes'] = int(request.data['buy_ram_kbytes'])
     else:
         token_params['buy_ram_kbytes'] = 4
@@ -379,11 +379,11 @@ def edit_eos_account(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    if 'stake_net_value' in request.data:
+    if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
         contract_details.stake_net_value = str(request.data['stake_net_value'])
-    if 'stake_cpu_value' in request.data:
+    if 'stake_cpu_value' in request.data and len(str(request.data['stake_cpu_value'])) > 0:
         contract_details.stake_cpu_value = str(request.data['stake_cpu_value'])
-    if 'buy_ram_kbytes' in request.data:
+    if 'buy_ram_kbytes' in request.data and request.data['buy_ram_kbytes'] != '':
         contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
     if 'account_name' in request.data:
         contract_details.account_name = request.data['account_name']
