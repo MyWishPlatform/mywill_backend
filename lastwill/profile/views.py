@@ -3,6 +3,8 @@ import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
+from django.core.mail import send_mail
+
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -13,7 +15,7 @@ from allauth.account.views import ConfirmEmailView
 
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import TRON_URL, MY_WISH_URL
+from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 
 
@@ -136,6 +138,12 @@ def create_api_token(request):
     token_str = str(uuid.uuid4())
     text = request.data['comment'] if 'comment' in request.data else ''
     APIToken(user=user, token=token_str, comment=text).save()
+    send_mail(
+        'User create api token',
+        'User with id={id} create token for api'.format(id=user.id),
+        DEFAULT_FROM_EMAIL,
+        [SUPPORT_EMAIL]
+    )
     return Response({"result": "ok"})
 
 
