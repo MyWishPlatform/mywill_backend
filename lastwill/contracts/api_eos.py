@@ -374,8 +374,9 @@ def show_eos_account(request):
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
-    if contract_details.eos_contract.tx_hash:
-        answer['tx_hash'] = contract_details.eos_contract.tx_hash
+    if contract_details.eos_contract:
+        if contract_details.eos_contract.tx_hash:
+            answer['tx_hash'] = contract_details.eos_contract.tx_hash
     return JsonResponse(answer)
 
 
