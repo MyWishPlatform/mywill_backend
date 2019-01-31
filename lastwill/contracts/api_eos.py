@@ -270,11 +270,11 @@ def create_eos_account(request):
     token_params['owner_public_key'] = request.data['owner_public_key']
     token_params['active_public_key'] = request.data['active_public_key']
     if 'stake_net_value' in request.data:
-        token_params['stake_net_value'] = request.data['stake_net_value']
+        token_params['stake_net_value'] = str(request.data['stake_net_value'])
     else:
         token_params['stake_net_value'] = '0.01'
     if 'stake_cpu_value' in  request.data:
-        token_params['stake_cpu_value'] = request.data['stake_cpu_value']
+        token_params['stake_cpu_value'] = str(request.data['stake_cpu_value'])
     else:
         token_params['stake_cpu_value'] = '0.64'
     if 'buy_ram_kbytes' in request.data:
@@ -376,11 +376,11 @@ def edit_eos_account(request):
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
     if 'stake_net_value' in request.data:
-        contract_details.stake_net_value = int(request.data['stake_net_value'])
+        contract_details.stake_net_value = str(request.data['stake_net_value'])
     if 'stake_cpu_value' in request.data:
-        contract_details.stake_cpu_value = int(request.data['stake_cpu_value'])
+        contract_details.stake_cpu_value = str(request.data['stake_cpu_value'])
     if 'buy_ram_kbytes' in request.data:
-        contract_details.buy_ram_kbytes = request.data['buy_ram_kbytes']
+        contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
     if 'account_name' in request.data:
         contract_details.account_name = request.data['account_name']
     if 'owner_public_key' in request.data:
