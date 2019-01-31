@@ -556,7 +556,8 @@ def get_eos_contracts(request):
             'id': c.id,
             'state': c.state,
             'created_date': c.created_date,
-            'network': c.netwrok.name,
+            'network': c.network.name,
+            'network_id': c.network.id,
             'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
