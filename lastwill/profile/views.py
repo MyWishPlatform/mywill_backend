@@ -1,4 +1,5 @@
 import pyotp
+import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
@@ -13,7 +14,7 @@ from allauth.account.views import ConfirmEmailView
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
 from lastwill.settings import TRON_URL, MY_WISH_URL
-from lastwill.profile.models import SubSite, UserSiteBalance
+from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 
 
 class UserConfirmEmailView(ConfirmEmailView):
@@ -116,6 +117,7 @@ def resend_email(request):
     em.send_confirmation(request=request)
     return Response({"result": "ok"})
 
+
 @api_view(http_method_names=['POST'])
 def set_lang(request):
     user = request.user
@@ -124,3 +126,26 @@ def set_lang(request):
     user.profile.lang = request.data['lang']
     user.profile.save()
     return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['POST'])
+def create_api_token(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    token_str = str(uuid.uuid4())
+    text = request.data['comment'] if 'comment' in request.data else ''
+    APIToken(user=user, token=token_str, comment=text).save()
+    return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['GET'])
+def get_api_tokens(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    answer = {"tokens":[]}
+    tokens = APIToken.objects.filter(user=user)
+    for token in tokens:
+        answer["tokens"].append(token.token)
+    return Response(answer)

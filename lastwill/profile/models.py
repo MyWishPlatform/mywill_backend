@@ -33,7 +33,7 @@ class UserSiteBalance(models.Model):
 class APIToken(models.Model):
     user = models.ForeignKey(User)
     token = models.CharField(max_length=36)
-    comment = models.CharField(max_length=50)
+    comment = models.CharField(max_length=50, null=True, default=None)
 
     class Meta:
         unique_together = ("user", "token")
