@@ -290,7 +290,19 @@ def create_eos_account(request):
     )
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSAccountSerializer().create(contract, token_params)
-    return Response('Contract with id {id} created'.format(id=contract.id))
+    contract_details = contract.get_details()
+    answer = {
+        'state': contract.state,
+        'address': contract_details.account_name,
+        'id': contract.id,
+        'created_date': contract.created_date,
+        'network': contract.network.name,
+        'network_id': contract.network.id,
+    }
+    answer['net'] = contract_details.stake_net_value
+    answer['cpu'] = contract_details.stake_cpu_value
+    answer['ram'] = contract_details.buy_ram_kbytes
+    return Response(answer)
 
 
 @api_view(http_method_names=['POST'])
@@ -351,7 +363,14 @@ def show_eos_account(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    answer = {'state': contract.state, 'address': contract_details.account_name}
+    answer = {
+        'state': contract.state,
+        'address': contract_details.account_name,
+        'id': contract.id,
+        'created_date': contract.created_date,
+        'network': contract.network.name,
+        'network_id': contract.network.id,
+    }
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
@@ -392,7 +411,18 @@ def edit_eos_account(request):
     if 'active_public_key' in request.data:
         contract_details.active_public_key = request.data['active_public_key']
     contract_details.save()
-    return Response('Contract with id {id} edited'.format(id=contract.id))
+    answer = {
+        'state': contract.state,
+        'address': contract_details.account_name,
+        'id': contract.id,
+        'created_date': contract.created_date,
+        'network': contract.network.name,
+        'network_id': contract.network.id,
+    }
+    answer['net'] = contract_details.stake_net_value
+    answer['cpu'] = contract_details.stake_cpu_value
+    answer['ram'] = contract_details.buy_ram_kbytes
+    return Response(answer)
 
 
 @api_view(http_method_names=['GET'])
