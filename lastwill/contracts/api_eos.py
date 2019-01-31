@@ -305,6 +305,8 @@ def deploy_eos_account(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
