@@ -354,7 +354,7 @@ def show_eos_account(request):
     :return:
     '''
     token = request.data['token']
-    print('meta', request.META)
+    print('meta', request.META, flush=True)
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
