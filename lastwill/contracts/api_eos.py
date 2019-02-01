@@ -253,24 +253,6 @@ def create_eos_account(request):
     if int(request.data['network_id']) not in [10,11]:
         raise ValidationError({'result': 'Wrong network id'}, code=404)
     network = Network.objects.get(id=int(request.data['network_id']))
-    contract = Contract(
-        state='CREATED',
-        name='Contract',
-        contract_type=11,
-        network=network,
-        cost=0,
-        user=user
-    )
-    contract.save()
-    eos_contract = EOSContract(
-        address=None,
-        source_code='',
-        abi={},
-        bytecode='',
-        compiler_version=None,
-        constructor_arguments=''
-    )
-    eos_contract.save()
     token_params['owner_public_key'] = request.data['owner_public_key']
     token_params['active_public_key'] = request.data['active_public_key']
     if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
@@ -290,6 +272,24 @@ def create_eos_account(request):
         float(token_params['stake_net_value']),
         token_params['buy_ram_kbytes']
     )
+    contract = Contract(
+        state='CREATED',
+        name='Contract',
+        contract_type=11,
+        network=network,
+        cost=0,
+        user=user
+    )
+    contract.save()
+    eos_contract = EOSContract(
+        address=None,
+        source_code='',
+        abi={},
+        bytecode='',
+        compiler_version=None,
+        constructor_arguments=''
+    )
+    eos_contract.save()
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSAccountSerializer().create(contract, token_params)
     contract_details = contract.get_details()
