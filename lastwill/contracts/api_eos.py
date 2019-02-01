@@ -396,6 +396,7 @@ def edit_eos_account(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     # params = json.loads(request.body)
+    validate_account_name(request.data['account_name'])
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
@@ -545,7 +546,7 @@ def get_profile_info(request):
     answer = {
         'username': user.email if user.email else '{} {}'.format(
             user.first_name, user.last_name),
-        'contracts': Contract.objects.filter(user=user).count(),
+        'contracts': Contract.objects.filter(user=user, invisible=False).count(),
         'id': user.id,
         'lang': user.profile.lang,
     }
