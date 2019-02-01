@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.serializers import *
 from lastwill.contracts.api_eos import *
+import lastwill.check as check
 from lastwill.contracts.models import *
 from lastwill.other.models import *
 from lastwill.profile.models import *
@@ -34,6 +35,11 @@ def create_eth_token(request):
     if int(request.data['network_id']) not in [1, 2]:
         raise ValidationError({'result': 'Wrong network id'}, code=404)
     network = Network.objects.get(id=int(request.data['network_id']))
+    check.is_address(request.data['admin_address'])
+    if int(request.data['decimals']) < 0 or int(request.data['decimals']) > 50:
+        raise ValidationError({'result': 'Wrong decimals'}, code=404)
+    if request.data['token_type'] not in ['ERC20', 'ERC23']:
+        raise ValidationError({'result': 'Wrong token type'}, code=404)
     token_params = {
         'decimals': int(request.data['decimals']),
         'token_name': request.data['token_name'],
