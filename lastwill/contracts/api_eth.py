@@ -74,3 +74,32 @@ def create_eth_token(request):
         'token_type': contract_details.token_type
     }
     return Response(answer)
+
+
+@api_view(http_method_names=['GET'])
+def show_eth_token(request):
+    '''
+    view for show eos account
+    :param request: contain contract id
+    :return:
+    '''
+    # token = request.data['token']
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    contract_details = contract.get_details()
+    answer = {
+        'state': contract.state,
+        'address': contract_details.account_name,
+        'id': contract.id,
+        'created_date': contract.created_date,
+        'network': contract.network.name,
+        'network_id': contract.network.id,
+    }
+    return JsonResponse(answer)
