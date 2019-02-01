@@ -243,7 +243,7 @@ def create_eos_account(request):
     :param request: contain account_name, owner_public_key, active_public_key, token, network_id
     :return: ok
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -312,7 +312,7 @@ def deploy_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -389,7 +389,7 @@ def edit_eos_account(request):
     (account_name, public_key, cpu, net, ram)
     :return:
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -435,7 +435,7 @@ def calculate_cost_eos_account(request):
     :param request: contain cpu, net, ram
     :return: cost
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
@@ -462,7 +462,7 @@ def calculate_cost_eos_account_contract(request):
     :param request: contain contract_id
     :return: cost
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -499,7 +499,7 @@ def delete_eos_account_contract(request):
     :param request: contain contract_id
     :return: cost
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -518,7 +518,7 @@ def get_all_blockchains(request):
     :param request: token only
     :return: json with blockchain id and name
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
@@ -536,7 +536,7 @@ def get_profile_info(request):
     :param request: token only
     :return: json with info about user - username, contracts_count, id, lang
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -557,7 +557,7 @@ def get_balance_info(request):
     :param request: token, network_id
     :return: balance
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -574,7 +574,7 @@ def get_eos_contracts(request):
     :param request: token, network_id
     :return: balance
     '''
-    token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
