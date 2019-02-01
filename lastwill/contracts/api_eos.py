@@ -353,8 +353,8 @@ def show_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    token = request.data['token']
-    print('meta', request.META, flush=True)
+    # token = request.data['token']
+    token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
