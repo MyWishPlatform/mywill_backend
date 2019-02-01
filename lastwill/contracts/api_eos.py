@@ -250,6 +250,8 @@ def create_eos_account(request):
     token_params = {}
     token_params['account_name'] = request.data['account_name']
     validate_account_name(request.data['account_name'])
+    if int(request.data['network_id']) not in [10,11]:
+        raise ValidationError({'result': 'Wrong network id'}, code=404)
     network = Network.objects.get(id=int(request.data['network_id']))
     contract = Contract(
         state='CREATED',
