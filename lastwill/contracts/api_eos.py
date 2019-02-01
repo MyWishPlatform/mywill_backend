@@ -442,7 +442,7 @@ def calculate_cost_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
-
+    print('data in request', request.data, flush=True)
     ram = request.data['buy_ram_kbytes']
     net = request.data['stake_net_value']
     cpu = request.data['stake_cpu_value']
