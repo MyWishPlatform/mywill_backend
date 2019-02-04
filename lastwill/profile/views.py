@@ -148,7 +148,8 @@ def create_api_token(request):
         "user_id": user.id,
         "token": api_token.token,
         "label": api_token.comment,
-        "active": api_token.active
+        "active": api_token.active,
+        "last_accessed": api_token.last_accessed
     }
     return Response(answer)
 
