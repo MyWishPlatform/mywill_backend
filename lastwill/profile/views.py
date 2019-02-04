@@ -136,15 +136,21 @@ def create_api_token(request):
     if user.is_anonymous:
         raise PermissionDenied()
     token_str = str(uuid.uuid4())
-    text = request.data['comment'] if 'comment' in request.data else ''
-    APIToken(user=user, token=token_str, comment=text).save()
+    text = request.data['label']
+    api_token = APIToken(user=user, token=token_str, comment=text).save()
     send_mail(
         'User create api token',
         'User with id={id} create token for api'.format(id=user.id),
         DEFAULT_FROM_EMAIL,
         [SUPPORT_EMAIL]
     )
-    return Response({"result": "ok"})
+    answer = {
+        "user_id": user.id,
+        "token": api_token.token,
+        "label": api_token.comment,
+        "active": api_token.active
+    }
+    return Response(answer)
 
 
 @api_view(http_method_names=['GET'])
