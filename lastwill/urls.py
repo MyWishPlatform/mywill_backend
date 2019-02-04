@@ -121,6 +121,12 @@ urlpatterns = [
     url(r'^api/create_api_token/$', create_api_token),
     url(r'^api/get_api_tokens/$', get_api_tokens),
     url(r'^api/delete_api_token/$', delete_api_token),
+    url(r'^api/create_eth_token/$', create_eth_token),
+    url(r'^api/show_eth_token/$', show_eth_token),
+    url(r'^api/edit_eth_token/$', edit_eth_token),
+    url(r'^api/deploy_eth_token/$', deploy_eth_token),
+    url(r'^api/calculate_cost_eth_token/$', calculate_cost_eth_token_contract),
+    url(r'^api/delete_eth_token/$', delete_eth_token_contract),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
