@@ -96,10 +96,59 @@ def show_eth_token(request):
     contract_details = contract.get_details()
     answer = {
         'state': contract.state,
-        'address': contract_details.account_name,
         'id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
+        'token_name': contract_details.token_name,
+        'token_short_name': contract_details.token_short_name,
+        'admin_address': contract_details.admin_address,
+        'decimals': contract_details.decimals,
+        'token_type': contract_details.token_type
     }
     return JsonResponse(answer)
+
+
+@api_view(http_method_names=['PUT', 'PATCH'])
+def edit_eos_account(request):
+    '''
+    view for edit params in  eos account
+    :param request: contain contract id, editable field
+    (account_name, public_key, cpu, net, ram)
+    :return:
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = Contract.objects.get(id=int(request.data['contract_id']))
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 'Wrong status in contract'}, code=403)
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    contract_details = contract.get_details()
+    if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
+        contract_details.decimals = int(request.data['decimals'])
+    if 'token_type' in request.data and request.data['token_type'] in ['ERC20', 'ERC23']:
+        contract_details.token_type = request.data['token_type']
+    if 'token_short_name' in request.data and request.data['token_short_name'] != '':
+        contract_details.token_short_name = request.data['token_short_name'].upper()
+    if 'admin_address' in request.data:
+        check.is_address(request.data['admin_address'])
+        contract_details.admin_address = request.data['admin_address']
+    if 'token_name' in request.data and request.data['token_name'] != '':
+        contract_details.token_name = request.data['token_name']
+    contract_details.save()
+    answer = {
+        'state': contract.state,
+        'id': contract.id,
+        'created_date': contract.created_date,
+        'network': contract.network.name,
+        'network_id': contract.network.id,
+        'token_name': contract_details.token_name,
+        'token_short_name': contract_details.token_short_name,
+        'admin_address': contract_details.admin_address,
+        'decimals': contract_details.decimals,
+        'token_type': contract_details.token_type
+    }
+    return Response(answer)
