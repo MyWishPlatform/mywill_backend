@@ -117,7 +117,7 @@ urlpatterns = [
     url(r'^api/get_eos_contracts/$', get_eos_contracts),
     url(r'^api/create_api_token/$', create_api_token),
     url(r'^api/get_api_tokens/$', get_api_tokens),
-    url(r'^api/delete_api_token/<str:token>$', delete_api_token),
+    url(r'^api/delete_api_token/<str:token>', delete_api_token),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
