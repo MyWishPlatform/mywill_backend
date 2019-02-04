@@ -176,12 +176,12 @@ def get_api_tokens(request):
 
 
 @api_view(http_method_names=['DELETE'])
-def delete_api_token(request, token):
+def delete_api_token(request):
     user = request.user
     if user.is_anonymous:
         raise PermissionDenied()
-    # token_str = request.data['token']
-    api_token = APIToken.objects.get(user=user, token=token)
+    token_str = request.data['token']
+    api_token = APIToken.objects.get(user=user, token=token_str)
     api_token.active = False
     api_token.save()
     return Response({"result": "ok"})
