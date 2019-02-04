@@ -38,6 +38,9 @@ from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
                                         delete_eos_account_contract, get_all_blockchains,
                                         get_profile_info, get_balance_info, get_eos_contracts)
+from lastwill.contracts.api_eth import (create_eth_token, show_eth_token,
+                                        edit_eth_token, delete_eth_token_contract,
+                                        deploy_eth_token, calculate_cost_eth_token_contract)
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount

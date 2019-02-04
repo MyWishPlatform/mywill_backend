@@ -110,7 +110,7 @@ def show_eth_token(request):
 
 
 @api_view(http_method_names=['PUT', 'PATCH'])
-def edit_eos_account(request):
+def edit_eth_token(request):
     '''
     view for edit params in  eos account
     :param request: contain contract id, editable field
@@ -155,7 +155,7 @@ def edit_eos_account(request):
 
 
 @api_view(http_method_names=['GET'])
-def calculate_cost_eos_account_contract(request):
+def calculate_cost_eth_token_contract(request):
     eth_cost = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
     return Response({
         'ETH': str(int(eth_cost)),
@@ -187,7 +187,7 @@ def delete_eth_token_contract(request):
 
 
 @api_view(http_method_names=['POST'])
-def deploy_eos_account(request):
+def deploy_eth_token(request):
     '''
     view for deploy eos ac count
     :param request: contain contract id
