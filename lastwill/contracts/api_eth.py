@@ -152,3 +152,13 @@ def edit_eos_account(request):
         'token_type': contract_details.token_type
     }
     return Response(answer)
+
+
+@api_view(http_method_names=['GET'])
+def calculate_cost_eos_account_contract(request):
+    eth_cost = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
+    return Response({
+        'ETH': str(int(eth_cost)),
+        'WISH': str(int(eth_cost) * convert('ETH', 'WISH')['WISH']),
+        'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
+    })
