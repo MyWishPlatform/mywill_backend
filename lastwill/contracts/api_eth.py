@@ -16,7 +16,7 @@ from lastwill.contracts.models import *
 from lastwill.other.models import *
 from lastwill.profile.models import *
 from lastwill.promo.models import *
-from lastwill.settings import EOSISH_URL
+from lastwill.settings import MY_WISH_URL
 from lastwill.deploy.models import *
 from lastwill.consts import *
 
@@ -183,3 +183,39 @@ def delete_eth_token_contract(request):
     contract.invisible = True
     contract.save()
     return Response('Contract with id {id} deleted'.format(id=contract.id))
+
+
+
+@api_view(http_method_names=['POST'])
+def deploy_eos_account(request):
+    '''
+    view for deploy eos ac count
+    :param request: contain contract id
+    :return:
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong contract_id'}, code=404)
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 'Wrong state'}, code=404)
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
+    if contract.network.id == 1:
+        eth_cost = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
+        if 'promo' in request.data:
+            promo = request.data['promo'].upper()
+            user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=MY_WISH_URL).balance
+            eth_cost = check_promocode_in_api(promo, 15, user, user_balance, contract.id, eth_cost)
+        if not UserSiteBalance.objects.select_for_update().filter(
+                user=user, subsite__site_name=MY_WISH_URL, balance__gte=eth_cost
+        ).update(balance=F('balance') - eth_cost):
+            raise ValidationError({'result': 'You have not money'}, code=400)
+    contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.save()
+    queue = NETWORKS[contract.network.name]['queue']
+    send_in_queue(contract.id, 'launch', queue)
+    return Response({'id': contract.id, 'state': contract.state})
