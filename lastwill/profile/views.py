@@ -185,3 +185,15 @@ def delete_api_token(request):
     api_token.active = False
     api_token.save()
     return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['DELETE'])
+def delete_api_tokens(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    api_tokens = APIToken.objects.filter(user=user)
+    for token in api_tokens:
+        token.active = False
+        token.save()
+    return Response({"result": "ok"})

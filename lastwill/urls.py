@@ -22,7 +22,7 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
-from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token
+from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token, delete_api_tokens
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     deploy, get_token_contracts,
                                     ICOtokensView, get_statistics, i_am_alive,
@@ -118,6 +118,7 @@ urlpatterns = [
     url(r'^api/create_api_token/$', create_api_token),
     url(r'^api/get_api_tokens/$', get_api_tokens),
     url(r'^api/delete_api_token/$', delete_api_token),
+    url(r'^api/delete_all_api_tokens/$', delete_api_tokens),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
