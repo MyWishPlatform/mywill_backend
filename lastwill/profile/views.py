@@ -137,7 +137,8 @@ def create_api_token(request):
         raise PermissionDenied()
     token_str = str(uuid.uuid4())
     text = request.data['label']
-    api_token = APIToken(user=user, token=token_str, comment=text).save()
+    api_token = APIToken(user=user, token=token_str, comment=text)
+    api_token.save()
     send_mail(
         'User create api token',
         'User with id={id} create token for api'.format(id=user.id),
@@ -162,7 +163,15 @@ def get_api_tokens(request):
     answer = {"tokens":[]}
     tokens = APIToken.objects.filter(user=user, active=True)
     for token in tokens:
-        answer["tokens"].append(token.token)
+        answer["tokens"].append(
+            {
+                "user_id": user.id,
+                "token": token.token,
+                "label": token.comment,
+                "active": token.active,
+                "last_accessed": token.last_accessed
+            }
+        )
     return Response(answer)
 
 
