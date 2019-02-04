@@ -109,6 +109,12 @@ def check_auth(user_id, user_secret_key, params):
     else:
         raise ValidationError({'result': 'Authorisation Error'}, code=404)
 
+def log_userinfo(api_action, token, user=None):
+    username = "" if user is None else user
+    print('EOS API: {action} with token {tok} for user {usr}'
+          .format(action=api_action, tok=token, usr=username)
+          )
+
 
 @api_view(http_method_names=['POST'])
 def create_eos_token(request):
@@ -243,7 +249,6 @@ def create_eos_account(request):
     :param request: contain account_name, owner_public_key, active_public_key, token, network_id
     :return: ok
     '''
-    print('EOS API: account creating')
     token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
@@ -305,9 +310,7 @@ def create_eos_account(request):
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
-    print('EOS API: account created with token {tok} for user {usr}'
-          .format(tok=token, usr=user)
-          )
+    log_userinfo('account created', token, user)
     return Response(answer)
 
 
@@ -318,7 +321,6 @@ def deploy_eos_account(request):
     :param request: contain contract id
     :return:
     '''
-    print('EOS API: account deploying')
     token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
@@ -350,8 +352,7 @@ def deploy_eos_account(request):
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
-    print('EOS API: account deployed with token {tok} for user {usr} in network {net}'
-          .format(tok=token, usr=user, net=network))
+    log_userinfo('account deployed', token, user)
     return Response({'id': contract.id, 'state': contract.state})
 
 
@@ -387,6 +388,7 @@ def show_eos_account(request):
     if contract_details.eos_contract:
         if contract_details.eos_contract.tx_hash:
             answer['tx_hash'] = contract_details.eos_contract.tx_hash
+    log_userinfo('showing account', token, user)
     return JsonResponse(answer)
 
 
@@ -434,6 +436,7 @@ def edit_eos_account(request):
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
+    log_userinfo('edited account', token, user)
     return Response(answer)
 
 
@@ -455,6 +458,7 @@ def calculate_cost_eos_account(request):
     cpu = request.data['stake_cpu_value']
     eos_cost = calc_eos_cost(cpu, net, ram)
     print('eos cost', eos_cost, flush=True)
+    log_userinfo('calculated cost', token)
 
     return JsonResponse({
         'EOS': str(eos_cost),
@@ -492,6 +496,7 @@ def calculate_cost_eos_account_contract(request):
     }
     eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network) /10 ** 4
     print('eos cost', eos_cost, flush=True)
+    log_userinfo('calculated contract cost', token)
 
     return JsonResponse({
         'EOS': str(eos_cost),
@@ -518,6 +523,7 @@ def delete_eos_account_contract(request):
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract.invisible = True
     contract.save()
+    log_userinfo('deleted contract', token, user)
     return Response('Contract with id {id} deleted'.format(id=contract.id))
 
 
@@ -536,6 +542,7 @@ def get_all_blockchains(request):
     answer = []
     for net in nets:
         answer.append({'id': net.id, 'blockchain_name': API_NETWORK[net.name]})
+    log_userinfo('requested blockchain info', token)
     return JsonResponse({'networks': answer})
 
 
@@ -557,6 +564,7 @@ def get_profile_info(request):
         'id': user.id,
         'lang': user.profile.lang,
     }
+    log_userinfo('requested profile info', token, user)
     return Response(answer)
 
 
@@ -574,6 +582,7 @@ def get_balance_info(request):
     network_id = request.data['network_id']
     net = Network.objects.get(id=network_id)
     balance = UserSiteBalance.objects.get(user=user, subsite__id = NETWORK_SUBSITE[net.name]).balance
+    print('requested balance', token, user)
     return JsonResponse({'balance': balance})
 
 
@@ -605,4 +614,5 @@ def get_eos_contracts(request):
             'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
+    log_userinfo('requested eos contracts', token, user)
     return JsonResponse(answer)
