@@ -243,6 +243,7 @@ def create_eos_account(request):
     :param request: contain account_name, owner_public_key, active_public_key, token, network_id
     :return: ok
     '''
+    print('EOS API: account creating')
     token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
@@ -304,6 +305,9 @@ def create_eos_account(request):
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
+    print('EOS API: account created with token {tok} for user {usr}'
+          .format(tok=token, usr=user)
+          )
     return Response(answer)
 
 
@@ -314,6 +318,7 @@ def deploy_eos_account(request):
     :param request: contain contract id
     :return:
     '''
+    print('EOS API: account deploying')
     token = request.META['HTTP_TOKEN']
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
@@ -345,6 +350,8 @@ def deploy_eos_account(request):
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
+    print('EOS API: account deployed with token {tok} for user {usr} in network {net}'
+          .format(tok=token, usr=user, net=network))
     return Response({'id': contract.id, 'state': contract.state})
 
 
