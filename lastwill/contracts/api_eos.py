@@ -109,7 +109,7 @@ def check_auth(user_id, user_secret_key, params):
     else:
         raise ValidationError({'result': 'Authorisation Error'}, code=404)
 
-def log_userinfo(api_action, token, user=None, id=None, params=None):
+def log_userinfo(api_action, token, user=None, id=None, add_params=None):
     logger = 'EOS API: called {action} with token {tok} '\
         .format(action=api_action, tok=token)
     if user is not None:
@@ -117,6 +117,9 @@ def log_userinfo(api_action, token, user=None, id=None, params=None):
     if id is not None:
         logger += 'on contract {contract_id} '.format(contract_id=id)
     print(logger)
+    if add_params is not None:
+        print('EOS API: {action} parameters:'.format(action=api_action))
+
 
 
 @api_view(http_method_names=['POST'])
