@@ -180,7 +180,7 @@ def delete_api_token(request):
     user = request.user
     if user.is_anonymous:
         raise PermissionDenied()
-    token_str = request.date['token']
+    token_str = request.data['token']
     token = APIToken.objects.get(user=user, token=token_str)
     token.active = False
     token.save()
