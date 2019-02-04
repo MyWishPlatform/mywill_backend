@@ -162,3 +162,24 @@ def calculate_cost_eos_account_contract(request):
         'WISH': str(int(eth_cost) * convert('ETH', 'WISH')['WISH']),
         'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
     })
+
+
+@api_view(http_method_names=['POST', 'DELETE'])
+def delete_eth_token_contract(request):
+    '''
+    delete cost eos account
+    :param request: contain contract_id
+    :return: cost
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = Contract.objects.get(id=int(request.data['contract_id']))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    if contract.contract_type != 5:
+        raise ValidationError({'result': 'Wrong contract id'}, code=404)
+    contract.invisible = True
+    contract.save()
+    return Response('Contract with id {id} deleted'.format(id=contract.id))
