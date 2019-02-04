@@ -22,6 +22,7 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
+from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     deploy, get_token_contracts,
                                     ICOtokensView, get_statistics, i_am_alive,
@@ -32,7 +33,12 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_invest_balance_day, check_status,
                                     get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
                                     check_eos_accounts_exists, buy_brand_report, get_authio_cost)
-from lastwill.other.api import SentenceViewSet
+from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
+                                        show_eos_account, edit_eos_account,
+                                        calculate_cost_eos_account, calculate_cost_eos_account_contract,
+                                        delete_eos_account_contract, get_all_blockchains,
+                                        get_profile_info, get_balance_info, get_eos_contracts)
+from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
@@ -90,9 +96,28 @@ urlpatterns = [
     url(r'^api/get_eos_cost/$', get_eos_cost),
     url(r'^api/get_eos_airdrop_cost/$', get_eos_airdrop_cost),
     url(r'^api/check_eos_accounts_exists/$', check_eos_accounts_exists),
+    # url(r'^api/create_eos_token/$', create_eos_token),
+    # url(r'^api/deploy_eos_token/$', deploy_eos_token),
+    # url(r'^api/show_eos_token/$', show_eos_token),
     url(r'^api/snapshot_get_value/$', snapshot_get_value),
+    url(r'^api/create_eos_account/$', create_eos_account),
+    url(r'^api/deploy_eos_account/$', deploy_eos_account),
+    url(r'^api/show_eos_account/$', show_eos_account),
+    url(r'^api/edit_eos_account/$', edit_eos_account),
+    # url(r'^api/edit_eos_token/$', edit_eos_token),
     url(r'^api/buy_brand_report/$', buy_brand_report),
     url(r'^api/get_authio_cost/$', get_authio_cost),
+    url(r'^api/send_unblocking_feedback/$', send_unblocking_info),
+    url(r'^api/calculate_cost_eos_account/$', calculate_cost_eos_account),
+    url(r'^api/calculate_cost_eos_account_contract/$', calculate_cost_eos_account_contract),
+    url(r'^api/delete_eos_account_contract/$', delete_eos_account_contract),
+    url(r'^api/get_all_blockchains/$', get_all_blockchains),
+    url(r'^api/get_profile_info/$', get_profile_info),
+    url(r'^api/get_balance_info/$', get_balance_info),
+    url(r'^api/get_eos_contracts/$', get_eos_contracts),
+    url(r'^api/create_api_token/$', create_api_token),
+    url(r'^api/get_api_tokens/$', get_api_tokens),
+    url(r'^api/delete_api_token/$', delete_api_token),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

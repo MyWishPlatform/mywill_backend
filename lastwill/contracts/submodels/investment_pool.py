@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import NETWORKS
+from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 class InvestAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
@@ -55,7 +56,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
-    @logging
     def get_arguments(self, *args, **kwargs):
         return [
                 self.admin_address,
@@ -65,17 +65,14 @@ class ContractDetailsInvestmentPool(CommonDetails):
         ]
 
     def compile(self, _=''):
-        self.lgr.append('compile %d' % self.contract.id)
         print('investment pool contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(
             self, sour_path='lastwill/investment-pool/*',
             config_name='investment-pool-config.json'
         )
-        self.lgr.append('dest %s' % dest)
         preproc_params = {'constants': {}}
 
         preproc_params["constants"]["D_SOFT_CAP_WEI"] = str(self.soft_cap)
@@ -111,7 +108,6 @@ class ContractDetailsInvestmentPool(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self):
         return super().deploy()
 
@@ -119,7 +115,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return 0.5 * 10**18
+        return CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH']
 
     @classmethod
     def min_cost(cls):
@@ -128,7 +124,7 @@ class ContractDetailsInvestmentPool(CommonDetails):
         return cost
 
     def get_gaslimit(self):
-        return 3000000
+        return CONTRACT_GAS_LIMIT['INVESTMENT_POOL']
 
     def fundsAdded(self, message):
         invest = InvestAddress(

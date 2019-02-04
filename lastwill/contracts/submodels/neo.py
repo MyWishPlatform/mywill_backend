@@ -15,6 +15,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
+from lastwill.consts import CONTRACT_PRICE_NEO
 
 
 class NeoContract(EthContract):
@@ -51,17 +52,14 @@ class ContractDetailsNeo(CommonDetails):
     def predeploy_validate(self):
         pass
 
-    @logging
     def compile(self):
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(
             self, 'lastwill/neo-ico-contracts/*', 'token-config.json'
         )
-        self.lgr.append('dest %s' %dest)
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {
             "D_NAME": self.token_name,
@@ -85,7 +83,6 @@ class ContractDetailsNeo(CommonDetails):
             while len(amount) < 33:
                 amount.append(0)
             preproc_params["constants"]["D_PREMINT_AMOUNTS"].append(amount)
-        self.lgr.append(('prepoc params', preproc_params))
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system("/bin/bash -c 'cd {dest} && ./2_compile_token.sh'".format(dest=dest)):
@@ -119,15 +116,12 @@ class ContractDetailsNeo(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, contract_params='0710', return_type='05'):
-        self.lgr.append('compile')
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
         print('from address', from_addr)
-        self.lgr.append('from address %s' %from_addr)
         details = {
             'name': 'WISH',
             'description': 'NEO smart contract',
@@ -146,7 +140,6 @@ class ContractDetailsNeo(CommonDetails):
         }
         response = neo_int.mw_construct_deploy_tx(param_list)
         print('construct response', response, flush=True)
-        self.lgr.append(('construct response', response))
         binary_tx = response['tx']
         contract_hash = response['hash']
 
@@ -155,7 +148,6 @@ class ContractDetailsNeo(CommonDetails):
         )
         tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'], flush=True)
-        self.lgr.append(('after sign', tx.ToJson()['txid']))
         ms = StreamManager.GetStream()
         writer = BinaryWriter(ms)
         tx.Serialize(writer)
@@ -163,15 +155,12 @@ class ContractDetailsNeo(CommonDetails):
         signed_tx = ms.ToArray()
         print('full tx:', flush=True)
         print(signed_tx, flush=True)
-        # self.lgr.append(('full tx', signed_tx))
         result = neo_int.sendrawtransaction(signed_tx.decode())
         print(result, flush=True)
         if not result:
             raise TxFail()
         print('contract hash:', contract_hash)
-        self.lgr.append('contract hash: %s' %contract_hash)
         print('result of send raw transaction: ', result)
-        self.lgr.append('result of send raw transaction: %s' %result)
         self.neo_contract.address = contract_hash
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
@@ -179,9 +168,7 @@ class ContractDetailsNeo(CommonDetails):
     @blocking
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
-        self.lgr.append('msg deployed')
         neo_int = NeoInt(self.contract.network.name)
         from_addr = NETWORKS[self.contract.network.name]['address']
         param_list = {
@@ -213,7 +200,6 @@ class ContractDetailsNeo(CommonDetails):
         if not result:
             raise TxFail()
         print('result of send raw transaction: ', result)
-        self.lgr.append(('result of send raw transaction: ', result))
         self.contract.save()
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
@@ -221,7 +207,6 @@ class ContractDetailsNeo(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def initialized(self, message):
         if self.contract.state  not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
             return
@@ -241,7 +226,6 @@ class ContractDetailsNeo(CommonDetails):
                     [self.contract.user.email]
             )
 
-    @logging
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
@@ -275,18 +259,14 @@ class ContractDetailsNeoICO(CommonDetails):
 
     reused_token = models.BooleanField(default=False)
 
-    @logging
     def compile(self):
-        self.lgr.append('compile')
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
-            self.lgr.append('already compiled')
             return
         dest, preproc_config = create_directory(
             self, 'lastwill/neo-ico-contracts/*', 'crowdsale-config.json'
         )
-        self.lgr.append('dest %s ' %dest)
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {
             "D_NAME": self.token_name,
@@ -313,7 +293,6 @@ class ContractDetailsNeoICO(CommonDetails):
             while len(amount) < 33:
                 amount.append(0)
             preproc_params["constants"]["D_PREMINT_AMOUNTS"].append(amount)
-        self.lgr.append(('prepoc params', preproc_params))
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system("/bin/bash -c 'cd {dest} && ./2_compile_crowdsale.sh'".format(dest=dest)):
@@ -356,8 +335,8 @@ class ContractDetailsNeoICO(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if details.get('storage_area', False):
-            return 600
-        return 200
+            return CONTRACT_PRICE_NEO['WITH_STORAGE']
+        return CONTRACT_PRICE_NEO['NO_STORAGE']
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -366,15 +345,12 @@ class ContractDetailsNeoICO(CommonDetails):
 
     @blocking
     @postponable
-    @logging
     def deploy(self, contract_params='0710', return_type='05'):
-        self.lgr.append('deploy neo ico')
         self.compile()
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract_crowdsale.bytecode
         neo_int = NeoInt(self.contract.network.name)
         print('from address', from_addr)
-        self.lgr.append('from address %s' % from_addr)
         details = {
             'name': 'WISH',
             'description': 'NEO smart contract',
@@ -415,7 +391,6 @@ class ContractDetailsNeoICO(CommonDetails):
             raise TxFail()
         print('contract hash:', contract_hash)
         print('result of send raw transaction: ', result)
-        self.lgr.append('result of send raw transaction: %s' % result)
         self.neo_contract_crowdsale.address = contract_hash
         self.neo_contract_crowdsale.tx_hash = tx.ToJson()['txid']
         self.neo_contract_crowdsale.save()
@@ -423,7 +398,6 @@ class ContractDetailsNeoICO(CommonDetails):
     @blocking
     @postponable
     @check_transaction
-    @logging
     def msg_deployed(self, message):
         neo_int = NeoInt(self.contract.network.name)
         from_addr = NETWORKS[self.contract.network.name]['address']
@@ -463,7 +437,6 @@ class ContractDetailsNeoICO(CommonDetails):
 
     @postponable
     @check_transaction
-    @logging
     def initialized(self, message):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             return
@@ -483,7 +456,6 @@ class ContractDetailsNeoICO(CommonDetails):
                     [self.contract.user.email]
             )
 
-    @logging
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()

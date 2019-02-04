@@ -1,7 +1,10 @@
 import pyotp
+import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
+from django.core.mail import send_mail
+
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -12,8 +15,8 @@ from allauth.account.views import ConfirmEmailView
 
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import TRON_URL, MY_WISH_URL
-from lastwill.profile.models import SubSite, UserSiteBalance
+from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL
+from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 
 
 class UserConfirmEmailView(ConfirmEmailView):
@@ -41,7 +44,6 @@ def profile_view(request):
         raise PermissionDenied()
     site_name = request.META['HTTP_HOST']
     # print('site name is', site_name)
-    print('requests meta', request.META)
     if site_name.startswith('cn'):
         site_name = site_name[2:]
     if site_name.startswith('local'):
@@ -117,6 +119,7 @@ def resend_email(request):
     em.send_confirmation(request=request)
     return Response({"result": "ok"})
 
+
 @api_view(http_method_names=['POST'])
 def set_lang(request):
     user = request.user
@@ -124,4 +127,45 @@ def set_lang(request):
         raise PermissionDenied()
     user.profile.lang = request.data['lang']
     user.profile.save()
+    return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['POST'])
+def create_api_token(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    token_str = str(uuid.uuid4())
+    text = request.data['comment'] if 'comment' in request.data else ''
+    APIToken(user=user, token=token_str, comment=text).save()
+    send_mail(
+        'User create api token',
+        'User with id={id} create token for api'.format(id=user.id),
+        DEFAULT_FROM_EMAIL,
+        [SUPPORT_EMAIL]
+    )
+    return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['GET'])
+def get_api_tokens(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    answer = {"tokens":[]}
+    tokens = APIToken.objects.filter(user=user, active=True)
+    for token in tokens:
+        answer["tokens"].append(token.token)
+    return Response(answer)
+
+
+@api_view(http_method_names=['POST', 'DELETE'])
+def delete_api_token(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    token_str = request.date['token']
+    token = APIToken.objects.get(user=user, token=token_str)
+    token.active = False
+    token.save()
     return Response({"result": "ok"})
