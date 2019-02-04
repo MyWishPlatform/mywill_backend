@@ -41,7 +41,10 @@ def create_payment(uid, tx, currency, amount, site_id):
         original_delta=str(amount),
         site=site
     ).save()
-    print('payment created')
+    print('PAYMENT: Created')
+    print('PAYMENT: Received {amount} {curr} from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
+          .format(amount=value, curr=currency, email=user, user_id=uid, txid=tx, sitename=site)
+          )
 
 
 def calculate_decimals(currency, amount):
@@ -68,13 +71,18 @@ def positive_payment(user, value, site_id, currency):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
+    freeze_value = value * 0.15
+    freeze_dest = 'WISH' if site_id == 1 else 'EOSISH'
     if site_id == 1:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + value * 0.15
+            wish=F('wish') + freeze_value
         )
     else:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            eosish=F('eosish') + (value * 0.15)
+            eosish=F('eosish') + freeze_value
+        )
+    print('PAYMENT: Freezed {amount} {currency}'
+          .format(amount=freeze_value, currency=freeze_dest)
         )
 
 def negative_payment(user, value, site_id):
