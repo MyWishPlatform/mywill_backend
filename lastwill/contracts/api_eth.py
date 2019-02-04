@@ -24,8 +24,9 @@ from lastwill.consts import *
 @api_view(http_method_names=['POST'])
 def create_eth_token(request):
     '''
-    view for create eos account
-    :param request: contain account_name, owner_public_key, active_public_key, token, network_id
+    view for create eth token
+    :param request: (admin_address, token_name, decimals,
+    token_short_name, token_type, network_id)
     :return: ok
     '''
     token = request.META['HTTP_TOKEN']
@@ -79,7 +80,7 @@ def create_eth_token(request):
 @api_view(http_method_names=['GET'])
 def show_eth_token(request):
     '''
-    view for show eos account
+    view for show eth token
     :param request: contain contract id
     :return:
     '''
@@ -112,9 +113,9 @@ def show_eth_token(request):
 @api_view(http_method_names=['PUT', 'PATCH'])
 def edit_eth_token(request):
     '''
-    view for edit params in  eos account
+    view for edit params in  eth token
     :param request: contain contract id, editable field
-    (account_name, public_key, cpu, net, ram)
+    (admin_address, token_name, decimals, token_short_name, token_type)
     :return:
     '''
     token = request.META['HTTP_TOKEN']
@@ -167,7 +168,7 @@ def calculate_cost_eth_token_contract(request):
 @api_view(http_method_names=['POST', 'DELETE'])
 def delete_eth_token_contract(request):
     '''
-    delete cost eos account
+    delete eth token
     :param request: contain contract_id
     :return: cost
     '''
@@ -189,7 +190,7 @@ def delete_eth_token_contract(request):
 @api_view(http_method_names=['POST'])
 def deploy_eth_token(request):
     '''
-    view for deploy eos ac count
+    view for deploy eth token
     :param request: contain contract id
     :return:
     '''
