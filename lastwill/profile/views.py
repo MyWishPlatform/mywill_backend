@@ -175,7 +175,7 @@ def get_api_tokens(request):
     return Response(answer)
 
 
-@api_view(http_method_names=['POST', 'DELETE'])
+@api_view(http_method_names=['DELETE'])
 def delete_api_token(request):
     user = request.user
     if user.is_anonymous:
