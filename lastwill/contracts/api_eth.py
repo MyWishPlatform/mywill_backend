@@ -212,8 +212,9 @@ def deploy_eth_token(request):
             promo = request.data['promo'].upper()
             user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=MY_WISH_URL).balance
             eth_cost = check_promocode_in_api(promo, 15, user, user_balance, contract.id, eth_cost)
+            wish_cost = int(eth_cost) * convert('ETH', 'WISH')['WISH']
         if not UserSiteBalance.objects.select_for_update().filter(
-                user=user, subsite__site_name=MY_WISH_URL, balance__gte=eth_cost
+                user=user, subsite__site_name=MY_WISH_URL, balance__gte=wish_cost
         ).update(balance=F('balance') - eth_cost):
             raise ValidationError({'result': 'You have not money'}, code=400)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
