@@ -66,7 +66,7 @@ def validate_account_name(name):
 
 
 def validate_eos_account_params(cpu, net, ram):
-    if cpu > 50 or net > 50 or ram > 885 or cpu < 0 or net < 0 or ram < 0:
+    if cpu > 50 or net > 50 or ram > 40 or cpu < 0 or net < 0 or ram < 0:
         raise ValidationError({'result': 'Wrong value net, cpu or ram'},
                               code=404)
 
@@ -289,7 +289,7 @@ def edit_eos_account(request):
         else:
             contract_details.stake_cpu_value = str(request.data['stake_cpu_value'])
     if 'buy_ram_kbytes' in request.data and request.data['buy_ram_kbytes'] != '':
-        if int(request.data['buy_ram_kbytes']) > 885 or int(request.data['buy_ram_kbytes']) < 0:
+        if int(request.data['buy_ram_kbytes']) > 40 or int(request.data['buy_ram_kbytes']) < 0:
             raise ValidationError({'result': 'Wrong value of ram'}, code=404)
         else:
             contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
