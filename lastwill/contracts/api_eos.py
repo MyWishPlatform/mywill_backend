@@ -1,10 +1,5 @@
-import hashlib
-import datetime
-import hmac
-
 from django.http import JsonResponse
 from django.db.models import F
-from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework.response import Response
@@ -13,7 +8,6 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.serializers import *
 from lastwill.contracts.models import *
-from lastwill.other.models import *
 from lastwill.profile.models import *
 from lastwill.promo.models import *
 from lastwill.settings import EOSISH_URL
@@ -87,28 +81,6 @@ def calc_eos_cost(cpu, net, ram):
     eos_cost = round(
         (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
     return eos_cost
-
-
-def check_auth(user_id, user_secret_key, params):
-    user = User.objects.filter(id=user_id).first()
-    if not user:
-        raise ValidationError({'result': 'Invalid user id'}, code=404)
-    ex_service = ExternalService.objects.filter(user=user).first()
-    if not ex_service:
-        raise ValidationError({'result': 'This service is not allowed'}, code=404)
-    str_params = '?' + '&'.join([str(k) + '=' + str(v) for k, v in params.items() if k != 'secret_key'])
-    hash = hmac.new(
-        ex_service.secret.encode(),
-        (ex_service.old_hmac + str_params).encode(),
-        hashlib.sha256
-    )
-    secret_key = hash.hexdigest()
-    if secret_key == user_secret_key:
-        ex_service.old_hmac = secret_key
-        ex_service.save()
-        return True
-    else:
-        raise ValidationError({'result': 'Authorisation Error'}, code=404)
 
 
 @api_view(http_method_names=['POST'])

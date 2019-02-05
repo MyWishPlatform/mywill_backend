@@ -1,21 +1,15 @@
-import datetime
-
 from django.http import JsonResponse
 from django.db.models import F
-from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.serializers import *
 from lastwill.contracts.api_eos import *
 import lastwill.check as check
 from lastwill.contracts.models import *
-from lastwill.other.models import *
 from lastwill.profile.models import *
-from lastwill.promo.models import *
 from lastwill.settings import MY_WISH_URL
 from lastwill.deploy.models import *
 from lastwill.consts import *
