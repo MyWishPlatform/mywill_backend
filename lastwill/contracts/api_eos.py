@@ -19,6 +19,7 @@ from lastwill.promo.models import *
 from lastwill.settings import EOSISH_URL
 from lastwill.deploy.models import *
 from lastwill.consts import *
+from exchange_API import *
 
 
 def get_user_for_token(token):
@@ -108,132 +109,6 @@ def check_auth(user_id, user_secret_key, params):
         return True
     else:
         raise ValidationError({'result': 'Authorisation Error'}, code=404)
-
-
-@api_view(http_method_names=['POST'])
-def create_eos_token(request):
-    '''
-    view for create eos token
-    :param request: contain token_short_name, token_account,
-    decimals, maximum_supply, user_id
-    :return: ok
-    '''
-    user_id = int(request.data['user_id'])
-    user_secret_key = request.data['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.data)
-    network = Network.objects.get(id=10)
-    contract = Contract(
-        state='CREATED',
-        name='Contract',
-        contract_type=14,
-        network=network,
-        cost=0,
-        user_id=user_id
-    )
-    contract.save()
-    eos_contract = EOSContract(
-        address=None,
-        source_code='',
-        abi={},
-        bytecode='',
-        compiler_version=None,
-        constructor_arguments=''
-    )
-    eos_contract.save()
-    token_params = {}
-    token_params['decimals'] = int(request.data['decimals'])
-    token_params['maximum_supply'] = int(request.data['maximum_supply'])
-    token_params['token_short_name'] = request.data['token_short_name']
-    token_params['token_account'] = request.data['token_account']
-    token_params['admin_address'] = request.data['admin_address']
-    token_params['eos_contract'] = eos_contract
-    ContractDetailsEOSTokenSASerializer().create(contract, token_params)
-    return Response('ok')
-
-
-@api_view(http_method_names=['POST'])
-def deploy_eos_token(request):
-    '''
-    view for deploy eos token
-    :param request: contain contract id
-    :return:
-    '''
-    user_id = int(request.data['user_id'])
-    user_secret_key = request.data['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.data)
-    contract = Contract.objects.get(id=int(request.data.get('id')))
-    if contract.state != 'CREATED':
-        raise ValidationError({'result': 'Wrong state'}, code=404)
-    if not Profile.objects.select_for_update().filter(
-            user_id=user_id, balance__gte=20000 *10**18
-    ).update(balance=F('balance') - 20000 *10**18):
-        raise Exception('no money')
-    contract_details = contract.get_details()
-    contract_details.predeploy_validate()
-    contract.state = 'WAITING_FOR_DEPLOYMENT'
-    contract.save()
-    # add withdraw coins
-    queue = NETWORKS[contract.network.name]['queue']
-    send_in_queue(contract.id, 'launch', queue)
-    return Response('ok')
-
-
-@api_view(http_method_names=['GET'])
-def show_eos_token(request):
-    '''
-    view for show eos token
-    :param request: contain contract id
-    :return:
-    '''
-    user_id = int(request.query_params['user_id'])
-    user_secret_key = request.query_params['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.query_params)
-    contract = Contract.objects.get(id=int(request.query_params.get('id')))
-    contract_details = contract.get_details()
-    answer = {'state': contract.state, 'address': contract_details.token_account}
-    answer['decimals'] = contract_details.decimals
-    answer['admin_address'] = contract_details.admin_address
-    answer['token_short_name'] = contract_details.token_short_name
-    if contract_details.eos_contract.tx_hash:
-        answer['tx_hash'] = contract_details.eos_contract.tx_hash
-    return JsonResponse(answer)
-
-
-@api_view(http_method_names=['PUT', 'PATCH'])
-def edit_eos_token(request):
-    '''
-    view for edit params in  eos token
-    :param request: contain contract id, editable field
-    (decimals, max_supply, addresses or token_short_name)
-    :return:
-    '''
-    user_id = int(request.data['user_id'])
-    user_secret_key = request.data['secret_key']
-    if not user_secret_key:
-        raise ValidationError({'result': 'Secret key not found'}, code=404)
-    check_auth(user_id, user_secret_key, request.data)
-    contract = Contract.objects.get(id=int(request.data.get('id')))
-    if contract.state != 'CREATED':
-        raise ValidationError({'result': 2}, code=403)
-    contract_details = contract.get_details()
-    if 'decimals' in request.data:
-        contract_details.decimals = int(request.data['decimals'])
-    if 'maximum_supply' in request.data:
-        contract_details.maximum_supply = int(request.data['maximum_supply'])
-    if 'token_short_name' in request.data:
-        contract_details.token_short_name = request.data['token_short_name']
-    if 'token_account' in request.data:
-        contract_details.token_account = request.data['token_account']
-    if 'admin_address' in request.data:
-        contract_details.admin_address = request.data['admin_address']
-    contract_details.save()
-    return Response('ok')
 
 
 @api_view(http_method_names=['POST'])
@@ -332,7 +207,8 @@ def deploy_eos_account(request):
             'stake_cpu_value': contract_details.stake_cpu_value,
             'buy_ram_kbytes': contract_details.buy_ram_kbytes
         }
-        eos_cost = contract_details.calc_cost_eos(params, network)
+        eosish_cost = contract_details.calc_cost_eos(params, network)
+        eos_cost = (int(eosish_cost) * convert('EOS', 'EOSISH')['EOSISH'])
         if 'promo' in request.data:
             promo = request.data['promo'].upper()
             user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=EOSISH_URL).balance
