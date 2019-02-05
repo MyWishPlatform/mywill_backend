@@ -46,7 +46,8 @@ def create_eth_token(request):
         'token_name': request.data['token_name'],
         'token_short_name': request.data['token_short_name'],
         'admin_address': request.data['admin_address'],
-        'token_type': request.data['token_type']
+        'token_type': request.data['token_type'],
+        'token_holders': []
     }
     Contract.get_details_model(
         5
