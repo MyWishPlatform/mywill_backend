@@ -147,9 +147,10 @@ def create_eos_account(request):
         float(token_params['stake_net_value']),
         token_params['buy_ram_kbytes']
     )
+    name_contract = request.data['name'] if 'name' in request.data else 'contract'
     contract = Contract(
         state='CREATED',
-        name='Contract',
+        name=name_contract,
         contract_type=11,
         network=network,
         cost=0,
@@ -175,6 +176,7 @@ def create_eos_account(request):
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
+        'name': contract.name
     }
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
@@ -249,6 +251,7 @@ def show_eos_account(request):
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
+        'name': contract.name
     }
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
@@ -301,6 +304,9 @@ def edit_eos_account(request):
     if 'active_public_key' in request.data:
         contract_details.active_public_key = request.data['active_public_key']
     contract_details.save()
+    if 'name' in request.data and len(request.data['name']) > 0:
+        contract.name = request.data['name']
+        contract.save()
     answer = {
         'state': contract.state,
         'address': contract_details.account_name,
@@ -308,6 +314,7 @@ def edit_eos_account(request):
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
+        'name': contract.name
     }
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
@@ -480,6 +487,7 @@ def get_eos_contracts(request):
             'created_date': c.created_date,
             'network': c.network.name,
             'network_id': c.network.id,
+            'name': c.name,
             'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
