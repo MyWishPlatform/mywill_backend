@@ -66,7 +66,7 @@ def validate_account_name(name):
 
 
 def validate_eos_account_params(cpu, net, ram):
-    if cpu > 50 or net > 50 or ram > 50:
+    if cpu > 50 or net > 50 or ram > 885:
         raise ValidationError({'result': 'Wrong value net, cpu or ram'},
                               code=404)
 
@@ -272,7 +272,6 @@ def edit_eos_account(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     # params = json.loads(request.body)
-    validate_account_name(request.data['account_name'])
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
@@ -280,12 +279,22 @@ def edit_eos_account(request):
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
     if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
-        contract_details.stake_net_value = str(request.data['stake_net_value'])
+        if float(request.data['stake_net_value']) < 0 or float(request.data['stake_net_value']) > 50:
+            raise ValidationError({'result': 'Wrong value of net'}, code=404)
+        else:
+            contract_details.stake_net_value = str(request.data['stake_net_value'])
     if 'stake_cpu_value' in request.data and len(str(request.data['stake_cpu_value'])) > 0:
-        contract_details.stake_cpu_value = str(request.data['stake_cpu_value'])
+        if float(request.data['stake_cpu_value']) < 0 or float(request.data['stake_cpu_value']) > 50:
+            raise ValidationError({'result': 'Wrong value of cpu'}, code=404)
+        else:
+            contract_details.stake_cpu_value = str(request.data['stake_cpu_value'])
     if 'buy_ram_kbytes' in request.data and request.data['buy_ram_kbytes'] != '':
-        contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
+        if int(request.data['buy_ram_kbytes']) > 885 or int(request.data['buy_ram_kbytes']) < 0:
+            raise ValidationError({'result': 'Wrong value of ram'}, code=404)
+        else:
+            contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
     if 'account_name' in request.data:
+        validate_account_name(request.data['account_name'])
         contract_details.account_name = request.data['account_name']
     if 'owner_public_key' in request.data:
         contract_details.owner_public_key = request.data['owner_public_key']
@@ -458,7 +467,7 @@ def get_eos_contracts(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     if 'limit' in request.data:
-        limit = request.data['limit']
+        limit = int(request.data['limit'])
     else:
         limit = 8
     contracts = Contract.objects.filter(contract_type=11, user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'], invisible=False)
