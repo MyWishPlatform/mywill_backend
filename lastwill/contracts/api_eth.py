@@ -65,7 +65,7 @@ def create_eth_token(request):
     contract_details = ContractDetailsTokenSerializer().create(contract, token_params)
     answer = {
         'state': contract.state,
-        'admin_address': contract_details.account_name,
+        'admin_address': contract_details.admin_address,
         'token_short_name': contract_details.token_short_name,
         'token_name': contract_details.token_name,
         'id': contract.id,
