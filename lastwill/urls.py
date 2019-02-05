@@ -22,7 +22,7 @@ from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
-from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token
+from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token, delete_api_tokens
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     deploy, get_token_contracts,
                                     ICOtokensView, get_statistics, i_am_alive,
@@ -99,15 +99,11 @@ urlpatterns = [
     url(r'^api/get_eos_cost/$', get_eos_cost),
     url(r'^api/get_eos_airdrop_cost/$', get_eos_airdrop_cost),
     url(r'^api/check_eos_accounts_exists/$', check_eos_accounts_exists),
-    # url(r'^api/create_eos_token/$', create_eos_token),
-    # url(r'^api/deploy_eos_token/$', deploy_eos_token),
-    # url(r'^api/show_eos_token/$', show_eos_token),
     url(r'^api/snapshot_get_value/$', snapshot_get_value),
     url(r'^api/create_eos_account/$', create_eos_account),
     url(r'^api/deploy_eos_account/$', deploy_eos_account),
     url(r'^api/show_eos_account/$', show_eos_account),
     url(r'^api/edit_eos_account/$', edit_eos_account),
-    # url(r'^api/edit_eos_token/$', edit_eos_token),
     url(r'^api/buy_brand_report/$', buy_brand_report),
     url(r'^api/get_authio_cost/$', get_authio_cost),
     url(r'^api/send_unblocking_feedback/$', send_unblocking_info),
@@ -127,6 +123,7 @@ urlpatterns = [
     url(r'^api/deploy_eth_token/$', deploy_eth_token),
     url(r'^api/calculate_cost_eth_token/$', calculate_cost_eth_token_contract),
     url(r'^api/delete_eth_token/$', delete_eth_token_contract),
+    url(r'^api/delete_all_api_tokens/$', delete_api_tokens),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
