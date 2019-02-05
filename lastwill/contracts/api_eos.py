@@ -66,7 +66,7 @@ def validate_account_name(name):
 
 
 def validate_eos_account_params(cpu, net, ram):
-    if cpu > 50 or net > 50 or ram > 885:
+    if cpu > 50 or net > 50 or ram > 885 or cpu < 0 or net < 0 or ram < 0:
         raise ValidationError({'result': 'Wrong value net, cpu or ram'},
                               code=404)
 
