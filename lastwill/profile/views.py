@@ -136,15 +136,23 @@ def create_api_token(request):
     if user.is_anonymous:
         raise PermissionDenied()
     token_str = str(uuid.uuid4())
-    text = request.data['comment'] if 'comment' in request.data else ''
-    APIToken(user=user, token=token_str, comment=text).save()
+    text = request.data['label']
+    api_token = APIToken(user=user, token=token_str, comment=text)
+    api_token.save()
     send_mail(
         'User create api token',
         'User with id={id} create token for api'.format(id=user.id),
         DEFAULT_FROM_EMAIL,
         [SUPPORT_EMAIL]
     )
-    return Response({"result": "ok"})
+    answer = {
+        "user_id": user.id,
+        "token": api_token.token,
+        "label": api_token.comment,
+        "active": api_token.active,
+        "last_accessed": api_token.last_accessed
+    }
+    return Response(answer)
 
 
 @api_view(http_method_names=['GET'])
@@ -155,17 +163,37 @@ def get_api_tokens(request):
     answer = {"tokens":[]}
     tokens = APIToken.objects.filter(user=user, active=True)
     for token in tokens:
-        answer["tokens"].append(token.token)
+        answer["tokens"].append(
+            {
+                "user_id": user.id,
+                "token": token.token,
+                "label": token.comment,
+                "active": token.active,
+                "last_accessed": token.last_accessed
+            }
+        )
     return Response(answer)
 
 
-@api_view(http_method_names=['POST', 'DELETE'])
+@api_view(http_method_names=['DELETE'])
 def delete_api_token(request):
     user = request.user
     if user.is_anonymous:
         raise PermissionDenied()
-    token_str = request.date['token']
-    token = APIToken.objects.get(user=user, token=token_str)
-    token.active = False
-    token.save()
+    token_str = request.data['token']
+    api_token = APIToken.objects.get(user=user, token=token_str)
+    api_token.active = False
+    api_token.save()
+    return Response({"result": "ok"})
+
+
+@api_view(http_method_names=['DELETE'])
+def delete_api_tokens(request):
+    user = request.user
+    if user.is_anonymous:
+        raise PermissionDenied()
+    api_tokens = APIToken.objects.filter(user=user)
+    for token in api_tokens:
+        token.active = False
+        token.save()
     return Response({"result": "ok"})
