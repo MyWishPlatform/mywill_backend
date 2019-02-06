@@ -37,7 +37,7 @@ def check_account_name(name, network_id):
     if len(stdout) > 0:
         json.loads(stdout.decode())
         raise ValidationError({
-            'result': 'Account with this name has already been created in block'
+            'result': 'Account with this name has already been created'
         }, code=404)
 
 
