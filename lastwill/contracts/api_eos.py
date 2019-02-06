@@ -44,7 +44,7 @@ def check_account_name(name, network_id):
 def check_eos_key(key, key_type=None) :
     '''
     method check eos public key
-    :param key: eos key without <EOS>
+    :param key: eos key
     :param key_type: type of cryptografy
     :return: key if succuss else ValueError
     '''
@@ -54,13 +54,13 @@ def check_eos_key(key, key_type=None) :
     buffer = hexlify(base58.b58decode(key_string)).decode()
     chksum = buffer[-8:]
     key = buffer[:-8]
-    if key_type == 'sha256x2' :
+    if key_type == 'sha256x2':
             # legacy
         first_sha = sha256(unhexlify(key))
         newChk = sha256(unhexlify(first_sha))[:8]
-    else :
+    else:
         check = key
-        if key_type :
+        if key_type:
             check += hexlify(bytearray(key_type, 'utf-8')).decode()
         newChk = ripemd160(unhexlify(check))[:8]
     print('newChk: '+newChk)
