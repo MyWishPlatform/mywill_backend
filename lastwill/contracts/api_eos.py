@@ -16,6 +16,31 @@ from lastwill.consts import *
 from exchange_API import *
 
 
+def check_account_name(name, network_id):
+    network = Network.objects.get(id=network_id)
+    wallet_name = NETWORKS[network.name]['wallet']
+    password = NETWORKS[network.name]['eos_password']
+    unlock_eos_account(wallet_name, password)
+    if network.name == 'EOS_MAINNET':
+        eos_url = 'https://%s' % (
+            str(NETWORKS[network.name]['host']))
+    else:
+        eos_url = 'http://%s:%s' % (
+        str(NETWORKS[network.name]['host']),
+        str(NETWORKS[network.name]['port']))
+
+    command_list = [
+            'cleos', '-u', eos_url, 'get', 'account', name, '--json'
+        ]
+    proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = proc.communicate()
+    if len(stdout) > 0:
+        json.loads(stdout.decode())
+        raise ValidationError({
+            'result': 'Account with this name has already been created in block'
+        }, code=404)
+
+
 def get_user_for_token(token):
     api_token = get_object_or_404(APIToken, token=token)
     if not api_token.active:
@@ -118,6 +143,7 @@ def create_eos_account(request):
     token_params = {}
     token_params['account_name'] = request.data['account_name']
     validate_account_name(request.data['account_name'])
+    check_account_name(token_params['account_name'], int(request.data['network_id']))
     if int(request.data['network_id']) not in [10,11]:
         raise ValidationError({'result': 'Wrong network id'}, code=404)
     network = Network.objects.get(id=int(request.data['network_id']))
@@ -199,6 +225,7 @@ def deploy_eos_account(request):
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
+    check_account_name(contract_details.account_name, contract.network.id)
     contract_details.predeploy_validate()
     if contract.network.id == 10:
         network = Network.objects.get(name='EOS_MAINNET')
@@ -302,6 +329,7 @@ def edit_eos_account(request):
             contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
     if 'account_name' in request.data:
         validate_account_name(request.data['account_name'])
+        check_account_name(request.data['account_name'], int(request.data['network_id']))
         contract_details.account_name = request.data['account_name']
     if 'owner_public_key' in request.data:
         contract_details.owner_public_key = request.data['owner_public_key']
