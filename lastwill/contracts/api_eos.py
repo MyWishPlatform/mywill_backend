@@ -18,9 +18,6 @@ from exchange_API import *
 
 def check_account_name(name, network_id):
     network = Network.objects.get(id=network_id)
-    wallet_name = NETWORKS[network.name]['wallet']
-    password = NETWORKS[network.name]['eos_password']
-    unlock_eos_account(wallet_name, password)
     if network.name == 'EOS_MAINNET':
         eos_url = 'https://%s' % (
             str(NETWORKS[network.name]['host']))
