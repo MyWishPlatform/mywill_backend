@@ -110,6 +110,7 @@ def create_eos_account(request):
     user = get_user_for_token(token)
     log_action_name = 'create_eos_account'
     log_userinfo(log_action_name, token, user)
+    print('logging', flush=True)
     token_params = {}
     token_params['account_name'] = request.data['account_name']
     validate_account_name(request.data['account_name'])
