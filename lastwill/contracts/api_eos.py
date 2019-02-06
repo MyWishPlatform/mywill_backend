@@ -1,3 +1,6 @@
+from binascii import hexlify, unhexlify
+from eospy.utils import sha256, ripemd160, str_to_hex, hex_to_int
+
 from django.http import JsonResponse
 from django.db.models import F
 from django.shortcuts import get_object_or_404
@@ -36,6 +39,34 @@ def check_account_name(name, network_id):
         raise ValidationError({
             'result': 'Account with this name has already been created'
         }, code=404)
+
+
+def check_eos_key(key, key_type=None) :
+    '''
+    method check eos public key
+    :param key: eos key without <EOS>
+    :param key_type: type of cryptografy
+    :return: key if succuss else ValueError
+    '''
+    if not key.startswith('EOS'):
+        raise ValueError('EOS public key should start with "EOS"')
+    key_string = key[3:]
+    buffer = hexlify(base58.b58decode(key_string)).decode()
+    chksum = buffer[-8:]
+    key = buffer[:-8]
+    if key_type == 'sha256x2' :
+            # legacy
+        first_sha = sha256(unhexlify(key))
+        newChk = sha256(unhexlify(first_sha))[:8]
+    else :
+        check = key
+        if key_type :
+            check += hexlify(bytearray(key_type, 'utf-8')).decode()
+        newChk = ripemd160(unhexlify(check))[:8]
+    print('newChk: '+newChk)
+    if chksum != newChk :
+        raise ValueError('Checksums do not match: {0} != {1} in your public key'.format(chksum, newChk))
+    return key
 
 
 def get_user_for_token(token):
@@ -145,7 +176,9 @@ def create_eos_account(request):
         raise ValidationError({'result': 'Wrong network id'}, code=404)
     network = Network.objects.get(id=int(request.data['network_id']))
     token_params['owner_public_key'] = request.data['owner_public_key']
+    check_eos_key(request.data['owner_public_key'])
     token_params['active_public_key'] = request.data['active_public_key']
+    check_eos_key(request.data['active_public_key'])
     if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
         token_params['stake_net_value'] = str(request.data['stake_net_value'])
     else:
@@ -329,8 +362,10 @@ def edit_eos_account(request):
         check_account_name(request.data['account_name'], int(request.data['network_id']))
         contract_details.account_name = request.data['account_name']
     if 'owner_public_key' in request.data:
+        check_eos_key(request.data['owner_public_key'])
         contract_details.owner_public_key = request.data['owner_public_key']
     if 'active_public_key' in request.data:
+        check_eos_key(request.data['active_public_key'])
         contract_details.active_public_key = request.data['active_public_key']
     log_additions(log_action_name, request.data)
     contract_details.save()
