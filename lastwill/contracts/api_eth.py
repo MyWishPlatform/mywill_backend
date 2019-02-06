@@ -241,6 +241,6 @@ def get_source_code_eth_token(request):
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
     answer = {
-        'source_code': contract_details.eth_contract_token_source_code,
+        'source_code': contract_details.eth_contract_token.source_code,
     }
     return JsonResponse(answer)
