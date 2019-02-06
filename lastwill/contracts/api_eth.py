@@ -216,3 +216,31 @@ def deploy_eth_token(request):
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
     return Response({'id': contract.id, 'state': contract.state})
+
+
+@api_view(http_method_names=['GET'])
+def get_source_code_eth_token(request):
+    '''
+    view for show source code of eth token
+    :param request: contain contract id
+    :return:
+    '''
+    # token = request.data['token']
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise ValidationError({'result': 'Source code not available for testnet'}, code=404)
+    if contract.state not in ['ACTIVE', 'DONE']:
+        raise ValidationError({'result': 'Source code not available for this state of contract'}, code=404)
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    contract_details = contract.get_details()
+    answer = {
+        'source_code': contract_details.eth_contract_token_source_code,
+    }
+    return JsonResponse(answer)
