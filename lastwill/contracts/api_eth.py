@@ -62,7 +62,7 @@ def create_eth_token(request):
         'admin_address': contract_details.admin_address,
         'token_short_name': contract_details.token_short_name,
         'token_name': contract_details.token_name,
-        'id': contract.id,
+        'contract_id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
@@ -92,7 +92,7 @@ def show_eth_token(request):
     contract_details = contract.get_details()
     answer = {
         'state': contract.state,
-        'id': contract.id,
+        'contract_id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
@@ -144,7 +144,7 @@ def edit_eth_token(request):
     contract_details.save()
     answer = {
         'state': contract.state,
-        'id': contract.id,
+        'contract_id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
