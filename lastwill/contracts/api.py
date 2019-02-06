@@ -33,6 +33,7 @@ from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo, Promo2ContractType
 from lastwill.promo.api import check_and_get_discount
 from lastwill.profile.models import *
+from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
