@@ -144,7 +144,7 @@ def create_eos_account(request):
     answer = {
         'state': contract.state,
         'address': contract_details.account_name,
-        'id': contract.id,
+        'contract_id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
@@ -219,7 +219,7 @@ def show_eos_account(request):
     answer = {
         'state': contract.state,
         'address': contract_details.account_name,
-        'id': contract.id,
+        'contract_id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
@@ -282,7 +282,7 @@ def edit_eos_account(request):
     answer = {
         'state': contract.state,
         'address': contract_details.account_name,
-        'id': contract.id,
+        'contract_id': contract.id,
         'created_date': contract.created_date,
         'network': contract.network.name,
         'network_id': contract.network.id,
@@ -454,7 +454,7 @@ def get_eos_contracts(request):
     answer = {'contracts': []}
     for c in contracts:
         contract_info = {
-            'id': c.id,
+            'contract_id': c.id,
             'state': c.state,
             'created_date': c.created_date,
             'network': c.network.name,
