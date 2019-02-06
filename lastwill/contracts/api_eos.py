@@ -84,16 +84,20 @@ def calc_eos_cost(cpu, net, ram):
 
 
 def log_userinfo(api_action, token, user=None, id=None):
-    logger = 'EOS API: called {action} with token {tok} '\
-        .format(action=api_action, tok=token)
+    logger = ('EOS API: called {action} with token {tok} ').format(
+        action=api_action, tok=token
+    )
     if user is not None:
         logger += 'for user {usr} '.format(usr=user)
     if id is not None:
         logger += 'on contract {contract_id} '.format(contract_id=id)
     print(logger, flush=True)
 
+
 def log_additions(api_action, add_params):
-    logger = 'EOS API: {action} parameters: {params}'.format(action=api_action, params=add_params)
+    logger = 'EOS API: {action} parameters: {params}'.format(
+        action=api_action, params=add_params
+    )
     print(logger, flush=True)
 
 
@@ -194,7 +198,7 @@ def deploy_eos_account(request):
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
-    log_additions(log_action_name, contract_details)
+    log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()
     if contract.network.id == 10:
         network = Network.objects.get(name='EOS_MAINNET')
@@ -241,7 +245,7 @@ def show_eos_account(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    log_additions(log_action_name, contract_details)
+    log_additions(log_action_name, {'contract_id': int(request.data['contract_id'])})
     answer = {
         'state': contract.state,
         'address': contract_details.account_name,
@@ -303,7 +307,7 @@ def edit_eos_account(request):
         contract_details.owner_public_key = request.data['owner_public_key']
     if 'active_public_key' in request.data:
         contract_details.active_public_key = request.data['active_public_key']
-    log_additions(log_action_name, contract_details)
+    log_additions(log_action_name, request.data)
     contract_details.save()
     if 'name' in request.data and len(request.data['name']) > 0:
         contract.name = request.data['name']

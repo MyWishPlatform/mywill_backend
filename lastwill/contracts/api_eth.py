@@ -15,6 +15,24 @@ from lastwill.deploy.models import *
 from lastwill.consts import *
 
 
+def log_userinfo(api_action, token, user=None, id=None):
+    logger = ('ETH API: called {action} with token {tok} ').format(
+        action=api_action, tok=token
+    )
+    if user is not None:
+        logger += 'for user {usr} '.format(usr=user)
+    if id is not None:
+        logger += 'on contract {contract_id} '.format(contract_id=id)
+    print(logger, flush=True)
+
+
+def log_additions(api_action, add_params):
+    logger = 'ETH API: {action} parameters: {params}'.format(
+        action=api_action, params=add_params
+    )
+    print(logger, flush=True)
+
+
 @api_view(http_method_names=['POST'])
 def create_eth_token(request):
     '''
@@ -29,6 +47,8 @@ def create_eth_token(request):
     user = get_user_for_token(token)
     if int(request.data['network_id']) not in [1, 2]:
         raise ValidationError({'result': 'Wrong network id'}, code=404)
+    log_action_name = 'create_eth_token'
+    log_userinfo(log_action_name, token, user)
     network = Network.objects.get(id=int(request.data['network_id']))
     check.is_address(request.data['admin_address'])
     if int(request.data['decimals']) < 0 or int(request.data['decimals']) > 50:
@@ -43,6 +63,7 @@ def create_eth_token(request):
         'token_type': request.data['token_type'],
         'token_holders': []
     }
+    log_additions(log_action_name, token_params)
     Contract.get_details_model(
         5
     ).calc_cost(token_params, network)
@@ -84,6 +105,8 @@ def show_eth_token(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    log_action_name = 'show_eth_token'
+    log_userinfo(log_action_name, token, user)
     contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
@@ -102,6 +125,7 @@ def show_eth_token(request):
         'decimals': contract_details.decimals,
         'token_type': contract_details.token_type
     }
+    log_additions(log_action_name, {'contract_id': int(request.data['contract_id'])})
     if contract_details.eth_contract_token and contract_details.eth_contract_token.tx_hash:
         answer['tx_hash'] = contract_details.eth_contract_token.tx_hash
     if contract_details.eth_contract_token and contract_details.eth_contract_token.address:
@@ -124,6 +148,8 @@ def edit_eth_token(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    log_action_name = 'edit_eth_token'
+    log_userinfo(log_action_name, token, user)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
@@ -141,6 +167,7 @@ def edit_eth_token(request):
         contract_details.admin_address = request.data['admin_address']
     if 'token_name' in request.data and request.data['token_name'] != '':
         contract_details.token_name = request.data['token_name']
+    log_additions(log_action_name, request.data)
     contract_details.save()
     answer = {
         'state': contract.state,
@@ -160,6 +187,11 @@ def edit_eth_token(request):
 @api_view(http_method_names=['GET'])
 def calculate_cost_eth_token_contract(request):
     eth_cost = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    get_user_for_token(token)
+    log_userinfo('calculate_cost_eos_account', token)
     return Response({
         'ETH': str(int(eth_cost)),
         'WISH': str(int(eth_cost) * convert('ETH', 'WISH')['WISH']),
@@ -179,6 +211,7 @@ def delete_eth_token_contract(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
+    log_userinfo('delete_cost_eos_account_contract', token, user, int(request.data['contract_id']))
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     if contract.contract_type != 5:
@@ -201,11 +234,15 @@ def deploy_eth_token(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    log_action_name = 'deploy_eth_token'
+    contract_id = int(request.data.get('contract_id'))
+    log_userinfo(log_action_name, token, user, contract_id)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
+    log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()
     if contract.network.id == 1:
         eth_cost = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
@@ -238,6 +275,8 @@ def get_source_code_eth_token(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
+    log_action_name = 'get_source_code_eth_token'
+    log_userinfo(log_action_name, token, int(request.data['contract_id']))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.network.name != 'ETHEREUM_MAINNET':
