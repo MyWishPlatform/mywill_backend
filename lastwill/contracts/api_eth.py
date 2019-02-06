@@ -104,6 +104,11 @@ def show_eth_token(request):
     }
     if contract_details.eth_contract_token and contract_details.eth_contract_token.tx_hash:
         answer['tx_hash'] = contract_details.eth_contract_token.tx_hash
+    if contract_details.eth_contract_token and contract_details.eth_contract_token.address:
+        answer['contract_address'] = contract_details.eth_contract_token.address
+    if contract_details.eth_contract_token and contract_details.eth_contract_token.compiler_version:
+        answer['compiler_version'] = contract_details.eth_contract_token.compiler_version
+        answer['name_contract'] = 'MainToken'
     return JsonResponse(answer)
 
 
