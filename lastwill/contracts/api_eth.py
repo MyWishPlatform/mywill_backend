@@ -102,6 +102,8 @@ def show_eth_token(request):
         'decimals': contract_details.decimals,
         'token_type': contract_details.token_type
     }
+    if contract_details.eth_contract_token and contract_details.eth_contract_token.tx_hash:
+        answer['tx_hash'] = contract_details.eth_contract_token.tx_hash
     return JsonResponse(answer)
 
 
