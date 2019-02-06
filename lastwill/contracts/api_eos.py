@@ -110,17 +110,18 @@ def check_auth(user_id, user_secret_key, params):
     else:
         raise ValidationError({'result': 'Authorisation Error'}, code=404)
 
-def log_userinfo(api_action, token, user=None, id=None, add_params=None):
+def log_userinfo(api_action, token, user=None, id=None):
     logger = 'EOS API: called {action} with token {tok} '\
         .format(action=api_action, tok=token)
     if user is not None:
         logger += 'for user {usr} '.format(usr=user)
     if id is not None:
         logger += 'on contract {contract_id} '.format(contract_id=id)
-    print(logger)
-    if add_params is not None:
-        print('EOS API: {action} parameters:'.format(action=api_action))
+    print(logger, flush=True)
 
+def log_additions(api_action, add_params):
+    logger = 'EOS API: {action} parameters: {params}'.format(action=api_action, params=add_params)
+    print(logger, flush=True)
 
 
 @api_view(http_method_names=['POST'])
@@ -134,6 +135,8 @@ def create_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    log_action_name = 'create_eos_account'
+    log_userinfo(log_action_name, token, user)
     token_params = {}
     token_params['account_name'] = request.data['account_name']
     validate_account_name(request.data['account_name'])
@@ -154,6 +157,7 @@ def create_eos_account(request):
         token_params['buy_ram_kbytes'] = int(request.data['buy_ram_kbytes'])
     else:
         token_params['buy_ram_kbytes'] = 4
+    log_additions(log_action_name, token_params)
     validate_eos_account_params(
         float(token_params['stake_cpu_value']),
         float(token_params['stake_net_value']),
@@ -193,7 +197,6 @@ def create_eos_account(request):
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
-    log_userinfo('create_eos_account', token, user)
     return Response(answer)
 
 
@@ -208,12 +211,16 @@ def deploy_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    log_action_name = 'deploy_eos_account'
+    contract_id = int(request.data.get('contract_id'))
+    log_userinfo(log_action_name, token, user, contract_id)
+    contract = Contract.objects.get(id=contract_id)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
+    log_additions(log_action_name, contract_details)
     contract_details.predeploy_validate()
     if contract.network.id == 10:
         network = Network.objects.get(name='EOS_MAINNET')
@@ -236,7 +243,6 @@ def deploy_eos_account(request):
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
-    log_userinfo('deploy_eos_account', token, user)
     return Response({'id': contract.id, 'state': contract.state})
 
 
@@ -252,12 +258,16 @@ def show_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
+    log_action_name = 'show_eos_account'
+    contract_id = int(request.data['contract_id'])
+    log_userinfo(log_action_name, token, user, contract_id)
+    contract = get_object_or_404(Contract, id=contract_id)
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
+    log_additions(log_action_name, contract_details)
     answer = {
         'state': contract.state,
         'address': contract_details.account_name,
@@ -273,7 +283,6 @@ def show_eos_account(request):
     if contract_details.eos_contract:
         if contract_details.eos_contract.tx_hash:
             answer['tx_hash'] = contract_details.eos_contract.tx_hash
-    log_userinfo('show_eos_account', token, user)
     return JsonResponse(answer)
 
 
@@ -289,6 +298,8 @@ def edit_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    log_action_name = 'edit_eos_account'
+    log_userinfo(log_action_name, token, user)
     # params = json.loads(request.body)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     if contract.state != 'CREATED':
@@ -318,6 +329,7 @@ def edit_eos_account(request):
         contract_details.owner_public_key = request.data['owner_public_key']
     if 'active_public_key' in request.data:
         contract_details.active_public_key = request.data['active_public_key']
+    log_additions(log_action_name, contract_details)
     contract_details.save()
     if 'name' in request.data and len(request.data['name']) > 0:
         contract.name = request.data['name']
@@ -334,7 +346,6 @@ def edit_eos_account(request):
     answer['net'] = contract_details.stake_net_value
     answer['cpu'] = contract_details.stake_cpu_value
     answer['ram'] = contract_details.buy_ram_kbytes
-    log_userinfo('edit_eos_account', token, user)
     return Response(answer)
 
 
@@ -350,13 +361,13 @@ def calculate_cost_eos_account(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
+    log_userinfo('calculate_cost_eos_account', token)
     print('data in request', request.data, flush=True)
     ram = request.data['buy_ram_kbytes']
     net = request.data['stake_net_value']
     cpu = request.data['stake_cpu_value']
     eos_cost = calc_eos_cost(cpu, net, ram)
     print('eos cost', eos_cost, flush=True)
-    log_userinfo('calculate_cost_eos_account', token)
 
     return JsonResponse({
         'EOS': str(eos_cost),
@@ -378,7 +389,10 @@ def calculate_cost_eos_account_contract(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.data['contract_id']))
+    contract_id = int(request.data['contract_id'])
+    log_action_name = 'calculate_cost_eos_account_contract'
+    log_userinfo(log_action_name, token, user, contract_id)
+    contract = Contract.objects.get(id=contract_id)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     if contract.contract_type != 11:
@@ -386,6 +400,7 @@ def calculate_cost_eos_account_contract(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     details = contract.get_details()
+    log_additions(log_action_name, details)
     network = Network.objects.get(name='EOS_MAINNET')
     params = {
         'stake_net_value': details.stake_net_value,
@@ -394,7 +409,6 @@ def calculate_cost_eos_account_contract(request):
     }
     eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network) /10 ** 4
     print('eos cost', eos_cost, flush=True)
-    log_userinfo('calculate_cost_eos_account', token)
 
     return JsonResponse({
         'EOS': str(eos_cost),
@@ -416,12 +430,13 @@ def delete_eos_account_contract(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
-    contract = Contract.objects.get(id=int(request.data['contract_id']))
+    contract_id = int(request.data['contract_id'])
+    log_userinfo('delete_cost_eos_account_contract', token, user, contract_id)
+    contract = Contract.objects.get(id=contract_id)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract.invisible = True
     contract.save()
-    log_userinfo('delete_eos_contract', token, user)
     return Response('Contract with id {id} deleted'.format(id=contract.id))
 
 
@@ -433,6 +448,7 @@ def get_all_blockchains(request):
     :return: json with blockchain id and name
     '''
     token = request.META['HTTP_TOKEN']
+    log_userinfo('get_all_blockchain', token)
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     get_user_for_token(token)
@@ -440,7 +456,6 @@ def get_all_blockchains(request):
     answer = []
     for net in nets:
         answer.append({'id': net.id, 'blockchain_name': API_NETWORK[net.name]})
-    log_userinfo('get_all_blockchain', token)
     return JsonResponse({'networks': answer})
 
 
@@ -455,6 +470,7 @@ def get_profile_info(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    log_userinfo('get_profile_info', token, user)
     answer = {
         'username': user.email if user.email else '{} {}'.format(
             user.first_name, user.last_name),
@@ -477,10 +493,12 @@ def get_balance_info(request):
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
+    log_action_name = 'get_profile_info'
+    log_userinfo(log_action_name, token, user)
     network_id = request.data['network_id']
     net = Network.objects.get(id=network_id)
+    log_additions(log_action_name, network_id)
     balance = UserSiteBalance.objects.get(user=user, subsite__id = NETWORK_SUBSITE[net.name]).balance
-    print('get_balance_info', token, user)
     return JsonResponse({'balance': balance})
 
 
@@ -492,6 +510,8 @@ def get_eos_contracts(request):
     :return: balance
     '''
     token = request.META['HTTP_TOKEN']
+    log_action_name = 'get_eos_contracts'
+    log_userinfo(log_action_name, token)
     if not token:
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
@@ -499,6 +519,7 @@ def get_eos_contracts(request):
         limit = int(request.data['limit'])
     else:
         limit = 8
+    log_additions(log_action_name, limit)
     contracts = Contract.objects.filter(contract_type=11, user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'], invisible=False)
     contracts = contracts.order_by('-created_date')[0:limit]
     answer = {'contracts': []}
