@@ -235,7 +235,7 @@ def get_source_code_eth_token(request):
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise ValidationError({'result': 'Source code not available for testnet'}, code=404)
-    if contract.state not in ['ACTIVE', 'DONE']:
+    if contract.state not in ['ACTIVE', 'DONE', 'ENDED']:
         raise ValidationError({'result': 'Source code not available for this state of contract'}, code=404)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
