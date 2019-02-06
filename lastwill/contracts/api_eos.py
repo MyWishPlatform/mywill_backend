@@ -116,11 +116,11 @@ def log_userinfo(api_action, token, user=None, id=None):
         logger += 'for user {usr} '.format(usr=user)
     if id is not None:
         logger += 'on contract {contract_id} '.format(contract_id=id)
-    print(logger)
+    print(logger, flush=True)
 
 def log_additions(api_action, add_params):
     logger = 'EOS API: {action} parameters: {params}'.format(action=api_action, params=add_params)
-    print(logger)
+    print(logger, flush=True)
 
 
 @api_view(http_method_names=['POST'])
