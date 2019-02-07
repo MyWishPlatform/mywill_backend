@@ -251,10 +251,10 @@ def deploy_eos_account(request):
     contract = Contract.objects.get(id=contract_id)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
-    if contract.state != 'CREATED':
-        raise ValidationError({'result': 'Wrong state'}, code=404)
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
+    if contract.state != 'CREATED':
+        raise ValidationError({'result': 'Wrong state'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
     check_account_name(contract_details.account_name, contract.network.id)
