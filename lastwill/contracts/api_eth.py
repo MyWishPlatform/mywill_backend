@@ -174,12 +174,12 @@ def edit_eth_token(request):
     log_action_name = 'edit_eth_token'
     log_userinfo(log_action_name, token, user)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
-    if contract.invisible:
-        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     contract_details = contract.get_details()
     if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
         contract_details.decimals = int(request.data['decimals'])

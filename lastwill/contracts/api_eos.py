@@ -339,12 +339,12 @@ def edit_eos_account(request):
     log_userinfo(log_action_name, token, user)
     # params = json.loads(request.body)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
-    if contract.invisible:
-        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     contract_details = contract.get_details()
     if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
         if float(request.data['stake_net_value']) < 0 or float(request.data['stake_net_value']) > 50:
