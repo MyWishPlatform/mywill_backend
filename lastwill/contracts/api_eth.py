@@ -33,6 +33,27 @@ def log_additions(api_action, add_params):
     print(logger, flush=True)
 
 
+def validate_token_short_name(name):
+    if len(name) > 64:
+        raise ValidationError({'result': 'Too long token short name'},
+                              code=404)
+    if len(name) == 0:
+        raise ValidationError({'result': 'Empty token short name'},
+                              code=404)
+    for symb in name:
+        if not symb.isupper():
+            raise ValidationError({'result': 'Lower symbol in token short name'}, code=404)
+
+
+def validate_token_name(name):
+    if len(name) == 0:
+        raise ValidationError({'result': 'Empty token name'},
+                              code=404)
+    if len(name) > 512:
+        raise ValidationError({'result': 'Too long token name'},
+                              code=404)
+
+
 @api_view(http_method_names=['POST'])
 def create_eth_token(request):
     '''
@@ -53,8 +74,10 @@ def create_eth_token(request):
     check.is_address(request.data['admin_address'])
     if int(request.data['decimals']) < 0 or int(request.data['decimals']) > 50:
         raise ValidationError({'result': 'Wrong decimals'}, code=404)
-    if request.data['token_type'] not in ['ERC20', 'ERC23']:
+    if request.data['token_type'] not in ['ERC20', 'ERC223']:
         raise ValidationError({'result': 'Wrong token type'}, code=404)
+    validate_token_name(request.data['token_name'])
+    validate_token_short_name(request.data['token_short_name'])
     token_params = {
         'decimals': int(request.data['decimals']),
         'token_name': request.data['token_name'],
@@ -158,14 +181,16 @@ def edit_eth_token(request):
     contract_details = contract.get_details()
     if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
         contract_details.decimals = int(request.data['decimals'])
-    if 'token_type' in request.data and request.data['token_type'] in ['ERC20', 'ERC23']:
+    if 'token_type' in request.data and request.data['token_type'] in ['ERC20', 'ERC223']:
         contract_details.token_type = request.data['token_type']
     if 'token_short_name' in request.data and request.data['token_short_name'] != '':
-        contract_details.token_short_name = request.data['token_short_name'].upper()
+        validate_token_short_name(request.data['token_short_name'])
+        contract_details.token_short_name = request.data['token_short_name']
     if 'admin_address' in request.data:
         check.is_address(request.data['admin_address'])
         contract_details.admin_address = request.data['admin_address']
     if 'token_name' in request.data and request.data['token_name'] != '':
+        validate_token_name(request.data['token_name'])
         contract_details.token_name = request.data['token_name']
     log_additions(log_action_name, request.data)
     contract_details.save()
