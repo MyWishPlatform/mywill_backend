@@ -178,6 +178,8 @@ def edit_eth_token(request):
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     contract_details = contract.get_details()
     if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
         contract_details.decimals = int(request.data['decimals'])
@@ -266,6 +268,8 @@ def deploy_eth_token(request):
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()

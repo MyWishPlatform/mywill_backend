@@ -253,6 +253,8 @@ def deploy_eos_account(request):
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong state'}, code=404)
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
     check_account_name(contract_details.account_name, contract.network.id)
@@ -341,6 +343,8 @@ def edit_eos_account(request):
         raise ValidationError({'result': 'Wrong status in contract'}, code=403)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     contract_details = contract.get_details()
     if 'stake_net_value' in request.data and len(str(request.data['stake_net_value'])) > 0:
         if float(request.data['stake_net_value']) < 0 or float(request.data['stake_net_value']) > 50:
@@ -437,6 +441,8 @@ def calculate_cost_eos_account_contract(request):
         raise ValidationError({'result': 'Wrong contract_type'}, code=404)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
     details = contract.get_details()
     log_additions(log_action_name, details)
     network = Network.objects.get(name='EOS_MAINNET')
