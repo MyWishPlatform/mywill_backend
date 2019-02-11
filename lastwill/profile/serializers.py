@@ -79,10 +79,10 @@ def init_profile(user, is_social=False, lang='en'):
 
     btc_address1 = wish_key.ChildKey(user.id).Address()
     btc_address2 = eosish_key.ChildKey(user.id).Address()
-    btc_address3 = wish_key.ChildKey(user.id).Address()
+    btc_address3 = tron_key.ChildKey(user.id).Address()
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
-    eth_address3 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
+    eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
     Profile(user=user, is_social=is_social, lang=lang).save()
     create_wish_balance(user, eth_address1, btc_address1, memo_str1)
