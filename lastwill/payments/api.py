@@ -17,12 +17,16 @@ def create_payment(uid, tx, currency, amount, site_id):
     if amount == 0.0:
         return
     print('create payment')
-    if SubSite.objects.get(id=site_id).site_name in (MY_WISH_URL, TRON_URL):
+    if SubSite.objects.get(id=site_id).site_name == MY_WISH_URL:
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
+    elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
+        value = amount if currency == 'TRONISH' else amount * convert(
+            currency / NET_DECIMALS[currency], 'TRON'
+        )['TRON'] * NET_DECIMALS['TRON']
     else:
         amount = calculate_decimals(currency, amount)
         value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']

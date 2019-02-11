@@ -85,7 +85,9 @@ NET_DECIMALS = {
     'WISH': 10 ** 18,
     'EOSISH': 10 ** 4,
     'BNB': 10 ** 18,
-    'BTC': 10 ** 8
+    'BTC': 10 ** 8,
+    'TRON': 10 ** 6,
+    'TRONISH': 10 ** 6
 }
 
 URL_STATS_CURRENCY_BODY = 'https://api.coinmarketcap.com/v1/ticker/'
