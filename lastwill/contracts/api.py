@@ -82,7 +82,6 @@ class ContractViewSet(ModelViewSet):
 
     def get_queryset(self):
         result = self.queryset.order_by('-created_date')
-        eos = self.request.query_params.get('eos', None)
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
