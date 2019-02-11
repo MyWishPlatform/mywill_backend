@@ -89,7 +89,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['ETH'])
+        result = int(25000 * NET_DECIMALS['TRONISH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -253,7 +253,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['ETH'])
+        result = int(2500 * NET_DECIMALS['TRONISH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -411,7 +411,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * 10 ** 18)
+        result = int(2500 * NET_DECIMALS['TRONISH'])
         return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
