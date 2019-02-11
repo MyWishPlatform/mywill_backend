@@ -49,8 +49,8 @@ def profile_view(request):
     if site_name.startswith('local'):
         print('cut local')
         site_name = site_name[5:]
-    if site_name == TRON_URL:
-        site_name = MY_WISH_URL
+    # if site_name == TRON_URL:
+    #     site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
     print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
@@ -65,7 +65,8 @@ def profile_view(request):
             'id': request.user.id,
             'lang': request.user.profile.lang,
             'memo': user_balance.memo,
-            'eos_address': 'mywishcoming'
+            'eos_address': 'mywishcoming',
+            'tron_address': user_balance.tron_address if user_balance.tron_address else ''
     }
     return Response(answer)
 
