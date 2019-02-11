@@ -24,7 +24,7 @@ def create_payment(uid, tx, currency, amount, site_id):
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
     elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
-        value = amount if currency == 'TRONISH' else amount * convert(
+        value = amount if currency in ('TRONISH', 'TRON') else amount * convert(
             currency / NET_DECIMALS[currency], 'TRON'
         )['TRON'] * NET_DECIMALS['TRON']
     else:
