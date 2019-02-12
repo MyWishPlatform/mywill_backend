@@ -17,6 +17,7 @@ from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
 from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
+from tron_wif.hex2wif import hex2tronwif
 
 
 class UserConfirmEmailView(ConfirmEmailView):
@@ -66,7 +67,7 @@ def profile_view(request):
             'lang': request.user.profile.lang,
             'memo': user_balance.memo,
             'eos_address': 'mywishcoming',
-            'tron_address': user_balance.tron_address if user_balance.tron_address else ''
+            'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else ''
     }
     return Response(answer)
 
