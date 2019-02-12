@@ -199,7 +199,7 @@ def deploy(request):
             contract.contract_type
         )().to_representation(contract_details)
         cost = contract_details.calc_cost(kwargs, contract.network)
-        currency = 'TRON'
+        currency = 'TRX'
         site_id = 3
     promo_str = request.data.get('promo', None)
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
