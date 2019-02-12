@@ -41,9 +41,8 @@ def freeze_eosish(amount):
     wallet_name = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['wallet']
     password = NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['eos_password']
     unlock_eos_account(wallet_name, password)
-    eos_url = 'http://%s:%s' % (
-      str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['host']),
-      str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['port']))
+    eos_url = 'https://%s' % (
+      str(NETWORKS[NETWORK_SIGN_TRANSACTION_EOSISH]['host']))
     amount_with_decimals = (
             str(amount)[0:len(str(amount))-4]
             + '.0000'
