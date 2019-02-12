@@ -8,4 +8,4 @@ def hex2tronwif(hexstr):
     if response.exitcode == 0:
         return response.stdout.decode().strip()
     else:
-        sys.stderr.write(response.stderr)
+        sys.stderr.write(response.stderr.decode().strip())
