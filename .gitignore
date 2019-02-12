@@ -34,4 +34,4 @@ lastwill/contracts/submodels/common.py.save
 slogger.py
 templates/wstest.html
 ws_test.py
-
+node_modules/
