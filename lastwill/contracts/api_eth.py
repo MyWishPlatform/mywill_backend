@@ -269,7 +269,7 @@ def deploy_eth_token(request):
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.state != 'CREATED':
-        raise ValidationError({'result': 'Wrong state'}, code=404)
+        raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()
