@@ -42,7 +42,7 @@ def validate_token_short_name(name):
                               code=404)
     for symb in name:
         if not symb.isupper():
-            raise ValidationError({'result': 'Lower symbol in token short name'}, code=404)
+            raise ValidationError({'result': 'Wrong symbol in token short name'}, code=404)
 
 
 def validate_token_name(name):
