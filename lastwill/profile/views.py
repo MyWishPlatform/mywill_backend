@@ -141,7 +141,9 @@ def create_api_token(request):
     api_token.save()
     send_mail(
         'User create api token',
-        'User with id={id} create token for api'.format(id=user.id),
+        'User with id={id} {email_info} create token for api'.format(
+            id=user.id, email_info='email is {email}'.format(email=user.email)
+        ),
         DEFAULT_FROM_EMAIL,
         [SUPPORT_EMAIL]
     )
