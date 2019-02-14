@@ -181,11 +181,15 @@ def edit_eth_token(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
+    if 'decimals' in request.data:
+        if int(request.data['decimals']) < 0 and int(request.data['decimals']) > 50:
+            raise ValidationError({'result': 'Wrong decimals'}, code=404)
         contract_details.decimals = int(request.data['decimals'])
-    if 'token_type' in request.data and request.data['token_type'] in ['ERC20', 'ERC223']:
+    if 'token_type' in request.data:
+        if request.data['token_type'] not in ['ERC20', 'ERC223']:
+            raise ValidationError({'result': 'Wrong token type'}, code=404)
         contract_details.token_type = request.data['token_type']
-    if 'token_short_name' in request.data and request.data['token_short_name'] != '':
+    if 'token_short_name' in request.data:
         validate_token_short_name(request.data['token_short_name'])
         contract_details.token_short_name = request.data['token_short_name']
     if 'admin_address' in request.data:
