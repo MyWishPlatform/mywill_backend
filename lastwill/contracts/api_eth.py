@@ -42,7 +42,7 @@ def validate_token_short_name(name):
                               code=404)
     for symb in name:
         if not symb.isupper():
-            raise ValidationError({'result': 'Lower symbol in token short name'}, code=404)
+            raise ValidationError({'result': 'Wrong symbol in token short name'}, code=404)
 
 
 def validate_token_name(name):
@@ -181,11 +181,18 @@ def edit_eth_token(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
+    fields = ('decimals', 'token_type', 'token_short_name', 'admin_address', 'token_name')
+    if not any([key in request.data.keys() for key in fields]):
+        raise ValueError("Optional parameters (at least one)")
+    if 'decimals' in request.data:
+        if int(request.data['decimals']) < 0 and int(request.data['decimals']) > 50:
+            raise ValidationError({'result': 'Wrong decimals'}, code=404)
         contract_details.decimals = int(request.data['decimals'])
-    if 'token_type' in request.data and request.data['token_type'] in ['ERC20', 'ERC223']:
+    if 'token_type' in request.data:
+        if request.data['token_type'] not in ['ERC20', 'ERC223']:
+            raise ValidationError({'result': 'Wrong token type'}, code=404)
         contract_details.token_type = request.data['token_type']
-    if 'token_short_name' in request.data and request.data['token_short_name'] != '':
+    if 'token_short_name' in request.data:
         validate_token_short_name(request.data['token_short_name'])
         contract_details.token_short_name = request.data['token_short_name']
     if 'admin_address' in request.data:
@@ -269,7 +276,7 @@ def deploy_eth_token(request):
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.state != 'CREATED':
-        raise ValidationError({'result': 'Wrong state'}, code=404)
+        raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()
