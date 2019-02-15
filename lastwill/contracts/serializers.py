@@ -1259,3 +1259,15 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
 #            'transfer_threshold_wei',
 #            'transfer_delay_seconds'
         )
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
