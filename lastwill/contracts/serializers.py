@@ -27,7 +27,8 @@ from lastwill.contracts.models import (
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
-        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop
+        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
+        ContractDetailsTRONLostKey
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -1244,3 +1245,17 @@ class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
+
+
+class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTRONLostKey
+        fields = (
+            'user_address',
+            'active_to',
+            'check_interval',
+            'last_check',
+            'next_check',
+#            'transfer_threshold_wei',
+#            'transfer_delay_seconds'
+        )
