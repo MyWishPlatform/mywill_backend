@@ -165,3 +165,24 @@ AVAILABLE_CONTRACT_TYPES = {
         {'contract_type': 17, 'contract_name': 'Airdrop'}
     ]
 }
+
+NETWORK_TYPES = {
+    'testnet': [2, 4, 6, 11, 15],
+    'mainnet': [1, 3, 5, 10, 14]
+}
+
+ALL_CONTRACT_STATES = [
+    'ACTIVE',
+    'CANCELLED',
+    'CREATED',
+    'DONE',
+    'ENDED',
+    'EXPIRED',
+    'KILLED',
+    'POSTPONED',
+    'TRIGGERED',
+    'UNDER_CROWDSALE',
+    'WAITING_ACTIVATION',
+    'WAITING_FOR_DEPLOYMENT',
+    'WAITING_FOR_PAYMENT'
+]

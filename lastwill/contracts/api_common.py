@@ -32,3 +32,38 @@ def get_available_contracts(request):
         return AVAILABLE_CONTRACT_TYPES[int(request.data['network_id'])]
 
 
+@api_view(http_method_names=['GET'])
+def get_contracts(request):
+    '''
+    view for get contracts with filter
+    :param request: (network_id, network_type, contract_type, state)
+    :return: list of available contracts
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contracts = Contract.objects.filter(user=user, invisible=False)
+    if 'network_id' not in request.data:
+        if int(request.data['network_id']) not in (1, 2, 5, 6, 10, 11, 14, 15):
+            raise ValidationError({'result': 'Wrong network id'}, code=404)
+        contracts = contracts.filter(network__id=int(request.data['network_id']))
+    if 'network_type' in request.data:
+        if request.data['network_type'].lower() not in ('testnet', 'mainnet'):
+            raise ValidationError({'result': 'Wrong network type'}, code=404)
+        contracts = contracts.filter(network__id__in=NETWORK_TYPES[request.data['network_type'].lower()])
+    if 'contract_type' in request.data:
+        if request.data['contract_type'] not in [[x for x in range(18)]]:
+            raise ValidationError({'result': 'Wrong contract type'}, code=404)
+        contracts = contracts.filter(contract_type=request.data['contract_type'])
+    if 'state' in request.data:
+        if request.data['state'] not in ALL_CONTRACT_STATES:
+            raise ValidationError({'result': 'Wrong state'}, code=404)
+    answer = []
+    for c in contracts:
+        answer.append({
+            'id': c.id, 'name': c.name, 'network_name': c.network.name,
+            'network_id': c.network.id, 'contract_type': c.contract_type,
+            'state': c.state
+        })
+    return Response(answer)
