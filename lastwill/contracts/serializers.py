@@ -1271,3 +1271,8 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
+        now = timezone.now() + 15
+        if 'user_address' not in details:
+            raise ValidationError
+        if 'active_to' not in details or details['active_to'] < now:
+            raise ValidationError({'result': 2}, code=400)
