@@ -109,3 +109,59 @@ ETH_MAINNET_ADDRESS = '0x1e1fEdbeB8CE004a03569A3FF03A1317a6515Cf1'
 ETH_TESTNET_ADDRESS = '0x88dbD934eF3349f803E1448579F735BE8CAB410D'
 
 LASTWILL_ALIVE_TIMEOUT = 60 * 60 * 24
+
+
+AVAILABLE_CONTRACT_TYPES = {
+    1: [
+        {'contract_type': 0, 'contract_name': 'LastWill'},
+        {'contract_type': 1, 'contract_name': 'LostKey'},
+        {'contract_type': 2, 'contract_name': 'DefferedPayment'},
+        {'contract_type': 4, 'contract_name': 'ICO'},
+        {'contract_type': 5, 'contract_name': 'Token'},
+        {'contract_type': 8, 'contract_name': 'AirDrop'},
+        {'contract_type': 9, 'contract_name': 'InvestmentPool'},
+    ],
+    2: [
+        {'contract_type': 0, 'contract_name': 'LastWill'},
+        {'contract_type': 1, 'contract_name': 'LostKey'},
+        {'contract_type': 2, 'contract_name': 'DefferedPayment'},
+        {'contract_type': 4, 'contract_name': 'ICO'},
+        {'contract_type': 5, 'contract_name': 'Token'},
+        {'contract_type': 8, 'contract_name': 'AirDrop'},
+        {'contract_type': 9, 'contract_name': 'InvestmentPool'},
+    ],
+    5: [
+        {'contract_type': 6, 'contract_name': 'Token'},
+        {'contract_type': 7, 'contract_name': 'ICO'}
+    ],
+    6: [
+        {'contract_type': 6, 'contract_name': 'Token'},
+        {'contract_type': 7, 'contract_name': 'ICO'}
+    ],
+    10: [
+        {'contract_type': 10, 'contract_name': 'Token'},
+        {'contract_type': 11, 'contract_name': 'Account'},
+        {'contract_type': 12, 'contract_name': 'ICO'},
+        {'contract_type': 13, 'contract_name': 'AirDrop'},
+        {'contract_type': 14, 'contract_name': 'TokenStandAlone'}
+
+    ],
+    11: [
+        {'contract_type': 10, 'contract_name': 'Token'},
+        {'contract_type': 11, 'contract_name': 'Account'},
+        {'contract_type': 12, 'contract_name': 'ICO'},
+        {'contract_type': 13, 'contract_name': 'AirDrop'},
+        {'contract_type': 14, 'contract_name': 'TokenStandAlone'}
+    ],
+    14: [
+        {'contract_type': 15, 'contract_name': 'Token'},
+        {'contract_type': 16, 'contract_name': 'GameAsset'},
+        {'contract_type': 17, 'contract_name': 'Airdrop'}
+
+    ],
+    15: [
+        {'contract_type': 15, 'contract_name': 'Token'},
+        {'contract_type': 16, 'contract_name': 'GameAsset'},
+        {'contract_type': 17, 'contract_name': 'Airdrop'}
+    ]
+}
