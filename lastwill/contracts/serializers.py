@@ -166,7 +166,9 @@ class ContractSerializer(serializers.ModelSerializer):
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
             'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
-            'TRX': str(int(eth_cost) * convert('ETH', 'TRX')['TRX'])
+            'TRX': str(int(eth_cost) * convert('ETH', 'TRX')['TRX']),
+            'TRONISH': str(int(eth_cost) * convert('ETH', 'TRX')['TRX'])
+
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
