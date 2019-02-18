@@ -1303,6 +1303,7 @@ class ContractDetailsTRONLastwillSerializer(serializers.ModelSerializer):
         if details['check_interval'] > 315360000:
             raise ValidationError
         if details['active_to'] < (now.timestamp() + 900):
+            raise ValidationError
         check.is_address(details['user_address'])
         details['user_address'] = details['user_address'].lower()
         details['active_to'] = datetime.datetime.strptime(
