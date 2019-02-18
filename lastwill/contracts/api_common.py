@@ -1,14 +1,7 @@
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.models import *
-from lastwill.profile.models import *
-from lastwill.settings import MY_WISH_URL
-from lastwill.deploy.models import *
 from lastwill.contracts.api_eos import *
 from lastwill.consts import *
 
@@ -67,3 +60,24 @@ def get_contracts(request):
             'state': c.state
         })
     return Response(answer)
+
+
+@api_view(http_method_names=['GET'])
+def get_contract_price(request):
+    '''
+    view for get contract price
+    :param request: (contract_type)
+    :return: price with decimals
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    get_user_for_token(token)
+    if 'contract_type' not in request.data:
+        return Response(API_CONTRACT_PRICES)
+    else:
+        if int(request.data['contract_type']) not in [[x for x in range(18)]] or int(request.data['contract_type']) == 3:
+            raise ValidationError({'result': 'Wrong contract_type'}, code=404)
+        for x in AVAILABLE_CONTRACT_TYPES:
+            if x['contract_type'] == int(request.data['contract_type']):
+                return Response(x)
