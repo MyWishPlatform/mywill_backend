@@ -28,7 +28,7 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
-        ContractDetailsTRONLostKey
+        ContractDetailsTRONLastwill
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
