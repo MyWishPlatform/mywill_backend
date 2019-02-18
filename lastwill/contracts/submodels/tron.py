@@ -566,7 +566,7 @@ class ContractDetailsTRONLostKey(CommonDetails):
     transfer_delay_seconds = models.IntegerField(default=0)
 
     def predeploy_validate(self):
-        now = timezone.now()
+        now = timezone.now() + 15
         if self.active_to < now:
             raise ValidationError({'result': 1}, code=400)
 
@@ -587,7 +587,7 @@ class ContractDetailsTRONLostKey(CommonDetails):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        network = Network.objects.get(name='TRON_MAINNET')
         now = datetime.datetime.now()
         cost = cls.calc_cost({
             'check_interval': 1,

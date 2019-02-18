@@ -1259,6 +1259,10 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
 #            'transfer_threshold_wei',
 #            'transfer_delay_seconds'
         )
+        extra_kwargs = {
+            'last_check': {'read_only': True},
+            'next_check': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
