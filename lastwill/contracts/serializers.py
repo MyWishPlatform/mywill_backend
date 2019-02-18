@@ -1268,14 +1268,7 @@ class ContractDetailsTRONLastwillSerializer(serializers.ModelSerializer):
         if not contract_details:
            print('*'*50, contract_details.id, flush=True)
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
-        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-
-        if contract_details.contract.network.name in ['RSK_MAINNET', 'RSK_TESTNET']:
-            btc_key = contract_details.btc_key
-            if btc_key:
-                res['btc_address'] = contract_details.btc_key.btc_address
-        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
-            res['eth_contract']['source_code'] = ''
+        res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
         return res
 
     def create(self, contract, contract_details):
