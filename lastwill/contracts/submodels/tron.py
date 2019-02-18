@@ -551,23 +551,33 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.contract.save()
         take_off_blocking(self.contract.network.name)
 
+
 @contract_details('Tron Lost key contract')
-class ContractDetailsTRONLostKey(CommonDetails):
-    sol_path = 'lastwill/lost-key/'
-    source_filename = 'contracts/LostKeyDelayedPaymentWallet.sol'
-    result_filename = 'build/contracts/LostKeyDelayedPaymentWallet.json'
+class ContractDetailsTRONLastwill(CommonDetails):
+    sol_path = 'lastwill/last-will/'
+    source_filename = 'contracts/LastWillNotify.sol'
+    result_filename = 'build/contracts/LastWillNotify.json'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-    transfer_threshold_wei = models.IntegerField(default=0)
-    transfer_delay_seconds = models.IntegerField(default=0)
+    tron_contract = models.ForeignKey(
+        TRONContract,
+        null=True,
+        default=None,
+        related_name='tron_airdrop_details',
+        on_delete=models.SET_NULL
+    )
+    email = models.CharField(max_length=256, null=True, default=None)
+    platform_alive = models.BooleanField(default=False)
+    platform_cancel = models.BooleanField(default=False)
+    last_reset = models.DateTimeField(null=True, default=None)
+    last_press_imalive = models.DateTimeField(null=True, default=None)
 
     def predeploy_validate(self):
-        now = timezone.now() + 15
-        if self.active_to < now:
+        now = timezone.now()
+        if self.active_to < (now.timestamp() + 900):
             raise ValidationError({'result': 1}, code=400)
 
     def get_arguments(self, *args, **kwargs):
@@ -576,14 +586,9 @@ class ContractDetailsTRONLostKey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-#            self.transfer_threshold_wei,
-#            self.transfer_delay_seconds
-            2**256-1,
-            0,
+            False if self.contract.network.name in
+                     ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
         ]
-
-    def fundsAdded(self, message):
-        pass
 
     @classmethod
     def min_cost(cls):
@@ -610,22 +615,22 @@ class ContractDetailsTRONLostKey(CommonDetails):
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
         check_interval = int(kwargs['check_interval'])
-        Cg = 1476117
-        CBg = 28031
+        Cg = 780476
+        CBg = 26561
         Tg = 22000
         Gp = 60 * NET_DECIMALS['ETH_GAS_PRICE']
         Dg = 29435
         DBg = 9646
         B = heirs_num
         Cc = 124852
-        DxC = max(abs((
-                                  datetime.date.today() - active_to).total_seconds() / check_interval),
-                  1)
+        DxC = max(abs(
+            (datetime.date.today() - active_to).total_seconds() / check_interval
+        ), 1)
         O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
-        return 2 * int(
-            Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (
-                        Gp * Cc + O) * DxC
+        result = 2 * int(
+            Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC
         ) + 80000
+        return result
 
     @postponable
     @check_transaction
@@ -643,8 +648,6 @@ class ContractDetailsTRONLostKey(CommonDetails):
         if next_check < self.active_to:
             self.next_check = next_check
         else:
-            self.contract.state = 'EXPIRED'
-            self.contract.save()
             self.next_check = None
         self.save()
         take_off_blocking(self.contract.network.name, self.contract.id)
@@ -678,11 +681,6 @@ class ContractDetailsTRONLostKey(CommonDetails):
             )
 
     def get_gaslimit(self):
-        Cg = 3200000
-        CBg = 28031
-        return Cg + len(self.contract.heir_set.all()) * CBg
-
-    @blocking
-    @postponable
-    def deploy(self):
-        return super().deploy()
+        Cg = 1270525
+        CBg = 26561
+        return Cg + len(self.contract.heir_set.all()) * CBg + 25000
