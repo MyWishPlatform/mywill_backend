@@ -12,9 +12,9 @@ class memoize_timeout:
         def func(*args, **kwargs):
             key = (args, tuple(sorted(kwargs.items())))
             v = self.cache.get(key, (0,0))
-            print('cache')
+            # print('cache')
             if time.time() - v[1] > self.timeout:
-                print('updating')
+                # print('updating')
                 v = self.cache[key] = f(*args, **kwargs), time.time()
             return v[0]
         return func
