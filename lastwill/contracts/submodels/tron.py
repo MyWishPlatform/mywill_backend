@@ -688,18 +688,21 @@ class ContractDetailsTRONLostkey(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(self, sour_path='lastwill/tron-lost-key-token/*')
-
         dest, preproc_config = create_directory(
             self, sour_path='lastwill/tron-lost-key-token/*',
             config_name='c-preprocessor-config.json'
         )
         owner = '0x' + self.user_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
+        heirs_list = []
+        heirs_percents = []
+        for h in self.contract.heir_set.all():
+            heirs_list.append(h.address)
+            heirs_percents.append(h.percentage)
 
         preproc_params = {'constants': {}}
         preproc_params["constants"]["D_TARGET"] = owner
-        preproc_params["constants"]["D_HEIRS"] = []
-        preproc_params["constants"]["D_PERCENTS"] = []
+        preproc_params["constants"]["D_HEIRS"] = heirs_list
+        preproc_params["constants"]["D_PERCENTS"] = heirs_percents
         preproc_params["constants"]["D_PERIOD_SECONDS"] = self.check_interval
         print('params', preproc_params, flush=True)
 
