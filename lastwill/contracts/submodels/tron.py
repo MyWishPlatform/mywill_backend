@@ -706,7 +706,6 @@ class ContractDetailsTRONLastwill(CommonDetails):
         preproc_params["constants"]["D_PERIOD_SECONDS"] = self.check_interval
         print('params', preproc_params, flush=True)
 
-
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile'.format(dest=dest)):
@@ -716,13 +715,65 @@ class ContractDetailsTRONLastwill(CommonDetails):
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/LostKeyMain.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        tron_contract = TRONContract()
-        tron_contract.abi = token_json['abi']
-        tron_contract.bytecode = token_json['bytecode'][2:]
-        tron_contract.compiler_version = token_json['compiler']['version']
-        tron_contract.contract = self.contract
-        tron_contract.original_contract = self.contract
-        tron_contract.source_code = source_code
-        tron_contract.save()
-        self.tron_contract = tron_contract
+        tron_contract_lostkey = TRONContract()
+        tron_contract_lostkey.abi = token_json['abi']
+        tron_contract_lostkey.bytecode = token_json['bytecode'][2:]
+        tron_contract_lostkey.compiler_version = token_json['compiler']['version']
+        tron_contract_lostkey.contract = self.contract
+        tron_contract_lostkey.original_contract = self.contract
+        tron_contract_lostkey.source_code = source_code
+        tron_contract_lostkey.save()
+        self.tron_contract_lostkey = tron_contract_lostkey
         self.save()
+
+    @blocking
+    @postponable
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        self.compile()
+        print('deploy tron lostkey token')
+        abi = json.dumps(self.tron_contract_lostkey.abi)
+        deploy_params = {
+            'abi': str(abi),
+            'bytecode': self.tron_contract_lostkey.bytecode,
+            'consume_user_resource_percent': 0,
+            'fee_limit': 1000000000,
+            'call_value': 0,
+            'bandwidth_limit': 1000000,
+            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            'origin_energy_limit': 100000000
+        }
+        deploy_params = json.dumps(deploy_params)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
+        print('transaction created')
+        trx_info1 = json.loads(result.content.decode())
+        trx_info1 = {'transaction': trx_info1}
+        self.tron_contract_token.address = trx_info1['transaction']['contract_address']
+        self.tron_contract_token.save()
+        trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
+        trx = json.dumps(trx_info1)
+
+        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        print('transaction sign')
+        trx_info2 = json.loads(result.content.decode())
+        trx = json.dumps(trx_info2)
+        for i in range(5):
+            print('attempt=', i)
+            result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
+            print(result.content)
+            answer = json.loads(result.content.decode())
+            print('answer=', answer, flush=True)
+            if answer['result']:
+                params = {'value': trx_info2['txID']}
+                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+                ret = json.loads(result.content.decode())
+                if ret:
+                    self.tron_contract_token.tx_hash = trx_info2['txID']
+                    print('tx_hash=n', trx_info2['txID'], flush=True)
+                    self.tron_contract_token.save()
+                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                    self.contract.save()
+                    return
+            time.sleep(5)
+        else:
+                raise ValidationError({'result': 1}, code=400)
