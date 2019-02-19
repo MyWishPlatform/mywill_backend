@@ -554,9 +554,6 @@ class ContractDetailsTRONAirdrop(CommonDetails):
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLastwill(CommonDetails):
-    sol_path = 'lastwill/last-will/'
-    source_filename = 'contracts/LastWillNotify.sol'
-    result_filename = 'build/contracts/LastWillNotify.json'
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
