@@ -553,7 +553,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
 
 
 @contract_details('Tron Lost key contract')
-class ContractDetailsTRONLastwill(CommonDetails):
+class ContractDetailsTRONLostkey(CommonDetails):
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
@@ -684,7 +684,7 @@ class ContractDetailsTRONLastwill(CommonDetails):
         return Cg + len(self.contract.heir_set.all()) * CBg + 25000
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
-        print('tron lastwill contract compile')
+        print('tron lostkey contract compile')
         if self.temp_directory:
             print('already compiled')
             return
