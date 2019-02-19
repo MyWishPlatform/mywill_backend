@@ -1274,7 +1274,7 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
     def create(self, contract, contract_details):
         heirs = contract_details.pop('heirs')
         for heir_json in heirs:
-            heir_json['address'] = heir_json['address'].lower()
+            heir_json['address'] = heir_json['address']
             kwargs = heir_json.copy()
             kwargs['contract'] = contract
             Heir(**kwargs).save()
@@ -1286,7 +1286,7 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
         contract.heir_set.all().delete()
         heirs = contract_details.pop('heirs')
         for heir_json in heirs:
-            heir_json['address'] = heir_json['address'].lower()
+            heir_json['address'] = heir_json['address']
             kwargs = heir_json.copy()
             kwargs['contract'] = contract
             Heir(**kwargs).save()
@@ -1304,15 +1304,15 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['active_to'] < (now.timestamp() + 900):
             raise ValidationError
-        check.is_address(details['user_address'])
-        details['user_address'] = details['user_address'].lower()
+
+        details['user_address'] = details['user_address']
         details['active_to'] = datetime.datetime.strptime(
             details['active_to'], '%Y-%m-%d %H:%M'
         )
         for heir_json in details['heirs']:
             heir_json.get('email', None) and check.is_email(heir_json['email'])
-            check.is_address(heir_json['address'])
-            heir_json['address'] = heir_json['address'].lower()
+
+            heir_json['address'] = heir_json['address']
             check.is_percent(heir_json['percentage'])
             heir_json['percentage'] = int(heir_json['percentage'])
         check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
