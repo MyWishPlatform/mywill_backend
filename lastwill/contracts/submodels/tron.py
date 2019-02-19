@@ -564,7 +564,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         TRONContract,
         null=True,
         default=None,
-        related_name='tron_airdrop_details',
+        related_name='tron_lostkey_details',
         on_delete=models.SET_NULL
     )
     email = models.CharField(max_length=256, null=True, default=None)
