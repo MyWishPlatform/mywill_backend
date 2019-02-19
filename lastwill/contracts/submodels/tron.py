@@ -562,6 +562,7 @@ class ContractDetailsTRONLastwill(CommonDetails):
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
+    temp_directory = models.CharField(max_length=36)
     tron_contract = models.ForeignKey(
         TRONContract,
         null=True,
@@ -684,3 +685,44 @@ class ContractDetailsTRONLastwill(CommonDetails):
         Cg = 1270525
         CBg = 26561
         return Cg + len(self.contract.heir_set.all()) * CBg + 25000
+
+    def compile(self, eth_contract_attr_name='eth_contract_token'):
+        print('tron lastwill contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        dest, preproc_config = create_directory(self, sour_path='lastwill/tron-lost-key-token/*')
+
+        dest, preproc_config = create_directory(
+            self, sour_path='lastwill/tron-lost-key-token/*',
+            config_name='c-preprocessor-config.json'
+        )
+        owner = '0x' + self.user_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
+
+        preproc_params = {'constants': {}}
+        preproc_params["constants"]["D_TARGET"] = owner
+        preproc_params["constants"]["D_HEIRS"] = []
+        preproc_params["constants"]["D_PERCENTS"] = []
+        preproc_params["constants"]["D_PERIOD_SECONDS"] = self.check_interval
+        print('params', preproc_params, flush=True)
+
+
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && yarn compile'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
+        with open(path.join(dest, 'build/contracts/LostKeyMain.json'), 'rb') as f:
+            token_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'build/LostKeyMain.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        tron_contract = TRONContract()
+        tron_contract.abi = token_json['abi']
+        tron_contract.bytecode = token_json['bytecode'][2:]
+        tron_contract.compiler_version = token_json['compiler']['version']
+        tron_contract.contract = self.contract
+        tron_contract.original_contract = self.contract
+        tron_contract.source_code = source_code
+        tron_contract.save()
+        self.tron_contract = tron_contract
+        self.save()
