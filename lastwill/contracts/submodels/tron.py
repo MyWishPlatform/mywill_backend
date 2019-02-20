@@ -769,7 +769,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 ret = json.loads(result.content.decode())
                 if ret:
                     self.tron_contract.tx_hash = trx_info2['txID']
-                    print('tx_hash=n', trx_info2['txID'], flush=True)
+                    print('tx_hash=', trx_info2['txID'], flush=True)
                     self.tron_contract.save()
                     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
                     self.contract.save()
