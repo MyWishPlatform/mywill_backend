@@ -1307,8 +1307,6 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
         details['active_to'] = datetime.datetime.strptime(
             details['active_to'], '%Y-%m-%d %H:%M'
         )
-        if details['active_to'] < (now.timestamp() + 900):
-            raise ValidationError
         for heir_json in details['heirs']:
             heir_json.get('email', None) and check.is_email(heir_json['email'])
 
