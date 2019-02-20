@@ -574,9 +574,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
     last_press_imalive = models.DateTimeField(null=True, default=None)
 
     def predeploy_validate(self):
-        now = timezone.now()
-        if self.active_to < (now.timestamp() + 900):
-            raise ValidationError({'result': 1}, code=400)
+        pass
 
     def get_arguments(self, *args, **kwargs):
         return [
