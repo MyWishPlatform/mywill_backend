@@ -696,7 +696,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
         heirs_list = []
         heirs_percents = []
         for h in self.contract.heir_set.all():
-            heirs_list.append(h.address)
+            addr = '0x' + h.address[2:] if h.address.startswith('41') else convert_address_to_hex(h.address)
+            heirs_list.append(addr)
             heirs_percents.append(h.percentage)
 
         preproc_params = {'constants': {}}
