@@ -633,7 +633,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        super().msg_deployed(message)
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
         self.next_check = timezone.now() + datetime.timedelta(
             seconds=self.check_interval)
         self.save()
