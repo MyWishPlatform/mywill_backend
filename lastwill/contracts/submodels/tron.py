@@ -692,7 +692,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
             self, sour_path='lastwill/tron-lost-key-token/*',
             config_name='c-preprocessor-config.json'
         )
-        owner = '0x' + self.user_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
+        owner = '0x' + self.user_address[2:] if self.user_address.startswith('41') else convert_address_to_hex(self.user_address)
         heirs_list = []
         heirs_percents = []
         for h in self.contract.heir_set.all():
