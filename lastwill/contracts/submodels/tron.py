@@ -715,15 +715,15 @@ class ContractDetailsTRONLostkey(CommonDetails):
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/LostKeyMain.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        tron_contract_lostkey = TRONContract()
-        tron_contract_lostkey.abi = token_json['abi']
-        tron_contract_lostkey.bytecode = token_json['bytecode'][2:]
-        tron_contract_lostkey.compiler_version = token_json['compiler']['version']
-        tron_contract_lostkey.contract = self.contract
-        tron_contract_lostkey.original_contract = self.contract
-        tron_contract_lostkey.source_code = source_code
-        tron_contract_lostkey.save()
-        self.tron_contract_lostkey = tron_contract_lostkey
+        tron_contract = TRONContract()
+        tron_contract.abi = token_json['abi']
+        tron_contract.bytecode = token_json['bytecode'][2:]
+        tron_contract.compiler_version = token_json['compiler']['version']
+        tron_contract.contract = self.contract
+        tron_contract.original_contract = self.contract
+        tron_contract.source_code = source_code
+        tron_contract.save()
+        self.tron_contract = tron_contract
         self.save()
 
     @blocking
@@ -748,8 +748,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
         print('transaction created')
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
-        self.tron_contract_token.address = trx_info1['transaction']['contract_address']
-        self.tron_contract_token.save()
+        self.tron_contract.address = trx_info1['transaction']['contract_address']
+        self.tron_contract.save()
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
 
@@ -768,9 +768,9 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
                 ret = json.loads(result.content.decode())
                 if ret:
-                    self.tron_contract_token.tx_hash = trx_info2['txID']
+                    self.tron_contract.tx_hash = trx_info2['txID']
                     print('tx_hash=n', trx_info2['txID'], flush=True)
-                    self.tron_contract_token.save()
+                    self.tron_contract.save()
                     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
                     self.contract.save()
                     return
