@@ -64,6 +64,8 @@ def add_decimals(currency, amount):
         amount = amount * NET_DECIMALS['ETH']
     if currency in ['BTC']:
         amount = amount * NET_DECIMALS['BTC']
+    if currency in ['EOS']:
+        amount = amount * NET_DECIMALS['EOS']
     return amount
 
 
