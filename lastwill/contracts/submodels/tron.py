@@ -695,7 +695,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         owner = '0x' + self.user_address[2:] if self.user_address.startswith('41') else convert_address_to_hex(self.user_address)
         heirs = self.contract.heir_set.all()
         heirs_list = ','.join(map(
-        lambda h: 'address(%s)' % '0x' + h.address[2:] if h.address.startswith('41') else convert_address_to_hex(h.address),
+        lambda h: 'address(%s)' % '0x' + h.address[2:] if h.address.startswith('41') else 'address(%s)' % convert_address_to_hex(h.address),
             heirs
             ))
         heirs_percents = ','.join(map(lambda h: 'uint(%s)' % h.percentage, heirs))
