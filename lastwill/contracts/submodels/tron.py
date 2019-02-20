@@ -550,3 +550,230 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.save()
         take_off_blocking(self.contract.network.name)
+
+
+@contract_details('Tron Lost key contract')
+class ContractDetailsTRONLostkey(CommonDetails):
+    user_address = models.CharField(max_length=50, null=True, default=None)
+    check_interval = models.IntegerField()
+    active_to = models.DateTimeField()
+    last_check = models.DateTimeField(null=True, default=None)
+    next_check = models.DateTimeField(null=True, default=None)
+    temp_directory = models.CharField(max_length=36)
+    tron_contract = models.ForeignKey(
+        TRONContract,
+        null=True,
+        default=None,
+        related_name='tron_lostkey_details',
+        on_delete=models.SET_NULL
+    )
+    email = models.CharField(max_length=256, null=True, default=None)
+    platform_alive = models.BooleanField(default=False)
+    platform_cancel = models.BooleanField(default=False)
+    last_reset = models.DateTimeField(null=True, default=None)
+    last_press_imalive = models.DateTimeField(null=True, default=None)
+
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.active_to < (now.timestamp() + 900):
+            raise ValidationError({'result': 1}, code=400)
+
+    def get_arguments(self, *args, **kwargs):
+        return [
+            self.user_address,
+            [h.address for h in self.contract.heir_set.all()],
+            [h.percentage for h in self.contract.heir_set.all()],
+            self.check_interval,
+            False if self.contract.network.name in
+                     ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
+        ]
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='TRON_MAINNET')
+        now = datetime.datetime.now()
+        cost = cls.calc_cost({
+            'check_interval': 1,
+            'heirs': [],
+            'active_to': now
+        }, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(
+            kwargs['heirs'])
+        active_to = kwargs['active_to']
+        if isinstance(active_to, str):
+            if 'T' in active_to:
+                active_to = active_to[:active_to.index('T')]
+            active_to = datetime.date(*map(int, active_to.split('-')))
+        elif isinstance(active_to, datetime.datetime):
+            active_to = active_to.date()
+        check_interval = int(kwargs['check_interval'])
+        Cg = 780476
+        CBg = 26561
+        Tg = 22000
+        Gp = 60 * NET_DECIMALS['ETH_GAS_PRICE']
+        Dg = 29435
+        DBg = 9646
+        B = heirs_num
+        Cc = 124852
+        DxC = max(abs(
+            (datetime.date.today() - active_to).total_seconds() / check_interval
+        ), 1)
+        O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
+        result = 2 * int(
+            Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC
+        ) + 80000
+        return result
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        super().msg_deployed(message)
+        self.next_check = timezone.now() + datetime.timedelta(
+            seconds=self.check_interval)
+        self.save()
+
+    @check_transaction
+    def checked(self, message):
+        now = timezone.now()
+        self.last_check = now
+        next_check = now + datetime.timedelta(seconds=self.check_interval)
+        if next_check < self.active_to:
+            self.next_check = next_check
+        else:
+            self.next_check = None
+        self.save()
+        take_off_blocking(self.contract.network.name, self.contract.id)
+
+    @check_transaction
+    def triggered(self, message):
+        self.last_check = timezone.now()
+        self.next_check = None
+        self.save()
+        heirs = Heir.objects.filter(contract=self.contract)
+        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
+        for heir in heirs:
+            if heir.email:
+                send_mail(
+                    heir_subject,
+                    heir_message.format(
+                        user_address=heir.address,
+                        link_tx=link.format(tx=message['transactionHash'])
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [heir.email]
+                )
+        self.contract.state = 'TRIGGERED'
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(
+                carry_out_subject,
+                carry_out_message,
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
+
+    def get_gaslimit(self):
+        Cg = 1270525
+        CBg = 26561
+        return Cg + len(self.contract.heir_set.all()) * CBg + 25000
+
+    def compile(self, eth_contract_attr_name='eth_contract_token'):
+        print('tron lostkey contract compile')
+        if self.temp_directory:
+            print('already compiled')
+            return
+        dest, preproc_config = create_directory(
+            self, sour_path='lastwill/tron-lost-key-token/*',
+            config_name='c-preprocessor-config.json'
+        )
+        owner = '0x' + self.user_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(self.admin_address)
+        heirs_list = []
+        heirs_percents = []
+        for h in self.contract.heir_set.all():
+            heirs_list.append(h.address)
+            heirs_percents.append(h.percentage)
+
+        preproc_params = {'constants': {}}
+        preproc_params["constants"]["D_TARGET"] = owner
+        preproc_params["constants"]["D_HEIRS"] = heirs_list
+        preproc_params["constants"]["D_PERCENTS"] = heirs_percents
+        preproc_params["constants"]["D_PERIOD_SECONDS"] = self.check_interval
+        print('params', preproc_params, flush=True)
+
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && yarn compile'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
+        with open(path.join(dest, 'build/contracts/LostKeyMain.json'), 'rb') as f:
+            token_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'build/LostKeyMain.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        tron_contract_lostkey = TRONContract()
+        tron_contract_lostkey.abi = token_json['abi']
+        tron_contract_lostkey.bytecode = token_json['bytecode'][2:]
+        tron_contract_lostkey.compiler_version = token_json['compiler']['version']
+        tron_contract_lostkey.contract = self.contract
+        tron_contract_lostkey.original_contract = self.contract
+        tron_contract_lostkey.source_code = source_code
+        tron_contract_lostkey.save()
+        self.tron_contract_lostkey = tron_contract_lostkey
+        self.save()
+
+    @blocking
+    @postponable
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        self.compile()
+        print('deploy tron lostkey token')
+        abi = json.dumps(self.tron_contract_lostkey.abi)
+        deploy_params = {
+            'abi': str(abi),
+            'bytecode': self.tron_contract_lostkey.bytecode,
+            'consume_user_resource_percent': 0,
+            'fee_limit': 1000000000,
+            'call_value': 0,
+            'bandwidth_limit': 1000000,
+            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            'origin_energy_limit': 100000000
+        }
+        deploy_params = json.dumps(deploy_params)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
+        print('transaction created')
+        trx_info1 = json.loads(result.content.decode())
+        trx_info1 = {'transaction': trx_info1}
+        self.tron_contract_token.address = trx_info1['transaction']['contract_address']
+        self.tron_contract_token.save()
+        trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
+        trx = json.dumps(trx_info1)
+
+        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        print('transaction sign')
+        trx_info2 = json.loads(result.content.decode())
+        trx = json.dumps(trx_info2)
+        for i in range(5):
+            print('attempt=', i)
+            result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
+            print(result.content)
+            answer = json.loads(result.content.decode())
+            print('answer=', answer, flush=True)
+            if answer['result']:
+                params = {'value': trx_info2['txID']}
+                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+                ret = json.loads(result.content.decode())
+                if ret:
+                    self.tron_contract_token.tx_hash = trx_info2['txID']
+                    print('tx_hash=n', trx_info2['txID'], flush=True)
+                    self.tron_contract_token.save()
+                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                    self.contract.save()
+                    return
+            time.sleep(5)
+        else:
+                raise ValidationError({'result': 1}, code=400)
