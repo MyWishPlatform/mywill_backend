@@ -731,10 +731,10 @@ class ContractDetailsTRONLostkey(CommonDetails):
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         self.compile()
         print('deploy tron lostkey token')
-        abi = json.dumps(self.tron_contract_lostkey.abi)
+        abi = json.dumps(self.tron_contract.abi)
         deploy_params = {
             'abi': str(abi),
-            'bytecode': self.tron_contract_lostkey.bytecode,
+            'bytecode': self.tron_contract.bytecode,
             'consume_user_resource_percent': 0,
             'fee_limit': 1000000000,
             'call_value': 0,
