@@ -81,5 +81,6 @@ def get_contract_price(request):
         if int(request.data['contract_type']) == 3:
             raise ValidationError({'result': 'Wrong contract_type'}, code=404)
         for x in AVAILABLE_CONTRACT_TYPES:
-            if x['contract_type'] == int(request.data['contract_type']):
-                return Response(x)
+            for y in x:
+                if y['contract_type'] == int(request.data['contract_type']):
+                    return Response(y)
