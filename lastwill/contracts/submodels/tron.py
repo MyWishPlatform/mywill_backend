@@ -679,6 +679,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         preproc_params["constants"]["D_HEIRS"] = heirs_list
         preproc_params["constants"]["D_PERCENTS"] = heirs_percents
         preproc_params["constants"]["D_PERIOD_SECONDS"] = self.check_interval
+        preproc_params["constants"]["D_HEIRS_COUNT"] = len(heirs)
         print('params', preproc_params, flush=True)
 
         with open(preproc_config, 'w') as f:
