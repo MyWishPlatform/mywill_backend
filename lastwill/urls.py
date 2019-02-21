@@ -42,6 +42,7 @@ from lastwill.contracts.api_eth import (create_eth_token, show_eth_token,
                                         edit_eth_token, delete_eth_token_contract,
                                         deploy_eth_token, calculate_cost_eth_token_contract,
                                         get_source_code_eth_token)
+from lastwill.contracts.api_common import get_contract_price, get_contracts, get_available_contracts
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
@@ -126,6 +127,9 @@ urlpatterns = [
     url(r'^api/delete_eth_token/$', delete_eth_token_contract),
     url(r'^api/delete_all_api_tokens/$', delete_api_tokens),
     url(r'^api/get_source_code_eth_token/$', get_source_code_eth_token),
+    url(r'^api/get_contract_price/$', get_contract_price),
+    url(r'^api/get_contracts/$', get_contracts),
+    url(r'^api/get_available_contracts/$', get_available_contracts),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
