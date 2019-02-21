@@ -22,7 +22,7 @@ def get_available_contracts(request):
     else:
         if int(request.data['network_id']) not in (1, 2, 5, 6, 10, 11, 14, 15):
             raise ValidationError({'result': 'Wrong network id'}, code=404)
-        return AVAILABLE_CONTRACT_TYPES[int(request.data['network_id'])]
+        return Response(AVAILABLE_CONTRACT_TYPES[int(request.data['network_id'])])
 
 
 @api_view(http_method_names=['GET'])
