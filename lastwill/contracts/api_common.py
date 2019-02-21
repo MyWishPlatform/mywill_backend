@@ -76,7 +76,9 @@ def get_contract_price(request):
     if 'contract_type' not in request.data:
         return Response(API_CONTRACT_PRICES)
     else:
-        if int(request.data['contract_type']) not in [[x for x in range(18)]] or int(request.data['contract_type']) == 3:
+        if int(request.data['contract_type']) not in [x for x in range(18)]:
+            raise ValidationError({'result': 'Wrong contract_type'}, code=404)
+        if int(request.data['contract_type']) == 3:
             raise ValidationError({'result': 'Wrong contract_type'}, code=404)
         for x in AVAILABLE_CONTRACT_TYPES:
             if x['contract_type'] == int(request.data['contract_type']):
