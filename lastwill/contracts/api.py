@@ -967,7 +967,7 @@ def get_authio_cost(request):
 @api_view(http_method_names=['GET'])
 def get_testnet_tron_tokens(request):
     user = request.user
-    contracts = Contract.objects.filter(user=user, contract_type=15, network_name='TRON_TESTNET')
+    contracts = Contract.objects.filter(user=user, contract_type=15, network__name='TRON_TESTNET')
     answer = []
     for c in contracts:
         d = c.get_details()
