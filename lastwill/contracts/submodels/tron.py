@@ -684,13 +684,22 @@ class ContractDetailsTRONLostkey(CommonDetails):
             ))
         heirs_percents = ','.join(map(lambda h: 'uint(%s)' % h.percentage, heirs))
         preproc_params = {'constants': {}}
-        preproc_params["constants"]["D_TARGET"] = owner
+        preproc_params["constants"]["D_TARGET"] = "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
         preproc_params["constants"]["D_HEIRS"] = heirs_list
         preproc_params["constants"]["D_PERCENTS"] = heirs_percents
         preproc_params["constants"]["D_PERIOD_SECONDS"] = self.check_interval
         preproc_params["constants"]["D_HEIRS_COUNT"] = len(heirs)
         print('params', preproc_params, flush=True)
 
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
+        if os.system('cd {dest} && yarn compile'.format(dest=dest)):
+            raise Exception('compiler for test error while deploying')
+        if os.system('cd {dest} && yarn test'.format(
+                dest=dest)):
+            raise Exception('testing error')
+
+        preproc_params["constants"]["D_TARGET"] = owner
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile'.format(dest=dest)):
