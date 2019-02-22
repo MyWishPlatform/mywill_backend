@@ -76,15 +76,21 @@ def positive_payment(user, value, site_id, currency):
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
     freeze_value = value * 0.15
-    freeze_dest = 'WISH' if site_id == 1 else 'EOSISH'
     if site_id == 1:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + freeze_value
         )
+        freeze_dest = 'WISH'
+    elif site_id == 3:
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            eosish=F('tronish') + freeze_value
+        )
+        freeze_dest = 'TRONISH'
     else:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + freeze_value
         )
+        freeze_dest = 'EOSISH'
     print('PAYMENT: Freezed {amount} {currency}'
           .format(amount=freeze_value, currency=freeze_dest)
         )
@@ -102,7 +108,7 @@ def get_payment_statistics(start, stop=None):
     payments = InternalPayment.objects.filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     )
-    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0}
+    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0, 'TRX': 0.0, 'TRONISH': 0.0}
     for pay in payments:
         print(
             pay.datetime.date(),
