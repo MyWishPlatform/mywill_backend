@@ -52,6 +52,8 @@ def get_contracts(request):
     if 'state' in request.data:
         if request.data['state'] not in ALL_CONTRACT_STATES:
             raise ValidationError({'result': 'Wrong state'}, code=404)
+        contracts = contracts.filter(state=request.data['state'])
+
     answer = []
     for c in contracts:
         answer.append({
