@@ -32,7 +32,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     load_airdrop, get_contract_for_link,
                                     get_invest_balance_day, check_status,
                                     get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
-                                    check_eos_accounts_exists, buy_brand_report, get_authio_cost)
+                                    check_eos_accounts_exists, buy_brand_report, get_authio_cost,
+                                    get_testnet_tron_tokens)
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
@@ -130,6 +131,7 @@ urlpatterns = [
     url(r'^api/get_contract_price/$', get_contract_price),
     url(r'^api/get_contracts/$', get_contracts),
     url(r'^api/get_available_contracts/$', get_available_contracts),
+    url(r'^api/get_testnet_tron_tokens/$', get_testnet_tron_tokens),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

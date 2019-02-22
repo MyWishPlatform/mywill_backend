@@ -962,3 +962,19 @@ def get_authio_cost(request):
     wish_cost = str(int(to_wish('ETH', int(eth_cost))))
     btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
     return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+
+
+@api_view(http_method_names=['GET'])
+def get_testnet_tron_tokens(request):
+    user = request.user
+    contracts = Contract.objects.filter(user=user, contract_type=15, network_name='TRON_TESTNET')
+    answer = []
+    for c in contracts:
+        d = c.get_details()
+        answer.append({
+            'address': d.tron_contract_token.address,
+            'decimals': d.decimals,
+            'token_short_name': d.token_short_name,
+            'token_name': d.token_name
+        })
+    return Response(answer)
