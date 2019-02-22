@@ -199,6 +199,8 @@ class ContractDetailsTRONToken(CommonDetails):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        self.tron_contract_token.address = message['address']
+        self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
 
     def ownershipTransferred(self, message):
@@ -352,6 +354,8 @@ class ContractDetailsGameAssets(CommonDetails):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        self.tron_contract_token.address = message['address']
+        self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
 
     def ownershipTransferred(self, message):
@@ -549,6 +553,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        self.tron_contract.address = message['address']
+        self.tron_contract.save()
         take_off_blocking(self.contract.network.name)
 
 
@@ -612,6 +618,9 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.next_check = timezone.now() + datetime.timedelta(
             seconds=self.check_interval)
         self.save()
+        self.tron_contract.address = message['address']
+        self.tron_contract.save()
+        take_off_blocking(self.contract.network.name)
 
     @check_transaction
     def checked(self, message):
