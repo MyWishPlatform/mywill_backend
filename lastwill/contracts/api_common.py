@@ -46,9 +46,9 @@ def get_contracts(request):
             raise ValidationError({'result': 'Wrong network type'}, code=404)
         contracts = contracts.filter(network__id__in=NETWORK_TYPES[request.data['network_type'].lower()])
     if 'contract_type' in request.data:
-        if request.data['contract_type'] not in [[x for x in range(18)]]:
+        if int(request.data['contract_type']) not in [x for x in range(18)] or int(request.data['contract_type']) == 3:
             raise ValidationError({'result': 'Wrong contract type'}, code=404)
-        contracts = contracts.filter(contract_type=request.data['contract_type'])
+        contracts = contracts.filter(contract_type=int(request.data['contract_type']))
     if 'state' in request.data:
         if request.data['state'] not in ALL_CONTRACT_STATES:
             raise ValidationError({'result': 'Wrong state'}, code=404)
