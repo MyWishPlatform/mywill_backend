@@ -613,8 +613,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
         constructNet = 7819
         heirConstructAdditionEnergy = 25722
         heirConstructAdditionNet = 78
-        energyPrice = 10
-        netPrice = 10
+        energyPrice = 5000
+        netPrice = 158000
         tron_cost = (
                 constructEnergy * energyPrice
                 + constructNet * netPrice
