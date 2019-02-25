@@ -363,7 +363,7 @@ def edit_eos_account(request):
             contract_details.buy_ram_kbytes = int(request.data['buy_ram_kbytes'])
     if 'account_name' in request.data:
         validate_account_name(request.data['account_name'])
-        check_account_name(request.data['account_name'], int(request.data['network_id']))
+        check_account_name(request.data['account_name'], contract.network.id)
         contract_details.account_name = request.data['account_name']
     if 'owner_public_key' in request.data:
         check_eos_key(request.data['owner_public_key'])
