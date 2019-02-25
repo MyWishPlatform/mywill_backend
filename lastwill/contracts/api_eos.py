@@ -154,6 +154,13 @@ def log_additions(api_action, add_params):
     print(logger, flush=True)
 
 
+def check_int_number(number):
+    try:
+        int(number)
+    except:
+        raise ValidationError({'result': 'Invalid value. Integer var expected.'}, code=404)
+
+
 @api_view(http_method_names=['POST'])
 def create_eos_account(request):
     '''
@@ -188,6 +195,7 @@ def create_eos_account(request):
     else:
         token_params['stake_cpu_value'] = '0.64'
     if 'buy_ram_kbytes' in request.data and request.data['buy_ram_kbytes'] != '':
+        check_int_number(request.data['buy_ram_kbytes'])
         token_params['buy_ram_kbytes'] = int(request.data['buy_ram_kbytes'])
     else:
         token_params['buy_ram_kbytes'] = 4
@@ -357,6 +365,7 @@ def edit_eos_account(request):
         else:
             contract_details.stake_cpu_value = str(request.data['stake_cpu_value'])
     if 'buy_ram_kbytes' in request.data and request.data['buy_ram_kbytes'] != '':
+        check_int_number(request.data['buy_ram_kbytes'])
         if int(request.data['buy_ram_kbytes']) > 40 or int(request.data['buy_ram_kbytes']) < 0:
             raise ValidationError({'result': 'Wrong value of ram'}, code=404)
         else:
