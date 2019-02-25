@@ -21,6 +21,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
 
+from exchange_API import convert
 
 
 def convert_address_to_hex(address):
@@ -607,7 +608,22 @@ class ContractDetailsTRONLostkey(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(1.99 * 10 ** 18)
+        heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
+        constructEnergy = 1171716
+        constructNet = 7819
+        heirConstructAdditionEnergy = 25722
+        heirConstructAdditionNet = 78
+        energyPrice = 10
+        netPrice = 10
+        tron_cost = (
+                constructEnergy * energyPrice
+                + constructNet * netPrice
+                + heirs_num * (
+                        heirConstructAdditionEnergy * energyPrice
+                        + heirConstructAdditionNet * netPrice
+                )
+        ) * 2.2 / 10 ** 6
+        result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
         return result
 
     @postponable
