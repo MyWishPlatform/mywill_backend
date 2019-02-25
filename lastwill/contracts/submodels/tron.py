@@ -613,8 +613,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
         constructNet = 7819
         heirConstructAdditionEnergy = 25722
         heirConstructAdditionNet = 78
-        energyPrice = 5000
-        netPrice = 158000
+        energyPrice = 10
+        netPrice = 10
         tron_cost = (
                 constructEnergy * energyPrice
                 + constructNet * netPrice
@@ -622,7 +622,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
                         heirConstructAdditionEnergy * energyPrice
                         + heirConstructAdditionNet * netPrice
                 )
-        ) * 2.2 / 10 ** 6
+        ) * 220 / 10 ** 6
         result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
         return result
 
