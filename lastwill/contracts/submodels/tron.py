@@ -636,6 +636,19 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.save()
         self.tron_contract.address = message['address']
         self.tron_contract.save()
+        if self.contract.user.email:
+            network = self.contract.network.name
+            network_name = MAIL_NETWORK[network]
+            send_mail(
+                tron_deploy_subject,
+                tron_deploy_text.format(
+                    contract_type_name=self.contract.get_all_details_model()[
+                        self.contract.contract_type]['name'],
+                    network_name=network_name
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
         take_off_blocking(self.contract.network.name)
 
     @check_transaction
