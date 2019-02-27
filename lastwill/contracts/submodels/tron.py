@@ -862,4 +862,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
             print(result.content, flush=True)
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
-
+            if answer['result']:
+                    return
+            time.sleep(5)
+        else:
+            raise ValidationError({'result': 1}, code=400)
