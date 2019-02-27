@@ -830,7 +830,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
     @blocking
     def check_contract(self):
         deploy_params = {
-            'contract_address': '',
+            'contract_address': self.tron_contract.address,
             'consume_user_resource_percent': 0,
             'fee_limit': 1000000000,
             'call_value': 0,
