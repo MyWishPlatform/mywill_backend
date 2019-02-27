@@ -833,7 +833,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
             'contract_address': self.tron_contract.address,
             'owner_address': '41' + convert_address_to_hex(
                 NETWORKS[self.contract.network.name]['address'])[2:],
-            'function_selector': 'check()'
+            'function_selector': 'check()',
+            'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
         tron_url = 'http://%s:%s' % (
