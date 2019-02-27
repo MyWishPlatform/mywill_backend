@@ -18,7 +18,7 @@ from lastwill.consts import LASTWILL_ALIVE_TIMEOUT
 def check_all():
     print('check_all method', flush=True)
     for contract in Contract.objects.filter(
-            contract_type__in=(0, 1, 2), state='ACTIVE'
+            contract_type__in=(0, 1, 2, 18), state='ACTIVE'
     ):
         details = contract.get_details()
         if contract.contract_type == 2:
