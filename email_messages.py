@@ -178,7 +178,6 @@ tron_deploy_subject = """Your contract is ready"""
 tron_deploy_text = """Hello,
 
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
-{contract_type_name}: {link}
 
 Please contact support@mywish.io if you need if you have any questions.
 
