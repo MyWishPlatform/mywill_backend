@@ -648,7 +648,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 + netPrice +triggerEnergyPerHeir * energyPrice * heirs_num
                 + triggerEnergyPerToken * energyPrice * tokensCount
         )
-        tron_cost = (constructPrice + checkPrice + triggerPrice) * 220 / 10 ** 6
+        tron_cost = (constructPrice + checkPrice + triggerPrice) * 200 / 10 ** 6
         result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
         return result
 
