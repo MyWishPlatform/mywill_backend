@@ -608,6 +608,18 @@ class ContractDetailsTRONLostkey(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
+        active_to = kwargs['active_to']
+        if isinstance(active_to, str):
+            if 'T' in active_to:
+                active_to = active_to[:active_to.index('T')]
+            active_to = datetime.date(*map(int, active_to.split('-')))
+        elif isinstance(active_to, datetime.datetime):
+            active_to = active_to.date()
+        check_interval = int(kwargs['check_interval'])
+        checkCount = max(abs(
+            (datetime.date.today() - active_to).total_seconds() / check_interval
+        ), 1)
+
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         constructEnergy = 1171716
         constructNet = 7819
@@ -615,7 +627,14 @@ class ContractDetailsTRONLostkey(CommonDetails):
         heirConstructAdditionNet = 78
         energyPrice = 10
         netPrice = 10
-        tron_cost = (
+        checkEnergy = 2003
+        checkNet = 280
+        triggerEnergy = 8500
+        triggerNet = 280
+        triggerEnergyPerHeir = 40000
+        triggerEnergyPerToken = 40000
+        tokensCount = 20
+        constructPrice = (
                 constructEnergy * energyPrice
                 + constructNet * netPrice
                 + heirs_num * (
@@ -623,6 +642,13 @@ class ContractDetailsTRONLostkey(CommonDetails):
                         + heirConstructAdditionNet * netPrice
                 )
         ) * 220 / 10 ** 6
+        checkPrice = ((checkEnergy * energyPrice + checkNet * netPrice)) * checkCount
+        triggerPrice = (
+                triggerEnergy * energyPrice + triggerNet
+                + netPrice +triggerEnergyPerHeir * energyPrice * heirs_num
+                + triggerEnergyPerToken * energyPrice * tokensCount
+        )
+        tron_cost = constructPrice + checkPrice + triggerPrice
         result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
         return result
 
