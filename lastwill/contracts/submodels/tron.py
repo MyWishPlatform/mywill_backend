@@ -847,7 +847,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         result = requests.post(tron_url + '/wallet/triggersmartcontract',
                                data=deploy_params)
         print('transaction created')
-        print(result, flush=True)
+        print(result.content.decode(), flush=True)
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name][
@@ -857,7 +857,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         result = requests.post(tron_url + '/wallet/gettransactionsign',
                                data=trx)
         print('transaction sign')
-        print(result, flush=True)
+        print(result.content.decode(), flush=True)
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         for i in range(5):
