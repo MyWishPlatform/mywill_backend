@@ -844,7 +844,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         print('transaction created')
         print(result.content.decode(), flush=True)
         trx_info1 = json.loads(result.content.decode())
-        trx_info1 = {'transaction': trx_info1}
+        trx_info1 = {'transaction': trx_info1['transaction']}
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name][
             'private_key']
         trx = json.dumps(trx_info1)
