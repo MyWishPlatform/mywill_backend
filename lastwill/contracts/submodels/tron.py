@@ -826,3 +826,46 @@ class ContractDetailsTRONLostkey(CommonDetails):
             time.sleep(5)
         else:
                 raise ValidationError({'result': 1}, code=400)
+
+    @blocking
+    def check_contract(self):
+        deploy_params = {
+            'contract_address': '',
+            'consume_user_resource_percent': 0,
+            'fee_limit': 1000000000,
+            'call_value': 0,
+            'bandwidth_limit': 1000000,
+            'owner_address': '41' + convert_address_to_hex(
+                NETWORKS[self.contract.network.name]['address'])[2:],
+            'origin_energy_limit': 100000000,
+            'function_selector': 'check()'
+        }
+        deploy_params = json.dumps(deploy_params)
+        tron_url = 'http://%s:%s' % (
+        str(NETWORKS[self.contract.network.name]['host']),
+        str(NETWORKS[self.contract.network.name]['port']))
+        result = requests.post(tron_url + '/wallet/triggersmartcontract',
+                               data=deploy_params)
+        print('transaction created')
+        trx_info1 = json.loads(result.content.decode())
+        trx_info1 = {'transaction': trx_info1}
+        self.tron_contract.address = trx_info1['transaction'][
+            'contract_address']
+        self.tron_contract.save()
+        trx_info1['privateKey'] = NETWORKS[self.contract.network.name][
+            'private_key']
+        trx = json.dumps(trx_info1)
+
+        result = requests.post(tron_url + '/wallet/gettransactionsign',
+                               data=trx)
+        print('transaction sign')
+        trx_info2 = json.loads(result.content.decode())
+        trx = json.dumps(trx_info2)
+        for i in range(5):
+            print('attempt=', i)
+            result = requests.post(tron_url + '/wallet/broadcasttransaction',
+                                   data=trx)
+            print(result.content)
+            answer = json.loads(result.content.decode())
+            print('answer=', answer, flush=True)
+
