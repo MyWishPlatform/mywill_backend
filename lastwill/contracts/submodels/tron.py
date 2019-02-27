@@ -831,13 +831,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
     def check_contract(self):
         deploy_params = {
             'contract_address': self.tron_contract.address,
-            'consume_user_resource_percent': 0,
-            'fee_limit': 1000000000,
-            'call_value': 0,
-            'bandwidth_limit': 1000000,
             'owner_address': '41' + convert_address_to_hex(
                 NETWORKS[self.contract.network.name]['address'])[2:],
-            'origin_energy_limit': 100000000,
             'function_selector': 'check()'
         }
         deploy_params = json.dumps(deploy_params)
