@@ -641,14 +641,14 @@ class ContractDetailsTRONLostkey(CommonDetails):
                         heirConstructAdditionEnergy * energyPrice
                         + heirConstructAdditionNet * netPrice
                 )
-        ) * 220 / 10 ** 6
+        )
         checkPrice = ((checkEnergy * energyPrice + checkNet * netPrice)) * checkCount
         triggerPrice = (
                 triggerEnergy * energyPrice + triggerNet
                 + netPrice +triggerEnergyPerHeir * energyPrice * heirs_num
                 + triggerEnergyPerToken * energyPrice * tokensCount
         )
-        tron_cost = constructPrice + checkPrice + triggerPrice
+        tron_cost = (constructPrice + checkPrice + triggerPrice) * 220 / 10 ** 6
         result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
         return result
 
