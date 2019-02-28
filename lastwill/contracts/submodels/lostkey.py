@@ -178,8 +178,10 @@ class ContractDetailsLostKeyTokens(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            False if self.contract.network.name in
-                     ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
+                #            self.transfer_threshold_wei,
+                #            self.transfer_delay_seconds
+            2 ** 256 - 1,
+            0,
         ]
 
     @classmethod
