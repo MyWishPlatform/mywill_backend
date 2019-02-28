@@ -108,33 +108,30 @@ def freeze_tronish(amount):
     result = requests.post(tron_url + '/wallet/triggersmartcontract',
                             data=deploy_params)
     print('transaction created')
-    # trx_info1 = json.loads(result.content.decode())
-    # trx_info1 = {'transaction': trx_info1}
-    # # print('trx info', trx_info1)
-    # self.tron_contract.address = trx_info1['transaction']['contract_address']
-    # self.tron_contract.save()
-    # trx_info1['privateKey'] = NETWORKS[self.contract.network.name][
-    #     'private_key']
-    # trx = json.dumps(trx_info1)
-    # # print('before', trx)
-    # result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
-    # print('transaction sign')
-    # trx_info2 = json.loads(result.content.decode())
-    # trx = json.dumps(trx_info2)
-    # # print('after', trx)
-    # # print(trx)
-    # for i in range(5):
-    #     print('attempt=', i)
-    #     result = requests.post(tron_url + '/wallet/broadcasttransaction',
-    #                            data=trx)
-    #     print(result.content)
-    #     answer = json.loads(result.content.decode())
-    #     print('answer=', answer, flush=True)
-    #     if answer['result']:
-    #             return
-    #     time.sleep(5)
-    # else:
-    #     raise ValidationError({'result': 1}, code=400)
+    trx_info1 = json.loads(result.content.decode())
+    trx_info1 = {'transaction': trx_info1}
+    # print('trx info', trx_info1)
+    trx_info1['privateKey'] = TRON_COLD_PASSWORD
+    trx = json.dumps(trx_info1)
+    print('before', trx)
+    result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+    print('transaction sign')
+    trx_info2 = json.loads(result.content.decode())
+    trx = json.dumps(trx_info2)
+    print('after', trx)
+    # print(trx)
+    for i in range(5):
+        print('attempt=', i)
+        result = requests.post(tron_url + '/wallet/broadcasttransaction',
+                               data=trx)
+        print(result.content)
+        answer = json.loads(result.content.decode())
+        print('answer=', answer, flush=True)
+        if answer['result']:
+                return
+        time.sleep(5)
+    else:
+        raise Exception('cannot make tx with 5 attempts')
 
 
 def check_payments():
