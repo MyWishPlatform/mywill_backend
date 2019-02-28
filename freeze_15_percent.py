@@ -168,7 +168,7 @@ def check_payments():
             freeze_balance.save()
         except Exception as e:
             attempt += 1
-            print(e)
+            print(e, flush=True)
             print('Freezing TRONISH failed')
             send_mail_attempt("WISH", freeze_balance.tronish, e)
 
