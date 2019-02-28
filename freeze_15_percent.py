@@ -90,6 +90,7 @@ def freeze_eosish(amount):
 
 
 def freeze_tronish(amount):
+    print('freeze tronish', flush=True)
     freeze_encoded_parameter = binascii.hexlify(
         encode_abi(['address', 'uint'], [convert_address_to_hex(COLD_TRON_ADDRESS), amount])
     )
@@ -159,6 +160,7 @@ def check_payments():
             print('Freezing EOSISH failed')
             send_mail_attempt("EOSISH", freeze_balance.eosish, e)
     if freeze_balance.tronish > 0:
+        print('tronish > 0', flush=True)
         try:
             freeze_tronish(freeze_balance.tronish)
             freeze_balance.tronish = 0
