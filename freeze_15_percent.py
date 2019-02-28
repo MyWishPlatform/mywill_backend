@@ -111,7 +111,7 @@ def freeze_tronish(amount):
                             data=deploy_params)
     print('transaction created', flush=True)
     trx_info1 = json.loads(result.content.decode())
-    trx_info1 = {'transaction': trx_info1}
+    trx_info1 = {'transaction': trx_info1['transaction']}
     print('trx info', trx_info1, flush=True)
     trx_info1['privateKey'] = TRON_COLD_PASSWORD
     trx = json.dumps(trx_info1)
