@@ -222,7 +222,7 @@ class ContractSerializer(serializers.ModelSerializer):
             16: ContractDetailsGameAssetsSerializer,
             17: ContractDetailsTRONAirdropSerializer,
             18: ContractDetailsTRONLostkeySerializer,
-            19: ContractDetailsLostKeyTokens
+            19: ContractDetailsLostKeyTokensSerializer
         }[contract_type]
 
 
