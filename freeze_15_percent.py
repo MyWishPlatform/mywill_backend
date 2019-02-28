@@ -101,26 +101,27 @@ def freeze_tronish(amount):
         'owner_address': convert_address_to_hex(UPDATE_TRON_ADDRESS)
     }
     deploy_params = json.dumps(deploy_params)
+    print('params', deploy_params, flush=True)
     tron_url = 'http://%s:%s' % (
     str(NETWORKS['TRON_MAINNET']['host']),
     str(NETWORKS['TRON_MAINNET']['port']))
     result = requests.post(tron_url + '/wallet/triggersmartcontract',
                             data=deploy_params)
-    print('transaction created')
+    print('transaction created', flush=True)
     trx_info1 = json.loads(result.content.decode())
     trx_info1 = {'transaction': trx_info1}
-    # print('trx info', trx_info1)
+    print('trx info', trx_info1, flush=True)
     trx_info1['privateKey'] = TRON_COLD_PASSWORD
     trx = json.dumps(trx_info1)
-    print('before', trx)
+    print('before', trx, flush=True)
     result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
-    print('transaction sign')
+    print('transaction sign', flush=True)
     trx_info2 = json.loads(result.content.decode())
     trx = json.dumps(trx_info2)
-    print('after', trx)
+    print('after', trx, flush=True)
     # print(trx)
     for i in range(5):
-        print('attempt=', i)
+        print('attempt=', i, flush=True)
         result = requests.post(tron_url + '/wallet/broadcasttransaction',
                                data=trx)
         print(result.content)
