@@ -62,7 +62,8 @@ def get_discount(request):
             'ETH': str(cost),
             'WISH': str(int(to_wish('ETH', int(cost)))),
             'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
-            'TRX': str(int(cost) * convert('ETH', 'TRX')['TRX'])
+            'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6),
+            'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(
@@ -73,7 +74,10 @@ def get_discount(request):
                 'ETH': str(cost),
                 'WISH': str(int(to_wish('ETH', int(cost)))),
                 'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
-                'TRX': str(int(cost) * convert('ETH', 'TRX')['TRX'])
+                'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
+                    'TRX'] * 10 ** 6),
+                'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
+                    'TRX'] * 10 ** 6)
             }
 
     return Response(answer)
