@@ -97,7 +97,7 @@ def freeze_tronish(amount):
     deploy_params = {
         'contract_address': convert_address_to_hex(TRON_ADDRESS),
         'function_selector': 'transfer(address,uint)',
-        'parameter': freeze_encoded_parameter,
+        'parameter': freeze_encoded_parameter.decode(),
         'fee_limit': 1000000000,
         'call_value': 0,
         'owner_address': convert_address_to_hex(UPDATE_TRON_ADDRESS)
