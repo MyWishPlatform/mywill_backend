@@ -93,6 +93,7 @@ def freeze_tronish(amount):
     freeze_encoded_parameter = binascii.hexlify(
         encode_abi(['address', 'uint'], [convert_address_to_hex(COLD_TRON_ADDRESS), amount])
     )
+    print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
     deploy_params = {
         'contract_address': convert_address_to_hex(TRON_ADDRESS),
         'function_selector': 'transfer(address,uint)',
