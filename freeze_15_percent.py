@@ -103,7 +103,7 @@ def freeze_tronish(amount):
     # tron_url = 'http://%s:%s' % (
     # str(NETWORKS['TRON_MAINNET']['host']),
     # str(NETWORKS['TRON_MAINNET']['port']))
-    # result = requests.post(tron_url + '/wallet/deploycontract',
+    # result = requests.post(tron_url + '/wallet/triggersmartcontract',
     #                        data=deploy_params)
     # print('transaction created')
     # trx_info1 = json.loads(result.content.decode())
@@ -129,16 +129,6 @@ def freeze_tronish(amount):
     #     answer = json.loads(result.content.decode())
     #     print('answer=', answer, flush=True)
     #     if answer['result']:
-    #         params = {'value': trx_info2['txID']}
-    #         result = requests.post(tron_url + '/wallet/gettransactionbyid',
-    #                                data=json.dumps(params))
-    #         ret = json.loads(result.content.decode())
-    #         if ret:
-    #             self.tron_contract.tx_hash = trx_info2['txID']
-    #             print('tx_hash=', trx_info2['txID'], flush=True)
-    #             self.tron_contract.save()
-    #             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-    #             self.contract.save()
     #             return
     #     time.sleep(5)
     # else:
