@@ -832,7 +832,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         deploy_params = {
             'contract_address': self.tron_contract.address,
             'owner_address': '41' + convert_address_to_hex(
-                NETWORKS[self.contract.network.name]['address'])[2:],
+                NETWORKS[self.contract.network.name]['check_address'])[2:],
             'function_selector': 'check()',
             # 'origin_energy_limit': 100000000
         }
@@ -847,7 +847,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1['transaction']}
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name][
-            'private_key']
+            'check_private_key']
         trx = json.dumps(trx_info1)
 
         result = requests.post(tron_url + '/wallet/gettransactionsign',
