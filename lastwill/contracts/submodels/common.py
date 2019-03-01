@@ -361,6 +361,7 @@ class Contract(models.Model):
         contract_details_types[17] = {'name': 'TRON Airdrop', 'model': tron_airdrop}
         contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
+        return contract_details_types
 
     @classmethod
     def get_details_model(cls, contract_type):
