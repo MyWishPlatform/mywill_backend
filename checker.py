@@ -20,7 +20,9 @@ def check_all():
     for contract in Contract.objects.filter(
             contract_type__in=(0, 1, 2, 18, 19), state='ACTIVE'
     ):
+        print('contract_id=', contract.id, flush=True)
         details = contract.get_details()
+        print('details_id=', details.id, flush=True)
         if contract.contract_type == 2:
             # if details.date < timezone.now():
             #     send_in_pika(contract)
