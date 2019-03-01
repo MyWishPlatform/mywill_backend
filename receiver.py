@@ -97,8 +97,6 @@ class Receiver(threading.Thread):
 
     def check_contract(self, message):
         print('ignored',flush=True)
-        return
-
         print('check contract message', flush=True)
         contract = Contract.objects.get(id=message['contractId'])
         contract.get_details().check_contract()
