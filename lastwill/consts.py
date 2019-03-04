@@ -205,3 +205,6 @@ API_CONTRACT_PRICES = [
     {'contract_type': 16, 'contract_name': 'GameAsset', 'price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
     {'contract_type': 17, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
 ]
+
+ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
+ETHPLORER_KEY = 'freekey'
