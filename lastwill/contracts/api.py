@@ -985,6 +985,28 @@ def get_testnet_tron_tokens(request):
 @api_view(http_method_names=['GET'])
 def get_tokens_for_eth_address(request):
     address = request.query_params['address']
+    network = request.query_params['network']
     check.is_address(address)
-    result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY))
-    return Response(result.json()['tokens'])
+    if network == 'mainnet':
+        result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()['tokens']
+    else:
+        contracts = Contract.objects.filter(
+            user=request.user, contract_type=5, network__name='ETHEREUM_ROPSTEN', state__in=('ACTIVE', 'ENDED', 'DONE')
+        )
+        result = []
+        for contract in contracts:
+            details = contract.get_details()
+            result.append(
+                {'token_info':
+                     {
+                         'address': details.eth_contract_token.address,
+                         'decimals': details.decimals,
+                         'symbol': details.token_short_name,
+                         'name': details.token_name,
+                         'owner': details.admin_address
+                     },
+                'balance': 0
+                }
+            )
+
+    return Response(result)
