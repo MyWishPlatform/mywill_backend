@@ -191,8 +191,41 @@ class ContractDetailsLostKeyTokens(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * 10 ** 18)
-        return result
+        active_to = kwargs['active_to']
+        if isinstance(active_to, str):
+            if 'T' in active_to:
+                active_to = active_to[:active_to.index('T')]
+            active_to = datetime.date(*map(int, active_to.split('-')))
+        elif isinstance(active_to, datetime.datetime):
+            active_to = active_to.date()
+        check_interval = int(kwargs['check_interval'])
+
+        gasPrice = 40000000000
+
+        constructGas = 1660000
+        constructGasPerHeir = 40000
+
+        checkGas = 25000
+
+        triggerGas = 32000
+        triggerGasPerHeir = 42000
+        triggerGasPerToken = 18000
+        heirsCount= int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(
+            kwargs['heirs'])
+
+        constructPrice = gasPrice * (
+        constructGas + heirsCount * constructGasPerHeir)
+
+        checkCount = max(abs(
+            (datetime.date.today() - active_to).total_seconds() / check_interval
+        ), 1)
+        checkPrice = checkGas * gasPrice * checkCount
+
+        triggerPrice = gasPrice * (
+        triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
+
+        return (constructPrice + checkPrice + triggerPrice) / 10 ** 18
+
 
     @postponable
     @check_transaction
