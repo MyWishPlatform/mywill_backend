@@ -986,8 +986,8 @@ def get_testnet_tron_tokens(request):
 def get_tokens_for_eth_address(request):
     address = request.query_params['address']
     network = request.query_params['network']
-    check.is_address(address)
     if network == 'mainnet':
+        check.is_address(address)
         result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()['tokens']
     else:
         contracts = Contract.objects.filter(
@@ -997,7 +997,8 @@ def get_tokens_for_eth_address(request):
         for contract in contracts:
             details = contract.get_details()
             result.append(
-                {'token_info':
+                {
+                    'token_info':
                      {
                          'address': details.eth_contract_token.address,
                          'decimals': details.decimals,
@@ -1005,7 +1006,7 @@ def get_tokens_for_eth_address(request):
                          'name': details.token_name,
                          'owner': details.admin_address
                      },
-                'balance': 0
+                    'balance': 0
                 }
             )
 
