@@ -987,4 +987,4 @@ def get_tokens_for_eth_address(request):
     address = request.query_params['address']
     check.is_address(address)
     result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY))
-    return Response(result.json()['tokenInfo'])
+    return Response(result.json()['tokens'])
