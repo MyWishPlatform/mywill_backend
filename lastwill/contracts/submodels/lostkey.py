@@ -39,7 +39,7 @@ def get_parsing_tokenholdings(address):
 
         res.append(
             {
-                'token_info':
+                'tokenInfo':
                     {
                         'address': address,
                         'symbol': symbol,
