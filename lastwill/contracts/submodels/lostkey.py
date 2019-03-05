@@ -12,6 +12,45 @@ from lastwill.consts import NET_DECIMALS
 from lxml.html import parse, fromstring, etree
 
 
+def get_parsing_tokenholdings(address):
+    TOKEN_HOLDINGS_URL_BASE = 'https://etherscan.io/tokenholdingsHandler.ashx?&a='
+    URL_END = '&q=&p=1&f=0&h=0&sort=total_price_usd&order=desc&fav='
+    res = requests.get(TOKEN_HOLDINGS_URL_BASE + address + URL_END)
+    doc = fromstring(res.content)
+    div = doc[1]
+    tr_list = []
+    for el in div:
+        if el.tag == 'tr' and len(el) >= 7:
+            tr_list.append(el)
+
+    tr_list.pop(0)  # throw out ETH field
+    res = []
+
+    for el in tr_list:
+        value = el[3].text_content().split()
+        amount = value[0]
+        symbol = value[1]
+        try:
+            name_t = el[1][0][1][0]
+            name = name_t.items()[0][1]
+        except IndexError:
+            name = 'Erc20 ({sym})'.format(sym=symbol)
+        address = el[1][1][0].text_content()
+
+        res.append(
+            {
+                'token_info':
+                    {
+                        'address': address,
+                        'symbol': symbol,
+                        'name': name
+                    },
+                'balance': amount
+            }
+        )
+    return res
+
+
 @contract_details('Wallet contract (lost key)')
 class ContractDetailsLostKey(CommonDetails):
     sol_path = 'lastwill/lost-key/'
@@ -336,43 +375,3 @@ class ContractDetailsLostKeyTokens(CommonDetails):
         eth_contract.save()
         self.eth_contract = eth_contract
         self.save()
-
-    def get_parsing_tokenholdings(self, address):
-        TOKEN_HOLDINGS_URL_BASE = 'https://etherscan.io/tokenholdingsHandler.ashx?&a='
-        URL_END = '&q=&p=1&f=0&h=0&sort=total_price_usd&order=desc&fav='
-        res = requests.get(TOKEN_HOLDINGS_URL_BASE + address + URL_END)
-        doc = fromstring(res.content)
-        div = doc[1]
-        tr_list = []
-        for el in div:
-            if el.tag == 'tr' and len(el) >= 7:
-                tr_list.append(el)
-
-        tr_list.pop(0) #throw out ETH field
-        res = []
-
-        for el in tr_list:
-            value = el[3].text_content().split()
-            amount = value[0]
-            symbol = value[1]
-            try:
-                name_t = el[1][0][1][0]
-                name = name_t.items()[0][1]
-            except IndexError:
-                name = 'Erc20 ({sym})'.format(sym=symbol)
-            address = el[1][1][0].text_content()
-
-            res.append(
-                {
-                'token_info':
-                    {
-                        'address': address,
-                        'symbol': symbol,
-                        'name': name
-                    },
-                'balance': amount
-                }
-            )
-
-        return res
-

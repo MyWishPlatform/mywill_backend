@@ -988,7 +988,9 @@ def get_tokens_for_eth_address(request):
     network = request.query_params['network']
     if network == 'mainnet':
         check.is_address(address)
-        result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()['tokens']
+        result = get_parsing_tokenholdings(address)
+        if not result:
+            result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()['tokens']
     else:
         contracts = Contract.objects.filter(
             user=request.user, contract_type=5, network__name='ETHEREUM_ROPSTEN', state__in=('ACTIVE', 'ENDED', 'DONE')
