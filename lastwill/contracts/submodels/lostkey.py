@@ -23,32 +23,35 @@ def get_parsing_tokenholdings(address):
         if el.tag == 'tr' and len(el) >= 7:
             tr_list.append(el)
 
-    tr_list.pop(0)  # throw out ETH field
-    res = []
+    if len(tr_list) >= 1:
+        tr_list.pop(0)  # throw out ETH field
+        res = []
 
-    for el in tr_list:
-        value = el[3].text_content().split()
-        amount = value[0]
-        symbol = value[1]
-        try:
-            name_t = el[1][0][1][0]
-            name = name_t.items()[0][1]
-        except IndexError:
-            name = 'Erc20 ({sym})'.format(sym=symbol)
-        address = el[1][1][0].text_content()
+        for el in tr_list:
+            value = el[3].text_content().split()
+            amount = value[0]
+            symbol = value[1]
+            try:
+                name_t = el[1][0][1][0]
+                name = name_t.items()[0][1]
+            except IndexError:
+                name = 'Erc20 ({sym})'.format(sym=symbol)
+            address = el[1][1][0].text_content()
 
-        res.append(
-            {
-                'tokenInfo':
-                    {
-                        'address': address,
-                        'symbol': symbol,
-                        'name': name
-                    },
-                'balance': amount
-            }
-        )
-    return res
+            res.append(
+                {
+                    'tokenInfo':
+                        {
+                            'address': address,
+                            'symbol': symbol,
+                            'name': name
+                        },
+                    'balance': amount
+                }
+            )
+        return res
+    else:
+        return []
 
 
 @contract_details('Wallet contract (lost key)')
