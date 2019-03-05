@@ -988,7 +988,8 @@ def get_tokens_for_eth_address(request):
     network = request.query_params['network']
     if network == 'mainnet':
         check.is_address(address)
-        result = get_parsing_tokenholdings(address)
+        # result = get_parsing_tokenholdings(address)
+        result = []
         if not result:
             result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()['tokens']
     else:
