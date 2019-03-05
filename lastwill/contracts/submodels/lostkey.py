@@ -13,7 +13,7 @@ from lxml.html import parse, fromstring, etree
 
 
 def get_parsing_tokenholdings(address):
-    pages = 10
+    pages = 16
     results = []
     for i in range(pages):
         page = get_tokenholdings_page(address, i+1)
