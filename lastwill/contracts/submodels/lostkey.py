@@ -13,36 +13,54 @@ from lxml.html import parse, fromstring, etree
 
 
 def get_parsing_tokenholdings(address):
+    pages = 16
+    results = []
+    for i in range(pages):
+        page = get_tokenholdings_page(address, i+1)
+        if len(page) != 0:
+            results.extend(page)
+    return results
+
+
+def get_tokenholdings_page(address, page):
     TOKEN_HOLDINGS_URL_BASE = 'https://etherscan.io/tokenholdingsHandler.ashx?&a='
-    URL_END = '&q=&p=1&f=0&h=0&sort=total_price_usd&order=desc&fav='
+    URL_END = '&q=&p={page}&f=0&h=0&sort=total_price_usd&order=desc&fav='.format(page=page)
     res = requests.get(TOKEN_HOLDINGS_URL_BASE + address + URL_END)
     doc = fromstring(res.content)
-    div = doc[1]
+
+    div = doc[1][5] if len(doc[1]) == 6 else doc[1]
+
     tr_list = []
     for el in div:
-        if el.tag == 'tr' and len(el) >= 7:
+        if el.tag == 'tr':
             tr_list.append(el)
 
+    tr_list = tr_list[:int((len(tr_list)/2))]
+
     if len(tr_list) >= 1:
-        tr_list.pop(0)  # throw out ETH field
         res = []
+        tr_list = tr_list[:int((len(tr_list)/2))]
 
         for el in tr_list:
             value = el[3].text_content().split()
-            amount = value[0]
+            amount = value[0].replace(',', '')
             symbol = value[1]
+
+            if symbol == 'ETH':
+                continue
+
             try:
                 name_t = el[1][0][1][0]
                 name = name_t.items()[0][1]
             except IndexError:
                 name = 'Erc20 ({sym})'.format(sym=symbol)
-            address = el[1][1][0].text_content()
+            token_addr = el[1][1][0].text_content()
 
             res.append(
                 {
                     'tokenInfo':
                         {
-                            'address': address,
+                            'address': token_addr,
                             'symbol': symbol,
                             'name': name
                         },
@@ -52,6 +70,7 @@ def get_parsing_tokenholdings(address):
         return res
     else:
         return []
+
 
 
 @contract_details('Wallet contract (lost key)')
