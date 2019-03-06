@@ -10,7 +10,8 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, LASTWILL_ALIVE_TIMEOUT
+from lastwill.settings import LASTWILL_ALIVE_TIMEOUT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 
 @contract_details('Will contract')
