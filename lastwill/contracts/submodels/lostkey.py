@@ -267,7 +267,7 @@ class ContractDetailsLostKeyTokens(CommonDetails):
         triggerPrice = gasPrice * (
         triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
 
-        return (constructPrice + checkPrice + triggerPrice) / 10 ** 18
+        return constructPrice + checkPrice + triggerPrice
 
 
     @postponable
