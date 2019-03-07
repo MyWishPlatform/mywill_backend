@@ -825,6 +825,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
             'owner_address': '41' + convert_address_to_hex(
                 NETWORKS[self.contract.network.name]['check_address'])[2:],
             'function_selector': 'check()',
+            'fee_limit': 1000000000
             # 'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)

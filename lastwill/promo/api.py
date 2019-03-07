@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
-from lastwill.settings import  MY_WISH_URL, EOSISH_URL
+from lastwill.settings import  MY_WISH_URL, EOSISH_URL, TRON_URL
 from lastwill.consts import NET_DECIMALS
 from exchange_API import *
 from .models import *
@@ -46,18 +46,18 @@ def get_discount(request):
             kwargs = ContractSerializer().get_details_serializer(
                 contract.contract_type
             )().to_representation(contract_details)
-            cost = contract_details.calc_cost_eos(kwargs, contract.network) * discount / 100
+            cost = contract_details.calc_cost_eos(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'EOS': cost,
                 'EOSISH': str(float(cost) * convert('EOS', 'EOSISH')['EOSISH'])
             }
-        elif host == MY_WISH_URL:
-            cost = contract.cost * discount / 100
+        elif host == MY_WISH_URL or TRON_URL:
+            cost = contract.cost * (100 - discount) / 100
             if contract.contract_type == 5:
                 print('token token', flush=True)
                 if contract_details.authio:
                     print('token with authio', flush=True)
-                    cost = (contract.cost - 3 * NET_DECIMALS['ETH']) * discount / 100 + 3 * NET_DECIMALS['ETH']
+                    cost = (contract.cost - 3 * NET_DECIMALS['ETH']) * (100 - discount) / 100 + 3 * NET_DECIMALS['ETH']
             answer['discount_price'] = {
             'ETH': str(cost),
             'WISH': str(int(to_wish('ETH', int(cost)))),
@@ -69,7 +69,7 @@ def get_discount(request):
             kwargs = ContractSerializer().get_details_serializer(
                 contract.contract_type
             )().to_representation(contract_details)
-            cost = contract_details.calc_cost(kwargs, contract.network) * discount / 100
+            cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'ETH': str(cost),
                 'WISH': str(int(to_wish('ETH', int(cost)))),
