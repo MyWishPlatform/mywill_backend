@@ -8,6 +8,7 @@ class SnapshotRow(models.Model):
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
 
+
 class SnapshotEOSRow(models.Model):
     eos_address = models.CharField(max_length=50)
     value = models.DecimalField(
@@ -20,6 +21,7 @@ class TRONSnapshotEth(models.Model):
     balance = models.DecimalField(
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+    tron_address = models.CharField(max_length=50)
 
 
 class TRONSnapshotEOS(models.Model):
@@ -27,6 +29,7 @@ class TRONSnapshotEOS(models.Model):
     balance = models.DecimalField(
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+    tron_address = models.CharField(max_length=50)
 
 
 class TRONSnapshotTRON(models.Model):
