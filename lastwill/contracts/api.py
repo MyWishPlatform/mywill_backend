@@ -632,7 +632,8 @@ def get_cost_all_contracts(request):
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
         elif i in [15, 16, 17, 18]:
             eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
-            answer[i] = (int(eth_cost) * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
+            # print('price', i, 'eth_cost', eth_cost, flush=True)
+            answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
