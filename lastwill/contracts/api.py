@@ -199,7 +199,8 @@ def deploy(request):
         kwargs = ContractSerializer().get_details_serializer(
             contract.contract_type
         )().to_representation(contract_details)
-        cost = contract_details.calc_cost(kwargs, contract.network)
+        eth_cost = contract_details.calc_cost(kwargs, contract.network) / 10 ** 18
+        cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
         currency = 'TRX'
         site_id = 3
     promo_str = request.data.get('promo', None)
