@@ -695,14 +695,14 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.next_check = None
         self.save()
         heirs = Heir.objects.filter(contract=self.contract)
-        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
+        # link = NETWORKS[self.tron_contract.contract.network.name]['link_tx']
         for heir in heirs:
             if heir.email:
                 send_mail(
                     heir_subject,
                     heir_message.format(
                         user_address=heir.address,
-                        link_tx=link.format(tx=message['transactionHash'])
+                        link_tx=message['transactionHash']
                     ),
                     DEFAULT_FROM_EMAIL,
                     [heir.email]
