@@ -630,8 +630,9 @@ def get_cost_all_contracts(request):
         if i in [10, 11, 12, 13, 14]:
             # print(host, EOSISH_URL, flush=True)
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
-        elif i in [16, 16, 17]:
-            answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['TRONISH']
+        elif i in [15, 16, 17, 18]:
+            eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
+            answer[i] = (int(eth_cost) * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
