@@ -17,6 +17,7 @@ from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
 from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
+from tron_wif.hex2wif import hex2tronwif
 
 
 class UserConfirmEmailView(ConfirmEmailView):
@@ -49,8 +50,8 @@ def profile_view(request):
     if site_name.startswith('local'):
         print('cut local')
         site_name = site_name[5:]
-    if site_name == TRON_URL:
-        site_name = MY_WISH_URL
+    # if site_name == TRON_URL:
+    #     site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
     # print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
@@ -65,7 +66,8 @@ def profile_view(request):
             'id': request.user.id,
             'lang': request.user.profile.lang,
             'memo': user_balance.memo,
-            'eos_address': 'mywishcoming'
+            'eos_address': 'mywishcoming',
+            'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else ''
     }
     return Response(answer)
 

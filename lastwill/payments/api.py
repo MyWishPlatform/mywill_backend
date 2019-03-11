@@ -17,12 +17,16 @@ def create_payment(uid, tx, currency, amount, site_id):
     if amount == 0.0:
         return
     print('create payment')
-    if SubSite.objects.get(id=site_id).site_name in (MY_WISH_URL, TRON_URL):
+    if SubSite.objects.get(id=site_id).site_name == MY_WISH_URL:
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
+    elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
+        value = amount if currency in ('TRONISH', 'TRX') else amount * float(convert(
+            currency, 'TRX'
+        )['TRX']) / NET_DECIMALS[currency] * NET_DECIMALS['TRON']
     else:
         amount = calculate_decimals(currency, amount)
         value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']
@@ -43,7 +47,7 @@ def create_payment(uid, tx, currency, amount, site_id):
     ).save()
     print('PAYMENT: Created')
     print('PAYMENT: Received {amount} {curr} from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-          .format(amount=value, curr=currency, email=user, user_id=uid, txid=tx, sitename=site)
+          .format(amount=value, curr=currency, email=user, user_id=uid, txid=tx, sitename=site_id)
           )
 
 
@@ -74,15 +78,21 @@ def positive_payment(user, value, site_id, currency):
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
     freeze_value = value * 0.15
-    freeze_dest = 'WISH' if site_id == 1 else 'EOSISH'
     if site_id == 1:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + freeze_value
         )
+        freeze_dest = 'WISH'
+    elif site_id == 3:
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            eosish=F('tronish') + freeze_value
+        )
+        freeze_dest = 'TRONISH'
     else:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + freeze_value
         )
+        freeze_dest = 'EOSISH'
     print('PAYMENT: Freezed {amount} {currency}'
           .format(amount=freeze_value, currency=freeze_dest)
         )
@@ -100,7 +110,7 @@ def get_payment_statistics(start, stop=None):
     payments = InternalPayment.objects.filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     )
-    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0}
+    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0, 'TRX': 0.0, 'TRONISH': 0.0}
     for pay in payments:
         print(
             pay.datetime.date(),

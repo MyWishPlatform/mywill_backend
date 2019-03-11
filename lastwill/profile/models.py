@@ -27,6 +27,7 @@ class UserSiteBalance(models.Model):
     balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
     eth_address = models.CharField(max_length=50, null=True, default=None)
     btc_address = models.CharField(max_length=50, null=True, default=None)
+    tron_address = models.CharField(max_length=50, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
 
 

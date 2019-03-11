@@ -38,19 +38,6 @@ def replace_0x(message):
     return message
 
 
-def convert_address_to_wif(address):
-    short_address = '0x41' + address[2:]
-    m = hashlib.sha256()
-    m.update(short_address.encode())
-    first_part = m.digest()
-    # m.update(first_part)
-    # control_sum = m.digest()
-    address_with_sum = binascii.hexlify(short_address.encode() + first_part[0:4])
-    # encode_address = address_with_sum.encode()
-    wif_address = base58.b58encode(address_with_sum)
-    return wif_address
-
-
 class TRONContract(EthContract):
     pass
 
@@ -90,7 +77,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['ETH'])
+        result = int(5 * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -256,7 +243,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['ETH'])
+        result = int(0.5 * NET_DECIMALS['ETH'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -416,7 +403,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * 10 ** 18)
+        result = int(0.5 * NET_DECIMALS['ETH'])
         return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):

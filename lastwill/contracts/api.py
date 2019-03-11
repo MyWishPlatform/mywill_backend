@@ -83,7 +83,6 @@ class ContractViewSet(ModelViewSet):
 
     def get_queryset(self):
         result = self.queryset.order_by('-created_date')
-        eos = self.request.query_params.get('eos', None)
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
@@ -200,9 +199,10 @@ def deploy(request):
         kwargs = ContractSerializer().get_details_serializer(
             contract.contract_type
         )().to_representation(contract_details)
-        cost = contract_details.calc_cost(kwargs, contract.network)
-        currency = 'ETH'
-        site_id = 1
+        eth_cost = contract_details.calc_cost(kwargs, contract.network) / 10 ** 18
+        cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
+        currency = 'TRX'
+        site_id = 3
     promo_str = request.data.get('promo', None)
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
     cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
@@ -631,7 +631,10 @@ def get_cost_all_contracts(request):
         if i in [10, 11, 12, 13, 14]:
             # print(host, EOSISH_URL, flush=True)
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
-            # answer[i] = 200
+        elif i in [15, 16, 17, 18]:
+            eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
+            # print('price', i, 'eth_cost', eth_cost, flush=True)
+            answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
