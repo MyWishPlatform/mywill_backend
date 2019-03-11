@@ -42,7 +42,7 @@ def validate_token_short_name(name):
                               code=404)
     for symb in name:
         if not symb.isupper():
-            raise ValidationError({'result': 'Lower symbol in token short name'}, code=404)
+            raise ValidationError({'result': 'Wrong symbol in token short name'}, code=404)
 
 
 def validate_token_name(name):
@@ -78,12 +78,15 @@ def create_eth_token(request):
         raise ValidationError({'result': 'Wrong token type'}, code=404)
     validate_token_name(request.data['token_name'])
     validate_token_short_name(request.data['token_short_name'])
+    if request.data['future_minting'] not in [True, False]:
+        raise ValidationError({'result': 'Wrong future minting'}, code=404)
     token_params = {
         'decimals': int(request.data['decimals']),
         'token_name': request.data['token_name'],
         'token_short_name': request.data['token_short_name'],
         'admin_address': request.data['admin_address'],
         'token_type': request.data['token_type'],
+        'future_minting': request.data['future_minting'],
         'token_holders': []
     }
     log_additions(log_action_name, token_params)
@@ -111,7 +114,8 @@ def create_eth_token(request):
         'network': contract.network.name,
         'network_id': contract.network.id,
         'decimals': contract_details.decimals,
-        'token_type': contract_details.token_type
+        'token_type': contract_details.token_type,
+        'future_minting': contract_details.future_minting
     }
     return Response(answer)
 
@@ -146,7 +150,8 @@ def show_eth_token(request):
         'token_short_name': contract_details.token_short_name,
         'admin_address': contract_details.admin_address,
         'decimals': contract_details.decimals,
-        'token_type': contract_details.token_type
+        'token_type': contract_details.token_type,
+        'future_minting': contract_details.future_minting
     }
     log_additions(log_action_name, {'contract_id': int(request.data['contract_id'])})
     if contract_details.eth_contract_token and contract_details.eth_contract_token.tx_hash:
@@ -181,11 +186,18 @@ def edit_eth_token(request):
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     contract_details = contract.get_details()
-    if 'decimals' in request.data and int(request.data['decimals']) >= 0 and int(request.data['decimals']) <= 50:
+    fields = ('decimals', 'token_type', 'token_short_name', 'admin_address', 'token_name')
+    if not any([key in request.data.keys() for key in fields]):
+        raise ValidationError({'result': 'Optional parameters (at least one)'}, code=403)
+    if 'decimals' in request.data:
+        if int(request.data['decimals']) < 0 and int(request.data['decimals']) > 50:
+            raise ValidationError({'result': 'Wrong decimals'}, code=404)
         contract_details.decimals = int(request.data['decimals'])
-    if 'token_type' in request.data and request.data['token_type'] in ['ERC20', 'ERC223']:
+    if 'token_type' in request.data:
+        if request.data['token_type'] not in ['ERC20', 'ERC223']:
+            raise ValidationError({'result': 'Wrong token type'}, code=404)
         contract_details.token_type = request.data['token_type']
-    if 'token_short_name' in request.data and request.data['token_short_name'] != '':
+    if 'token_short_name' in request.data:
         validate_token_short_name(request.data['token_short_name'])
         contract_details.token_short_name = request.data['token_short_name']
     if 'admin_address' in request.data:
@@ -194,6 +206,10 @@ def edit_eth_token(request):
     if 'token_name' in request.data and request.data['token_name'] != '':
         validate_token_name(request.data['token_name'])
         contract_details.token_name = request.data['token_name']
+    if 'future_minting' in request.data:
+        if request.data['future_minting'] not in [True, False]:
+            raise ValidationError({'result': 'Wrong future minting'}, code=404)
+        contract_details.future_minting = request.data['future_minting']
     log_additions(log_action_name, request.data)
     contract_details.save()
     answer = {
@@ -269,7 +285,7 @@ def deploy_eth_token(request):
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
     if contract.state != 'CREATED':
-        raise ValidationError({'result': 'Wrong state'}, code=404)
+        raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     contract_details = contract.get_details()
     log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()

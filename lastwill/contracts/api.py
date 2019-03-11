@@ -85,11 +85,11 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16, 17))
+            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16, 17, 18))
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
-            result = result.filter(contract_type__in=(15, 16, 17))
+            result = result.filter(contract_type__in=(15, 16, 17, 18))
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -219,7 +219,7 @@ def deploy(request):
 @api_view(http_method_names=['POST'])
 def i_am_alive(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.state != 'ACTIVE' or contract.contract_type not in (0, 1):
+    if contract.user != request.user or contract.state != 'ACTIVE' or contract.contract_type not in (0, 1, 18):
         raise PermissionDenied
     details = contract.get_details()
     if details.last_press_imalive:
@@ -236,7 +236,7 @@ def i_am_alive(request):
 @api_view(http_method_names=['POST'])
 def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (0, 1):
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (0, 1, 18):
         raise PermissionDenied()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'cancel', queue)
@@ -962,3 +962,59 @@ def get_authio_cost(request):
     wish_cost = str(int(to_wish('ETH', int(eth_cost))))
     btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
     return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+
+
+@api_view(http_method_names=['GET'])
+def get_testnet_tron_tokens(request):
+    user = request.user
+    contracts = Contract.objects.filter(
+        user=user, contract_type=15, network__name='TRON_TESTNET', state__in=('ACTIVE', 'ENDED', 'DONE')
+    )
+    answer = []
+    for c in contracts:
+        d = c.get_details()
+        answer.append({
+            'address': d.tron_contract_token.address,
+            'decimals': d.decimals,
+            'token_short_name': d.token_short_name,
+            'token_name': d.token_name
+        })
+    return Response(answer)
+
+
+@api_view(http_method_names=['GET'])
+def get_tokens_for_eth_address(request):
+    address = request.query_params['address']
+    network = request.query_params['network']
+    if network == 'mainnet':
+        check.is_address(address)
+        result = get_parsing_tokenholdings(address)
+        # result = []
+        if not result:
+            result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()
+            if 'tokens' in result:
+                result = result['tokens']
+            else:
+                result = []
+    else:
+        contracts = Contract.objects.filter(
+            user=request.user, contract_type=5, network__name='ETHEREUM_ROPSTEN', state__in=('ACTIVE', 'ENDED', 'DONE')
+        )
+        result = []
+        for contract in contracts:
+            details = contract.get_details()
+            result.append(
+                {
+                    'token_info':
+                     {
+                         'address': details.eth_contract_token.address,
+                         'decimals': details.decimals,
+                         'symbol': details.token_short_name,
+                         'name': details.token_name,
+                         'owner': details.admin_address
+                     },
+                    'balance': 0
+                }
+            )
+
+    return Response(result)

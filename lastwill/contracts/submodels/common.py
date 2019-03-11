@@ -336,6 +336,9 @@ class Contract(models.Model):
         tron_token = apps.get_model('contracts', 'ContractDetailsTRONToken')
         game_asset = apps.get_model('contracts', 'ContractDetailsGameAssets')
         tron_airdrop = apps.get_model('contracts', 'ContractDetailsTRONAirdrop')
+        tron_lostkey = apps.get_model('contracts', 'ContractDetailsTRONLostkey')
+        eth_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsLostKeyTokens')
+
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -356,6 +359,8 @@ class Contract(models.Model):
         contract_details_types[15] = {'name': 'TRON Token', 'model': tron_token}
         contract_details_types[16] = {'name': 'Game Assets', 'model': game_asset}
         contract_details_types[17] = {'name': 'TRON Airdrop', 'model': tron_airdrop}
+        contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
+        contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
         return contract_details_types
 
     @classmethod

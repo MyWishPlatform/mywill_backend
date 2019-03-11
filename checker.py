@@ -10,17 +10,18 @@ from django.core.mail import send_mail
 
 from lastwill.contracts.models import Contract
 from lastwill.parint import *
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.settings import DEFAULT_FROM_EMAIL, LASTWILL_ALIVE_TIMEOUT
 import email_messages
-from lastwill.consts import LASTWILL_ALIVE_TIMEOUT
 
 
 def check_all():
     print('check_all method', flush=True)
     for contract in Contract.objects.filter(
-            contract_type__in=(0, 1, 2), state='ACTIVE'
+            contract_type__in=(0, 1, 2, 18, 19), state='ACTIVE'
     ):
+        print('contract_id=', contract.id, flush=True)
         details = contract.get_details()
+        print('details_id=', details.id, flush=True)
         if contract.contract_type == 2:
             # if details.date < timezone.now():
             #     send_in_pika(contract)

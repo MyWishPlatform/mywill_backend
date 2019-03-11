@@ -53,7 +53,7 @@ def profile_view(request):
     # if site_name == TRON_URL:
     #     site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
-    print(request.user.id, flush=True)
+    # print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
     answer = {
             'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
@@ -143,7 +143,9 @@ def create_api_token(request):
     api_token.save()
     send_mail(
         'User create api token',
-        'User with id={id} create token for api'.format(id=user.id),
+        'User with id={id} {email_info} create token for api'.format(
+            id=user.id, email_info='email is {email}'.format(email=user.email)
+        ),
         DEFAULT_FROM_EMAIL,
         [SUPPORT_EMAIL]
     )
