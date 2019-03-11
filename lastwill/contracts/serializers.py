@@ -27,7 +27,8 @@ from lastwill.contracts.models import (
         InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
-        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop
+        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
+        ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -168,7 +169,6 @@ class ContractSerializer(serializers.ModelSerializer):
             'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
             'TRX': str(int(eth_cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6),
             'TRONISH': str(int(eth_cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
-
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
@@ -220,7 +220,9 @@ class ContractSerializer(serializers.ModelSerializer):
             14: ContractDetailsEOSTokenSASerializer,
             15: ContractDetailsTRONTokenSerializer,
             16: ContractDetailsGameAssetsSerializer,
-            17: ContractDetailsTRONAirdropSerializer
+            17: ContractDetailsTRONAirdropSerializer,
+            18: ContractDetailsTRONLostkeySerializer,
+            19: ContractDetailsLostKeyTokensSerializer
         }[contract_type]
 
 
@@ -1246,3 +1248,144 @@ class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)
+
+
+class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTRONLostkey
+        fields = (
+            'user_address', 'active_to', 'check_interval',
+            'last_check', 'next_check', 'email', 'platform_alive',
+            'platform_cancel', 'last_reset', 'last_press_imalive'
+        )
+        extra_kwargs = {
+            'last_check': {'read_only': True},
+            'next_check': {'read_only': True},
+            'last_reset': {'read_only': True},
+            'last_press_imalive': {'read_only': True}
+        }
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        heir_serializer = HeirSerializer()
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
+        res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
+        return res
+
+    def create(self, contract, contract_details):
+        heirs = contract_details.pop('heirs')
+        for heir_json in heirs:
+            heir_json['address'] = heir_json['address']
+            kwargs = heir_json.copy()
+            kwargs['contract'] = contract
+            Heir(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        contract.heir_set.all().delete()
+        heirs = contract_details.pop('heirs')
+        for heir_json in heirs:
+            heir_json['address'] = heir_json['address']
+            kwargs = heir_json.copy()
+            kwargs['contract'] = contract
+            Heir(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        now = timezone.now()
+        if 'user_address' not in details or 'heirs' not in details:
+            raise ValidationError
+        if 'active_to' not in details or 'check_interval' not in details:
+            raise ValidationError
+        if details['check_interval'] > 315360000:
+            raise ValidationError
+        details['user_address'] = details['user_address']
+        details['active_to'] = datetime.datetime.strptime(
+            details['active_to'], '%Y-%m-%d %H:%M'
+        )
+        for heir_json in details['heirs']:
+            heir_json.get('email', None) and check.is_email(heir_json['email'])
+
+            heir_json['address'] = heir_json['address']
+            check.is_percent(heir_json['percentage'])
+            heir_json['percentage'] = int(heir_json['percentage'])
+        check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
+        return details
+
+
+class ContractDetailsLostKeyTokensSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsLostKeyTokens
+        fields = (
+            'user_address', 'active_to', 'check_interval',
+            'last_check', 'next_check', 'email', 'platform_alive',
+            'platform_cancel', 'last_reset', 'last_press_imalive'
+        )
+        extra_kwargs = {
+            'last_check': {'read_only': True},
+            'next_check': {'read_only': True},
+            'last_reset': {'read_only': True},
+            'last_press_imalive': {'read_only': True}
+        }
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        heir_serializer = HeirSerializer()
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+    def create(self, contract, contract_details):
+        heirs = contract_details.pop('heirs')
+        for heir_json in heirs:
+            heir_json['address'] = heir_json['address'].lower()
+            kwargs = heir_json.copy()
+            kwargs['contract'] = contract
+            Heir(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        contract.heir_set.all().delete()
+        heirs = contract_details.pop('heirs')
+        for heir_json in heirs:
+            heir_json['address'] = heir_json['address'].lower()
+            kwargs = heir_json.copy()
+            kwargs['contract'] = contract
+            Heir(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        if 'user_address' not in details or 'heirs' not in details:
+            raise ValidationError
+        if 'active_to' not in details or 'check_interval' not in details:
+            raise ValidationError
+        if details['check_interval'] > 315360000:
+            raise ValidationError
+        check.is_address(details['user_address'])
+        details['user_address'] = details['user_address'].lower()
+        details['active_to'] = datetime.datetime.strptime(
+            details['active_to'], '%Y-%m-%d %H:%M'
+        )
+        for heir_json in details['heirs']:
+            heir_json.get('email', None) and check.is_email(heir_json['email'])
+            check.is_address(heir_json['address'])
+            heir_json['address'] = heir_json['address'].lower()
+            check.is_percent(heir_json['percentage'])
+            heir_json['percentage'] = int(heir_json['percentage'])
+        check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
+        return details

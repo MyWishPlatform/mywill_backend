@@ -53,7 +53,7 @@ def profile_view(request):
     # if site_name == TRON_URL:
     #     site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
-    print(request.user.id, flush=True)
+    # print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
     answer = {
             'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),

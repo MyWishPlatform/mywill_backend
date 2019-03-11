@@ -35,3 +35,6 @@ slogger.py
 templates/wstest.html
 ws_test.py
 node_modules/
+api_params.json
+get_secret_key_Dasha.py
+tst.json

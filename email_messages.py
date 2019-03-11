@@ -173,3 +173,13 @@ Error, which was encountered:
 Best wishes,
 MyWish Team.
 """
+
+tron_deploy_subject = """Your contract is ready"""
+tron_deploy_text = """Hello,
+
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
+
+Please contact support@mywish.io if you need if you have any questions.
+
+Best wishes,
+MyWish Team."""

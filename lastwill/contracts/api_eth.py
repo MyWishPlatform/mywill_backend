@@ -188,7 +188,7 @@ def edit_eth_token(request):
     contract_details = contract.get_details()
     fields = ('decimals', 'token_type', 'token_short_name', 'admin_address', 'token_name')
     if not any([key in request.data.keys() for key in fields]):
-        raise ValueError("Optional parameters (at least one)")
+        raise ValidationError({'result': 'Optional parameters (at least one)'}, code=403)
     if 'decimals' in request.data:
         if int(request.data['decimals']) < 0 and int(request.data['decimals']) > 50:
             raise ValidationError({'result': 'Wrong decimals'}, code=404)
