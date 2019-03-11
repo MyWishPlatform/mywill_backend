@@ -1005,7 +1005,7 @@ def get_tokens_for_eth_address(request):
             details = contract.get_details()
             result.append(
                 {
-                    'token_info':
+                    'tokenInfo':
                      {
                          'address': details.eth_contract_token.address,
                          'decimals': details.decimals,

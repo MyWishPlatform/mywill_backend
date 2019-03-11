@@ -404,7 +404,8 @@ class ContractDetailsToken(CommonDetails):
             for th in token_holders:
                 mint_info = mint_info + '\n' + th.address + '\n'
                 mint_info = mint_info + str(th.amount) + '\n'
-                mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+                if th.freeze_date:
+                    mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
             mail = EmailMessage(
                 subject=authio_subject,
                 body=authio_message.format(
