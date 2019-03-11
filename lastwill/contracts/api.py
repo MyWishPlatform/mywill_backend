@@ -29,6 +29,7 @@ from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPAR
 from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL
 from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.permissions import IsOwner, IsStaff
+from lastwill.snapshot.models import *
 from lastwill.parint import *
 from lastwill.promo.models import Promo, User2Promo, Promo2ContractType
 from lastwill.promo.api import check_and_get_discount
@@ -1018,3 +1019,34 @@ def get_tokens_for_eth_address(request):
             )
 
     return Response(result)
+
+
+@api_view(http_method_names=['GET'])
+def get_tronish_balance(request):
+    eos_address = request.query_params.get('eos_address', None)
+    if eos_address:
+        tronish_info = TRONSnapshotEOS.objects.filter(eos_address=eos_address).first()
+        if tronish_info:
+            return Response({
+                'balance': tronish_info.balance / 10 ** 4 / 20 * 10 ** 6
+            })
+
+    eth_address = request.query_params.get('eth_address', None)
+    if eth_address:
+        tronish_info = TRONSnapshotEth.objects.filter(
+            eth_address=eth_address).first()
+        if tronish_info:
+            return Response({
+                'balance': tronish_info.balance / 10 ** 18 * 10 ** 6
+            })
+
+    tron_address = request.query_params.get('tron_address', None)
+    if tron_address:
+        tronish_info = TRONSnapshotTRON.objects.filter(
+            tron_address=tron_address).first()
+        if tronish_info:
+            return Response({
+                'balance': tronish_info.balance / 10000
+            })
+
+    return Response({'balance': 0})
