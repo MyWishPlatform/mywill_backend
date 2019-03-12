@@ -199,8 +199,8 @@ def deploy(request):
         kwargs = ContractSerializer().get_details_serializer(
             contract.contract_type
         )().to_representation(contract_details)
-        eth_cost = contract_details.calc_cost(kwargs, contract.network) / 10 ** 18
-        cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
+        cost = contract_details.calc_cost_tron(kwargs, contract.network)
+        # cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
         currency = 'TRX'
         site_id = 3
     promo_str = request.data.get('promo', None)
@@ -632,9 +632,10 @@ def get_cost_all_contracts(request):
             # print(host, EOSISH_URL, flush=True)
             answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
         elif i in [15, 16, 17, 18]:
-            eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
+            # eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
             # print('price', i, 'eth_cost', eth_cost, flush=True)
-            answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
+            # answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
+            answer[i] = contract_details_types[i]['model'].calc_cost_tron() / NET_DECIMALS['TRX']
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)

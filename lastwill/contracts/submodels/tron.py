@@ -80,6 +80,13 @@ class ContractDetailsTRONToken(CommonDetails):
         result = int(5 * NET_DECIMALS['ETH'])
         return result
 
+    @staticmethod
+    def calc_cost_tron(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(30000 * NET_DECIMALS['TRX'])
+        return result
+
     def get_arguments(self, eth_contract_attr_name):
         return []
 
@@ -246,6 +253,13 @@ class ContractDetailsGameAssets(CommonDetails):
         result = int(0.5 * NET_DECIMALS['ETH'])
         return result
 
+    @staticmethod
+    def calc_cost_tron(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(3000 * NET_DECIMALS['TRX'])
+        return result
+
     def get_arguments(self, eth_contract_attr_name):
         return []
 
@@ -404,6 +418,13 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         result = int(0.5 * NET_DECIMALS['ETH'])
+        return result
+
+    @staticmethod
+    def calc_cost_tron(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(3000 * NET_DECIMALS['TRX'])
         return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
@@ -637,6 +658,13 @@ class ContractDetailsTRONLostkey(CommonDetails):
         )
         tron_cost = (constructPrice + checkPrice + triggerPrice) * 200 / 10 ** 6
         result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
+        return result
+
+    @staticmethod
+    def calc_cost_tron(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(4000 * NET_DECIMALS['TRX'])
         return result
 
     @postponable
