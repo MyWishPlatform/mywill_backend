@@ -635,7 +635,7 @@ def get_cost_all_contracts(request):
             # eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
             # print('price', i, 'eth_cost', eth_cost, flush=True)
             # answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
-            answer[i] = contract_details_types[i]['model'].calc_cost_tron() / NET_DECIMALS['TRX']
+            answer[i] = contract_details_types[i]['model'].min_cost_tron() / NET_DECIMALS['TRX']
         else:
             answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
