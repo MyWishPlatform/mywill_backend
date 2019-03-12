@@ -48,7 +48,7 @@ def create_reminder(contract, day):
 
 
 def send_reminders(contract):
-    if contract.contract_type == 0:
+    if contract.contract_type in [0, 18, 19]:
         details = contract.get_details()
         if contract.state == 'ACTIVE' and contract.user.email:
             if details.next_check:

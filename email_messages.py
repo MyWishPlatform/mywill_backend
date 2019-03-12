@@ -78,7 +78,7 @@ postponed_message = """Contract {contract_id} change state on 'POSTPONED' """
 remind_subject = """Reminder to confirm “Live” status"""
 remind_message = """Hello,
 
-We would like to remind you to confirm your “live” status for Will contract.
+We would like to remind you to confirm your “live” status for the contract.
 Contract will be executed if no confirmation during the next {days} days.
 
 You can see the contract here: https://contracts.mywish.io
