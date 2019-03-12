@@ -51,7 +51,7 @@ def get_discount(request):
                 'EOS': cost,
                 'EOSISH': str(float(cost) * convert('EOS', 'EOSISH')['EOSISH'])
             }
-        elif host == MY_WISH_URL or TRON_URL:
+        elif host == MY_WISH_URL:
             cost = contract.cost * (100 - discount) / 100
             if contract.contract_type == 5:
                 print('token token', flush=True)
@@ -64,6 +64,21 @@ def get_discount(request):
             'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
             'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6),
             'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
+            }
+        elif host == TRON_URL:
+            kwargs = ContractSerializer().get_details_serializer(
+                contract.contract_type
+            )().to_representation(contract_details)
+            cost = contract_details.calc_cost_tron(kwargs, contract.network) * (100 - discount) / 100
+
+            answer['discount_price'] = {
+                'ETH': str(cost),
+                'WISH': str(int(to_wish('ETH', int(cost)))),
+                'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
+                'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
+                    'TRX'] * 10 ** 6),
+                'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
+                    'TRX'] * 10 ** 6)
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(
