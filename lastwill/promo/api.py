@@ -72,13 +72,8 @@ def get_discount(request):
             cost = contract_details.calc_cost_tron(kwargs, contract.network) * (100 - discount) / 100
 
             answer['discount_price'] = {
-                'ETH': str(cost),
-                'WISH': str(int(to_wish('ETH', int(cost)))),
-                'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
-                'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
-                    'TRX'] * 10 ** 6),
-                'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
-                    'TRX'] * 10 ** 6)
+                'TRX': int(cost),
+                'TRONISH': int(cost)
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(
