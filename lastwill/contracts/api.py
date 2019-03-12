@@ -57,12 +57,13 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
            cost = cost - cost * discount / 100
         # promo_object = Promo.objects.get(promo_str=promo_str.upper())
         # User2Promo(user=user, promo=promo_object, contract_id=cid).save()
-        Promo.objects.select_for_update().filter(
-                promo_str=promo_str.upper()
-        ).update(
-                use_count=F('use_count') + 1,
-                referral_bonus=F('referral_bonus') + wish_cost
-        )
+        if promo_str:
+            Promo.objects.select_for_update().filter(
+                    promo_str=promo_str.upper()
+            ).update(
+                    use_count=F('use_count') + 1,
+                    referral_bonus=F('referral_bonus') + wish_cost
+            )
     return cost
 
 
