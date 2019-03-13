@@ -114,7 +114,7 @@ def get_payment_statistics(start, stop=None):
     for pay in payments:
         print(
             pay.datetime.date(),
-            pay.user,
+            pay.user.id,
             float(pay.original_delta)/NET_DECIMALS[pay.original_currency],
             pay.original_currency,
             flush=True

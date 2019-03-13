@@ -177,11 +177,17 @@ class ContractSerializer(serializers.ModelSerializer):
             res['cost']['EOSISH'] = str(float(
                 res['cost']['EOS']
             ) * convert('EOS', 'EOSISH')['EOSISH'])
+        if contract.network.name == 'EOS_TESTNET':
+            res['cost']['EOS'] = 0
+            res['cost']['EOSISH'] = 0
         if contract.network.name == 'TRON_MAINNET':
             res['cost']['TRX'] = str(Contract.get_details_model(
                 contract.contract_type
             ).calc_cost_tron(res['contract_details'], contract.network))
             res['cost']['TRONISH'] = res['cost']['TRX']
+        if contract.network.name == 'TRON_TESTNET':
+            res['cost']['TRX'] = 0
+            res['cost']['TRONISH'] = 0
         return res
 
     def update(self, contract, validated_data):

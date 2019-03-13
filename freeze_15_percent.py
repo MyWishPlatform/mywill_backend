@@ -10,7 +10,7 @@ from threading import Timer
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
-from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
+# from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 from lastwill.json_templates import get_freeze_wish_abi
@@ -162,18 +162,18 @@ def check_payments():
             print(e)
             print('Freezing EOSISH failed')
             send_mail_attempt("EOSISH", freeze_balance.eosish, e)
-    if freeze_balance.tronish >= 450000000:
-        print('tronish > 0', flush=True)
-        try:
-            print('try send tronish', flush=True)
-            freeze_tronish()
-            freeze_balance.tronish = freeze_balance.tronish - 450000000
-            freeze_balance.save()
-        except Exception as e:
-            attempt += 1
-            print(e, flush=True)
-            print('Freezing TRONISH failed')
-            send_mail_attempt("WISH", freeze_balance.tronish, e)
+    # if freeze_balance.tronish >= 450000000:
+    #     print('tronish > 0', flush=True)
+    #     try:
+    #         print('try send tronish', flush=True)
+    #         freeze_tronish()
+    #         freeze_balance.tronish = freeze_balance.tronish - 450000000
+    #         freeze_balance.save()
+    #     except Exception as e:
+    #         attempt += 1
+    #         print(e, flush=True)
+    #         print('Freezing TRONISH failed')
+    #         send_mail_attempt("WISH", freeze_balance.tronish, e)
 
 
 def send_failed_freezing(token, balance, trace):
