@@ -92,15 +92,15 @@ def freeze_eosish(amount):
 def freeze_tronish(amount):
     print('freeze tronish', flush=True)
     print('before encode', flush=True)
-    params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], amount])
+    # params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], amount])
     print('after encode', flush=True)
     # print('params', params, flush=True)
-    freeze_encoded_parameter = binascii.hexlify(params)
-    print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
+    # freeze_encoded_parameter = binascii.hexlify(params)
+    # print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
     deploy_params = {
         'contract_address': convert_address_to_hex(TRON_ADDRESS),
         'function_selector': 'transfer(address,uint256)',
-        'parameter': freeze_encoded_parameter.decode(),
+        'parameter': '000000000000000000000000a449da9d3c1d07d7ea10eb65d4a8635171fe751a000000000000000000000000000000000000000000000000000000000000000a',
         'fee_limit': 1000000000,
         'call_value': 0,
         'owner_address': convert_address_to_hex(UPDATE_TRON_ADDRESS)
