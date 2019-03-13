@@ -1,10 +1,11 @@
 import os
-import base58
-from ethereum import abi
-from threading import Timer
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
+
+import base58
+from ethereum import abi
+from threading import Timer
 
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL
@@ -90,7 +91,7 @@ def freeze_eosish(amount):
 
 def freeze_tronish(amount):
     print('freeze tronish', flush=True)
-    params = encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], amount])
+    params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], amount])
     print('params', params, flush=True)
     freeze_encoded_parameter = binascii.hexlify(params)
     print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
