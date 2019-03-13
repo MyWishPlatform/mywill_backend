@@ -91,8 +91,10 @@ def freeze_eosish(amount):
 
 def freeze_tronish(amount):
     print('freeze tronish', flush=True)
+    print('before encode', flush=True)
     params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], amount])
-    print('params', params, flush=True)
+    print('after encode', flush=True)
+    # print('params', params, flush=True)
     freeze_encoded_parameter = binascii.hexlify(params)
     print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
     deploy_params = {
