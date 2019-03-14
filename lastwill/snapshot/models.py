@@ -37,3 +37,17 @@ class TRONSnapshotTRON(models.Model):
     balance = models.DecimalField(
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+
+
+class TRONISHAirdropWISHHolders(models.Model):
+    address = models.CharField(max_length=50)
+    balance = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
+
+
+class TRONISHAirdropEOSISHHolders(models.Model):
+    address = models.CharField(max_length=50)
+    balance = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
