@@ -117,6 +117,7 @@ def get_payment_statistics(start, stop=None):
             pay.user.id,
             float(pay.original_delta)/NET_DECIMALS[pay.original_currency],
             pay.original_currency,
+            'site id', pay.site.id,
             flush=True
         )
         total_payments[pay.original_currency] += float(pay.original_delta)/NET_DECIMALS[pay.original_currency]
