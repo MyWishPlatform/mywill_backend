@@ -74,7 +74,7 @@ def check_and_freeze(account_params, tron_url):
         if account_resources['net_delta'] <= TRON_REPLENISH_THRESHOLD['NET']:
             print('Started automatic replenish of NET for {addr}'.format(addr=account_params["address"]))
             freeze_tron_resource(account_params, tron_url, 1, "BANDWIDTH")
-            print('Finished automatic replenish'.format(network_name=network))
+            print('Finished automatic replenish')
         else:
             print('account {addr} NET is above required limit on'.format(addr=account_params["address"]),
                   account_resources['net_delta'] - TRON_REPLENISH_THRESHOLD['NET']
@@ -83,7 +83,7 @@ def check_and_freeze(account_params, tron_url):
             print('Started automatic replenish of ENERGY for {addr}'.format(addr=account_params["address"]))
             trx_energy_amount = math.ceil(TRON_REPLENISH_THRESHOLD['ENERGY'] / TRON_REPLENISH_THRESHOLD['MIN_TRX'])
             freeze_tron_resource(account_params, tron_url, trx_energy_amount, "ENERGY")
-            print('Finished automatic replenish'.format(network_name=network))
+            print('Finished automatic replenish')
         else:
             print('account {addr} ENERGY is above required limit on'.format(addr=account_params["address"]),
                   account_resources['energy_delta'] - TRON_REPLENISH_THRESHOLD['ENERGY']
