@@ -18,18 +18,21 @@ def check_account(account_params, tron_url):
     data = {"address": account_params['address']}
     result = requests.post(tron_url + '/wallet/getaccountresource', data=json.dumps(data))
     account_info = json.loads(result.content.decode())
-    if ('NetLimit' or 'EnergyLimit') in account_info:
+
+    if 'NetLimit' in account_info:
         if 'NetUsed' in account_info:
             net_available = account_info['NetLimit'] - account_info['NetUsed']
         else:
             net_available = account_info['NetLimit']
+    else:
+        net_available = 0
 
+    if 'EnergyLimit' in account_info:
         if 'EnergyUsed' in account_info:
             energy_available = account_info['EnergyLimit'] - account_info['EnergyUsed']
         else:
             energy_available = account_info['EnergyLimit']
     else:
-        net_available = 0
         energy_available = 0
 
     return {
