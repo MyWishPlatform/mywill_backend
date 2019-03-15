@@ -18,8 +18,12 @@ def check_account(account_params, tron_url):
     data = {"address": account_params['address']}
     result = requests.post(tron_url + '/wallet/getaccountresource', data=json.dumps(data))
     account_info = json.loads(result.content.decode())
-    net_available = account_info['NetLimit'] - account_info['NetUsed']
-    energy_available = account_info['EnergyLimit'] - account_info['EnergyUsed']
+    if 'NetLimit' or 'EnergyLimit' in account_info.keys():
+        net_available = account_info['NetLimit'] - account_info['NetUsed']
+        energy_available = account_info['EnergyLimit'] - account_info['EnergyUsed']
+    else:
+        net_available = 0
+        energy_available = 0
 
     return {
         'net_delta': net_available,
@@ -96,11 +100,11 @@ def convert_trx_resources(network):
     #     "private_key": NETWORKS[network]['private_key']
     # }
     account_main = {
-        "address": '41' + convert_address_to_hex(TRON_REPLENISH_ACCOUNT['address']),
+        "address": '41' + convert_address_to_hex(TRON_REPLENISH_ACCOUNT['address'])[2:],
         "private_key": TRON_REPLENISH_ACCOUNT['private_key']
     }
     account_check = {
-        "address": '41' + convert_address_to_hex(TRON_REPLENISH_CHECK_ACCOUNT['address']),
+        "address": '41' + convert_address_to_hex(TRON_REPLENISH_CHECK_ACCOUNT['address'])[2:],
         "private_key": TRON_REPLENISH_CHECK_ACCOUNT['private_key']
     }
 
