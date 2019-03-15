@@ -11,7 +11,7 @@ django.setup()
 from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.tron import convert_address_to_hex
 from lastwill.consts import TRON_REPLENISH_THRESHOLD
-from lastwill.settings import TRON_REPLENISH_ACCOUNT, TRON_REPLENISH_CHECK_ACCOUNT
+from lastwill.settings import TRON_REPLENISH_ACCOUNT, TRON_REPLENISH_CHECK_ACCOUNT, NETWORKS
 
 
 def check_account(account_params, tron_url):
