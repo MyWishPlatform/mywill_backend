@@ -103,12 +103,10 @@ def convert_trx_resources(network):
         "address": '41' + convert_address_to_hex(TRON_REPLENISH_ACCOUNT['address'])[2:],
         "private_key": TRON_REPLENISH_ACCOUNT['private_key']
     }
-    print(account_main)
     account_check = {
         "address": '41' + convert_address_to_hex(TRON_REPLENISH_CHECK_ACCOUNT['address'])[2:],
         "private_key": TRON_REPLENISH_CHECK_ACCOUNT['private_key']
     }
-    print_account_check
 
     check_and_freeze(account_main, tron_url)
     check_and_freeze(account_check, tron_url)
