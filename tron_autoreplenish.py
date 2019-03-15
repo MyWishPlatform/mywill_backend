@@ -18,7 +18,7 @@ def check_account(account_params, tron_url):
     data = {"address": account_params['address']}
     result = requests.post(tron_url + '/wallet/getaccountresource', data=json.dumps(data))
     account_info = json.loads(result.content.decode())
-    if 'NetLimit' or 'EnergyLimit' in account_info.keys():
+    if ('NetLimit' or 'EnergyLimit') in account_info.keys():
         net_available = account_info['NetLimit'] - account_info['NetUsed']
         energy_available = account_info['EnergyLimit'] - account_info['EnergyUsed']
     else:
@@ -103,10 +103,12 @@ def convert_trx_resources(network):
         "address": '41' + convert_address_to_hex(TRON_REPLENISH_ACCOUNT['address'])[2:],
         "private_key": TRON_REPLENISH_ACCOUNT['private_key']
     }
+    print(account_main)
     account_check = {
         "address": '41' + convert_address_to_hex(TRON_REPLENISH_CHECK_ACCOUNT['address'])[2:],
         "private_key": TRON_REPLENISH_CHECK_ACCOUNT['private_key']
     }
+    print_account_check
 
     check_and_freeze(account_main, tron_url)
     check_and_freeze(account_check, tron_url)
