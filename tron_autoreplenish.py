@@ -10,10 +10,8 @@ from lastwill.contracts.submodels.tron import convert_address_to_hex
 from lastwill.consts import TRON_REPLENISH_THRESHOLD
 
 
-def check_account(network):
-    tron_url = 'http://%s:%s' % (str(NETWORKS[network]['host']), str(NETWORKS[network]['port']))
-    address = '41' + convert_address_to_hex(NETWORKS[network]['address'])[2:]
-    data = {"address": address}
+def check_account(account_params, tron_url):
+    data = {"address": account_params['address']}
     result = requests.post(tron_url + '/wallet/getaccountresource', data=json.dumps(data))
     account_info = json.loads(result.content.decode())
     net_available = account_info['NetLimit'] - account_info['NetUsed']
@@ -25,10 +23,9 @@ def check_account(network):
     }
 
 
-def freeze_tron_resource(network, amount, resource_name):
-    tron_url = 'http://%s:%s' % (str(NETWORKS[network]['host']), str(NETWORKS[network]['port']))
+def freeze_tron_resource(account_params, tron_url, amount, resource_name):
     data = {
-        "owner_address": '41' + convert_address_to_hex(NETWORKS[network]['address'])[2:],
+        "owner_address": account_params['address'],
         "frozen_balance": amount * TRON_REPLENISH_THRESHOLD['MIN_TRX'],
         "frozen_duration": 3,
         "resource": resource_name
@@ -38,7 +35,7 @@ def freeze_tron_resource(network, amount, resource_name):
     print('transaction created')
     print(freeze_tx)
     freeze_tx = {'transaction': freeze_tx,
-                 'privateKey':  NETWORKS[network]['private_key']}
+                 'privateKey':  account_params['private_key']}
     trx1 = json.dumps(freeze_tx)
     print('transaction sign')
     sign_res = requests.post(tron_url + '/wallet/gettransactionsign', data=trx1)
@@ -63,26 +60,35 @@ def freeze_tron_resource(network, amount, resource_name):
                 raise ValidationError({'result': 1}, code=400)
 
 
-def check_and_freeze(network):
-    account_resources = check_account(network)
+def check_and_freeze(account_params, tron_url):
+    account_resources = check_account(tron_url)
     try:
         if account_resources['net_delta'] <= TRON_REPLENISH_THRESHOLD['NET']:
-            print('{network_name} Started automatic replenish of NET'.format(network_name=network))
-            freeze_tron_resource(network, 1, "BANDWIDTH")
-            print('{network_name} Finished automatic replenish'.format(network_name=network))
+            print('Started automatic replenish of NET for {addr}'.format(addr=account_params["address"]))
+            freeze_tron_resource(account_params, tron_url, 1, "BANDWIDTH")
+            print('Finished automatic replenish'.format(network_name=network))
         else:
-            print('{network_name} account NET is above required limit on'.format(network_name=network),
+            print('account {addr} NET is above required limit on'.format(addr=account_params["address"]),
                   account_resources['net_delta'] - TRON_REPLENISH_THRESHOLD['NET']
                   )
         if account_resources['energy_delta'] <= TRON_REPLENISH_THRESHOLD['ENERGY']:
-            print('{network_name} Started automatic replenish of ENERGY'.format(network_name=network))
+            print('Started automatic replenish of ENERGY for {addr}'.format(addr=account_params["address"]))
             trx_energy_amount = math.ceil(TRON_REPLENISH_THRESHOLD['ENERGY'] / TRON_REPLENISH_THRESHOLD['MIN_TRX'])
-            freeze_tron_resource(network, trx_energy_amount, "ENERGY")
-            print('{network_name} Finished automatic replenish'.format(network_name=network))
+            freeze_tron_resource(account_params, tron_url, trx_energy_amount, "ENERGY")
+            print('Finished automatic replenish'.format(network_name=network))
         else:
-            print('{network_name} account resource is above required limit on'.format(network_name=network),
+            print('account {addr} ENERGY is above required limit on'.format(addr=account_params["address"]),
                   account_resources['energy_delta'] - TRON_REPLENISH_THRESHOLD['ENERGY']
                   )
     except Exception as e:
         print(e)
-        print('TRON autoreplenish failed')
+        print('TRON autoreplenish for {addr} failed'.format(addr=account_params["address"]))
+
+
+def convert_trx_resources(network):
+    account_parameters = {
+        "address": '41' + convert_address_to_hex(NETWORKS[network]['address'])[2:],
+        "private_key": NETWORKS[network]['private_key']
+    }
+    tron_url = 'http://%s:%s' % (str(NETWORKS[network]['host']), str(NETWORKS[network]['port']))
+    check_and_freeze(account_parameters, tron_url)
