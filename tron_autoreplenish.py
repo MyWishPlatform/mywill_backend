@@ -2,8 +2,11 @@ import json
 import time
 import math
 import requests
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
+
 
 from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.tron import convert_address_to_hex
