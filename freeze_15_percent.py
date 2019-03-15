@@ -202,5 +202,6 @@ def send_mail_attempt(token, balance, trace):
 if __name__ == '__main__':
     attempt = 0
     while 1:
+        print('-' * 50)
         check_payments()
         time.sleep(60 * 10)
