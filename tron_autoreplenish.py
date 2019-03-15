@@ -65,7 +65,7 @@ def freeze_tron_resource(account_params, tron_url, amount, resource_name):
 
 
 def check_and_freeze(account_params, tron_url):
-    account_resources = check_account(tron_url)
+    account_resources = check_account(account_params, tron_url)
     try:
         if account_resources['net_delta'] <= TRON_REPLENISH_THRESHOLD['NET']:
             print('Started automatic replenish of NET for {addr}'.format(addr=account_params["address"]))
