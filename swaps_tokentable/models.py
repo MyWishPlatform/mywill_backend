@@ -6,4 +6,4 @@ class SwapsTokentable(models.Model):
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     decimals = models.IntegerField()
-    token_name = models.CharField(max_length=512)
+    image_link = models.CharField(max_length=512)
