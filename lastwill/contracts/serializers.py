@@ -28,7 +28,8 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
-        ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens
+        ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
+        ContractDetailsSWAPS, InvestAddresses
 )
 from lastwill.contracts.decorators import *
 from exchange_API import to_wish, convert
@@ -233,7 +234,8 @@ class ContractSerializer(serializers.ModelSerializer):
             16: ContractDetailsGameAssetsSerializer,
             17: ContractDetailsTRONAirdropSerializer,
             18: ContractDetailsTRONLostkeySerializer,
-            19: ContractDetailsLostKeyTokensSerializer
+            19: ContractDetailsLostKeyTokensSerializer,
+            20: ContractDetailsSWAPSSerializer
         }[contract_type]
 
 
@@ -1399,4 +1401,53 @@ class ContractDetailsLostKeyTokensSerializer(serializers.ModelSerializer):
             check.is_percent(heir_json['percentage'])
             heir_json['percentage'] = int(heir_json['percentage'])
         check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
+        return details
+
+
+class InvestAddressesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestAddresses
+        fields = ('address', 'amount')
+
+
+class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsSWAPS
+        fields = (
+            'owner_token_address', 'investor_token_address', 'active_to', 'owner_token_value',
+            'investor_token_value', 'public', 'owner_address'
+        )
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        investors_serializer = InvestAddressesSerializer()
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        if 'owner_address' not in details:
+            raise ValidationError
+        if 'active_to' not in details:
+            raise ValidationError
+        check.is_address(details['owner_address'])
+        details['owner_address'] = details['owner_address'].lower()
+        details['active_to'] = datetime.datetime.strptime(
+            details['active_to'], '%Y-%m-%d %H:%M'
+        )
         return details

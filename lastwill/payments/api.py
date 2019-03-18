@@ -85,7 +85,7 @@ def positive_payment(user, value, site_id, currency):
         freeze_dest = 'WISH'
     elif site_id == 3:
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            eosish=F('tronish') + freeze_value
+            tronish=F('tronish') + freeze_value
         )
         freeze_dest = 'TRONISH'
     else:
