@@ -69,8 +69,7 @@ class ContractDetailsSWAPS(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(self,  sour_path='lastwill/swaps/*',
-            config_name='c-preprocessor-config.json')
+        dest, preproc_config = create_directory(self, sour_path='lastwill/swaps/*')
         # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
         if os.system('cd {dest} && yarn compile'.format(dest=dest)):
             raise Exception('compiler error while deploying')
