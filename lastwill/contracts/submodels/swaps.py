@@ -14,7 +14,7 @@ from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
-class InvestAddresses(models.Models):
+class InvestAddresses(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(
