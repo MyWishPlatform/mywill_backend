@@ -23,10 +23,10 @@ class InvestAddresses(models.Models):
 
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS(CommonDetails):
-    swap_address1 = models.CharField(max_length=50)
-    swap_value1 = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
-    swap_address2 = models.CharField(max_length=50)
-    swap_value2 = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    owner_token_address = models.CharField(max_length=50)
+    owner_token_value = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    investor_token_address = models.CharField(max_length=50)
+    investor_token_value = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     active_to = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
