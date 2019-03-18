@@ -1,6 +1,6 @@
 from django.db import models
 
-# Create your models here.
+
 class Tokens(models.Model):
     address = models.CharField(max_length=50)
     token_name = models.CharField(max_length=512)
