@@ -55,31 +55,40 @@ class ContractDetailsSWAPS(CommonDetails):
         return result
 
     def get_arguments(self, eth_contract_attr_name):
-        return []
+        return [
+            self.owner_address,
+            self.owner_token_address,
+            self.owner_token_value,
+            self.investor_token_address,
+            self.investor_token_value,
+            self.active_to
+        ]
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('standalone token contract compile')
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(self)
-        # preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
-        # preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
-        # with open(preproc_config, 'w') as f:
-        #     f.write(json.dumps(preproc_params))
-        # # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
-        # if os.system('cd {dest} && yarn compile'.format(dest=dest)):
-        #     raise Exception('compiler error while deploying')
-        #
-        # with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
-        #     token_json = json.loads(f.read().decode('utf-8-sig'))
-        # with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
-        #     source_code = f.read().decode('utf-8-sig')
-        # self.eth_contract_token = create_ethcontract_in_compile(
-        #     token_json['abi'], token_json['bytecode'][2:],
-        #     token_json['compiler']['version'], self.contract, source_code
-        # )
-        # self.save()
+        dest, preproc_config = create_directory(self,  sour_path='lastwill/swaps/*',
+            config_name='c-preprocessor-config.json')
+        # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+        if os.system('cd {dest} && yarn compile'.format(dest=dest)):
+            raise Exception('compiler error while deploying')
+
+        with open(path.join(dest, 'build/contracts/Swaps.json'), 'rb') as f:
+            token_json = json.loads(f.read().decode('utf-8-sig'))
+        with open(path.join(dest, 'contracts/Swaps.sol'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        eth_contract = EthContract()
+        eth_contract.abi = token_json['abi']
+        eth_contract.bytecode = token_json['bytecode'][2:]
+        eth_contract.compiler_version = token_json['compiler']['version']
+        eth_contract.contract = self.contract
+        eth_contract.original_contract = self.contract
+        eth_contract.source_code = source_code
+        eth_contract.save()
+        self.eth_contract = eth_contract
+        self.save()
 
     @blocking
     @postponable
