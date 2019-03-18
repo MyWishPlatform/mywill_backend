@@ -4,10 +4,13 @@ from lastwill.swaps_tokentable.models import Tokens
 
 
 @api_view()
-def get_all_tokens():
-    
+def get_all_tokens(request):
     result = []
-    token_list = Tokens.objects.all()
+    tokens_all = Tokens.objects.all()
+
+    token_list = tokens_all.filter(token_short_name=request.query_params['token_short_name'])
+    if request.query_params['token_name']:
+        token_list = token_list.filter(token_name=request.query_params['token_name'])
 
     for t in token_list:
         result.append({
