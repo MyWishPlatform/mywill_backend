@@ -74,9 +74,9 @@ class ContractDetailsSWAPS(CommonDetails):
         preproc_params = {"constants": {
             "D_OWNER": self.owner_address,
             "D_BASE_ADDRESS": self.base_address,
-            "D_BASE_LIMIT": self.base_limit,
+            "D_BASE_LIMIT": int(self.base_limit),
             "D_QUOTE_ADDRESS": self.quote_address,
-            "D_QUOTE_LIMIT": self.quote_limit,
+            "D_QUOTE_LIMIT": int(self.quote_limit),
             "D_EXPIRATION_TS": self.active_to
         }}
         with open(preproc_config, 'w') as f:
