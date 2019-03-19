@@ -9,10 +9,10 @@ def get_all_tokens(request):
     token_name = request.query_params.get('token_name', None)
 
     tokens_all = Tokens.objects.all()
-    token_list = tokens_all.filter(token_short_name=token_shortname).first()
+    token_list = tokens_all.filter(token_short_name=token_shortname)
 
     if token_name:
-        token_list = token_list.filter(token_name=token_name).first()
+        token_list = token_list.filter(token_name=token_name)
 
     result = []
     for t in token_list:
