@@ -5,13 +5,16 @@ from lastwill.swaps_tokentable.models import Tokens
 
 @api_view()
 def get_all_tokens(request):
-    result = []
+    token_shortname = request.query_params.get('token_short_name', None)
+    token_name = request.query_params.get('token_name', None)
+
     tokens_all = Tokens.objects.all()
+    token_list = tokens_all.filter(token_short_name=token_shortname).first()
 
-    token_list = tokens_all.filter(token_short_name=request.query_params['token_short_name'])
-    if request.query_params['token_name']:
-        token_list = token_list.filter(token_name=request.query_params['token_name'])
+    if token_name:
+        token_list = token_list.filter(token_name=token_name).first()
 
+    result = []
     for t in token_list:
         result.append({
             'address': t.address,
