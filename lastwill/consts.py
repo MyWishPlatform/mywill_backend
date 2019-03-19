@@ -94,6 +94,12 @@ NET_DECIMALS = {
     'TRX': 10 ** 6
 }
 
+TRON_REPLENISH_THRESHOLD = {
+    'NET': 36000,
+    'ENERGY': 5600000,
+    'MIN_TRX': 1000000
+}
+
 URL_STATS_CURRENCY_BODY = 'https://api.coinmarketcap.com/v1/ticker/'
 URL_STATS_CURRENCY = {
     'MYWISH': URL_STATS_CURRENCY_BODY + "mywish/",
