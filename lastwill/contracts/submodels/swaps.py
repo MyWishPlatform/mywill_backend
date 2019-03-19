@@ -23,10 +23,10 @@ class InvestAddresses(models.Model):
 
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS(CommonDetails):
-    owner_token_address = models.CharField(max_length=50)
-    owner_token_value = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
-    investor_token_address = models.CharField(max_length=50)
-    investor_token_value = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    base_address = models.CharField(max_length=50)
+    base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    quote_address = models.CharField(max_length=50)
+    quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     active_to = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
@@ -57,10 +57,10 @@ class ContractDetailsSWAPS(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return [
             self.owner_address,
-            self.owner_token_address,
-            self.owner_token_value,
-            self.investor_token_address,
-            self.investor_token_value,
+            self.base_address,
+            self.base_limit,
+            self.quote_address,
+            self.quote_limit,
             self.active_to
         ]
 
@@ -71,6 +71,16 @@ class ContractDetailsSWAPS(CommonDetails):
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/swaps/*')
         # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
+        preproc_params = {"constants": {
+            "D_OWNER": self.owner_address,
+            "D_BASE_ADDRESS": self.base_address,
+            "D_BASE_LIMIT": self.base_limit,
+            "D_QUOTE_ADDRESS": self.quote_address,
+            "D_QUOTE_LIMIT": self.quote_limit,
+            "D_EXPIRATION_TS": self.active_to
+        }}
+        with open(preproc_config, 'w') as f:
+            f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
@@ -91,7 +101,7 @@ class ContractDetailsSWAPS(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+    def deploy(self, eth_contract_attr_name='eth_contract'):
         return super().deploy(eth_contract_attr_name)
 
     def get_gaslimit(self):
