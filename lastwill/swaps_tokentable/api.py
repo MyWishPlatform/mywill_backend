@@ -18,7 +18,6 @@ def get_all_tokens(request):
     for t in token_list:
         result.append({
             'address': t.address,
-            'id': t.token_name,
             'token_name': t.token_name,
             'token_short_name': t.token_short_name,
             'decimals': t.decimals,
