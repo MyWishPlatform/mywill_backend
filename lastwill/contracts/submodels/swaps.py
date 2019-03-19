@@ -57,12 +57,12 @@ class ContractDetailsSWAPS(CommonDetails):
 
     def get_arguments(self, eth_contract_attr_name):
         return [
-            self.owner_address,
-            self.base_address,
-            self.base_limit,
-            self.quote_address,
-            self.quote_limit,
-            self.active_to
+            # self.owner_address,
+            # self.base_address,
+            # self.base_limit,
+            # self.quote_address,
+            # self.quote_limit,
+            # self.active_to
         ]
 
     def compile(self, eth_contract_attr_name='eth_contract'):
