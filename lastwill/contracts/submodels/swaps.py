@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import SUPPORT_EMAIL, CONTRACTS_TEMP_DIR
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import ETH_ADDRESS, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
@@ -74,10 +74,10 @@ class ContractDetailsSWAPS(CommonDetails):
         # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
         preproc_params = {"constants": {
             "D_OWNER": self.owner_address,
-            "D_BASE_ADDRESS": self.base_address,
-            "D_BASE_LIMIT": int(self.base_limit),
-            "D_QUOTE_ADDRESS": self.quote_address,
-            "D_QUOTE_LIMIT": int(self.quote_limit),
+            "D_BASE_ADDRESS": self.base_address if self.base_address != ETH_ADDRESS else "address(0)",
+            "D_BASE_LIMIT": str(int(self.base_limit)),
+            "D_QUOTE_ADDRESS": self.quote_address if self.quote_address != ETH_ADDRESS else "address(0)",
+            "D_QUOTE_LIMIT": str(int(self.quote_limit)),
             "D_EXPIRATION_TS": time.mktime(self.active_to.timetuple())
         }}
         with open(preproc_config, 'w') as f:

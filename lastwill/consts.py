@@ -213,3 +213,5 @@ API_CONTRACT_PRICES = [
 
 ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
 ETHPLORER_KEY = 'freekey'
+
+ETH_ADDRESS = '0x0000000000000000000000000000000000000000'
