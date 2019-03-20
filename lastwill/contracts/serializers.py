@@ -1414,8 +1414,8 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsSWAPS
         fields = (
-            'owner_token_address', 'investor_token_address', 'active_to', 'owner_token_value',
-            'investor_token_value', 'public', 'owner_address'
+            'base_address', 'quote_address', 'active_to', 'base_limit',
+            'quote_limit', 'public', 'owner_address'
         )
 
     def to_representation(self, contract_details):
