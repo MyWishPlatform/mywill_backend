@@ -49,7 +49,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_tokentable.api import get_all_tokens
+from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -136,7 +136,9 @@ urlpatterns = [
     url(r'^api/get_testnet_tron_tokens/$', get_testnet_tron_tokens),
     url(r'^api/get_tokens_for_eth_address/$', get_tokens_for_eth_address),
     url(r'^api/get_tronish_balance/$', get_tronish_balance),
-    url(r'^api/get_all_tokens/$', get_all_tokens),]
+    url(r'^api/get_all_tokens/$', get_all_tokens),
+    url(r'^api/get_standarts_tokens/$', get_standarts_tokens),
+]
 
 urlpatterns += url(r'^/*', index, name='all'),
 
