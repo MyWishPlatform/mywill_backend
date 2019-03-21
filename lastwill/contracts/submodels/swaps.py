@@ -2,6 +2,7 @@ import datetime
 import time
 
 from ethereum import abi
+from ethereum.utils import checksum_encode
 
 from django.db import models
 from django.core.mail import send_mail, EmailMessage
@@ -73,10 +74,10 @@ class ContractDetailsSWAPS(CommonDetails):
         dest, preproc_config = create_directory(self, sour_path='lastwill/swaps/*')
         # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
         preproc_params = {"constants": {
-            "D_OWNER": self.owner_address,
-            "D_BASE_ADDRESS": self.base_address if self.base_address != ETH_ADDRESS else "address(0)",
+            "D_OWNER": checksum_encode(self.owner_address),
+            "D_BASE_ADDRESS": checksum_encode(self.base_address),
             "D_BASE_LIMIT": str(int(self.base_limit)),
-            "D_QUOTE_ADDRESS": self.quote_address if self.quote_address != ETH_ADDRESS else "address(0)",
+            "D_QUOTE_ADDRESS": checksum_encode(self.quote_address),
             "D_QUOTE_LIMIT": str(int(self.quote_limit)),
             "D_EXPIRATION_TS": str(int(time.mktime(self.active_to.timetuple())))
         }}
