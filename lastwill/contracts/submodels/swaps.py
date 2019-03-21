@@ -78,7 +78,7 @@ class ContractDetailsSWAPS(CommonDetails):
             "D_BASE_LIMIT": str(int(self.base_limit)),
             "D_QUOTE_ADDRESS": self.quote_address if self.quote_address != ETH_ADDRESS else "address(0)",
             "D_QUOTE_LIMIT": str(int(self.quote_limit)),
-            "D_EXPIRATION_TS": time.mktime(self.active_to.timetuple())
+            "D_EXPIRATION_TS": str(int(time.mktime(self.active_to.timetuple())))
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
