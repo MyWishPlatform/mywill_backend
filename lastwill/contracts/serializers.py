@@ -1420,10 +1420,10 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        investors_serializer = InvestAddressesSerializer()
+        # investors_serializer = InvestAddressesSerializer()
         if not contract_details:
            print('*'*50, contract_details.id, flush=True)
-        res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
+        # res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
