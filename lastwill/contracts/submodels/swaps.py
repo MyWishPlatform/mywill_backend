@@ -1,5 +1,7 @@
 import datetime
 import time
+import random
+import string
 
 from ethereum import abi
 from ethereum.utils import checksum_encode
@@ -104,6 +106,9 @@ class ContractDetailsSWAPS(CommonDetails):
     @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract'):
+        link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(15))
+        self.unique_link = link
+        self.save()
         return super().deploy(eth_contract_attr_name)
 
     def get_gaslimit(self):

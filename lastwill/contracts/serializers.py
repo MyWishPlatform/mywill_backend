@@ -1415,8 +1415,11 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         model = ContractDetailsSWAPS
         fields = (
             'base_address', 'quote_address', 'active_to', 'base_limit',
-            'quote_limit', 'public', 'owner_address'
+            'quote_limit', 'public', 'owner_address', 'unique_link'
         )
+        extra_kwargs = {
+            'unique_link': {'read_only': True}
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
