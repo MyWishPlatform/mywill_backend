@@ -189,21 +189,22 @@ class ContractDetailsTRONToken(CommonDetails):
         for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
-            print(result.content)
+            # print(result.content, flush=True)
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
-                params = {'value': trx_info2['txID']}
-                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-                ret = json.loads(result.content.decode())
-                if ret:
-                    self.tron_contract_token.tx_hash = trx_info2['txID']
-                    print('tx_hash=', trx_info2['txID'], flush=True)
-                    self.tron_contract_token.save()
-                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-                    self.contract.save()
-                    return
-            time.sleep(5)
+                # params = {'value': trx_info2['txID']}
+                # result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+                # ret = json.loads(result.content.decode())
+                # if ret:
+                print('tx_hash=', trx_info2['txID'], flush=True)
+                self.tron_contract_token.tx_hash = trx_info2['txID']
+                print('tx_hash=', trx_info2['txID'], flush=True)
+                self.tron_contract_token.save()
+                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                self.contract.save()
+                return
+            # time.sleep(5)
         else:
                 raise ValidationError({'result': 1}, code=400)
 
@@ -224,6 +225,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def finalized(self, message):
         if self.tron_contract_token.original_contract.state != 'ENDED':
             self.tron_contract_token.original_contract.state = 'ENDED'
+
             self.tron_contract_token.original_contract.save()
         if (self.tron_contract_token.original_contract.id !=
                 self.tron_contract_token.contract.id and
