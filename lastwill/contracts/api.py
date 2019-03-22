@@ -206,6 +206,8 @@ def deploy(request):
         currency = 'TRX'
         site_id = 3
     promo_str = request.data.get('promo', None)
+    if promo_str:
+        promo_str = promo_str.upper()
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
     print('promocode', promo_str, flush=True)
     print('cost before', cost, flush=True)
