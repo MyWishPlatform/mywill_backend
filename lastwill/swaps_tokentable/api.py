@@ -13,7 +13,7 @@ def get_all_tokens(request):
         token_list = token_list.filter(token_short_name__startswith=token_short_name.upper())
 
     if token_name:
-        token_list = token_list.filter(token_name__startswith=token_name)
+        token_list = token_list.filter(token_name__istartswith=token_name)
 
     result = []
     for t in token_list:
