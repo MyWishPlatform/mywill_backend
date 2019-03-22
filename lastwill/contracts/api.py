@@ -64,6 +64,7 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
                     use_count=F('use_count') + 1,
                     referral_bonus=F('referral_bonus') + wish_cost
             )
+    print('promo in check&apply', promo_str, flush=True)
     return cost
 
 
@@ -206,6 +207,7 @@ def deploy(request):
         site_id = 3
     promo_str = request.data.get('promo', None)
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
+    print('promocode', promo_str, flush=True)
     print('cost before', cost, flush=True)
     cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
     print('cost after', cost, flush=True)
