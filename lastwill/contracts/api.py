@@ -206,7 +206,9 @@ def deploy(request):
         site_id = 3
     promo_str = request.data.get('promo', None)
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
+    print('cost before', cost, flush=True)
     cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
+    print('cost after', cost, flush=True)
     create_payment(request.user.id, '', currency, -cost, site_id)
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
