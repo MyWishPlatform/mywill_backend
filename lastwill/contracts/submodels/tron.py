@@ -20,6 +20,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
+from lastwill.settings import TRON_NODE
 
 from exchange_API import convert
 
@@ -45,7 +46,7 @@ def generate_tron_url(network):
         str(NETWORKS[network]['port'])
         )
     else:
-        tron_url = 'https://api.trongrid.io'
+        tron_url = TRON_NODE
     return tron_url
 
 
