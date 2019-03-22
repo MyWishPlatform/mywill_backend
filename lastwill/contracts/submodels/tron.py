@@ -38,6 +38,17 @@ def replace_0x(message):
     return message
 
 
+def generate_tron_url(network):
+    if network == 'TRON_TESTNET':
+        tron_url = 'http://%s:%s' % (
+        str(NETWORKS[network]['host']),
+        str(NETWORKS[network]['port'])
+        )
+    else:
+        tron_url = 'https://api.trongrid.io'
+    return tron_url
+
+
 class TRONContract(EthContract):
     pass
 
@@ -159,23 +170,22 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        # tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = generate_tron_url(self.contract.network.name)
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
-        # print('trx info', trx_info1)
         self.tron_contract_token.address = trx_info1['transaction']['contract_address']
         self.tron_contract_token.save()
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
-        # print('before', trx)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
         print('transaction sign')
         trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
-        # print('after', trx)
-        # print(trx)
+        tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
