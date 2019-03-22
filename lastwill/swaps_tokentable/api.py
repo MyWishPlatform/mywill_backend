@@ -9,7 +9,7 @@ def get_all_tokens(request):
     token_name = request.query_params.get('token_name', None)
 
     tokens_all = Tokens.objects.all()
-    token_list = tokens_all.filter(token_short_name__startswith=token_shortname)
+    token_list = tokens_all.filter(token_short_name__startswith=token_shortname.upper())
 
     if token_name:
         token_list = token_list.filter(token_name=token_name)
