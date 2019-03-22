@@ -90,7 +90,7 @@ class ContractDetailsSWAPS(CommonDetails):
 
         with open(path.join(dest, 'build/contracts/Swaps.json'), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'contracts/Swaps.sol'), 'rb') as f:
+        with open(path.join(dest, 'build/Swaps.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         eth_contract = EthContract()
         eth_contract.abi = token_json['abi']
