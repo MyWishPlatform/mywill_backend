@@ -23,6 +23,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
 from lastwill.settings import TRON_NODE
 
 from exchange_API import convert
+from tronapi import Tron
 
 
 def convert_address_to_hex(address):
@@ -48,6 +49,13 @@ def generate_tron_url(network):
     else:
         tron_url = TRON_NODE
     return tron_url
+
+def instantiate_tronapi(pk):
+    tron = Tron(
+            private_key=pk
+    )
+    tron.private_key = pk
+    return tron
 
 
 class TRONContract(EthContract):
@@ -182,9 +190,9 @@ class ContractDetailsTRONToken(CommonDetails):
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx)
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
@@ -352,9 +360,9 @@ class ContractDetailsGameAssets(CommonDetails):
         trx = json.dumps(trx_info1)
         # print('before', trx)
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx)
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         # print('after', trx)
         # print(trx)
@@ -515,9 +523,9 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         trx = json.dumps(trx_info1)
         # print('before', trx)
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx)
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         # print('after', trx)
         # print(trx)
@@ -843,9 +851,9 @@ class ContractDetailsTRONLostkey(CommonDetails):
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
         tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx)
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
@@ -889,11 +897,10 @@ class ContractDetailsTRONLostkey(CommonDetails):
             'check_private_key']
         trx = json.dumps(trx_info1)
 
-        result = requests.post(tron_url + '/wallet/gettransactionsign',
-                               data=trx)
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx)
         print('transaction sign')
-        print(result.content.decode(), flush=True)
-        trx_info2 = json.loads(result.content.decode())
+        print(trx_info2, flush=True)
         trx = json.dumps(trx_info2)
         for i in range(5):
             print('attempt=', i)
