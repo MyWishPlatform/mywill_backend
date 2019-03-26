@@ -205,6 +205,8 @@ def deploy(request):
         currency = 'TRX'
         site_id = 3
     promo_str = request.data.get('promo', None)
+    if promo_str:
+        promo_str = promo_str.upper()
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
     cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
     create_payment(request.user.id, '', currency, -cost, site_id)
