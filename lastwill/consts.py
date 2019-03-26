@@ -91,7 +91,8 @@ NET_DECIMALS = {
     'BTC': 10 ** 8,
     'TRON': 10 ** 6,
     'TRONISH': 10 ** 6,
-    'TRX': 10 ** 6
+    'TRX': 10 ** 6,
+    'USDT': 10 ** 6
 }
 
 TRON_REPLENISH_THRESHOLD = {

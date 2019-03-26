@@ -111,28 +111,8 @@ class ContractSerializer(serializers.ModelSerializer):
         finally:
             transaction.set_autocommit(True)
         if validated_data['user'].email:
-            network_name = ''
             network = validated_data['network']
-            if network.name == 'ETHEREUM_MAINNET':
-                network_name = 'Ethereum'
-            if network.name == 'ETHEREUM_ROPSTEN':
-                network_name = 'Ropsten (Ethereum Testnet)'
-            if network.name == 'RSK_MAINNET':
-                network_name = 'RSK'
-            if network.name == 'RSK_TESTNET':
-                network_name = 'RSK Testnet'
-            if network.name == 'NEO_MAINNET':
-                network_name = 'NEO'
-            if network.name == 'NEO_TESTNET':
-                network_name = 'NEO Testnet'
-            if network.name == 'EOS_MAINNET':
-                network_name = 'EOS'
-            if network.name == 'EOS_TESTNET':
-                network_name = 'EOS Testnet'
-            if network.name == 'TRON_MAINNET':
-                network_name = 'TRON'
-            if network.name == 'TRON_TESTNET':
-                network_name = 'TRON Testnet'
+            network_name = MAIL_NETWORK[network.name]
             if contract.contract_type != 11:
                 send_mail(
                         email_messages.create_subject,
@@ -1454,3 +1434,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
             details['active_to'], '%Y-%m-%d %H:%M'
         )
         return details
+
+    def save(self, **kwargs):
+        print('swaps kwargs', kwargs, flush=True)
+        return super().save(**kwargs)

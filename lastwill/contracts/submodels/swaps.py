@@ -58,6 +58,19 @@ class ContractDetailsSWAPS(CommonDetails):
         result = int(0.5 * NET_DECIMALS['ETH'])
         return result
 
+    @classmethod
+    def min_cost_usdt(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost_usdt(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(100 * NET_DECIMALS['USDT'])
+        return result
+
     def get_arguments(self, eth_contract_attr_name):
         return [
             # self.owner_address,
@@ -106,7 +119,7 @@ class ContractDetailsSWAPS(CommonDetails):
     @blocking
     @postponable
     def deploy(self, eth_contract_attr_name='eth_contract'):
-        link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(15))
+        link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
         self.unique_link = link
         self.save()
         return super().deploy(eth_contract_attr_name)

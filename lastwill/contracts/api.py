@@ -26,7 +26,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL, SWAPS_URL
 from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
@@ -1057,3 +1057,25 @@ def get_tronish_balance(request):
             })
 
     return Response({'balance': 0})
+
+
+def deploy_swaps(contract_id):
+    host = SWAPS_URL
+    contract = Contract.objects.get(id=contract_id)
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
+
+    if contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
+        raise PermissionDenied
+    kwargs = ContractSerializer().get_details_serializer(
+        contract.contract_type
+    )().to_representation(contract_details)
+    cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+    site_id = 4
+    currency = 'USDT'
+    create_payment(contract.user.id, '', currency, -cost, site_id)
+    contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.save()
+    queue = NETWORKS[contract.network.name]['queue']
+    send_in_queue(contract.id, 'launch', queue)
+    return True
