@@ -31,7 +31,11 @@ from lastwill.contracts.models import (
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
         ContractDetailsSWAPS, InvestAddresses
 )
+from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
+from lastwill.settings import SWAPS_URL
+from lastwill.profile.models import *
+from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
@@ -52,6 +56,26 @@ def count_sold_tokens(address):
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
     sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
     return sold_tokens
+
+
+def deploy_swaps(contract_id):
+    contract = Contract.objects.get(id=contract_id)
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
+    kwargs = ContractSerializer().get_details_serializer(
+        contract.contract_type
+    )().to_representation(contract_details)
+    cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+    site_id = 4
+    currency = 'USDT'
+    user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
+    if user_info.balance >= cost or user_info.balance * 0.95 >= cost:
+        create_payment(contract.user.id, '', currency, -cost, site_id)
+        contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.save()
+        queue = NETWORKS[contract.network.name]['queue']
+        send_in_queue(contract.id, 'launch', queue)
+    return True
 
 
 class HeirSerializer(serializers.ModelSerializer):
@@ -1437,4 +1461,6 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         print('swaps kwargs', kwargs, flush=True)
+        contract = kwargs['contract']
+        deploy_swaps(contract['id'])
         return super().save(**kwargs)

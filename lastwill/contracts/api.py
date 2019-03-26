@@ -1,12 +1,3 @@
-import time
-import datetime
-from os import path
-from subprocess import Popen, PIPE
-import requests
-import binascii
-import base58
-from threading import Timer
-
 from django.utils import timezone
 from django.db.models import F
 from django.http import Http404
@@ -40,7 +31,7 @@ from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps
 from lastwill.consts import *
 
 
@@ -1059,23 +1050,17 @@ def get_tronish_balance(request):
     return Response({'balance': 0})
 
 
-def deploy_swaps(contract_id):
-    host = SWAPS_URL
-    contract = Contract.objects.get(id=contract_id)
-    contract_details = contract.get_details()
-    contract_details.predeploy_validate()
-
-    if contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
-        raise PermissionDenied
-    kwargs = ContractSerializer().get_details_serializer(
-        contract.contract_type
-    )().to_representation(contract_details)
-    cost = contract_details.calc_cost_usdt(kwargs, contract.network)
-    site_id = 4
-    currency = 'USDT'
-    create_payment(contract.user.id, '', currency, -cost, site_id)
-    contract.state = 'WAITING_FOR_DEPLOYMENT'
-    contract.save()
-    queue = NETWORKS[contract.network.name]['queue']
-    send_in_queue(contract.id, 'launch', queue)
+def autodeploing(user_id):
+    bb = UserSiteBalance.objects.get(subsite__id=4, user__id=user_id)
+    contracts = Contract.objects.filter(user__id=user_id, contract_type=20, network__name='ETHEREUM_MAINNET').order_by('-created_date')
+    for contract in contracts:
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+        if bb.balance >= cost:
+            deploy_swaps(contract.id)
+        bb.refresh_from_db()
     return True
