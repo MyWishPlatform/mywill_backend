@@ -131,6 +131,8 @@ class ContractDetailsSWAPS(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         res = super().msg_deployed(message, 'eth_contract')
+        self.eth_contract.address = message['address']
+        self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
         return res
