@@ -202,6 +202,7 @@ class ContractDetailsTRONToken(CommonDetails):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
             # print(result.content, flush=True)
+            print(result.content, flush=True)
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
