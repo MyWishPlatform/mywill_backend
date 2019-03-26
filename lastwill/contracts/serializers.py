@@ -1460,7 +1460,8 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         return details
 
     def save(self, **kwargs):
+        res = super().save(**kwargs)
         print('swaps kwargs', kwargs, flush=True)
         contract = kwargs['contract']
         deploy_swaps(contract['id'])
-        return super().save(**kwargs)
+        return res
