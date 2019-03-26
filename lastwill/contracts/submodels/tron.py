@@ -127,6 +127,8 @@ class ContractDetailsTRONToken(CommonDetails):
             if th.address.startswith('41'):
                 th.address = '0x' + th.address[2:]
                 th.save()
+            elif th.address.startswith('0x'):
+                pass
             else:
                 th.address = convert_address_to_hex(th.address)
                 th.save()
