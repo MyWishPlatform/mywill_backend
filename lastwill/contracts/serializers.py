@@ -137,7 +137,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if validated_data['user'].email:
             network = validated_data['network']
             network_name = MAIL_NETWORK[network.name]
-            if contract.contract_type != 11:
+            if contract.contract_type != 11 and contract.contract_type !=20:
                 send_mail(
                         email_messages.create_subject,
                         email_messages.create_message.format(
@@ -145,6 +145,13 @@ class ContractSerializer(serializers.ModelSerializer):
                         ),
                         DEFAULT_FROM_EMAIL,
                         [validated_data['user'].email]
+                )
+            elif contract.contract_type == 20:
+                send_mail(
+                    email_messages.swaps_subject,
+                    email_messages.swaps_message,
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
                 )
             else:
                 send_mail(
@@ -1457,6 +1464,8 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         details['active_to'] = datetime.datetime.strptime(
             details['active_to'], '%Y-%m-%d %H:%M'
         )
+        details['base_limit'] = int(details['base_limit'])
+        details['quote_limit'] = int(details['quote_limit'])
         return details
 
     def save(self, **kwargs):

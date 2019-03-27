@@ -494,6 +494,8 @@ class CommonDetails(models.Model):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
+            elif self.contract.contract_type == 20:
+                pass
             else:
                 send_mail(
                         common_subject,
