@@ -13,7 +13,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import SUPPORT_EMAIL, CONTRACTS_TEMP_DIR, SWAPS_URL
+from lastwill.settings import SUPPORT_EMAIL, SITE_PROTOCOL, SWAPS_URL
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
@@ -135,7 +135,8 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        swaps_link = 'https://{url}/{unique_link}'.format(
+        swaps_link='{protocol}://{url}/{unique_link}'.format(
+            protocol=SITE_PROTOCOL,
             unique_link=self.unique_link, url=SWAPS_URL
         )
         send_mail(
