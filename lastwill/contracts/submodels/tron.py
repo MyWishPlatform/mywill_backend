@@ -110,7 +110,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(30000 * NET_DECIMALS['TRX'])
+        result = int(600 * NET_DECIMALS['TRX'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -127,6 +127,8 @@ class ContractDetailsTRONToken(CommonDetails):
             if th.address.startswith('41'):
                 th.address = '0x' + th.address[2:]
                 th.save()
+            elif th.address.startswith('0x'):
+                pass
             else:
                 th.address = convert_address_to_hex(th.address)
                 th.save()
@@ -183,6 +185,7 @@ class ContractDetailsTRONToken(CommonDetails):
         tron_url = generate_tron_url(self.contract.network.name)
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
+        print(result.content, flush=True)
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
         self.tron_contract_token.address = trx_info1['transaction']['contract_address']
@@ -199,6 +202,7 @@ class ContractDetailsTRONToken(CommonDetails):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
             # print(result.content, flush=True)
+            print(result.content, flush=True)
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
@@ -289,7 +293,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(3000 * NET_DECIMALS['TRX'])
+        result = int(60 * NET_DECIMALS['TRX'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -351,6 +355,7 @@ class ContractDetailsGameAssets(CommonDetails):
         tron_url = generate_tron_url(self.contract.network.name)
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
+        print(result.content, flush=True)
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
         # print('trx info', trx_info1)
@@ -461,7 +466,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(3000 * NET_DECIMALS['TRX'])
+        result = int(60 * NET_DECIMALS['TRX'])
         return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
@@ -706,7 +711,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(4000 * NET_DECIMALS['TRX'])
+        result = int(80 * NET_DECIMALS['TRX'])
         return result
 
     @postponable
