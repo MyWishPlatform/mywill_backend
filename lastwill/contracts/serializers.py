@@ -1425,7 +1425,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsSWAPS
         fields = (
-            'base_address', 'quote_address', 'active_to', 'base_limit',
+            'base_address', 'quote_address', 'stop_date', 'base_limit',
             'quote_limit', 'public', 'owner_address', 'unique_link'
         )
         extra_kwargs = {
@@ -1461,8 +1461,8 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
             raise ValidationError
         check.is_address(details['owner_address'])
         details['owner_address'] = details['owner_address'].lower()
-        details['active_to'] = datetime.datetime.strptime(
-            details['active_to'], '%Y-%m-%d %H:%M'
+        details['stop_date'] = datetime.datetime.strptime(
+            details['stop_date'], '%Y-%m-%d %H:%M'
         )
         details['base_limit'] = int(details['base_limit'])
         details['quote_limit'] = int(details['quote_limit'])
