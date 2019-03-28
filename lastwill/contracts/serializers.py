@@ -1461,9 +1461,9 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
             raise ValidationError
         check.is_address(details['owner_address'])
         details['owner_address'] = details['owner_address'].lower()
-        details['active_to'] = datetime.datetime.strptime(
-            details['active_to'], '%Y-%m-%d %H:%M'
-        )
+        # details['active_to'] = datetime.datetime.strptime(
+        #     details['active_to'], '%Y-%m-%d %H:%M'
+        # )
         details['base_limit'] = int(details['base_limit'])
         details['quote_limit'] = int(details['quote_limit'])
         return details
