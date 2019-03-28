@@ -17,7 +17,7 @@ def get_test_tokens(token_name=None, token_short_name=None):
     result = []
     for t in token_list:
         result.append({
-            'address': t.address,
+            'address': t.eth_contract_token.address,
             'token_name': t.token_name,
             'token_short_name': t.token_short_name,
             'decimals': t.decimals,
