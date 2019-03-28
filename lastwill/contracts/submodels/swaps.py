@@ -31,7 +31,7 @@ class ContractDetailsSWAPS(CommonDetails):
     base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     quote_address = models.CharField(max_length=50)
     quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
-    active_to = models.IntegerField()
+    aactive_to = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
     unique_link = models.CharField(max_length=50)
@@ -94,7 +94,7 @@ class ContractDetailsSWAPS(CommonDetails):
             "D_BASE_LIMIT": str(int(self.base_limit)),
             "D_QUOTE_ADDRESS": checksum_encode(self.quote_address),
             "D_QUOTE_LIMIT": str(int(self.quote_limit)),
-            "D_EXPIRATION_TS": str(self.active_to)
+            "D_EXPIRATION_TS": str(int(time.mktime(self.active_to.timetuple())))
         }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
