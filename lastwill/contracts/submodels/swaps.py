@@ -31,7 +31,7 @@ class ContractDetailsSWAPS(CommonDetails):
     base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     quote_address = models.CharField(max_length=50)
     quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
-    active_to = models.DateTimeField()
+    # active_to = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
     unique_link = models.CharField(max_length=50)
