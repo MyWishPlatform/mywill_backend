@@ -1070,7 +1070,7 @@ def autodeploing(user_id):
 
 @api_view(http_method_names=['GET'])
 def confirm_swaps_info(request):
-    contract = Contract.objects.get(id=request.data.get('contract_id'))
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     host = request.META['HTTP_HOST']
     if contract.user != request.user or contract.state != 'CREATED':
         raise PermissionDenied
