@@ -1457,7 +1457,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
     def validate(self, details):
         if 'owner_address' not in details:
             raise ValidationError
-        if 'active_to' not in details:
+        if 'stop_date' not in details:
             raise ValidationError
         check.is_address(details['owner_address'])
         details['owner_address'] = details['owner_address'].lower()
