@@ -6,7 +6,7 @@ from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK
 
 
-def get_test_tokens(token_name=None, token_short_name=None):
+def get_test_tokens(token_name=None, token_short_name=None, address=None):
     token_list = ContractDetailsToken.objects.all().exclude(contract__state__in=('CREATED', 'POSTPONED'))
     if token_short_name:
         token_list = token_list.filter(
@@ -14,6 +14,10 @@ def get_test_tokens(token_name=None, token_short_name=None):
 
     if token_name:
         token_list = token_list.filter(token_name__istartswith=token_name)
+
+    if address:
+        token_list = token_list.filter(eth_contract_token__address=address.lower())
+
     result = []
     for t in token_list:
         result.append({
@@ -31,9 +35,10 @@ def get_all_tokens(request):
     host = request.META['HTTP_HOST']
     token_short_name = request.query_params.get('token_short_name', None)
     token_name = request.query_params.get('token_name', None)
+    address = request.query_params.get('address', None)
 
     if 'dev' in host.lower():
-        result = get_test_tokens(token_name, token_short_name)
+        result = get_test_tokens(token_name, token_short_name, address)
         return Response(result)
 
     token_list = Tokens.objects.all()
@@ -42,6 +47,9 @@ def get_all_tokens(request):
 
     if token_name:
         token_list = token_list.filter(token_name__istartswith=token_name)
+
+    if address:
+        token_list = token_list.filter(address=address.lower())
 
     result = []
     for t in token_list:
