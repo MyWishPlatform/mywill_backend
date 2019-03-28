@@ -1066,3 +1066,20 @@ def autodeploing(user_id):
             deploy_swaps(contract.id)
         bb.refresh_from_db()
     return True
+
+
+@api_view(http_method_names=['GET'])
+def confirm_swaps_info(request):
+    contract = Contract.objects.get(id=request.data.get('contract_id'))
+    host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state != 'CREATED':
+        raise PermissionDenied
+    if contract.contract_type != 20:
+        raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
+    if host != SWAPS_URL:
+        raise PermissionDenied
+    contract.state = 'WAITING_FOR_PAYMENT'
+    contract.save()
+    return Response('ok')
