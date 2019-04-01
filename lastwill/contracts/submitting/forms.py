@@ -25,4 +25,4 @@ class ContractFormSWAPS(CommonSerializedContractForm):
 
     class Meta:
         model = ContractDetailsSWAPS
-        exclude = ['id', 'eth_contract', 'temp_directory']
+        exclude = ['id', 'contract' 'eth_contract', 'temp_directory']
