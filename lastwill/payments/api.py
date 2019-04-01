@@ -23,14 +23,16 @@ def create_payment(uid, tx, currency, amount, site_id):
         )
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
-    elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
-        value = amount if currency in ('TRONISH', 'TRX') else amount * float(convert(
-            currency, 'TRX'
-        )['TRX']) / NET_DECIMALS[currency] * NET_DECIMALS['TRON']
-    else:
-        amount = calculate_decimals(currency, amount)
-        value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']
-        amount = add_decimals(currency, amount)
+        if currency in ('EOS', 'EOSISH'):
+            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['EOS']
+    # elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
+    #     value = amount if currency in ('TRONISH', 'TRX') else amount * float(convert(
+    #         currency, 'TRX'
+    #     )['TRX']) / NET_DECIMALS[currency] * NET_DECIMALS['TRON']
+    # else:
+    #     amount = calculate_decimals(currency, amount)
+    #     value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']
+    #     amount = add_decimals(currency, amount)
     user = User.objects.get(id=uid)
     if amount < 0.0:
         negative_payment(user, -value, site_id)
