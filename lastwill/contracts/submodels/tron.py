@@ -97,7 +97,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(5 * NET_DECIMALS['ETH'])
+        result = int(0.1 * NET_DECIMALS['ETH'])
         return result
 
     @classmethod
@@ -280,7 +280,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * NET_DECIMALS['ETH'])
+        result = int(0.01 * NET_DECIMALS['ETH'])
         return result
 
     @classmethod
@@ -453,7 +453,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * NET_DECIMALS['ETH'])
+        result = int(0.01 * NET_DECIMALS['ETH'])
         return result
 
     @classmethod
@@ -698,7 +698,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 + triggerEnergyPerToken * energyPrice * tokensCount
         )
         tron_cost = (constructPrice + checkPrice + triggerPrice) * 200 / 10 ** 6
-        result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
+        # result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
+        result = int(0.013 * NET_DECIMALS['ETH'])
         return result
 
     @classmethod
