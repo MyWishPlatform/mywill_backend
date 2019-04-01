@@ -1481,9 +1481,9 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
             raise ValidationError
         return details
 
-    def save(self, **kwargs):
-        res = super().save(**kwargs)
-        print('swaps kwargs', kwargs, flush=True)
-        contract = kwargs['contract']
-        deploy_swaps(contract['id'])
-        return res
+    # def save(self, **kwargs):
+    #     res = super().save(**kwargs)
+    #     print('swaps kwargs', kwargs, flush=True)
+    #     contract = kwargs['contract']
+    #     deploy_swaps(contract['id'])
+    #     return res

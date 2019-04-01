@@ -1086,4 +1086,5 @@ def confirm_swaps_info(request):
         c.save()
     contract.state = 'WAITING_FOR_PAYMENT'
     contract.save()
+    autodeploing(request.user)
     return JsonResponse(ContractSerializer().to_representation(contract))
