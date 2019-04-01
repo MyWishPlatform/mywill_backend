@@ -1068,7 +1068,7 @@ def autodeploing(user_id):
     return True
 
 
-@api_view(http_method_names=['GET'])
+@api_view(http_method_names=['POST'])
 def confirm_swaps_info(request):
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     host = request.META['HTTP_HOST']
