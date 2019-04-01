@@ -34,6 +34,7 @@ from lastwill.contracts.models import (
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
 from lastwill.settings import SWAPS_URL
+from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -201,13 +202,13 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.contract_type == 20:
             cost = str(Contract.get_details_model(
                 contract.contract_type
-            ).calc_cost_usdt(res['contract_details'], contract.network))
-            res['cost']['USDT'] = cost
+            ).calc_cost_usdt(res['contract_details'], contract.network)) / NET_DECIMALS['USDT']
             res['cost'] = {
-                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH']),
-                'WISH': str(int(to_wish('USDT', int(cost)))),
-                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC']),
-                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB']),
+                'USDT': str(int(cost * NET_DECIMALS['USDT'])),
+                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
+                'WISH': str(int(to_wish('USDT', int(cost)))* NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
             }
         return res
 
