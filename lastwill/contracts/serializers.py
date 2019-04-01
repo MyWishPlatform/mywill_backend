@@ -200,9 +200,9 @@ class ContractSerializer(serializers.ModelSerializer):
             res['cost']['TRX'] = 0
             res['cost']['TRONISH'] = 0
         if contract.contract_type == 20:
-            cost = str(Contract.get_details_model(
+            cost = Contract.get_details_model(
                 contract.contract_type
-            ).calc_cost_usdt(res['contract_details'], contract.network)) / NET_DECIMALS['USDT']
+            ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
                 'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
