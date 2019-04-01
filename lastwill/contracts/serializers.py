@@ -179,8 +179,6 @@ class ContractSerializer(serializers.ModelSerializer):
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
             'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
-            # 'TRX': str(int(eth_cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6),
-            # 'TRONISH': str(int(eth_cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
@@ -200,6 +198,17 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.network.name == 'TRON_TESTNET':
             res['cost']['TRX'] = 0
             res['cost']['TRONISH'] = 0
+        if contract.contract_type == 20:
+            cost = str(Contract.get_details_model(
+                contract.contract_type
+            ).calc_cost_usdt(res['contract_details'], contract.network))
+            res['cost']['USDT'] = cost
+            res['cost'] = {
+                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH']),
+                'WISH': str(int(to_wish('USDT', int(cost)))),
+                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC']),
+                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB']),
+            }
         return res
 
     def update(self, contract, validated_data):
