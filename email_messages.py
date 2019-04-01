@@ -183,3 +183,27 @@ Please contact support@mywish.io if you need if you have any questions.
 
 Best wishes,
 MyWish Team."""
+
+swaps_subject = """Your SWAP is ready for deployment"""
+swaps_message = """Hello,
+
+Your SWAP is created and ready for deployment to Ethereum.
+
+If you have any questions please contact support@mywish.io.
+
+Best wishes,
+MyWish Team.
+
+"""
+
+swaps_deploed_subject = """Your contract is ready"""
+swaps_deploed_message = """Congratulations!
+
+We are happy to inform you that your contract was successfully deployed to Ethereum.
+You can use your SWAP now: {swaps_link}
+
+Please contact support@mywish.io if you need if you have any questions.
+
+Best wishes,
+MyWish Team.
+"""

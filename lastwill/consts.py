@@ -91,7 +91,14 @@ NET_DECIMALS = {
     'BTC': 10 ** 8,
     'TRON': 10 ** 6,
     'TRONISH': 10 ** 6,
-    'TRX': 10 ** 6
+    'TRX': 10 ** 6,
+    'USDT': 10 ** 6
+}
+
+TRON_REPLENISH_THRESHOLD = {
+    'NET': 36000,
+    'ENERGY': 5600000,
+    'MIN_TRX': 1000000
 }
 
 URL_STATS_CURRENCY_BODY = 'https://api.coinmarketcap.com/v1/ticker/'
@@ -207,3 +214,5 @@ API_CONTRACT_PRICES = [
 
 ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
 ETHPLORER_KEY = 'freekey'
+
+ETH_ADDRESS = '0x0000000000000000000000000000000000000000'

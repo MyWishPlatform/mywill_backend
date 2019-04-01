@@ -24,7 +24,7 @@ class memoize_timeout:
 def convert(fsym, tsyms):
     eosish_factor = 1.0
     revesre_convert = False
-    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH'}
+    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
         requests.get('https://api.chaince.com/tickers/eosisheos/',

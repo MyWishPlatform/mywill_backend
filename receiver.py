@@ -21,6 +21,7 @@ from lastwill.contracts.models import (
     WhitelistAddress, AirdropAddress
 )
 from lastwill.contracts.serializers import ContractSerializer
+from lastwill.contracts.api import autodeploing
 from lastwill.settings import NETWORKS
 from lastwill.deploy.models import DeployAddress
 from lastwill.payments.api import create_payment
@@ -64,6 +65,9 @@ class Receiver(threading.Thread):
         print('message["amount"]', message['amount'])
         print('payment ok', flush=True)
         create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'], message['siteId'])
+        if message['siteId'] == 4:
+            autodeploing(message['userId'])
+
 
     def deployed(self, message):
         print('deployed message received', flush=True)

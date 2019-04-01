@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import MY_WISH_URL, TRON_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL
 from lastwill.consts import NET_DECIMALS
 from exchange_API import to_wish, convert
 
@@ -23,19 +23,29 @@ def create_payment(uid, tx, currency, amount, site_id):
         )
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
-        if currency in ('EOS', 'EOSISH'):
-            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['EOS']
-    # elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
-    #     value = amount if currency in ('TRONISH', 'TRX') else amount * float(convert(
-    #         currency, 'TRX'
-    #     )['TRX']) / NET_DECIMALS[currency] * NET_DECIMALS['TRON']
-    # else:
-    #     amount = calculate_decimals(currency, amount)
-    #     value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']
-    #     amount = add_decimals(currency, amount)
+    elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
+        value = amount if currency in ('TRONISH', 'TRX') else amount * float(convert(
+            currency, 'TRX'
+        )['TRX']) / NET_DECIMALS[currency] * NET_DECIMALS['TRON']
+    elif SubSite.objects.get(id=site_id).site_name == SWAPS_URL:
+        value = amount if currency == 'USDT' else amount * float(convert(
+            currency, 'USDT'
+        )['USDT']) / NET_DECIMALS[currency] * NET_DECIMALS['USDT']
+    else:
+        amount = calculate_decimals(currency, amount)
+        value = amount if currency == 'EOSISH' else amount * convert(currency, 'EOSISH')['EOSISH'] * NET_DECIMALS['EOSISH']
+        amount = add_decimals(currency, amount)
     user = User.objects.get(id=uid)
     if amount < 0.0:
-        negative_payment(user, -value, site_id)
+        if site_id == 4:
+            try:
+                negative_payment(user, -value, site_id)
+            except:
+                print('-5% payment', flush=True)
+                value = value * 0.95
+                negative_payment(user, -value, site_id)
+        else:
+            negative_payment(user, -value, site_id)
     else:
         positive_payment(user, value, site_id, currency)
     site = SubSite.objects.get(id=site_id)
