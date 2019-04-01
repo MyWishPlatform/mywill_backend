@@ -50,6 +50,7 @@ from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
 from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens
+from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -62,7 +63,8 @@ router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
 urlpatterns = [
     url(r'^reset', index),
     url(r'^', include('django.contrib.auth.urls')),
-    url(r'^jopa/', admin.site.urls),
+    # url(r'^jopa/', admin.site.urls),
+    url(r'^jopa/', lastwill_admin.urls),
     url(r'^api/', include(router.urls)),
     url(
             r'^api/rest-auth/registration/account-confirm-email/(?P<key>[-:\w]+)/$',

@@ -10,3 +10,6 @@ class LastWillAdminSite(admin.AdminSite):
             url(r'^create_contract_swaps/', create_contract_swaps),
         ]
         return urls + admin_urls
+
+
+lastwill_admin = LastWillAdminSite(name='lastwill_admin')
