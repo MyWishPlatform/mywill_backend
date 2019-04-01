@@ -1477,7 +1477,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         )
         details['base_limit'] = int(details['base_limit'])
         details['quote_limit'] = int(details['quote_limit'])
-        if details['base_address'] == details['quote_address']:
+        if details['base_address'].lower() == details['quote_address'].lower():
             raise ValidationError
         return details
 
