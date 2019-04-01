@@ -61,21 +61,22 @@ def count_sold_tokens(address):
 
 def deploy_swaps(contract_id):
     contract = Contract.objects.get(id=contract_id)
-    contract_details = contract.get_details()
-    contract_details.predeploy_validate()
-    kwargs = ContractSerializer().get_details_serializer(
-        contract.contract_type
-    )().to_representation(contract_details)
-    cost = contract_details.calc_cost_usdt(kwargs, contract.network)
-    site_id = 4
-    currency = 'USDT'
-    user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
-    if user_info.balance >= cost or user_info.balance * 0.95 >= cost:
-        create_payment(contract.user.id, '', currency, -cost, site_id)
-        contract.state = 'WAITING_FOR_DEPLOYMENT'
-        contract.save()
-        queue = NETWORKS[contract.network.name]['queue']
-        send_in_queue(contract.id, 'launch', queue)
+    if contract.state == 'WAITING_FOR_PAYMENT':
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+        site_id = 4
+        currency = 'USDT'
+        user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
+        if user_info.balance >= cost or user_info.balance * 0.95 >= cost:
+            create_payment(contract.user.id, '', currency, -cost, site_id)
+            contract.state = 'WAITING_FOR_DEPLOYMENT'
+            contract.save()
+            queue = NETWORKS[contract.network.name]['queue']
+            send_in_queue(contract.id, 'launch', queue)
     return True
 
 
@@ -1476,6 +1477,8 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         )
         details['base_limit'] = int(details['base_limit'])
         details['quote_limit'] = int(details['quote_limit'])
+        if details['base_address'] == details['quote_address']:
+            raise ValidationError
         return details
 
     def save(self, **kwargs):

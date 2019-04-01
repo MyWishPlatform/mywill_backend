@@ -1054,7 +1054,7 @@ def get_tronish_balance(request):
 
 def autodeploing(user_id):
     bb = UserSiteBalance.objects.get(subsite__id=4, user__id=user_id)
-    contracts = Contract.objects.filter(user__id=user_id, contract_type=20, network__name='ETHEREUM_MAINNET').order_by('-created_date')
+    contracts = Contract.objects.filter(user__id=user_id, contract_type=20, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
     for contract in contracts:
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
@@ -1080,6 +1080,10 @@ def confirm_swaps_info(request):
         raise PermissionDenied
     if host != SWAPS_URL:
         raise PermissionDenied
+    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
+    for c in confirm_contracts:
+        c.state = 'WAITING_FOR_PAYMENT'
+        c.save()
     contract.state = 'WAITING_FOR_PAYMENT'
     contract.save()
     return Response('ok')
