@@ -1,6 +1,6 @@
 <form method="post" action="">
     {% csrf_token %}
-    {% for field in form.fields %}
+    {% for field in form %}
         <div class="form-field">{{ field.label }} {{ field }}</div>
     {% endfor %}
     <input type="submit" value="Submit" />
