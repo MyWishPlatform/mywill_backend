@@ -1,7 +1,7 @@
 <form method="post" action="">
     {% csrf_token %}
     {% for field in form.fields %}
-        <div class="form-field">{{ field }}</div>
+        <div class="form-field">{{ field.label }} {{ field }}</div>
     {% endfor %}
     <input type="submit" value="Submit" />
 </form>
