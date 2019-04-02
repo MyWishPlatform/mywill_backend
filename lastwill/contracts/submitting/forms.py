@@ -25,4 +25,12 @@ class ContractFormSWAPS(CommonSerializedContractForm):
 
     class Meta:
         model = ContractDetailsSWAPS
-        exclude = []
+        fields = ['base_address',
+                  'base_limit',
+                  'quote_address',
+                  'quote_limit',
+                  'stop_date',
+                  'public',
+                  'owner_address',
+                  'unique_link'
+                  ]
