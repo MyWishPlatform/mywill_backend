@@ -43,6 +43,6 @@ class ContractFormSWAPS(CommonSerializedContractForm):
 
     def clean_stop_date(self):
             stop_date = self.cleaned_data['stop_date']
-            stop_date = str(stop_date.replace(tzinfo=None))
+            stop_date = str(stop_date.replace(tzinfo=None))[:-3]
             return stop_date
 
