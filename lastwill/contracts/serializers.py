@@ -207,7 +207,7 @@ class ContractSerializer(serializers.ModelSerializer):
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
                 'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
-                'WISH': str(int(to_wish('USDT', int(cost)))* NET_DECIMALS['WISH']),
+                'WISH': str(int(cost) * convert('USDT', 'WISH')['WISH'] * NET_DECIMALS['WISH']),
                 'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
             }
