@@ -1,6 +1,7 @@
 from django import forms
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS
 from lastwill.contracts.serializers import ContractDetailsSWAPSSerializer
+from django.forms.widgets import TextInput
 
 
 class CommonSerializedContractForm(forms.ModelForm):
@@ -23,6 +24,10 @@ class CommonSerializedContractForm(forms.ModelForm):
 class ContractFormSWAPS(CommonSerializedContractForm):
     serializer_class = ContractDetailsSWAPSSerializer
 
+    def __init__(self, *args, **kwargs):
+        super(ContractFormSWAPS, self).__init__(*args, **kwargs)
+        self.fields['stop_date'].widget = TextInput()
+
     class Meta:
         model = ContractDetailsSWAPS
         fields = ['base_address',
@@ -34,3 +39,4 @@ class ContractFormSWAPS(CommonSerializedContractForm):
                   'owner_address',
                   'unique_link'
                   ]
+
