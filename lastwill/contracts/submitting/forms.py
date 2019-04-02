@@ -41,3 +41,8 @@ class ContractFormSWAPS(CommonSerializedContractForm):
                   'unique_link'
                   ]
 
+    def clean_stop_date(self):
+            stop_date = self.cleaned_data['stop_date']
+            stop_date = str(stop_date)
+            return stop_date
+
