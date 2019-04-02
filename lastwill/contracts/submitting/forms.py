@@ -14,6 +14,7 @@ class CommonSerializedContractForm(forms.ModelForm):
 
     def is_valid(self):
         if super(CommonSerializedContractForm, self).is_valid():
+            print(self.cleaned_data)
             serializer = self.get_serializer(data=self.cleaned_data)
             valid = serializer.is_valid()
             self.add_error(None, serializer.errors)
