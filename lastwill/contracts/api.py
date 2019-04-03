@@ -1088,3 +1088,13 @@ def confirm_swaps_info(request):
     contract.save()
     autodeploing(contract.user.id)
     return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['GET'])
+def get_contract_for_unique_link(request):
+    link = request.data.get('unique_link')
+    details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
+    if not details:
+        raise PermissionDenied
+    contract = details.contract
+    return JsonResponse(ContractSerializer().to_representation(contract))
