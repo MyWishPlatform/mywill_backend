@@ -1092,7 +1092,9 @@ def confirm_swaps_info(request):
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_unique_link(request):
-    link = request.data.query_params['unique_link']
+    link = request.query_params.get('unique_link', None)
+    if not link:
+        raise PermissionDenied
     details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
     if not details:
         raise PermissionDenied
