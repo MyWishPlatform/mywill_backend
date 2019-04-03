@@ -1453,6 +1453,10 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
 
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
+        now = timezone.now()
+        if contract_details.contract.state == 'ACTIVE' and contract_details['stop_date'] < now:
+            contract_details.contract.state = 'EXPIRED'
+            contract_details.contract.save()
         return res
 
     def create(self, contract, contract_details):
