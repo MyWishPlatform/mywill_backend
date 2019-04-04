@@ -149,3 +149,7 @@ class ContractDetailsSWAPS(CommonDetails):
             [self.contract.user.email]
         )
         return res
+
+    def finalized(self, message):
+        self.contract.state = 'DONE'
+        self.contract.save()
