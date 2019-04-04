@@ -6,6 +6,19 @@ from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK
 
 
+
+def add_eth_for_test(result):
+    t = Tokens.objects.get(token_short_name='ETH')
+    result.append({
+        'address': t.address,
+        'token_name': t.token_name,
+        'token_short_name': t.token_short_name,
+        'decimals': t.decimals,
+        'image_link': t.image_link
+    })
+    return result
+
+
 def get_test_tokens(token_name=None, token_short_name=None, address=None):
     token_list = ContractDetailsToken.objects.all().exclude(contract__state__in=('CREATED', 'POSTPONED'))
     if token_short_name:
@@ -27,6 +40,7 @@ def get_test_tokens(token_name=None, token_short_name=None, address=None):
             'decimals': t.decimals,
             'image_link': DEFAULT_IMAGE_LINK
         })
+    result = add_eth_for_test(result)
     return result
 
 
