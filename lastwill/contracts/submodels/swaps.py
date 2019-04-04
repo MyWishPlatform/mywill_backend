@@ -153,3 +153,7 @@ class ContractDetailsSWAPS(CommonDetails):
     def finalized(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
+
+    def cancel(self, message):
+        self.contract.state = 'CANCELLED'
+        self.contract.save()
