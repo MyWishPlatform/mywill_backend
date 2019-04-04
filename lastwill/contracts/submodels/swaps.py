@@ -136,7 +136,7 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        swaps_link='{protocol}://{url}/{unique_link}'.format(
+        swaps_link='{protocol}://{url}/public/{unique_link}'.format(
             protocol=SITE_PROTOCOL,
             unique_link=self.unique_link, url=SWAPS_URL
         )
