@@ -1062,7 +1062,7 @@ def autodeploing(user_id):
             contract.contract_type
         )().to_representation(contract_details)
         cost = contract_details.calc_cost_usdt(kwargs, contract.network)
-        if bb.balance >= cost:
+        if bb.balance >= cost or bb.balance >= cost * 0.95:
             deploy_swaps(contract.id)
         bb.refresh_from_db()
     return True
