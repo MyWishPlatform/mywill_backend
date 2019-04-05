@@ -1482,7 +1482,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         details['base_limit'] = int(details['base_limit'])
         details['quote_limit'] = int(details['quote_limit'])
         if details['base_address'].lower() == details['quote_address'].lower():
-            raise ValidationError
+            raise ValidationError({'result': 1}, code=400)
         return details
 
     # def save(self, **kwargs):
