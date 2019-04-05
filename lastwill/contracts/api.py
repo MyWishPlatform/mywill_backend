@@ -1096,7 +1096,7 @@ def get_contract_for_unique_link(request):
     if not link:
         raise PermissionDenied
     details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
-    if not details or not details.public:
+    if not details:
         raise PermissionDenied
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
