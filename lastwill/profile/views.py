@@ -55,6 +55,7 @@ def profile_view(request):
     site = SubSite.objects.get(site_name=site_name)
     # print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
+    print(site_name, request.user.id, flush=True)
     answer = {
             'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
             'contracts': Contract.objects.filter(user=request.user).count(),
