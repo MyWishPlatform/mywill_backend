@@ -147,7 +147,7 @@ class ContractDetailsEOSToken(CommonDetails):
                 acc_name=self.admin_address,
                 max_sup=max_supply,
                 token=self.token_short_name
-            ), '-p', builder, '-j'
+            ), '-p', acc_name, '-j'
         ]
         print('command = ', command)
 
