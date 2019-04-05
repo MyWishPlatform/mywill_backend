@@ -42,6 +42,7 @@ class UserConfirmEmailView(ConfirmEmailView):
 @api_view()
 def profile_view(request):
     if request.user.is_anonymous:
+        print('anonymous', flush=True)
         raise PermissionDenied()
     site_name = request.META['HTTP_HOST']
     # print('site name is', site_name)
