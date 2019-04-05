@@ -71,7 +71,7 @@ def deploy_swaps(contract_id):
         site_id = 4
         currency = 'USDT'
         user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
-        if user_info.balance >= cost or user_info.balance * 0.95 >= cost:
+        if user_info.balance >= cost or int(user_info.balance) * 0.95 >= cost:
             create_payment(contract.user.id, '', currency, -cost, site_id)
             contract.state = 'WAITING_FOR_DEPLOYMENT'
             contract.save()
