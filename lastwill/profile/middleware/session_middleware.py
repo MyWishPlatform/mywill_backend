@@ -1,7 +1,7 @@
-from django.conf import settings
+# from django.conf import settings
 
 
-class CrossDomainSessionMiddleware(object):
+class CrossDomainSessionMiddleware():
     pass
     # def process_response(self, request, response):
     #     if response.cookies:
