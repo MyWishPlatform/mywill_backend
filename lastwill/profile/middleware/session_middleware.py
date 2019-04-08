@@ -20,10 +20,6 @@ class CrossDomainSessionMiddleware:
 
         # Code to be executed for each request/response after
         # the view is called.
-
-        return response
-
-    def process_response(self, request, response):
         if response.cookies:
             host = request.get_host()
             print('host in middleware', host, flush=True)
@@ -34,6 +30,7 @@ class CrossDomainSessionMiddleware:
                 for cookie in response.cookies:
                     if 'domain' in response.cookies[cookie]:
                         response.cookies[cookie]['domain'] = domain
+
         return response
 
 
