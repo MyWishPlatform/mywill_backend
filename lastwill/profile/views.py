@@ -23,6 +23,9 @@ from tron_wif.hex2wif import hex2tronwif
 class UserConfirmEmailView(ConfirmEmailView):
     def post(self, *args, **kwargs):
         self.object = confirmation = self.get_object()
+        print('confirmation', confirmation, flush=True)
+        print('request', self.request, flush=True)
+        print('object', self.object, flush=True)
         confirmation.confirm(self.request)
 
         '''get_adapter(self.request).add_message(
