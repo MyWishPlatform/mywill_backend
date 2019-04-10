@@ -45,8 +45,10 @@ class ConfirmEmailView(TemplateResponseMixin, View):
     template_name = "account/email_confirm." + app_settings.TEMPLATE_EXTENSION
 
     def get(self, *args, **kwargs):
+        print('get start', flush=True)
         try:
             self.object = self.get_object()
+            print('get, object', self.object, flush=True)
             if app_settings.CONFIRM_EMAIL_ON_GET:
                 print('get confirm email', app_settings.CONFIRM_EMAIL_ON_GET, flush=True)
                 return self.post(*args, **kwargs)
@@ -57,6 +59,7 @@ class ConfirmEmailView(TemplateResponseMixin, View):
         return self.render_to_response(ctx)
 
     def post(self, *args, **kwargs):
+        print('post start', flush=True)
         self.object = confirmation = self.get_object()
         print('post confirmation', confirmation, flush=True)
         confirmation.confirm(self.request)
@@ -94,8 +97,11 @@ class ConfirmEmailView(TemplateResponseMixin, View):
         return None
 
     def get_object(self, queryset=None):
+        print('get object start', flush=True)
         key = self.kwargs['key']
+        print('get object key', self.kwargs['key'], flush=True)
         emailconfirmation = EmailConfirmationHMAC.from_key(key)
+        print('get object emailconfirmation', emailconfirmation, flush=True)
         if not emailconfirmation:
             if queryset is None:
                 queryset = self.get_queryset()
