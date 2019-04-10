@@ -17,10 +17,11 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from allauth.account.views import confirm_email as allauthemailconfirmation
+# from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
+from lastwill.profile.views import confirm_email as allauthemailconfirmation
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
 from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token, delete_api_tokens
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,

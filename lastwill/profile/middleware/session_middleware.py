@@ -22,11 +22,9 @@ class CrossDomainSessionMiddleware:
         # the view is called.
         if response.cookies:
             host = request.get_host()
-            print('host in middleware', host, flush=True)
             # check if it's a different domain
             if host not in settings.SESSION_COOKIE_DOMAIN:
                 domain = ".{domain}".format(domain=host)
-                print('domain in middleware', domain, flush=True)
                 for cookie in response.cookies:
                     if 'domain' in response.cookies[cookie]:
                         response.cookies[cookie]['domain'] = domain
