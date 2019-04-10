@@ -1111,4 +1111,4 @@ def get_public_contracts(request):
         if d.public:
             result.append(ContractSerializer().to_representation(contract))
 
-    return JsonResponse(result)
+    return JsonResponse(result, safe=False)
