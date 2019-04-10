@@ -338,7 +338,7 @@ class Contract(models.Model):
         tron_airdrop = apps.get_model('contracts', 'ContractDetailsTRONAirdrop')
         tron_lostkey = apps.get_model('contracts', 'ContractDetailsTRONLostkey')
         eth_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsLostKeyTokens')
-
+        swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -361,6 +361,7 @@ class Contract(models.Model):
         contract_details_types[17] = {'name': 'TRON Airdrop', 'model': tron_airdrop}
         contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
+        contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
         return contract_details_types
 
     @classmethod
@@ -493,6 +494,8 @@ class CommonDetails(models.Model):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
+            elif self.contract.contract_type == 20:
+                pass
             else:
                 send_mail(
                         common_subject,

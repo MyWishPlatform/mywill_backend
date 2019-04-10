@@ -28,9 +28,15 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
-        ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens
+        ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
+        ContractDetailsSWAPS, InvestAddresses
 )
+from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
+from lastwill.settings import SWAPS_URL
+from lastwill.consts import NET_DECIMALS
+from lastwill.profile.models import *
+from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
@@ -51,6 +57,27 @@ def count_sold_tokens(address):
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
     sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
     return sold_tokens
+
+
+def deploy_swaps(contract_id):
+    contract = Contract.objects.get(id=contract_id)
+    if contract.state == 'WAITING_FOR_PAYMENT':
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+        site_id = 4
+        currency = 'USDT'
+        user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
+        if user_info.balance >= cost or int(user_info.balance) * 0.95 >= cost:
+            create_payment(contract.user.id, '', currency, -cost, site_id)
+            contract.state = 'WAITING_FOR_DEPLOYMENT'
+            contract.save()
+            queue = NETWORKS[contract.network.name]['queue']
+            send_in_queue(contract.id, 'launch', queue)
+    return True
 
 
 class HeirSerializer(serializers.ModelSerializer):
@@ -110,29 +137,9 @@ class ContractSerializer(serializers.ModelSerializer):
         finally:
             transaction.set_autocommit(True)
         if validated_data['user'].email:
-            network_name = ''
             network = validated_data['network']
-            if network.name == 'ETHEREUM_MAINNET':
-                network_name = 'Ethereum'
-            if network.name == 'ETHEREUM_ROPSTEN':
-                network_name = 'Ropsten (Ethereum Testnet)'
-            if network.name == 'RSK_MAINNET':
-                network_name = 'RSK'
-            if network.name == 'RSK_TESTNET':
-                network_name = 'RSK Testnet'
-            if network.name == 'NEO_MAINNET':
-                network_name = 'NEO'
-            if network.name == 'NEO_TESTNET':
-                network_name = 'NEO Testnet'
-            if network.name == 'EOS_MAINNET':
-                network_name = 'EOS'
-            if network.name == 'EOS_TESTNET':
-                network_name = 'EOS Testnet'
-            if network.name == 'TRON_MAINNET':
-                network_name = 'TRON'
-            if network.name == 'TRON_TESTNET':
-                network_name = 'TRON Testnet'
-            if contract.contract_type != 11:
+            network_name = MAIL_NETWORK[network.name]
+            if contract.contract_type != 11 and contract.contract_type !=20:
                 send_mail(
                         email_messages.create_subject,
                         email_messages.create_message.format(
@@ -140,6 +147,13 @@ class ContractSerializer(serializers.ModelSerializer):
                         ),
                         DEFAULT_FROM_EMAIL,
                         [validated_data['user'].email]
+                )
+            elif contract.contract_type == 20:
+                send_mail(
+                    email_messages.swaps_subject,
+                    email_messages.swaps_message,
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
                 )
             else:
                 send_mail(
@@ -167,8 +181,6 @@ class ContractSerializer(serializers.ModelSerializer):
             'ETH': str(eth_cost),
             'WISH': str(int(to_wish('ETH', int(eth_cost)))),
             'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
-            # 'TRX': str(int(eth_cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6),
-            # 'TRONISH': str(int(eth_cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
@@ -188,6 +200,17 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.network.name == 'TRON_TESTNET':
             res['cost']['TRX'] = 0
             res['cost']['TRONISH'] = 0
+        if contract.contract_type == 20:
+            cost = Contract.get_details_model(
+                contract.contract_type
+            ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
+            res['cost'] = {
+                'USDT': str(int(cost * NET_DECIMALS['USDT'])),
+                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
+                'WISH': str(int(cost) * convert('USDT', 'WISH')['WISH'] * NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
+            }
         return res
 
     def update(self, contract, validated_data):
@@ -233,7 +256,8 @@ class ContractSerializer(serializers.ModelSerializer):
             16: ContractDetailsGameAssetsSerializer,
             17: ContractDetailsTRONAirdropSerializer,
             18: ContractDetailsTRONLostkeySerializer,
-            19: ContractDetailsLostKeyTokensSerializer
+            19: ContractDetailsLostKeyTokensSerializer,
+            20: ContractDetailsSWAPSSerializer
         }[contract_type]
 
 
@@ -1400,3 +1424,70 @@ class ContractDetailsLostKeyTokensSerializer(serializers.ModelSerializer):
             heir_json['percentage'] = int(heir_json['percentage'])
         check.is_sum_eq_100([h['percentage'] for h in details['heirs']])
         return details
+
+
+class InvestAddressesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestAddresses
+        fields = ('address', 'amount')
+
+
+class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsSWAPS
+        fields = (
+            'base_address', 'quote_address', 'stop_date', 'base_limit',
+            'quote_limit', 'public', 'owner_address', 'unique_link'
+        )
+        extra_kwargs = {
+            'unique_link': {'read_only': True}
+        }
+
+    def to_representation(self, contract_details):
+        now = timezone.now()
+        if contract_details.contract.state == 'ACTIVE' and contract_details.stop_date < now:
+            contract_details.contract.state = 'EXPIRED'
+            contract_details.contract.save()
+        res = super().to_representation(contract_details)
+        # investors_serializer = InvestAddressesSerializer()
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        # res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        if 'owner_address' not in details:
+            raise ValidationError
+        if 'stop_date' not in details:
+            raise ValidationError
+        check.is_address(details['owner_address'])
+        details['owner_address'] = details['owner_address'].lower()
+        details['stop_date'] = datetime.datetime.strptime(
+            details['stop_date'], '%Y-%m-%d %H:%M'
+        )
+        details['base_limit'] = int(details['base_limit'])
+        details['quote_limit'] = int(details['quote_limit'])
+        if details['base_address'].lower() == details['quote_address'].lower():
+            raise ValidationError({'result': 1}, code=400)
+        return details
+
+    # def save(self, **kwargs):
+    #     res = super().save(**kwargs)
+    #     print('swaps kwargs', kwargs, flush=True)
+    #     contract = kwargs['contract']
+    #     deploy_swaps(contract['id'])
+    #     return res

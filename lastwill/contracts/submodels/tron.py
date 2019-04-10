@@ -20,8 +20,10 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_TRON
+from lastwill.settings import TRON_NODE
 
 from exchange_API import convert
+from tronapi import Tron
 
 
 def convert_address_to_hex(address):
@@ -36,6 +38,24 @@ def replace_0x(message):
     for mes in message:
         mes['address'] = '41' + mes['address'][2:]
     return message
+
+
+def generate_tron_url(network):
+    if network == 'TRON_TESTNET':
+        tron_url = 'http://%s:%s' % (
+        str(NETWORKS[network]['host']),
+        str(NETWORKS[network]['port'])
+        )
+    else:
+        tron_url = TRON_NODE
+    return tron_url
+
+def instantiate_tronapi(pk):
+    tron = Tron(
+            private_key=pk
+    )
+    tron.private_key = pk
+    return tron
 
 
 class TRONContract(EthContract):
@@ -90,7 +110,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(30000 * NET_DECIMALS['TRX'])
+        result = int(600 * NET_DECIMALS['TRX'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -107,6 +127,8 @@ class ContractDetailsTRONToken(CommonDetails):
             if th.address.startswith('41'):
                 th.address = '0x' + th.address[2:]
                 th.save()
+            elif th.address.startswith('0x'):
+                pass
             else:
                 th.address = convert_address_to_hex(th.address)
                 th.save()
@@ -159,41 +181,42 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        # tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = generate_tron_url(self.contract.network.name)
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
+        print(result.content, flush=True)
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
-        # print('trx info', trx_info1)
         self.tron_contract_token.address = trx_info1['transaction']['contract_address']
         self.tron_contract_token.save()
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
-        # print('before', trx)
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx_info1['transaction'])
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
-        # print('after', trx)
-        # print(trx)
+        tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
-            print(result.content)
+            # print(result.content, flush=True)
+            print(result.content, flush=True)
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
-                params = {'value': trx_info2['txID']}
-                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-                ret = json.loads(result.content.decode())
-                if ret:
-                    self.tron_contract_token.tx_hash = trx_info2['txID']
-                    print('tx_hash=', trx_info2['txID'], flush=True)
-                    self.tron_contract_token.save()
-                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-                    self.contract.save()
-                    return
-            time.sleep(5)
+                # params = {'value': trx_info2['txID']}
+                # result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
+                # ret = json.loads(result.content.decode())
+                # if ret:
+                self.tron_contract_token.tx_hash = trx_info2['txID']
+                print('tx_hash=', trx_info2['txID'], flush=True)
+                self.tron_contract_token.save()
+                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                self.contract.save()
+                return
+            # time.sleep(5)
         else:
                 raise ValidationError({'result': 1}, code=400)
 
@@ -214,6 +237,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def finalized(self, message):
         if self.tron_contract_token.original_contract.state != 'ENDED':
             self.tron_contract_token.original_contract.state = 'ENDED'
+
             self.tron_contract_token.original_contract.save()
         if (self.tron_contract_token.original_contract.id !=
                 self.tron_contract_token.contract.id and
@@ -269,7 +293,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(3000 * NET_DECIMALS['TRX'])
+        result = int(60 * NET_DECIMALS['TRX'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -327,9 +351,11 @@ class ContractDetailsGameAssets(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        # tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = generate_tron_url(self.contract.network.name)
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
+        print(result.content, flush=True)
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
         # print('trx info', trx_info1)
@@ -338,12 +364,14 @@ class ContractDetailsGameAssets(CommonDetails):
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
         # print('before', trx)
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx_info1['transaction'])
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         # print('after', trx)
         # print(trx)
+        tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
@@ -351,16 +379,12 @@ class ContractDetailsGameAssets(CommonDetails):
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
-                params = {'value': trx_info2['txID']}
-                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-                ret = json.loads(result.content.decode())
-                if ret:
-                    self.tron_contract_token.tx_hash = trx_info2['txID']
-                    print('tx_hash=', trx_info2['txID'], flush=True)
-                    self.tron_contract_token.save()
-                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-                    self.contract.save()
-                    return
+                self.tron_contract_token.tx_hash = trx_info2['txID']
+                print('tx_hash=', trx_info2['txID'], flush=True)
+                self.tron_contract_token.save()
+                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                self.contract.save()
+                return
             time.sleep(5)
         else:
                 raise ValidationError({'result': 1}, code=400)
@@ -442,7 +466,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(3000 * NET_DECIMALS['TRX'])
+        result = int(60 * NET_DECIMALS['TRX'])
         return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
@@ -491,7 +515,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = generate_tron_url(self.contract.network.name)
+        # tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
         trx_info1 = json.loads(result.content.decode())
@@ -502,12 +527,14 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
         # print('before', trx)
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx_info1['transaction'])
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
         # print('after', trx)
         # print(trx)
+        tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
@@ -515,16 +542,12 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
-                params = {'value': trx_info2['txID']}
-                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-                ret = json.loads(result.content.decode())
-                if ret:
-                    self.tron_contract.tx_hash = trx_info2['txID']
-                    print('tx_hash=', trx_info2['txID'], flush=True)
-                    self.tron_contract.save()
-                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-                    self.contract.save()
-                    return
+                self.tron_contract.tx_hash = trx_info2['txID']
+                print('tx_hash=', trx_info2['txID'], flush=True)
+                self.tron_contract.save()
+                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                self.contract.save()
+                return
             time.sleep(5)
         else:
                 raise ValidationError({'result': 1}, code=400)
@@ -688,7 +711,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
     def calc_cost_tron(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(4000 * NET_DECIMALS['TRX'])
+        result = int(80 * NET_DECIMALS['TRX'])
         return result
 
     @postponable
@@ -822,7 +845,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
             'origin_energy_limit': 100000000
         }
         deploy_params = json.dumps(deploy_params)
-        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tron_url = generate_tron_url(self.contract.network.name)
+        # tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
         trx_info1 = json.loads(result.content.decode())
@@ -831,11 +855,12 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.tron_contract.save()
         trx_info1['privateKey'] = NETWORKS[self.contract.network.name]['private_key']
         trx = json.dumps(trx_info1)
-
-        result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+        tron_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx_info1['transaction'])
         print('transaction sign')
-        trx_info2 = json.loads(result.content.decode())
         trx = json.dumps(trx_info2)
+        tron_url = generate_tron_url(self.contract.network.name)
         for i in range(5):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
@@ -843,16 +868,12 @@ class ContractDetailsTRONLostkey(CommonDetails):
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
-                params = {'value': trx_info2['txID']}
-                result = requests.post(tron_url + '/wallet/gettransactionbyid', data=json.dumps(params))
-                ret = json.loads(result.content.decode())
-                if ret:
-                    self.tron_contract.tx_hash = trx_info2['txID']
-                    print('tx_hash=', trx_info2['txID'], flush=True)
-                    self.tron_contract.save()
-                    self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-                    self.contract.save()
-                    return
+                self.tron_contract.tx_hash = trx_info2['txID']
+                print('tx_hash=', trx_info2['txID'], flush=True)
+                self.tron_contract.save()
+                self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+                self.contract.save()
+                return
             time.sleep(5)
         else:
                 raise ValidationError({'result': 1}, code=400)
@@ -881,11 +902,10 @@ class ContractDetailsTRONLostkey(CommonDetails):
             'check_private_key']
         trx = json.dumps(trx_info1)
 
-        result = requests.post(tron_url + '/wallet/gettransactionsign',
-                               data=trx)
+        tronapi = instantiate_tronapi(trx_info1['privateKey'])
+        trx_info2 = tronapi.trx.sign(trx_info1['transaction'])
         print('transaction sign')
-        print(result.content.decode(), flush=True)
-        trx_info2 = json.loads(result.content.decode())
+        print(trx_info2, flush=True)
         trx = json.dumps(trx_info2)
         for i in range(5):
             print('attempt=', i)

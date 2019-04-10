@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-   
+
     'rest_framework',
     'rest_framework.authtoken',
     'allauth',
@@ -57,9 +57,12 @@ INSTALLED_APPS = [
     'lastwill.deploy',
     'lastwill.promo',
     'lastwill.snapshot',
+    'lastwill.swaps_tokentable',
 ]
 
 MIDDLEWARE = [
+    # 'lastwill.profile.middleware.session_middleware.SessionHostDomainMiddleware',
+    'lastwill.profile.middleware.session_middleware.CrossDomainSessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -158,7 +161,7 @@ STATICFILES_DIRS = (
 )
 
 
-SITE_ID = 1 
+SITE_ID = 1
 REST_SESSION_LOGIN = True
 
 ACCOUNT_LOGOUT_ON_GET = True
