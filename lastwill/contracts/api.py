@@ -1100,3 +1100,15 @@ def get_contract_for_unique_link(request):
         raise PermissionDenied
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['GET'])
+def get_public_contracts(request):
+    contracts = Contract.objects.filter(contract_type=20, network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    result =[]
+    for contract in contracts:
+        d = contract.get_details()
+        if d.public:
+            result.append(ContractSerializer().to_representation(contract))
+
+    return JsonResponse(result)
