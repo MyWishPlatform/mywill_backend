@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
@@ -57,10 +59,9 @@ def get_all_tokens(request):
 
     token_list = Tokens.objects.all()
     if token_short_name:
-        token_list = token_list.filter(token_short_name__icontains=token_short_name.upper())
-
-    if token_name:
-        token_list = token_list.filter(token_name__icontains=token_name.lower())
+        token_list = token_list.filter(
+            Q(token_short_name__icontains=token_short_name.upper()| Q(token_name__icontains=token_name.lower()))
+        )
 
     if address:
         token_list = token_list.filter(address=address.lower())
