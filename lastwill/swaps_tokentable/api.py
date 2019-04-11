@@ -60,7 +60,7 @@ def get_all_tokens(request):
         token_list = token_list.filter(token_short_name__icontains=token_short_name.upper())
 
     if token_name:
-        token_list = token_list.filter(token_name__icontains=token_name)
+        token_list = token_list.filter(token_name__icontains=token_name.lower())
 
     if address:
         token_list = token_list.filter(address=address.lower())

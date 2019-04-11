@@ -15,7 +15,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.settings import SWAPS_MAIL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -152,7 +152,7 @@ class ContractSerializer(serializers.ModelSerializer):
                 send_mail(
                     email_messages.swaps_subject,
                     email_messages.swaps_message,
-                    DEFAULT_FROM_EMAIL,
+                    SWAPS_MAIL,
                     [validated_data['user'].email]
                 )
             else:
