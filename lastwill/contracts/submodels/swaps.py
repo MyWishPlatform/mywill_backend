@@ -48,7 +48,7 @@ class ContractDetailsSWAPS(CommonDetails):
 
     def predeploy_validate(self):
         now = timezone.now()
-        if self.stop_date < now:
+        if self.stop_date < now.timestamp():
             raise ValidationError({'result': 1}, code=400)
 
     @classmethod
