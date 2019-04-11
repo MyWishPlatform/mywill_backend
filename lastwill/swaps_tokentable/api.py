@@ -60,7 +60,7 @@ def get_all_tokens(request):
     token_list = Tokens.objects.all()
     if token_short_name:
         token_list = token_list.filter(
-            Q(token_short_name__icontains=token_short_name.upper()| Q(token_name__icontains=token_short_name.lower()))
+            Q(token_short_name__icontains=token_short_name.upper())| Q(token_name__icontains=token_short_name.lower())
         )
 
     if address:
