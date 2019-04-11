@@ -35,6 +35,8 @@ def get_test_tokens(token_name=None, token_short_name=None, address=None):
         token_list = token_list.filter(token_name__istartswith=token_name)
 
     if address:
+        if address == '0x0000000000000000000000000000000000000000':
+            result = add_eth_for_test(result)
         token_list = token_list.filter(eth_contract_token__address=address.lower())
 
     for t in token_list:
