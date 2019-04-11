@@ -25,8 +25,7 @@ class ContractDetailsSTO(CommonDetails):
     hard_cap = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
-    token_name = models.CharField(max_length=512)
-    token_short_name = models.CharField(max_length=64)
+    token_address = models.CharField(max_length=512)
     admin_address = models.CharField(max_length=50)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
@@ -92,12 +91,15 @@ class ContractDetailsSTO(CommonDetails):
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/waves-sto-contract/*')
         preproc_params = {"constants": {
-            "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
+            # "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
             "D_COLD_VAULT_PK": self.cold_wallet_address,
             "D_START_HEIGHT": self.start_date,
             "D_FINISH_HEIGHT": self.stop_date,
             "D_RATE": self.rate,
-            "D_WHITELIST": self.whitelist
+            "D_WHITELIST": self.whitelist,
+            "D_ASSET_ID": self.token_address,
+            "D_SOFT_CAP_WAVES": int(self.soft_cap),
+            "D_HARD_CAP_WAVES": int(self.hard_cap)
     }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
