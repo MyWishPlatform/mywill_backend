@@ -47,9 +47,10 @@ class ContractDetailsSWAPS(CommonDetails):
     temp_directory = models.CharField(max_length=36)
 
     def predeploy_validate(self):
-        now = timezone.now()
-        if self.stop_date < now.timestamp():
-            raise ValidationError({'result': 1}, code=400)
+        # now = timezone.now()
+        # if self.stop_date < now.timestamp():
+        #     raise ValidationError({'result': 1}, code=400)
+        pass
 
     @classmethod
     def min_cost(cls):
