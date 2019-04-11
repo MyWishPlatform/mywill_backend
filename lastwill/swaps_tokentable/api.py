@@ -23,9 +23,13 @@ def add_eth_for_test(result):
 
 def get_test_tokens(token_name=None, token_short_name=None, address=None):
     token_list = ContractDetailsToken.objects.all().exclude(contract__state__in=('CREATED', 'POSTPONED'))
+    result = []
     if token_short_name:
-        token_list = token_list.filter(
-            token_short_name__startswith=token_short_name.upper())
+        if token_short_name == 'ETH':
+            result = add_eth_for_test(result)
+        else:
+            token_list = token_list.filter(
+                token_short_name__startswith=token_short_name.upper())
 
     if token_name:
         token_list = token_list.filter(token_name__istartswith=token_name)
@@ -33,7 +37,6 @@ def get_test_tokens(token_name=None, token_short_name=None, address=None):
     if address:
         token_list = token_list.filter(eth_contract_token__address=address.lower())
 
-    result = []
     for t in token_list:
         result.append({
             'address': t.eth_contract_token.address,
@@ -42,7 +45,6 @@ def get_test_tokens(token_name=None, token_short_name=None, address=None):
             'decimals': t.decimals,
             'image_link': DEFAULT_IMAGE_LINK
         })
-    result = add_eth_for_test(result)
     return result
 
 
