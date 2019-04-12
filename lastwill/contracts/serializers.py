@@ -1,6 +1,5 @@
 import datetime
-import string
-import requests
+import smtplib
 import binascii
 import string
 import uuid
@@ -57,6 +56,22 @@ def count_sold_tokens(address):
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
     sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
     return sold_tokens
+
+
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP_SSL('smtp.yandex.com', 465)
+    server.ehlo()
+    server.starttls()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
 
 
 def deploy_swaps(contract_id):
@@ -149,23 +164,28 @@ class ContractSerializer(serializers.ModelSerializer):
                         [validated_data['user'].email]
                 )
             elif contract.contract_type == 20:
-                with get_connection(
-                        host=EMAIL_HOST_SWAPS,
-                        port=EMAIL_PORT_SWAPS,
-                        username=EMAIL_HOST_USER_SWAPS,
-                        password=EMAIL_HOST_PASSWORD_SWAPS,
-                        use_tls=EMAIL_USE_TLS_SWAPS
-                ) as connection:
-                    msg = EmailMessage(
-                        email_messages.swaps_subject,
-                        email_messages.swaps_message,
-                        SWAPS_MAIL,
-                        [validated_data['user'].email],
-                        connection=connection,
-                        headers={'From': SWAPS_MAIL}
-                    )
-                    msg.content_subtype = 'html'
-                    msg.send()
+                sendEMail(
+                    email_messages.swaps_subject,
+                    email_messages.swaps_message,
+                    validated_data['user'].email
+                )
+                # with get_connection(
+                #         host=EMAIL_HOST_SWAPS,
+                #         port=EMAIL_PORT_SWAPS,
+                #         username=EMAIL_HOST_USER_SWAPS,
+                #         password=EMAIL_HOST_PASSWORD_SWAPS,
+                #         use_tls=EMAIL_USE_TLS_SWAPS
+                # ) as connection:
+                #     msg = EmailMessage(
+                #         email_messages.swaps_subject,
+                #         email_messages.swaps_message,
+                #         SWAPS_MAIL,
+                #         [validated_data['user'].email],
+                #         connection=connection,
+                #         headers={'From': SWAPS_MAIL}
+                #     )
+                #     msg.content_subtype = 'html'
+                #     msg.send()
             else:
                 send_mail(
                         email_messages.eos_create_subject,
