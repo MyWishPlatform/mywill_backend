@@ -1,5 +1,6 @@
 import random
 import string
+import smtplib
 
 from ethereum.utils import checksum_encode
 
@@ -11,6 +12,22 @@ from lastwill.settings import SWAPS_MAIL, SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
+
+
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
 
 
 class InvestAddresses(models.Model):
@@ -131,26 +148,15 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        with get_connection(
-                host=EMAIL_HOST_SWAPS,
-                port=EMAIL_PORT_SWAPS,
-                username=EMAIL_HOST_USER_SWAPS,
-                password=EMAIL_HOST_PASSWORD_SWAPS,
-                use_tls=EMAIL_USE_TLS_SWAPS
-        ) as connection:
-            swaps_link='{protocol}://{url}/public/{unique_link}'.format(
-                protocol=SITE_PROTOCOL,
-                unique_link=self.unique_link, url=SWAPS_URL
-            )
-            send_mail(
-                swaps_deploed_subject,
-                swaps_deploed_message.format(
-                    swaps_link=swaps_link
-                ),
-                SWAPS_MAIL,
-                [self.contract.user.email],
-                connection=connection
-            )
+        swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
+            protocol=SITE_PROTOCOL,
+            unique_link=self.unique_link, url=SWAPS_URL
+        )
+        sendEMail(
+            swaps_deploed_subject,
+            swaps_deploed_message.format(swaps_link=swaps_link),
+            [self.contract.user.email]
+        )
         return res
 
     def finalized(self, message):
