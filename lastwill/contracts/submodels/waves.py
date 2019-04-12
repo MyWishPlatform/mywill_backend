@@ -104,7 +104,7 @@ class ContractDetailsSTO(CommonDetails):
     }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && yarn process-template'.format(dest=dest)):
+        if os.system('cd {dest} && yarn preprocess-contract'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/sto_contract.ride'), 'rb') as f:
