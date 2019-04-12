@@ -192,7 +192,7 @@ Your SWAP is created and ready for deployment to Ethereum.
 If you have any questions please contact support@swaps.network.
 
 Best wishes,
-MyWish Team.
+Swaps Team.
 
 """
 
@@ -205,5 +205,5 @@ You can use your SWAP now: {swaps_link}
 Please contact support@swaps.network if you need if you have any questions.
 
 Best wishes,
-MyWish Team.
+Swaps Team.
 """
