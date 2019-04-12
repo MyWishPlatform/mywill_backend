@@ -1,21 +1,33 @@
-import datetime
-import time
 import random
 import string
+import smtplib
 
-from ethereum import abi
 from ethereum.utils import checksum_encode
 
 from django.db import models
-from django.core.mail import send_mail, EmailMessage
-from django.contrib.postgres.fields import JSONField
-from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from django.core.mail import send_mail, EmailMessage, get_connection
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import SUPPORT_EMAIL, SITE_PROTOCOL, SWAPS_URL
+from lastwill.settings import SWAPS_MAIL, SITE_PROTOCOL, SWAPS_URL
+from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
+
+
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
 
 
 class InvestAddresses(models.Model):
@@ -46,6 +58,12 @@ class ContractDetailsSWAPS(CommonDetails):
     )
     temp_directory = models.CharField(max_length=36)
 
+    def predeploy_validate(self):
+        # now = timezone.now()
+        # if self.stop_date < now.timestamp():
+        #     raise ValidationError({'result': 1}, code=400)
+        pass
+
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
@@ -74,12 +92,6 @@ class ContractDetailsSWAPS(CommonDetails):
 
     def get_arguments(self, eth_contract_attr_name):
         return [
-            # self.owner_address,
-            # self.base_address,
-            # self.base_limit,
-            # self.quote_address,
-            # self.quote_limit,
-            # self.active_to
         ]
 
     def compile(self, eth_contract_attr_name='eth_contract'):
@@ -136,16 +148,13 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        swaps_link='{protocol}://{url}/public/{unique_link}'.format(
+        swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
             protocol=SITE_PROTOCOL,
             unique_link=self.unique_link, url=SWAPS_URL
         )
-        send_mail(
+        sendEMail(
             swaps_deploed_subject,
-            swaps_deploed_message.format(
-                swaps_link=swaps_link
-            ),
-            DEFAULT_FROM_EMAIL,
+            swaps_deploed_message.format(swaps_link=swaps_link),
             [self.contract.user.email]
         )
         return res

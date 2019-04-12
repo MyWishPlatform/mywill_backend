@@ -1,6 +1,5 @@
 import datetime
-import string
-import requests
+import smtplib
 import binascii
 import string
 import uuid
@@ -8,14 +7,14 @@ from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
 
 from django.db import transaction
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, EmailMessage
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.settings import SWAPS_MAIL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -33,7 +32,7 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
-from lastwill.settings import SWAPS_URL
+from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
 from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
 from lastwill.payments.api import create_payment
@@ -57,6 +56,22 @@ def count_sold_tokens(address):
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
     sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
     return sold_tokens
+
+
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
 
 
 def deploy_swaps(contract_id):
@@ -149,11 +164,10 @@ class ContractSerializer(serializers.ModelSerializer):
                         [validated_data['user'].email]
                 )
             elif contract.contract_type == 20:
-                send_mail(
+                sendEMail(
                     email_messages.swaps_subject,
                     email_messages.swaps_message,
-                    DEFAULT_FROM_EMAIL,
-                    [validated_data['user'].email]
+                    validated_data['user'].email
                 )
             else:
                 send_mail(
