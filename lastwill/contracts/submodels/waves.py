@@ -39,6 +39,7 @@ class ContractDetailsSTO(CommonDetails):
     cold_wallet_address = models.CharField(max_length=50, default='')
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
+    public_key = models.CharField(max_length=512)
 
     waves_contract = models.ForeignKey(
         WavesContract,
@@ -92,9 +93,10 @@ class ContractDetailsSTO(CommonDetails):
         dest, preproc_config = create_directory(self, sour_path='lastwill/waves-sto-contract/*')
         preproc_params = {"constants": {
             # "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
+            "D_MANAGEMENT_PUBKEY": self.public_key,
             "D_COLD_VAULT_PK": self.cold_wallet_address,
-            "D_START_HEIGHT": self.start_date,
-            "D_FINISH_HEIGHT": self.stop_date,
+            "D_START_DATE": self.start_date,
+            "D_FINISH_DATE": self.stop_date,
             "D_RATE": self.rate,
             "D_WHITELIST": self.whitelist,
             "D_ASSET_ID": self.token_address,
@@ -106,17 +108,12 @@ class ContractDetailsSTO(CommonDetails):
         if os.system('cd {dest} && yarn process-template'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
-        # with open(path.join(dest, 'build/contracts/Swaps.json'), 'rb') as f:
-        #     token_json = json.loads(f.read().decode('utf-8-sig'))
-        # with open(path.join(dest, 'build/Swaps.sol'), 'rb') as f:
-        #     source_code = f.read().decode('utf-8-sig')
-        # eth_contract = EthContract()
-        # eth_contract.abi = token_json['abi']
-        # eth_contract.bytecode = token_json['bytecode'][2:]
-        # eth_contract.compiler_version = token_json['compiler']['version']
-        # eth_contract.contract = self.contract
-        # eth_contract.original_contract = self.contract
-        # eth_contract.source_code = source_code
-        # eth_contract.save()
-        # self.eth_contract = eth_contract
-        # self.save()
+        with open(path.join(dest, 'build/sto_contract.ride'), 'rb') as f:
+            source_code = f.read().decode('utf-8-sig')
+        waves_contract = WavesContract()
+        waves_contract.contract = self.contract
+        waves_contract.original_contract = self.contract
+        waves_contract.source_code = source_code
+        waves_contract.save()
+        self.waves_contract = waves_contract
+        self.save()
