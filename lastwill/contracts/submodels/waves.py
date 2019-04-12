@@ -192,5 +192,5 @@ class ContractDetailsSTO(CommonDetails):
         )
         print('trx', trx, flush=True)
         self.waves_contract.address = address
-        self.waves_contract.tx_hash = trx['id']
+        self.waves_contract.tx_hash = json.loads(trx)['id']
         self.waves_contract.save()
