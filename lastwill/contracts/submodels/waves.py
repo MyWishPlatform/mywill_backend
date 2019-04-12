@@ -45,7 +45,7 @@ class ContractDetailsSTO(CommonDetails):
         WavesContract,
         null=True,
         default=None,
-        related_name='waves contract',
+        related_name='waves_contract',
         on_delete=models.SET_NULL
     )
 
