@@ -163,6 +163,19 @@ class ContractDetailsSTO(CommonDetails):
 
     def deploy(self):
         self.compile()
+        if NETWORKS[self.contract.network.name]['is_free']:
+            pw.setNode(
+                node='https://{addr}'.format(
+                    addr=NETWORKS[self.contract.network.name]['host']),
+                chain='testnet'
+            )
+        else:
+            pw.setNode(
+                node='https://{addr}'.format(
+                    addr=NETWORKS[self.contract.network.name]['host']),
+                chain='mainnet'
+            )
+
         deploy_address = pw.Address(privateKey=NETWORKS[self.contract.network.name]['private_key'])
         pubKey, privKey, address = create_waves_privkey()
         contract_address = pw.Address(privateKey=privKey)
