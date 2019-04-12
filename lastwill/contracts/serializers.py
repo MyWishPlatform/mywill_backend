@@ -28,7 +28,7 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsSWAPS, InvestAddresses
+        ContractDetailsSWAPS, InvestAddresses, WavesContract, ContractDetailsSTO
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -271,7 +271,8 @@ class ContractSerializer(serializers.ModelSerializer):
             17: ContractDetailsTRONAirdropSerializer,
             18: ContractDetailsTRONLostkeySerializer,
             19: ContractDetailsLostKeyTokensSerializer,
-            20: ContractDetailsSWAPSSerializer
+            20: ContractDetailsSWAPSSerializer,
+            21: ContractDetailsSTOSerializer
         }[contract_type]
 
 
@@ -1499,9 +1500,39 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
             raise ValidationError({'result': 1}, code=400)
         return details
 
-    # def save(self, **kwargs):
-    #     res = super().save(**kwargs)
-    #     print('swaps kwargs', kwargs, flush=True)
-    #     contract = kwargs['contract']
-    #     deploy_swaps(contract['id'])
-    #     return res
+
+class ContractDetailsSTOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsSTO
+        fields = (
+            'token_address', 'public_key', 'cold_wallet_address', 'start_date',
+            'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap'
+        )
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        # res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
+        res['waves_contract'] = EthContractSerializer().to_representation(contract_details.waves_contract)
+
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['waves_contract']['source_code'] = ''
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        if 'token_address' not in details:
+            raise ValidationError
+        if 'stop_date' not in details:
+            raise ValidationError
+        return details

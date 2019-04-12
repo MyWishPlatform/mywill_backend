@@ -339,6 +339,7 @@ class Contract(models.Model):
         tron_lostkey = apps.get_model('contracts', 'ContractDetailsTRONLostkey')
         eth_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsLostKeyTokens')
         swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
+        waves = apps.get_model('contracts', 'ContractDetailsSTO')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -362,6 +363,7 @@ class Contract(models.Model):
         contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
         contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
+        contract_details_types[21] = {'name': 'WAVES Contract STO', 'model': waves}
         return contract_details_types
 
     @classmethod

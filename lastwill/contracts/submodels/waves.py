@@ -1,6 +1,7 @@
 import datetime
 
 from ethereum import abi
+import pywaves as pw
 
 from django.db import models
 from django.core.mail import send_mail, EmailMessage
