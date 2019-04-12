@@ -185,7 +185,7 @@ class ContractDetailsTRONToken(CommonDetails):
         tron_url = generate_tron_url(self.contract.network.name)
         result = requests.post(tron_url + '/wallet/deploycontract', data=deploy_params)
         print('transaction created')
-        print(result.content, flush=True)
+        print(result.content.decode(), flush=True)
         trx_info1 = json.loads(result.content.decode())
         trx_info1 = {'transaction': trx_info1}
         self.tron_contract_token.address = trx_info1['transaction']['contract_address']
@@ -202,7 +202,7 @@ class ContractDetailsTRONToken(CommonDetails):
             print('attempt=', i)
             result = requests.post(tron_url + '/wallet/broadcasttransaction', data=trx)
             # print(result.content, flush=True)
-            print(result.content, flush=True)
+            print(result.content.decode(), flush=True)
             answer = json.loads(result.content.decode())
             print('answer=', answer, flush=True)
             if answer['result']:
