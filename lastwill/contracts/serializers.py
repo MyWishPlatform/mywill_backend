@@ -60,8 +60,8 @@ def count_sold_tokens(address):
 
 def sendEMail(sub, text, mail):
     server = smtplib.SMTP_SSL('smtp.yandex.com', 465)
-    server.ehlo()
     server.starttls()
+    server.ehlo()
     server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
     message = "\r\n".join([
         "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
