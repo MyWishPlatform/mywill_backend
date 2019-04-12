@@ -161,7 +161,8 @@ class ContractSerializer(serializers.ModelSerializer):
                         email_messages.swaps_message,
                         SWAPS_MAIL,
                         [validated_data['user'].email],
-                        connection=connection
+                        connection=connection,
+                        headers={'From': SWAPS_MAIL}
                     )
                     msg.content_subtype = 'html'
                     msg.send()
