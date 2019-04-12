@@ -165,7 +165,7 @@ class ContractDetailsSTO(CommonDetails):
         self.compile()
         deploy_address = pw.Address(privateKey=NETWORKS[self.contract.network.name]['private_key'])
         pubKey, privKey, address = create_waves_privkey()
-        contract_address = pw.address(privateKey=privKey)
+        contract_address = pw.Address(privateKey=privKey)
         print('account created', pubKey, privKey, address, flush=True)
         deploy_address.sendWaves(address, 10000000)
         trx = contract_address.setScript(
