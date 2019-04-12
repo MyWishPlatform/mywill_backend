@@ -183,7 +183,7 @@ class ContractDetailsSTO(CommonDetails):
         print('account created', pubKey, privKey, address, flush=True)
         sending = deploy_address.sendWaves(contract_address, 10000000)
         print('sending', sending, flush=True)
-        time.sleep(5)
+        time.sleep(8)
         pw.setOnline()
         trx = contract_address.setScript(
             self.waves_contract.source_code,
