@@ -8,7 +8,7 @@ from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
 
 from django.db import transaction
-from django.core.mail import send_mail, get_connection
+from django.core.mail import send_mail, get_connection, EmailMessage
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
@@ -156,13 +156,15 @@ class ContractSerializer(serializers.ModelSerializer):
                         password=EMAIL_HOST_PASSWORD_SWAPS,
                         use_tls=EMAIL_USE_TLS_SWAPS
                 ) as connection:
-                    send_mail(
+                    msg = EmailMessage(
                         email_messages.swaps_subject,
                         email_messages.swaps_message,
                         SWAPS_MAIL,
                         [validated_data['user'].email],
                         connection=connection
                     )
+                    msg.content_subtype = 'html'
+                    msg.send()
             else:
                 send_mail(
                         email_messages.eos_create_subject,
