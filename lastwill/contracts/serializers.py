@@ -8,7 +8,7 @@ from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
 
 from django.db import transaction
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
@@ -33,7 +33,7 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
-from lastwill.settings import SWAPS_URL
+from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
 from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
 from lastwill.payments.api import create_payment
@@ -149,12 +149,20 @@ class ContractSerializer(serializers.ModelSerializer):
                         [validated_data['user'].email]
                 )
             elif contract.contract_type == 20:
-                send_mail(
-                    email_messages.swaps_subject,
-                    email_messages.swaps_message,
-                    SWAPS_MAIL,
-                    [validated_data['user'].email]
-                )
+                with get_connection(
+                        host=EMAIL_HOST_SWAPS,
+                        port=EMAIL_PORT_SWAPS,
+                        username=EMAIL_HOST_USER_SWAPS,
+                        password=EMAIL_HOST_PASSWORD_SWAPS,
+                        use_tls=EMAIL_USE_TLS_SWAPS
+                ) as connection:
+                    send_mail(
+                        email_messages.swaps_subject,
+                        email_messages.swaps_message,
+                        SWAPS_MAIL,
+                        [validated_data['user'].email],
+                        connection=connection
+                    )
             else:
                 send_mail(
                         email_messages.eos_create_subject,

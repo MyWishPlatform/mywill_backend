@@ -1,19 +1,14 @@
-import datetime
-import time
 import random
 import string
 
-from ethereum import abi
 from ethereum.utils import checksum_encode
 
 from django.db import models
-from django.core.mail import send_mail, EmailMessage
-from django.contrib.postgres.fields import JSONField
-from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from django.core.mail import send_mail, EmailMessage, get_connection
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import SWAPS_MAIL, SITE_PROTOCOL, SWAPS_URL
+from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
@@ -136,18 +131,26 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        swaps_link='{protocol}://{url}/public/{unique_link}'.format(
-            protocol=SITE_PROTOCOL,
-            unique_link=self.unique_link, url=SWAPS_URL
-        )
-        send_mail(
-            swaps_deploed_subject,
-            swaps_deploed_message.format(
-                swaps_link=swaps_link
-            ),
-            SWAPS_MAIL,
-            [self.contract.user.email]
-        )
+        with get_connection(
+                host=EMAIL_HOST_SWAPS,
+                port=EMAIL_PORT_SWAPS,
+                username=EMAIL_HOST_USER_SWAPS,
+                password=EMAIL_HOST_PASSWORD_SWAPS,
+                use_tls=EMAIL_USE_TLS_SWAPS
+        ) as connection:
+            swaps_link='{protocol}://{url}/public/{unique_link}'.format(
+                protocol=SITE_PROTOCOL,
+                unique_link=self.unique_link, url=SWAPS_URL
+            )
+            send_mail(
+                swaps_deploed_subject,
+                swaps_deploed_message.format(
+                    swaps_link=swaps_link
+                ),
+                SWAPS_MAIL,
+                [self.contract.user.email],
+                connection=connection
+            )
         return res
 
     def finalized(self, message):
