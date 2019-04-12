@@ -96,7 +96,7 @@ class ContractDetailsSTO(CommonDetails):
             "D_COLD_VAULT_ADDR": self.cold_wallet_address,
             "D_START_DATE": self.start_date,
             "D_FINISH_DATE": self.stop_date,
-            "D_RATE": self.rate,
+            "D_RATE": int(self.rate),
             "D_WHITELIST": self.whitelist,
             "D_ASSET_ID": self.token_address,
             "D_SOFT_CAP_WAVES": str(int(self.soft_cap)),
