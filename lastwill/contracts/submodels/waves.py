@@ -1,7 +1,11 @@
 import datetime
+import base58
 
 from ethereum import abi
 import pywaves as pw
+import pywaves.crypto as crypto
+import axolotl_curve25519 as curve
+import struct
 
 from django.db import models
 from django.core.mail import send_mail, EmailMessage
@@ -11,6 +15,45 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS
+
+
+def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
+    if not publicKey and not privateKey and not seed:
+        wordCount = 2048
+        words = []
+        for i in range(5):
+            r = crypto.bytes2str(os.urandom(4))
+            x = (ord(r[3])) + (ord(r[2]) << 8) + (ord(r[1]) << 16) + (
+                        ord(r[0]) << 24)
+            w1 = x % wordCount
+            w2 = ((int(x / wordCount) >> 0) + w1) % wordCount
+            w3 = ((int(
+                (int(x / wordCount) >> 0) / wordCount) >> 0) + w2) % wordCount
+            words.append(pw.address.wordList[w1])
+            words.append(pw.address.wordList[w2])
+            words.append(pw.address.wordList[w3])
+        seed = ' '.join(words)
+    if publicKey:
+        pubKey = base58.b58decode(publicKey)
+        privKey = ""
+    else:
+        seedHash = crypto.hashChain(
+            struct.pack(">L", nonce) + crypto.str2bytes(seed))
+        accountSeedHash = crypto.sha256(seedHash)
+        if not privateKey:
+            privKey = curve.generatePrivateKey(accountSeedHash)
+        else:
+            privKey = base58.b58decode(privateKey)
+        pubKey = curve.generatePublicKey(privKey)
+    unhashedAddress = chr(1) + str(pw.CHAIN_ID) + crypto.hashChain(pubKey)[
+                                                       0:20]
+    addressHash = crypto.hashChain(crypto.str2bytes(unhashedAddress))[0:4]
+    address = base58.b58encode(
+        crypto.str2bytes(unhashedAddress + addressHash))
+    publicKey = base58.b58encode(pubKey)
+    if privKey != "":
+        privateKey = base58.b58encode(privKey)
+    return publicKey, privateKey, address
 
 
 class WavesContract(EthContract):
