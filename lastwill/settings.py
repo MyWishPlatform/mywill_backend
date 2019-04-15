@@ -61,6 +61,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # 'lastwill.profile.middleware.session_middleware.SessionHostDomainMiddleware',
+    'lastwill.profile.middleware.session_middleware.CrossDomainSessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

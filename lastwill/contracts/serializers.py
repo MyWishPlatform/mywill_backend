@@ -1,6 +1,5 @@
 import datetime
-import string
-import requests
+import smtplib
 import binascii
 import string
 import uuid
@@ -8,14 +7,14 @@ from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
 
 from django.db import transaction
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, EmailMessage
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import DEFAULT_FROM_EMAIL
+from lastwill.settings import SWAPS_MAIL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -33,7 +32,7 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
-from lastwill.settings import SWAPS_URL
+from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
 from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
 from lastwill.payments.api import create_payment
@@ -59,23 +58,40 @@ def count_sold_tokens(address):
     return sold_tokens
 
 
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
+
+
 def deploy_swaps(contract_id):
     contract = Contract.objects.get(id=contract_id)
-    contract_details = contract.get_details()
-    contract_details.predeploy_validate()
-    kwargs = ContractSerializer().get_details_serializer(
-        contract.contract_type
-    )().to_representation(contract_details)
-    cost = contract_details.calc_cost_usdt(kwargs, contract.network)
-    site_id = 4
-    currency = 'USDT'
-    user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
-    if user_info.balance >= cost or user_info.balance * 0.95 >= cost:
-        create_payment(contract.user.id, '', currency, -cost, site_id)
-        contract.state = 'WAITING_FOR_DEPLOYMENT'
-        contract.save()
-        queue = NETWORKS[contract.network.name]['queue']
-        send_in_queue(contract.id, 'launch', queue)
+    if contract.state == 'WAITING_FOR_PAYMENT':
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+        site_id = 4
+        currency = 'USDT'
+        user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
+        if user_info.balance >= cost or int(user_info.balance) * 0.95 >= cost:
+            create_payment(contract.user.id, '', currency, -cost, site_id)
+            contract.state = 'WAITING_FOR_DEPLOYMENT'
+            contract.save()
+            queue = NETWORKS[contract.network.name]['queue']
+            send_in_queue(contract.id, 'launch', queue)
     return True
 
 
@@ -148,11 +164,10 @@ class ContractSerializer(serializers.ModelSerializer):
                         [validated_data['user'].email]
                 )
             elif contract.contract_type == 20:
-                send_mail(
+                sendEMail(
                     email_messages.swaps_subject,
                     email_messages.swaps_message,
-                    DEFAULT_FROM_EMAIL,
-                    [validated_data['user'].email]
+                    validated_data['user'].email
                 )
             else:
                 send_mail(
@@ -206,7 +221,7 @@ class ContractSerializer(serializers.ModelSerializer):
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
                 'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
-                'WISH': str(int(to_wish('USDT', int(cost)))* NET_DECIMALS['WISH']),
+                'WISH': str(int(cost) * convert('USDT', 'WISH')['WISH'] * NET_DECIMALS['WISH']),
                 'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
             }
@@ -1443,6 +1458,10 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         }
 
     def to_representation(self, contract_details):
+        now = timezone.now()
+        if contract_details.contract.state == 'ACTIVE' and contract_details.stop_date < now:
+            contract_details.contract.state = 'EXPIRED'
+            contract_details.contract.save()
         res = super().to_representation(contract_details)
         # investors_serializer = InvestAddressesSerializer()
         if not contract_details:
@@ -1476,11 +1495,13 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         )
         details['base_limit'] = int(details['base_limit'])
         details['quote_limit'] = int(details['quote_limit'])
+        if details['base_address'].lower() == details['quote_address'].lower():
+            raise ValidationError({'result': 1}, code=400)
         return details
 
-    def save(self, **kwargs):
-        res = super().save(**kwargs)
-        print('swaps kwargs', kwargs, flush=True)
-        contract = kwargs['contract']
-        deploy_swaps(contract['id'])
-        return res
+    # def save(self, **kwargs):
+    #     res = super().save(**kwargs)
+    #     print('swaps kwargs', kwargs, flush=True)
+    #     contract = kwargs['contract']
+    #     deploy_swaps(contract['id'])
+    #     return res

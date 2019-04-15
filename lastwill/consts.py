@@ -41,9 +41,9 @@ NETWORK_SUBSITE = {
 CONTRACT_PRICE_ETH = {
     'AIRDROP': 0.5,
     'DEFFERED': 0.025,
-    'ICO': 4.99,
-    'TOKEN': 2.99,
-    'TOKEN_AUTHIO': 5.99,
+    'ICO': 1,
+    'TOKEN': 0.5,
+    'TOKEN_AUTHIO': 3.5,
     'INVESTMENT_POOL': 0.5,
     'EOS_TOKEN': 2.99,
     'EOS_ICO': 5,

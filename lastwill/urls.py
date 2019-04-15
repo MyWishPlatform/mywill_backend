@@ -17,10 +17,11 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from allauth.account.views import confirm_email as allauthemailconfirmation
+# from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.main.views import index, balance, login, eth2rub, exc_rate
+from lastwill.profile.views import confirm_email as allauthemailconfirmation
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
 from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token, delete_api_tokens
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
@@ -34,7 +35,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
                                     check_eos_accounts_exists, buy_brand_report, get_authio_cost,
                                     get_testnet_tron_tokens, get_tokens_for_eth_address,
-                                    get_tronish_balance, confirm_swaps_info)
+                                    get_tronish_balance, confirm_swaps_info,
+                                    get_contract_for_unique_link, get_public_contracts)
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
@@ -50,6 +52,7 @@ from lastwill.social.views import FacebookLogin, GoogleLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
 from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens
+from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -62,7 +65,8 @@ router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
 urlpatterns = [
     url(r'^reset', index),
     url(r'^', include('django.contrib.auth.urls')),
-    url(r'^jopa/', admin.site.urls),
+    # url(r'^jopa/', admin.site.urls),
+    url(r'^jopa/', lastwill_admin.urls),
     url(r'^api/', include(router.urls)),
     url(
             r'^api/rest-auth/registration/account-confirm-email/(?P<key>[-:\w]+)/$',
@@ -139,6 +143,8 @@ urlpatterns = [
     url(r'^api/get_all_tokens/$', get_all_tokens),
     url(r'^api/get_standarts_tokens/$', get_standarts_tokens),
     url(r'^api/confirm_swaps_info/$', confirm_swaps_info),
+    url(r'^api/get_contract_for_unique_link/$', get_contract_for_unique_link),
+    url(r'^api/get_public_contracts/$', get_public_contracts),
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

@@ -189,10 +189,10 @@ swaps_message = """Hello,
 
 Your SWAP is created and ready for deployment to Ethereum.
 
-If you have any questions please contact support@mywish.io.
+If you have any questions please contact support@swaps.network.
 
 Best wishes,
-MyWish Team.
+Swaps Team.
 
 """
 
@@ -202,8 +202,8 @@ swaps_deploed_message = """Congratulations!
 We are happy to inform you that your contract was successfully deployed to Ethereum.
 You can use your SWAP now: {swaps_link}
 
-Please contact support@mywish.io if you need if you have any questions.
+Please contact support@swaps.network if you have any questions.
 
 Best wishes,
-MyWish Team.
+Swaps Team.
 """

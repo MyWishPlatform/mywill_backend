@@ -11,4 +11,4 @@ def create_contract_swaps(request):
     else:
         form = ContractFormSWAPS()
 
-    return render(request, 'template_create.html', {'form': form})
+    return render(request, 'submitting/create.html', {'form': form})
