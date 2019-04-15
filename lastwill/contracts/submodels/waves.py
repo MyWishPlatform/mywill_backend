@@ -162,6 +162,8 @@ class ContractDetailsSTO(CommonDetails):
         self.waves_contract = waves_contract
         self.save()
 
+    @blocking
+    @postponable
     def deploy(self):
         self.compile()
         if NETWORKS[self.contract.network.name]['is_free']:
@@ -194,3 +196,16 @@ class ContractDetailsSTO(CommonDetails):
         self.waves_contract.address = address
         self.waves_contract.tx_hash = trx['id']
         self.waves_contract.save()
+
+    @blocking
+    @postponable
+    def msg_deployed(self, message):
+        print('msg_deployed method of the ico contract')
+        address = NETWORKS[self.contract.network.name]['address']
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            take_off_blocking(self.contract.network.name)
+            return
+        if self.waves_contract.id == message['contractId']:
+            self.contract.state = 'ACTIVE'
+            self.contract.save()
+            return
