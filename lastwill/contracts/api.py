@@ -629,7 +629,7 @@ def get_cost_all_contracts(request):
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
         answer[i] = contract_details_types[i]['model'].min_cost() / \
-                    NET_DECIMALS['ETH']
+                    NET_DECIMALS['USDT']
         # if i in [10, 11, 12, 13, 14]:
         #     # print(host, EOSISH_URL, flush=True)
         #     answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
