@@ -201,7 +201,6 @@ class ContractDetailsSTO(CommonDetails):
     @postponable
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
-        address = NETWORKS[self.contract.network.name]['address']
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             take_off_blocking(self.contract.network.name)
             return
@@ -209,3 +208,7 @@ class ContractDetailsSTO(CommonDetails):
             self.contract.state = 'ACTIVE'
             self.contract.save()
             return
+
+    def finalized(self, message):
+        self.contract.state = 'ENDED'
+        self.contract.save()
