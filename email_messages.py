@@ -202,7 +202,7 @@ swaps_deploed_message = """Congratulations!
 We are happy to inform you that your contract was successfully deployed to Ethereum.
 You can use your SWAP now: {swaps_link}
 
-Please contact support@swaps.network if you need if you have any questions.
+Please contact support@swaps.network if you have any questions.
 
 Best wishes,
 Swaps Team.
