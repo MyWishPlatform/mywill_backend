@@ -51,7 +51,7 @@ class ContractDetailsAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         #return 0.5 * 10**18
-        return CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH']
+        return 75 * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost(cls):

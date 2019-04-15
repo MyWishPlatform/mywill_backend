@@ -186,15 +186,20 @@ class ContractSerializer(serializers.ModelSerializer):
             contract.contract_type
         )(context=self.context).to_representation(contract.get_details())
         if contract.state != 'CREATED':
-            eth_cost = res['cost']
+            usdt_cost = res['cost']
+            if 'TESTNET' in contract.network.name or 'ROPSTEN' in contract.network.name:
+                usdt_cost = 0
         else:
-            eth_cost = Contract.get_details_model(
+            usdt_cost = Contract.get_details_model(
                 contract.contract_type
             ).calc_cost(res['contract_details'], contract.network)
         res['cost'] = {
-            'ETH': str(eth_cost),
-            'WISH': str(int(to_wish('ETH', int(eth_cost)))),
-            'BTC': str(int(eth_cost) * convert('ETH', 'BTC')['BTC']),
+            'USDT': str(usdt_cost),
+            'ETH': str(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18),
+            'WISH': str(int(usdt_cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18),
+            'BTC': str(int(usdt_cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8),
+            'EOS': str(int(usdt_cost) / 10 ** 6 * convert('USDT', 'EOS')['EOS'] * 10 ** 4),
+            'TRON': str(int(usdt_cost) * convert('USDT', 'TRON')['TRON']),
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(

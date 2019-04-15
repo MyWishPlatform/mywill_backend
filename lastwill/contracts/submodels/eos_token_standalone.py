@@ -45,7 +45,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_ETH['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['ETH'])
+        return int(245 * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):

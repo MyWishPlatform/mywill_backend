@@ -155,11 +155,11 @@ def check_error_promocode(promo_str, contract_type):
 def check_promocode(promo_str, user, cost, contract, details):
     # check token with authio
     if contract.contract_type == 5 and details.authio:
-        price_without_brand_report = contract.cost - BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+        price_without_brand_report = contract.cost - 105 * NET_DECIMALS['USDT']
         cost = check_and_apply_promocode(
             promo_str, user, price_without_brand_report, contract.contract_type, contract.id
         )
-        total_cost = cost + BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+        total_cost = cost + 105 * NET_DECIMALS['USDT']
     else:
         # count discount
         total_cost = check_and_apply_promocode(
@@ -179,7 +179,7 @@ def deploy(request):
         raise PermissionDenied
 
     cost = contract.cost
-    currency = 'ETH'
+    currency = 'USDT'
     site_id = 1
 
     # if host == EOSISH_URL:

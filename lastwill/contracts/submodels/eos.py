@@ -105,7 +105,7 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_ETH['EOS_TOKEN'] * NET_DECIMALS['ETH'])
+        return int(145 * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
@@ -205,13 +205,12 @@ class ContractDetailsEOSAccount(CommonDetails):
         ram = result['rows'][0]
         ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
         print('get ram price', flush=True)
-        eos_cost = (
+        usdt_cost = (
                 float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
                  + float(kwargs['stake_cpu_value'])
-        ) * 2 + 0.3
-        print('eos cost', eos_cost, flush=True)
-        return round(eos_cost, 0) * NET_DECIMALS['EOS']
+        ) * 10 + 0.3
+        return round(usdt_cost, 0) * NET_DECIMALS['USDT']
 
     @staticmethod
     def calc_cost(kwargs, network):
@@ -346,7 +345,7 @@ class ContractDetailsEOSICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = CONTRACT_PRICE_ETH['EOS_ICO'] * NET_DECIMALS['ETH']
+        cost = 395 * NET_DECIMALS['USDT']
         return cost
 
     @staticmethod
@@ -617,8 +616,8 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
-        cost = eos_cost * convert('EOS', 'ETH')['ETH']
-        return round(cost, 2) * NET_DECIMALS['ETH']
+        usdt_cost = eos_cost * 5
+        return round(usdt_cost, 2) * NET_DECIMALS['USDT']
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
