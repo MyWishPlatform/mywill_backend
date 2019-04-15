@@ -209,7 +209,7 @@ class ContractDetailsEOSAccount(CommonDetails):
                 float(kwargs['buy_ram_kbytes']) * ram_price
                 + float(kwargs['stake_net_value'])
                  + float(kwargs['stake_cpu_value'])
-        ) * 10 + 0.3
+        ) * 5 + 0.3
         return round(usdt_cost, 0) * NET_DECIMALS['USDT']
 
     @staticmethod
