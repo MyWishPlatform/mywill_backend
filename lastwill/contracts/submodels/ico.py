@@ -342,7 +342,7 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(95 * NET_DECIMALS['ГЫВЕ'])
+        result = int(95 * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
             result = int(200 * NET_DECIMALS['USDT'])
         return result
