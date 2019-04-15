@@ -198,7 +198,7 @@ class ContractSerializer(serializers.ModelSerializer):
             'ETH': str(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18),
             'WISH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
             'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8), 0))),
-            'EOS': str(int(round(int(usdt_cost) / 10 ** 6 * convert('USDT', 'EOS')['EOS'] * 10 ** 4), 0)),
+            'EOS': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'EOS')['EOS'] * 10 ** 4)),
             'TRON': str(int(round((int(usdt_cost) * convert('USDT', 'TRX')['TRX']), 0))),
         }
         if contract.network.name == 'EOS_MAINNET':
