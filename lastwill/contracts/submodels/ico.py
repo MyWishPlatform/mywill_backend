@@ -344,7 +344,7 @@ class ContractDetailsToken(CommonDetails):
             return 0
         result = int(95 * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(200 * NET_DECIMALS['USDT'])
+            result = int(95 + 450 * NET_DECIMALS['USDT'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
