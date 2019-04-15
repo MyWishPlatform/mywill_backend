@@ -195,7 +195,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost(res['contract_details'], contract.network)
         res['cost'] = {
             'USDT': str(usdt_cost),
-            'ETH': str(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18),
+            'ETH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
             'WISH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
             'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8), 0))),
             'EOS': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'EOS')['EOS'] * 10 ** 4)),
