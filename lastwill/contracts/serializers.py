@@ -193,6 +193,7 @@ class ContractSerializer(serializers.ModelSerializer):
             usdt_cost = Contract.get_details_model(
                 contract.contract_type
             ).calc_cost(res['contract_details'], contract.network)
+        usdt_cost = int(usdt_cost)
         res['cost'] = {
             'USDT': str(usdt_cost),
             'ETH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
