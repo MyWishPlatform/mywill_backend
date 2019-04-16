@@ -969,10 +969,11 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    eth_cost = str(BRAND_REPORT_PRICE * NET_DECIMALS['ETH'])
-    wish_cost = str(int(to_wish('ETH', int(eth_cost))))
-    btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
-    return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+    usdt_cost = str(450 * NET_DECIMALS['USDT'])
+    eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
+    wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
+    btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
 
 
 @api_view(http_method_names=['GET'])
