@@ -48,6 +48,8 @@ def convert(fsym, tsyms):
         else:
             tsyms = 'TRX'
             tronish = True
+    if fsym == 'TRONISH':
+        fsym = 'TRX'
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
         raise Exception('currency not allowed')
     print(fsym, tsyms)
