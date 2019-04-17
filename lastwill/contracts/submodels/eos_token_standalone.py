@@ -1,4 +1,4 @@
-import json
+from django.core.mail import send_mail
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.eos import *
@@ -203,5 +203,15 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def tokenCreated(self, message):
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        if self.contract.user.email:
+            network_name = MAIL_NETWORK[self.contract.network]
+            send_mail(
+                eos_contract_subject,
+                eos_contract_message.format(
+                    token_name=self.token_short_name,
+                    network_name=network_name
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
         take_off_blocking(self.contract.network.name, self.contract.id)
-
