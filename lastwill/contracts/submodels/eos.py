@@ -567,6 +567,16 @@ class ContractDetailsEOSICO(CommonDetails):
         self.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
+        if self.contract.user.email:
+            network_name = MAIL_NETWORK[self.contract.network]
+            send_mail(
+                eos_ico_subject,
+                eos_ico_message.format(
+                    network_name=network_name
+                ),
+                DEFAULT_FROM_EMAIL,
+                [self.contract.user.email]
+            )
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
