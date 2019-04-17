@@ -568,7 +568,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.save()
         if self.contract.user.email:
-            network_name = MAIL_NETWORK[self.contract.network]
+            network_name = MAIL_NETWORK[self.contract.network.name]
             send_mail(
                 eos_ico_subject,
                 eos_ico_message.format(
