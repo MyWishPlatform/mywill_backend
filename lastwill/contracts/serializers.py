@@ -2,6 +2,7 @@ import datetime
 import smtplib
 import binascii
 import string
+import random
 import uuid
 from ethereum.abi import method_id as m_id
 from rlp.utils import int_to_big_endian
@@ -28,7 +29,7 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsSWAPS, InvestAddresses
+        ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -277,7 +278,8 @@ class ContractSerializer(serializers.ModelSerializer):
             17: ContractDetailsTRONAirdropSerializer,
             18: ContractDetailsTRONLostkeySerializer,
             19: ContractDetailsLostKeyTokensSerializer,
-            20: ContractDetailsSWAPSSerializer
+            20: ContractDetailsSWAPSSerializer,
+            21: ContractDetailsSWAPS2Serializer
         }[contract_type]
 
 
@@ -1505,9 +1507,60 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
             raise ValidationError({'result': 1}, code=400)
         return details
 
-    # def save(self, **kwargs):
-    #     res = super().save(**kwargs)
-    #     print('swaps kwargs', kwargs, flush=True)
-    #     contract = kwargs['contract']
-    #     deploy_swaps(contract['id'])
-    #     return res
+
+class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsSWAPS2
+        fields = (
+            'base_address', 'quote_address', 'stop_date', 'base_limit',
+            'quote_limit', 'public', 'owner_address', 'unique_link', 'max_wei',
+            'memo_contract', 'whitelist', 'whitelist_address', 'min_wei'
+        )
+        extra_kwargs = {
+            'unique_link': {'read_only': True},
+            'memo_contract': {'read_only': True}
+        }
+
+    def to_representation(self, contract_details):
+        now = timezone.now()
+        if contract_details.contract.state == 'ACTIVE' and contract_details.stop_date < now:
+            contract_details.contract.state = 'EXPIRED'
+            contract_details.contract.save()
+        res = super().to_representation(contract_details)
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+    def create(self, contract, contract_details):
+        contract_details['memo_contract'] = '0x' + ''.join(
+            random.choice(string.ascii_lowercase + string.digits) for _ in
+            range(64)
+        )
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        if 'owner_address' not in details:
+            raise ValidationError
+        if 'stop_date' not in details:
+            raise ValidationError
+        check.is_address(details['owner_address'])
+        details['owner_address'] = details['owner_address'].lower()
+        details['stop_date'] = datetime.datetime.strptime(
+            details['stop_date'], '%Y-%m-%d %H:%M'
+        )
+        details['base_limit'] = int(details['base_limit'])
+        details['quote_limit'] = int(details['quote_limit'])
+        if details['base_address'].lower() == details['quote_address'].lower():
+            raise ValidationError({'result': 1}, code=400)
+        return details

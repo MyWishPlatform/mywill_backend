@@ -18,7 +18,7 @@ from django.db.models.signals import post_save
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
-    WhitelistAddress, AirdropAddress
+    WhitelistAddress, ContractDetailsSWAPS2
 )
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.contracts.api import autodeploing
@@ -76,6 +76,15 @@ class Receiver(threading.Thread):
             print('ignored because already active', flush=True)
             return
         contract.get_details().msg_deployed(message)
+        print('deployed ok!', flush=True)
+
+    def orderCreated(self, message):
+        print('deployed message received', flush=True)
+        details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
+        if details.contract.state == 'ACTIVE':
+            print('ignored because already active', flush=True)
+            return
+        details.msg_deployed(message)
         print('deployed ok!', flush=True)
 
     def killed(self, message):
@@ -142,14 +151,24 @@ class Receiver(threading.Thread):
 
     def finish(self, message):
         print('finish message')
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        contract.get_details().finalized(message)
+        if 'contractId' in message:
+            contract = EthContract.objects.get(id=message['contractId']).contract
+            contract.get_details().finalized(message)
+        if 'id' in message:
+            contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
+            contract.finalized(message)
         print('finish ok')
 
     def finalized(self, message):
         print('finalized message')
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        contract.get_details().finalized(message)
+        if 'contractId' in message:
+            contract = EthContract.objects.get(
+                id=message['contractId']).contract
+            contract.get_details().finalized(message)
+        if 'id' in message:
+            contract = ContractDetailsSWAPS2.objects.get(
+                memo_contract=message['id'])
+            contract.finalized(message)
         print('finalized ok')
 
     def transactionCompleted(self, message):
@@ -270,9 +289,13 @@ class Receiver(threading.Thread):
         details.save()
 
     def cancelled(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        details = contract.get_details()
-        details.cancelled(message)
+        if 'contractId' in message:
+            contract = EthContract.objects.get(id=message['contractId']).contract
+            details = contract.get_details()
+            details.cancelled(message)
+        if 'id' in message:
+            contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
+            contract.cancelled(message)
 
     def refund(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
