@@ -187,7 +187,7 @@ class ContractDetailsSWAPS2(CommonDetails):
         EthContract,
         null=True,
         default=None,
-        related_name='swaps_details',
+        related_name='swaps2_details',
         on_delete=models.SET_NULL
     )
     temp_directory = models.CharField(max_length=36)
