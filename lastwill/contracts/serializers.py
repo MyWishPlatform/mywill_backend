@@ -1513,8 +1513,8 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
         model = ContractDetailsSWAPS2
         fields = (
             'base_address', 'quote_address', 'stop_date', 'base_limit',
-            'quote_limit', 'public', 'owner_address', 'unique_link', 'max_wei',
-            'memo_contract', 'whitelist', 'whitelist_address', 'min_wei'
+            'quote_limit', 'public', 'owner_address', 'unique_link', 'min_quote_wei',
+            'memo_contract', 'whitelist', 'whitelist_address', 'min_base_wei'
         )
         extra_kwargs = {
             'unique_link': {'read_only': True},

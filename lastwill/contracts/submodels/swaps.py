@@ -192,10 +192,10 @@ class ContractDetailsSWAPS2(CommonDetails):
     )
     temp_directory = models.CharField(max_length=36)
 
-    min_wei = models.DecimalField(
+    min_base_wei = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
-    max_wei = models.DecimalField(
+    min_quote_wei = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
