@@ -84,7 +84,7 @@ class ContractViewSet(ModelViewSet):
         if host == TRON_URL:
             result = result.filter(contract_type__in=(15, 16, 17, 18))
         if host == SWAPS_URL:
-            result = result.filter(contract_type=20)
+            result = result.filter(contract_type__in=[20, 21])
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -170,7 +170,6 @@ def check_promocode(promo_str, user, cost, contract, details):
 
 @api_view(http_method_names=['POST'])
 def deploy(request):
-    host = request.META['HTTP_HOST']
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
