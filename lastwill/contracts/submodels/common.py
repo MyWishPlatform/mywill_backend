@@ -445,10 +445,7 @@ class CommonDetails(models.Model):
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')
-        if self.contract.contract_type == 20:
-            gas_price = 5 * 10 ** 9
-        else:
-            gas_price = None
+        gas_price = 5 * 10 ** 9
         signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
             self.contract.network.name, value=self.get_value(),
