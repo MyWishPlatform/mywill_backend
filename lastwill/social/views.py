@@ -36,6 +36,10 @@ def fb_complete_login(request, app, token):
             'access_token': token.token,
             'appsecret_proof': compute_appsecret_proof(app, token)
         })
+    print('requests params')
+    print(GRAPH_API_URL + '/me', flush=True)
+    print(token.token, flush=True)
+    print(compute_appsecret_proof(app, token), flush=True)
     print('resp', resp, flush=True)
     resp.raise_for_status()
     extra_data = resp.json()
