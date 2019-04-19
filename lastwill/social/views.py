@@ -28,7 +28,6 @@ def compute_appsecret_proof(app, token):
 
 def fb_complete_login(request, app, token):
     provider = providers.registry.by_id(FacebookProvider.id, request)
-    print('provider fields', provider.get_fields(), flush=True)
     resp = requests.get(
         GRAPH_API_URL + '/me',
         params={
@@ -38,6 +37,7 @@ def fb_complete_login(request, app, token):
         })
     print('requests params')
     print(GRAPH_API_URL + '/me', flush=True)
+    print('provider fields', ','.join(provider.get_fields()), flush=True)
     print(token.token, flush=True)
     print(compute_appsecret_proof(app, token), flush=True)
     print('resp', resp, flush=True)
