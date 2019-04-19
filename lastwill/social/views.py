@@ -36,6 +36,7 @@ def fb_complete_login(request, app, token):
             'access_token': token.token,
             'appsecret_proof': compute_appsecret_proof(app, token)
         })
+    print('resp', resp, flush=True)
     resp.raise_for_status()
     extra_data = resp.json()
     print('try login', flush=True)
