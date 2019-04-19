@@ -44,6 +44,7 @@ def fb_complete_login(request, app, token):
     resp.raise_for_status()
     extra_data = resp.json()
     print('try login', flush=True)
+    print('extra data', extra_data, flush=True)
     login = provider.sociallogin_from_response(request, extra_data)
     return login
 
