@@ -151,24 +151,24 @@ class Receiver(threading.Thread):
 
     def finish(self, message):
         print('finish message')
-        if 'contractId' in message:
-            contract = EthContract.objects.get(id=message['contractId']).contract
-            contract.get_details().finalized(message)
         if 'id' in message:
             contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
             contract.finalized(message)
+        else:
+            contract = EthContract.objects.get(id=message['contractId']).contract
+            contract.get_details().finalized(message)
         print('finish ok')
 
     def finalized(self, message):
         print('finalized message')
-        if 'contractId' in message:
-            contract = EthContract.objects.get(
-                id=message['contractId']).contract
-            contract.get_details().finalized(message)
         if 'id' in message:
             contract = ContractDetailsSWAPS2.objects.get(
                 memo_contract=message['id'])
             contract.finalized(message)
+        else:
+            contract = EthContract.objects.get(
+                id=message['contractId']).contract
+            contract.get_details().finalized(message)
         print('finalized ok')
 
     def transactionCompleted(self, message):
@@ -289,13 +289,13 @@ class Receiver(threading.Thread):
         details.save()
 
     def cancelled(self, message):
-        if 'contractId' in message:
-            contract = EthContract.objects.get(id=message['contractId']).contract
-            details = contract.get_details()
-            details.cancelled(message)
         if 'id' in message:
             contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
             contract.cancelled(message)
+        else:
+            contract = EthContract.objects.get(id=message['contractId']).contract
+            details = contract.get_details()
+            details.cancelled(message)
 
     def refund(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract

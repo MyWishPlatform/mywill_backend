@@ -202,13 +202,13 @@ class ContractDetailsSWAPS2(CommonDetails):
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        res = super().msg_deployed(message, 'eth_contract')
         link = ''.join(
             random.choice(string.ascii_lowercase + string.digits) for _ in
             range(6)
         )
         self.unique_link = link
         self.save()
+        self.eth_contract = EthContract()
         self.eth_contract.address = message['address']
         self.eth_contract.tx_hash = message['transactionHash']
         self.eth_contract.save()
@@ -224,7 +224,7 @@ class ContractDetailsSWAPS2(CommonDetails):
                 swaps_deploed_message.format(swaps_link=swaps_link),
                 [self.contract.user.email]
             )
-        return res
+        return
 
     def finalized(self, message):
         self.contract.state = 'DONE'
