@@ -1124,3 +1124,20 @@ def get_public_contracts(request):
             result.append(ContractSerializer().to_representation(contract))
 
     return JsonResponse(result, safe=False)
+
+
+@api_view(http_method_names=['POST'])
+def change_contract_state(request):
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state != 'CREATED':
+        raise PermissionDenied
+    if contract.contract_type != 21:
+        raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
+    if host != SWAPS_URL:
+        raise PermissionDenied
+    contract.state = 'WAITING_FOR_ACTIVATION'
+    contract.save()
+    return JsonResponse(ContractSerializer().to_representation(contract))
