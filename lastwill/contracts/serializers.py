@@ -1537,7 +1537,7 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
 
     def create(self, contract, contract_details):
         contract_details['memo_contract'] = '0x' + ''.join(
-            random.choice(string.ascii_lowercase + string.digits) for _ in
+            random.choice('abcdef' + string.digits) for _ in
             range(64)
         )
         kwargs = contract_details.copy()
