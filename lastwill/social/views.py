@@ -65,6 +65,8 @@ class MetamaskLoginSerializer(LoginSerializer):
         if valid_metamask_message(address, message, signature):
             metamask_user = Profile.objects.get(metamask_address=address)
             attrs['user'] = metamask_user
+        else:
+            raise PermissionDenied(1034)
 
         return attrs
 
