@@ -54,7 +54,7 @@ def convert(fsym, tsyms):
             'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(
                 fsym=fsym, tsyms=tsyms)
         ).content.decode())
-        answer['TRONISH'] = answer['TRX'] * 0.02
+        answer[tsyms] = answer[tsyms] * 0.02
         return answer
 
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
