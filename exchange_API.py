@@ -69,7 +69,7 @@ def convert(fsym, tsyms):
         tsyms = 'EOSISH'
     answer[tsyms] = answer[tsyms] * eosish_factor
     if tronish:
-        answer['TRONISH'] = answer['TRX'] * 0.02
+        answer['TRONISH'] = answer['TRX'] / 0.02
     return answer
 
 
