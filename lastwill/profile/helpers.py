@@ -3,6 +3,7 @@ from ethereum.utils import ecrecover_to_pub, sha3
 from eth_utils.hexadecimal import encode_hex, decode_hex, add_0x_prefix
 from eth_account.messages import defunct_hash_message
 from rest_framework.exceptions import ValidationError
+from random import choice
 
 
 def valid_totp(user, totp):
@@ -35,3 +36,15 @@ def valid_metamask_message(address, message, signature):
         raise ValidationError({'result': 'Incorrect signature'}, code=400)
 
     return True
+
+
+def generate_metamask_message():
+    startwordlist = [
+        "Hello!", "Greetings!", "Howdy!", "Hi!"
+    ]
+
+    endword = "MyWish Platform welcomes you"
+    startword = choice(startwordlist)
+    fullword = " ".join([startword, endword])
+
+    return fullword
