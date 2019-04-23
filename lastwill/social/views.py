@@ -16,7 +16,6 @@ from lastwill.profile.serializers import init_profile
 from lastwill.profile.helpers import valid_totp, valid_metamask_message
 
 
-
 class SocialLoginSerializer2FA(SocialLoginSerializer):
     email = serializers.CharField(required=False, allow_blank=True)
     totp = serializers.CharField(required=False, allow_blank=True)

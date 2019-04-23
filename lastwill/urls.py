@@ -24,6 +24,7 @@ from lastwill.main.views import index, balance, login, eth2rub, exc_rate
 from lastwill.profile.views import confirm_email as allauthemailconfirmation
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
 from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token, delete_api_tokens
+from lastwill.profile.helpers import generate_metamask_message
 from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     deploy, get_token_contracts,
                                     ICOtokensView, get_statistics, i_am_alive,
@@ -87,9 +88,10 @@ urlpatterns = [
     url(r'^api/generate_key/', generate_key),
     url(r'^api/enable_2fa/', enable_2fa),
     url(r'^api/disable_2fa/', disable_2fa),
+    url(r'^api/get_metamask_message', generate_metamask_message),
     url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
-    url(r'^api/rest-auth/metamask/$'. MetamaskLogin.as_view(), name='metamask_login'),
+    url(r'^api/rest-auth/metamask/$', MetamaskLogin.as_view(), name='metamask_login'),
     url(r'^api/resend_email/', resend_email),
     url(r'^api/get_discount/', get_discount),
     url(r'^/$', index, name='socialaccount_signup'),

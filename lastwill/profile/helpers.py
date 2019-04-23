@@ -4,6 +4,7 @@ from eth_utils.hexadecimal import encode_hex, decode_hex, add_0x_prefix
 from eth_account.messages import defunct_hash_message
 from rest_framework.exceptions import ValidationError
 from random import choice
+from rest_framework.decorators import api_view
 
 
 def valid_totp(user, totp):
@@ -38,6 +39,7 @@ def valid_metamask_message(address, message, signature):
     return True
 
 
+@api_view(http_method_names=['GET'])
 def generate_metamask_message():
     startwordlist = [
         "Hello!", "Greetings!", "Howdy!", "Hi!"
