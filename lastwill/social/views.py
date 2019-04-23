@@ -78,7 +78,7 @@ class MetamaskLogin(LoginView):
         self.user = self.serializer.validated_data['user']
         self.metamask_address = self.serializer.validated_data['address']
         try:
-            p = self.user.profile
+            p = Profile.objects.get(user=self.user)
         except ObjectDoesNotExist:
             self.user.username = str(self.user.id)
             init_profile(self.user, is_social=True, metamask_address=self.metamask_address,
