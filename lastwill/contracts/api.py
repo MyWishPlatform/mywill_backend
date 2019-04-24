@@ -58,6 +58,22 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     return cost
 
 
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
+
+
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
@@ -1149,7 +1165,7 @@ def send_message_author_swap(request):
     link = int(request.data.get('link'))
     email = int(request.data.get('email'))
     message = int(request.data.get('message'))
-    send_mail(
+    sendEMail(
         swaps_support_subject,
         swaps_support_message.format(
             id=contract_id,
@@ -1157,7 +1173,6 @@ def send_message_author_swap(request):
             link=link,
             msg=message
         ),
-        DEFAULT_FROM_EMAIL,
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
