@@ -363,7 +363,7 @@ class Contract(models.Model):
         contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
         contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
-        contract_details_types[21] = {'name': 'WAVES Contract STO', 'model': waves}
+        contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
         return contract_details_types
 
     @classmethod
