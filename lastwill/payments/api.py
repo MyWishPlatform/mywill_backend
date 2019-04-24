@@ -56,7 +56,7 @@ def create_payment(uid, tx, currency, amount, site_id):
         else:
             negative_payment(user, -value, site_id)
     else:
-        positive_payment(user, value, site_id, currency)
+        positive_payment(user, value, site_id, currency, amount)
     site = SubSite.objects.get(id=site_id)
     InternalPayment(
         user_id=uid,
@@ -94,29 +94,38 @@ def add_decimals(currency, amount):
     return amount
 
 
-def positive_payment(user, value, site_id, currency):
+def freeze_payments(amount, original_value, currency):
+    if currency in ('EOS', 'EOSISH'):
+        value = amount * 0.15
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            eosish=F('eosish') + value
+        )
+        print('FREEZE', value, 'EOSISH')
+    elif currency in ('TRON', 'TRONISH'):
+        value = amount * 0.10
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            tronish=F('tronish') + value
+        )
+        wish_value = original_value * 0.10
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            wish=F('wish') + wish_value
+        )
+        print('FREEZE', value, 'TRONISH')
+        print('FREEZE', wish_value, 'WISH')
+    else:
+        value = original_value * 0.15
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            wish=F('wish') + value
+        )
+        print('FREEZE', value, 'WISH')
+
+
+def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
-    freeze_value = value * 0.15
-    if site_id == 1:
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + freeze_value
-        )
-        freeze_dest = 'WISH'
-    elif site_id == 3:
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            tronish=F('tronish') + freeze_value
-        )
-        freeze_dest = 'TRONISH'
-    else:
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            eosish=F('eosish') + freeze_value
-        )
-        freeze_dest = 'EOSISH'
-    print('PAYMENT: Freezed {amount} {currency}'
-          .format(amount=freeze_value, currency=freeze_dest)
-        )
+    freeze_payments(amount, value, currency)
+
 
 def negative_payment(user, value, site_id):
     if not UserSiteBalance.objects.select_for_update().filter(
