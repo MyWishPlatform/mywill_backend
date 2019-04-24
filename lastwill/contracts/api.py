@@ -18,7 +18,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
 from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL, SWAPS_URL
-from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT, SWAPS_SUPPORT_MAIL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.parint import *
@@ -1141,3 +1141,23 @@ def change_contract_state(request):
     contract.state = 'WAITING_FOR_ACTIVATION'
     contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['POST'])
+def send_message_author_swap(request):
+    contract_id = int(request.data.get('contract_id'))
+    link = int(request.data.get('link'))
+    email = int(request.data.get('email'))
+    message = int(request.data.get('message'))
+    send_mail(
+        swaps_support_subject,
+        swaps_support_message.format(
+            id=contract_id,
+            email=email,
+            link=link,
+            msg=message
+        ),
+        DEFAULT_FROM_EMAIL,
+        [SWAPS_SUPPORT_MAIL]
+    )
+    return Response('ok')
