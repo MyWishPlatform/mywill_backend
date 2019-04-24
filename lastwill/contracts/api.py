@@ -65,7 +65,7 @@ class ContractViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT'):
+        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
             try:
                 self.perform_destroy(instance)
             except Http404:
