@@ -52,6 +52,16 @@ Please contact support@mywish.io if you need if you have any questions.
 Best wishes,
 MyWish Team."""
 
+eos_ico_subject = """Your account is ready"""
+eos_ico_message = """Hello,
+
+We are happy to inform you that your ICO was successfully created in {network_name}.
+
+Please contact support@mywish.io if you need if you have any questions.
+
+Best wishes,
+MyWish Team."""
+
 eos_contract_subject = """Your contract is ready"""
 eos_contract_message = """Hello,
 

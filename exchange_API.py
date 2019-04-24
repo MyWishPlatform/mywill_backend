@@ -44,23 +44,32 @@ def convert(fsym, tsyms):
     tronish = False
     if tsyms == 'TRONISH':
         if fsym == 'TRX':
-            return {'TRONISH': 1.0}
+            return {'TRONISH': 0.02}
         else:
             tsyms = 'TRX'
             tronish = True
+    if fsym == 'TRONISH':
+        fsym = 'TRX'
+        answer = json.loads(requests.get(
+            'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(
+                fsym=fsym, tsyms=tsyms)
+        ).content.decode())
+        answer[tsyms] = answer[tsyms] * 0.02
+        return answer
+
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
         raise Exception('currency not allowed')
-    print(fsym, tsyms)
+    # print(fsym, tsyms)
     answer = json.loads(requests.get(
         'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)
     ).content.decode())
-    print('currency_proxi answer', answer, flush=True)
+    # print('currency_proxi answer', answer, flush=True)
     if revesre_convert:
         answer = {'EOSISH': answer['EOS']}
         tsyms = 'EOSISH'
     answer[tsyms] = answer[tsyms] * eosish_factor
     if tronish:
-        answer['TRONISH'] = answer['TRX']
+        answer['TRONISH'] = answer['TRX'] / 0.02
     return answer
 
 

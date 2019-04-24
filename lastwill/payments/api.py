@@ -18,11 +18,20 @@ def create_payment(uid, tx, currency, amount, site_id):
         return
     print('create payment')
     if SubSite.objects.get(id=site_id).site_name == MY_WISH_URL:
+        if currency == 'WISH-1EF':
+            currency = 'WISH'
+            amount = amount * 10 ** 10
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
+        if currency in ['TRON', 'TRX', 'TRONISH']:
+            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['TRX']
+        if currency in ['EOS', 'EOSISH']:
+            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['EOS']
+        if currency == 'USDT':
+            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['USDT']
     elif SubSite.objects.get(id=site_id).site_name == TRON_URL:
         value = amount if currency in ('TRONISH', 'TRX') else amount * float(convert(
             currency, 'TRX'

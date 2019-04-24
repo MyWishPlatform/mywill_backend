@@ -33,6 +33,7 @@ from allauth.account.utils import (
 )
 from allauth.account.models import EmailAddress, EmailConfirmation, EmailConfirmationHMAC
 
+from exchange_API import to_wish, convert
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
 from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL
@@ -45,23 +46,17 @@ class ConfirmEmailView(TemplateResponseMixin, View):
     template_name = "account/email_confirm." + app_settings.TEMPLATE_EXTENSION
 
     def get(self, *args, **kwargs):
-        print('get start', flush=True)
         try:
             self.object = self.get_object()
-            print('get, object', self.object, flush=True)
             if app_settings.CONFIRM_EMAIL_ON_GET:
-                print('get confirm email', app_settings.CONFIRM_EMAIL_ON_GET, flush=True)
                 return self.post(*args, **kwargs)
         except Http404:
             self.object = None
         ctx = self.get_context_data()
-        print('get ctx', ctx, flush=True)
         return self.render_to_response(ctx)
 
     def post(self, *args, **kwargs):
-        print('post start', flush=True)
         self.object = confirmation = self.get_object()
-        print('post confirmation', confirmation, flush=True)
         confirmation.confirm(self.request)
         get_adapter(self.request).add_message(
             self.request,
@@ -69,13 +64,10 @@ class ConfirmEmailView(TemplateResponseMixin, View):
             'account/messages/email_confirmed.txt',
             {'email': confirmation.email_address.email})
         if app_settings.LOGIN_ON_EMAIL_CONFIRMATION:
-            print('post login on email', app_settings.LOGIN_ON_EMAIL_CONFIRMATION, flush=True)
             resp = self.login_on_confirm(confirmation)
             if resp is not None:
                 return resp
-
         redirect_url = self.get_redirect_url()
-        print('post redirect url', redirect_url, flush=True)
         if not redirect_url:
             ctx = self.get_context_data()
             return self.render_to_response(ctx)
@@ -97,11 +89,8 @@ class ConfirmEmailView(TemplateResponseMixin, View):
         return None
 
     def get_object(self, queryset=None):
-        print('get object start', flush=True)
         key = self.kwargs['key']
-        print('get object key', self.kwargs['key'], flush=True)
         emailconfirmation = EmailConfirmationHMAC.from_key(key)
-        print('get object emailconfirmation', emailconfirmation, flush=True)
         if not emailconfirmation:
             if queryset is None:
                 queryset = self.get_queryset()
@@ -183,7 +172,9 @@ def profile_view(request):
             'lang': request.user.profile.lang,
             'memo': user_balance.memo,
             'eos_address': 'mywishcoming',
-            'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else ''
+            'bnb_address': 'tbnb1pxwzr62lhdn27mpkdauuf7r4f56mkgmn2zznkc',
+            'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else '',
+            'usdt_balance': str(int(int(user_balance.balance) / 10 ** 18 * convert('WISH', 'USDT')['USDT'] * 10 ** 6))
     }
     return Response(answer)
 

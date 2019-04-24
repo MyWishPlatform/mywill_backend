@@ -57,13 +57,14 @@ def get_discount(request):
                 print('token token', flush=True)
                 if contract_details.authio:
                     print('token with authio', flush=True)
-                    cost = (contract.cost - 3 * NET_DECIMALS['ETH']) * (100 - discount) / 100 + 3 * NET_DECIMALS['ETH']
+                    cost = (contract.cost - 450 * NET_DECIMALS['USDT']) * (100 - discount) / 100 + 450 * NET_DECIMALS['USDT']
             answer['discount_price'] = {
-            'ETH': str(cost),
-            'WISH': str(int(to_wish('ETH', int(cost)))),
-            'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
-            'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6),
-            'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')['TRX'] * 10 ** 6)
+            'USDT': str(cost),
+            'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
+            'WISH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
+            'BTC': str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
+            'TRX': str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
+            'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
             }
         elif host == TRON_URL:
             kwargs = ContractSerializer().get_details_serializer(

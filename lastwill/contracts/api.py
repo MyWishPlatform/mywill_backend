@@ -78,7 +78,7 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=(10, 11, 12, 13, 14, 15, 16, 17, 18, 20))
+            result = result.exclude(contract_type__in=[20, 21])
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
@@ -155,11 +155,11 @@ def check_error_promocode(promo_str, contract_type):
 def check_promocode(promo_str, user, cost, contract, details):
     # check token with authio
     if contract.contract_type == 5 and details.authio:
-        price_without_brand_report = contract.cost - BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+        price_without_brand_report = contract.cost - 105 * NET_DECIMALS['USDT']
         cost = check_and_apply_promocode(
             promo_str, user, price_without_brand_report, contract.contract_type, contract.id
         )
-        total_cost = cost + BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+        total_cost = cost + 105 * NET_DECIMALS['USDT']
     else:
         # count discount
         total_cost = check_and_apply_promocode(
@@ -178,25 +178,29 @@ def deploy(request):
     if contract.user != request.user or contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
         raise PermissionDenied
 
-    if host == EOSISH_URL:
-        kwargs = ContractSerializer().get_details_serializer(
-            contract.contract_type
-        )().to_representation(contract_details)
-        cost = contract_details.calc_cost_eos(kwargs, contract.network)
-        currency = 'EOS'
-        site_id = 2
-    elif host == MY_WISH_URL:
-        cost = contract.cost
-        currency = 'ETH'
-        site_id = 1
-    else:
-        kwargs = ContractSerializer().get_details_serializer(
-            contract.contract_type
-        )().to_representation(contract_details)
-        cost = contract_details.calc_cost_tron(kwargs, contract.network)
-        # cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
-        currency = 'TRX'
-        site_id = 3
+    cost = contract.cost
+    currency = 'USDT'
+    site_id = 1
+
+    # if host == EOSISH_URL:
+    #     kwargs = ContractSerializer().get_details_serializer(
+    #         contract.contract_type
+    #     )().to_representation(contract_details)
+    #     cost = contract_details.calc_cost_eos(kwargs, contract.network)
+    #     currency = 'EOS'
+    #     site_id = 2
+    # elif host == MY_WISH_URL:
+    #     cost = contract.cost
+    #     currency = 'ETH'
+    #     site_id = 1
+    # else:
+    #     kwargs = ContractSerializer().get_details_serializer(
+    #         contract.contract_type
+    #     )().to_representation(contract_details)
+    #     cost = contract_details.calc_cost_tron(kwargs, contract.network)
+    #     # cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
+    #     currency = 'TRX'
+    #     site_id = 3
     promo_str = request.data.get('promo', None)
     if promo_str:
         promo_str = promo_str.upper()
@@ -624,16 +628,22 @@ def get_cost_all_contracts(request):
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
-        if i in [10, 11, 12, 13, 14]:
-            # print(host, EOSISH_URL, flush=True)
-            answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
-        elif i in [15, 16, 17, 18]:
-            # eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
-            # print('price', i, 'eth_cost', eth_cost, flush=True)
-            # answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
-            answer[i] = contract_details_types[i]['model'].min_cost_tron() / NET_DECIMALS['TRX']
-        else:
-            answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
+        answer[i] ={
+            'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
+            'WISH': str(int(
+                contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
+            ) * convert('USDT', 'WISH')['WISH'])
+        }
+        # if i in [10, 11, 12, 13, 14]:
+        #     # print(host, EOSISH_URL, flush=True)
+        #     answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
+        # elif i in [15, 16, 17, 18]:
+        #     # eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
+        #     # print('price', i, 'eth_cost', eth_cost, flush=True)
+        #     # answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
+        #     answer[i] = contract_details_types[i]['model'].min_cost_tron() / NET_DECIMALS['TRX']
+        # else:
+        #     answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
 
 
@@ -959,10 +969,11 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    eth_cost = str(BRAND_REPORT_PRICE * NET_DECIMALS['ETH'])
-    wish_cost = str(int(to_wish('ETH', int(eth_cost))))
-    btc_cost = str(int(eth_cost) * convert('ETH', 'BTC')['BTC'])
-    return JsonResponse({'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+    usdt_cost = str(450 * NET_DECIMALS['USDT'])
+    eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
+    wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
+    btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
 
 
 @api_view(http_method_names=['GET'])
