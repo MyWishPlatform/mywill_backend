@@ -1162,9 +1162,9 @@ def change_contract_state(request):
 @api_view(http_method_names=['POST'])
 def send_message_author_swap(request):
     contract_id = int(request.data.get('contract_id'))
-    link = int(request.data.get('link'))
-    email = int(request.data.get('email'))
-    message = int(request.data.get('message'))
+    link = request.data.get('link')
+    email = request.data.get('email')
+    message = request.data.get('message')
     sendEMail(
         swaps_support_subject,
         swaps_support_message.format(
