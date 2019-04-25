@@ -954,7 +954,7 @@ def buy_brand_report(request):
     if host != MY_WISH_URL:
         raise PermissionDenied
     cost = 450 * NET_DECIMALS['USDT']
-    currency = 'ETH'
+    currency = 'USDT'
     site_id = 1
     create_payment(request.user.id, '', currency, -cost, site_id)
     details.authio_date_payment = datetime.datetime.now().date()
