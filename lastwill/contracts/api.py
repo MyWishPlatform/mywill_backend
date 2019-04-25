@@ -953,7 +953,7 @@ def buy_brand_report(request):
     details = contract.get_details()
     if host != MY_WISH_URL:
         raise PermissionDenied
-    cost = BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
+    cost = 450 * NET_DECIMALS['USDT']
     currency = 'ETH'
     site_id = 1
     create_payment(request.user.id, '', currency, -cost, site_id)
