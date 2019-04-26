@@ -152,7 +152,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if validated_data['user'].email:
             network = validated_data['network']
             network_name = MAIL_NETWORK[network.name]
-            if contract.contract_type != 11 and contract.contract_type !=20:
+            if contract.contract_type not in (11, 20, 21):
                 send_mail(
                         email_messages.create_subject,
                         email_messages.create_message.format(
@@ -161,7 +161,7 @@ class ContractSerializer(serializers.ModelSerializer):
                         DEFAULT_FROM_EMAIL,
                         [validated_data['user'].email]
                 )
-            elif contract.contract_type == 20:
+            elif contract.contract_type in (20, 21):
                 sendEMail(
                     email_messages.swaps_subject,
                     email_messages.swaps_message,
