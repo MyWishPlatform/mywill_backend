@@ -16,15 +16,11 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL, SWAPS_URL
-from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
+from lastwill.settings import MY_WISH_URL, TRON_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
-from lastwill.parint import *
-from lastwill.promo.models import Promo, User2Promo, Promo2ContractType
 from lastwill.promo.api import check_and_get_discount
-from lastwill.profile.models import *
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
 from lastwill.deploy.models import Network
@@ -46,8 +42,6 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
            promo_str = None
         else:
            cost = cost - cost * discount / 100
-        # promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        # User2Promo(user=user, promo=promo_object, contract_id=cid).save()
         if promo_str:
             Promo.objects.select_for_update().filter(
                     promo_str=promo_str.upper()
@@ -112,10 +106,10 @@ def get_token_contracts(request):
         return Response([])
     res = []
     eth_contracts = EthContract.objects.filter(
-             contract__contract_type__in=(4,5),
+             contract__contract_type__in=(4, 5),
              contract__user=request.user,
-             address__isnull = False,
-             contract__network = request.query_params['network'],
+             address__isnull=False,
+             contract__network=request.query_params['network'],
     )
     for ec in eth_contracts:
         details = ec.contract.get_details()
@@ -170,7 +164,6 @@ def check_promocode(promo_str, user, cost, contract, details):
 
 @api_view(http_method_names=['POST'])
 def deploy(request):
-    host = request.META['HTTP_HOST']
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
@@ -182,25 +175,6 @@ def deploy(request):
     currency = 'USDT'
     site_id = 1
 
-    # if host == EOSISH_URL:
-    #     kwargs = ContractSerializer().get_details_serializer(
-    #         contract.contract_type
-    #     )().to_representation(contract_details)
-    #     cost = contract_details.calc_cost_eos(kwargs, contract.network)
-    #     currency = 'EOS'
-    #     site_id = 2
-    # elif host == MY_WISH_URL:
-    #     cost = contract.cost
-    #     currency = 'ETH'
-    #     site_id = 1
-    # else:
-    #     kwargs = ContractSerializer().get_details_serializer(
-    #         contract.contract_type
-    #     )().to_representation(contract_details)
-    #     cost = contract_details.calc_cost_tron(kwargs, contract.network)
-    #     # cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
-    #     currency = 'TRX'
-    #     site_id = 3
     promo_str = request.data.get('promo', None)
     if promo_str:
         promo_str = promo_str.upper()
@@ -634,16 +608,6 @@ def get_cost_all_contracts(request):
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
             ) * convert('USDT', 'WISH')['WISH'])
         }
-        # if i in [10, 11, 12, 13, 14]:
-        #     # print(host, EOSISH_URL, flush=True)
-        #     answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
-        # elif i in [15, 16, 17, 18]:
-        #     # eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
-        #     # print('price', i, 'eth_cost', eth_cost, flush=True)
-        #     # answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
-        #     answer[i] = contract_details_types[i]['model'].min_cost_tron() / NET_DECIMALS['TRX']
-        # else:
-        #     answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
 
 
@@ -1001,7 +965,6 @@ def get_tokens_for_eth_address(request):
     if network == 'mainnet':
         check.is_address(address)
         result = get_parsing_tokenholdings(address)
-        # result = []
         if not result:
             result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()
             if 'tokens' in result:
@@ -1028,7 +991,6 @@ def get_tokens_for_eth_address(request):
                     'balance': 0
                 }
             )
-
     return Response(result)
 
 
@@ -1050,7 +1012,6 @@ def get_tronish_balance(request):
             return Response({
                 'balance': tronish_info.balance / 10 ** 18 * 10 ** 6
             })
-
     tron_address = request.query_params.get('tron_address', None)
     if tron_address:
         tronish_info = TRONSnapshotTRON.objects.filter(
@@ -1059,7 +1020,6 @@ def get_tronish_balance(request):
             return Response({
                 'balance': tronish_info.balance / 10000
             })
-
     return Response({'balance': 0})
 
 

@@ -14,7 +14,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.settings import SWAPS_MAIL
 from lastwill.parint import ParInt
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -32,11 +31,11 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
-from lastwill.settings import EMAIL_HOST_SWAPS, EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS, EMAIL_PORT_SWAPS, EMAIL_USE_TLS_SWAPS
+from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
 from lastwill.payments.api import create_payment
-from exchange_API import to_wish, convert
+from exchange_API import convert
 from lastwill.consts import MAIL_NETWORK
 import email_messages
 from neocore.Cryptography.Crypto import Crypto
@@ -45,9 +44,7 @@ from neocore.UInt160 import UInt160
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
-
     par_int = ParInt()
-
     method_sign = '0x' + binascii.hexlify(
         int_to_big_endian(m_id('totalSupply', []))).decode()
     sold_tokens = par_int.eth_call({'to': address,
@@ -390,8 +387,6 @@ class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
             'check_interval',
             'last_check',
             'next_check',
-#            'transfer_threshold_wei',
-#            'transfer_delay_seconds'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
@@ -848,7 +843,6 @@ def count_last_balance(contract):
             now_date.year, now_date.month,
             now_date.day, now_date.hour, 0, 0
         )
-    # date = datetime.datetime.now().date()
     invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
     balance = 0
     for inv in invests:

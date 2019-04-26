@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import NETWORKS
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 class InvestAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)

@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 

@@ -40,22 +40,18 @@ def get_tokenholdings_page(address, page):
     if len(tr_list) >= 1:
         res = []
         tr_list = tr_list[:int((len(tr_list)/2))]
-
         for el in tr_list:
             value = el[3].text_content().split()
             amount = value[0].replace(',', '')
             symbol = value[1]
-
             if symbol == 'ETH':
                 continue
-
             try:
                 name_t = el[1][0][1][0]
                 name = name_t.items()[0][1]
             except IndexError:
                 name = 'Erc20 ({sym})'.format(sym=symbol)
             token_addr = el[1][1][0].text_content()
-
             res.append(
                 {
                     'tokenInfo':
@@ -70,7 +66,6 @@ def get_tokenholdings_page(address, page):
         return res
     else:
         return []
-
 
 
 @contract_details('Wallet contract (lost key)')
@@ -98,8 +93,6 @@ class ContractDetailsLostKey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-#            self.transfer_threshold_wei,
-#            self.transfer_delay_seconds
             2**256-1,
             0,
         ]
