@@ -141,15 +141,16 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
         self.contract.save()
-        swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
-            protocol=SITE_PROTOCOL,
-            unique_link=self.unique_link, url=SWAPS_URL
-        )
-        sendEMail(
-            swaps_deploed_subject,
-            swaps_deploed_message.format(swaps_link=swaps_link),
-            [self.contract.user.email]
-        )
+        if self.contract.user.email:
+            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
+                protocol=SITE_PROTOCOL,
+                unique_link=self.unique_link, url=SWAPS_URL
+            )
+            sendEMail(
+                swaps_deploed_subject,
+                swaps_deploed_message.format(swaps_link=swaps_link),
+                [self.contract.user.email]
+            )
         return res
 
     def finalized(self, message):
@@ -159,3 +160,79 @@ class ContractDetailsSWAPS(CommonDetails):
     def cancelled(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
+
+
+@contract_details('SWAPS contract')
+class ContractDetailsSWAPS2(CommonDetails):
+    base_address = models.CharField(max_length=50)
+    base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    quote_address = models.CharField(max_length=50)
+    quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    stop_date = models.DateTimeField()
+    public = models.BooleanField(default=True)
+    owner_address = models.CharField(max_length=50, null=True, default=None)
+    whitelist = models.BooleanField(default=False)
+    whitelist_address = models.CharField(max_length=50)
+    unique_link = models.CharField(max_length=50)
+    memo_contract = models.CharField(max_length=70)
+
+    eth_contract = models.ForeignKey(
+        EthContract,
+        null=True,
+        default=None,
+        related_name='swaps2_details',
+        on_delete=models.SET_NULL
+    )
+    temp_directory = models.CharField(max_length=36)
+
+    min_base_wei = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
+    min_quote_wei = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        link = ''.join(
+            random.choice(string.ascii_lowercase + string.digits) for _ in
+            range(6)
+        )
+        self.unique_link = link
+        self.save()
+        self.eth_contract = EthContract()
+        self.eth_contract.address = message['address']
+        self.eth_contract.tx_hash = message['transactionHash']
+        self.eth_contract.save()
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
+        if self.contract.user.email:
+            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
+                protocol=SITE_PROTOCOL,
+                unique_link=self.unique_link, url=SWAPS_URL
+            )
+            sendEMail(
+                swaps_deploed_subject,
+                swaps_deploed_message.format(swaps_link=swaps_link),
+                [self.contract.user.email]
+            )
+        return
+
+    def finalized(self, message):
+        self.contract.state = 'DONE'
+        self.contract.save()
+
+    def cancelled(self, message):
+        self.contract.state = 'CANCELLED'
+        self.contract.save()
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        return 0

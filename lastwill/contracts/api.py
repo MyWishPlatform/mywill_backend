@@ -52,6 +52,22 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     return cost
 
 
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
+
+
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
@@ -59,7 +75,7 @@ class ContractViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT'):
+        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
             try:
                 self.perform_destroy(instance)
             except Http404:
@@ -78,7 +94,7 @@ class ContractViewSet(ModelViewSet):
         if host == TRON_URL:
             result = result.filter(contract_type__in=(15, 16, 17, 18))
         if host == SWAPS_URL:
-            result = result.filter(contract_type=20)
+            result = result.filter(contract_type__in=[20, 21])
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -1068,6 +1084,8 @@ def get_contract_for_unique_link(request):
         raise PermissionDenied
     details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
     if not details:
+        details = ContractDetailsSWAPS2.objects.filter(unique_link=link).first()
+    if not details:
         raise PermissionDenied
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
@@ -1075,11 +1093,47 @@ def get_contract_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_public_contracts(request):
-    contracts = Contract.objects.filter(contract_type=20, network__name='ETHEREUM_MAINNET', state='ACTIVE')
-    result =[]
+    contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    result = []
     for contract in contracts:
         d = contract.get_details()
         if d.public:
             result.append(ContractSerializer().to_representation(contract))
 
     return JsonResponse(result, safe=False)
+
+
+@api_view(http_method_names=['POST'])
+def change_contract_state(request):
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state != 'CREATED':
+        raise PermissionDenied
+    if contract.contract_type != 21:
+        raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
+    if host != SWAPS_URL:
+        raise PermissionDenied
+    contract.state = 'WAITING_FOR_ACTIVATION'
+    contract.save()
+    return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['POST'])
+def send_message_author_swap(request):
+    contract_id = int(request.data.get('contract_id'))
+    link = request.data.get('link')
+    email = request.data.get('email')
+    message = request.data.get('message')
+    sendEMail(
+        swaps_support_subject,
+        swaps_support_message.format(
+            id=contract_id,
+            email=email,
+            link=link,
+            msg=message
+        ),
+        [SWAPS_SUPPORT_MAIL]
+    )
+    return Response('ok')
