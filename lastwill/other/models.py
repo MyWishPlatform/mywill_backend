@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from lastwill.settings import DEFAULT_FROM_EMAIL, DEFAULT_TO_EMAIL
 
+
 class Sentence(models.Model):
     username = models.CharField(max_length=200)
     email = models.CharField(max_length=200)

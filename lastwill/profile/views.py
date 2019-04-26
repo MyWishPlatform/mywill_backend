@@ -18,8 +18,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from allauth.account import app_settings
-from allauth.account.models import EmailAddress
-# from allauth.account.views import ConfirmEmailView
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import (
     complete_signup,
@@ -123,9 +121,6 @@ confirm_email = ConfirmEmailView.as_view()
 class UserConfirmEmailView(ConfirmEmailView):
     def post(self, *args, **kwargs):
         self.object = confirmation = self.get_object()
-        print('confirmation', confirmation, flush=True)
-        print('request', self.request, flush=True)
-        print('object', self.object, flush=True)
         confirmation.confirm(self.request)
 
         '''get_adapter(self.request).add_message(
@@ -148,18 +143,13 @@ def profile_view(request):
         print('anonymous', flush=True)
         raise PermissionDenied()
     site_name = request.META['HTTP_HOST']
-    # print('site name is', site_name)
     if site_name.startswith('cn'):
         site_name = site_name[2:]
     if site_name.startswith('local'):
         print('cut local')
         site_name = site_name[5:]
-    # if site_name == TRON_URL:
-    #     site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
-    # print(request.user.id, flush=True)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
-    print(site_name, request.user.id, flush=True)
     answer = {
             'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
             'contracts': Contract.objects.filter(user=request.user).count(),
