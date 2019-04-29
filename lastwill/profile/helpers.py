@@ -5,6 +5,7 @@ from eth_account.messages import defunct_hash_message
 from rest_framework.exceptions import ValidationError
 from random import choice
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 
 def valid_totp(user, totp):
@@ -49,4 +50,4 @@ def generate_metamask_message(request):
     startword = choice(startwordlist)
     fullword = " ".join([startword, endword])
 
-    return fullword
+    return Response(fullword)
