@@ -134,7 +134,7 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
         return attrs
 
 
-class MetamaskLogin(LoginView):
+class MetamaskLogin(SocialLoginSerializer):
     serializer_class = MetamaskLoginSerializer
 
     def login(self):
@@ -147,6 +147,6 @@ class MetamaskLogin(LoginView):
             init_profile(self.user, is_social=True, metamask_address=self.metamask_address,
                          lang=self.serializer.context['request'].COOKIES.get('lang', 'en'))
             self.user.save()
-        return super.login()
+        return super().login()
 
 
