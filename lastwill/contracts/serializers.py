@@ -1568,7 +1568,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
             'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
             'max_wei', 'reused_token', 'token_name', 'token_short_name',
-            'decimals', 'allow_change_dates'
+            'decimals', 'allow_change_dates', 'total_supply'
         )
 
     def to_representation(self, contract_details):
