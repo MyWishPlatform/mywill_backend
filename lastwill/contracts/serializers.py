@@ -1565,8 +1565,10 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsSTO
         fields = (
-            'token_address', 'public_key', 'cold_wallet_address', 'start_date',
-            'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap'
+            'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
+            'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
+            'max_wei', 'reused_token', 'token_name', 'token_short_name',
+            'decimals', 'allow_change_dates'
         )
 
     def to_representation(self, contract_details):
@@ -1591,7 +1593,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        if 'token_address' not in details:
+        if 'owner_address' not in details:
             raise ValidationError
         if 'stop_date' not in details:
             raise ValidationError

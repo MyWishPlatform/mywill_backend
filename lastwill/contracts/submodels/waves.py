@@ -70,7 +70,7 @@ class ContractDetailsSTO(CommonDetails):
     hard_cap = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
-    token_address = models.CharField(max_length=512)
+    asset_id = models.CharField(max_length=512, null=True, default=None)
     admin_address = models.CharField(max_length=50)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
@@ -78,13 +78,16 @@ class ContractDetailsSTO(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     temp_directory = models.CharField(max_length=36)
-    time_bonuses = JSONField(null=True, default=None)
-    amount_bonuses = JSONField(null=True, default=None)
-    continue_minting = models.BooleanField(default=False)
     cold_wallet_address = models.CharField(max_length=50, default='')
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
-    public_key = models.CharField(max_length=512)
+    reused_token = models.BooleanField(default=False)
+    token_name = models.CharField(max_length=512, null=True, default=None)
+    token_short_name = models.CharField(max_length=64, null=True, default=None)
+    decimals = models.IntegerField(null=True, default=None)
+    total_supply = models.DecimalField(
+        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
+    )
 
     waves_contract = models.ForeignKey(
         WavesContract,
@@ -110,7 +113,7 @@ class ContractDetailsSTO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5)
+        result = int(100 * NET_DECIMALS['USDT'])
         return result
 
     @classmethod
@@ -129,23 +132,25 @@ class ContractDetailsSTO(CommonDetails):
     def get_arguments(self, eth_contract_attr_name):
         return []
 
-    def compile(self, eth_contract_attr_name='eth_contract'):
-        print('standalone token contract compile')
+    def compile(self, eth_contract_attr_name='eth_contract', asset_id=''):
+        print('waves sto contract compile')
         if self.temp_directory:
             print('already compiled')
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/waves-sto-contract/*')
         preproc_params = {"constants": {
             # "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
-            "D_MANAGEMENT_PUBKEY": self.public_key,
+            "D_MANAGEMENT_ADDRESS": self.admin_address,
             "D_COLD_VAULT_ADDR": self.cold_wallet_address,
             "D_START_DATE": self.start_date,
             "D_FINISH_DATE": self.stop_date,
             "D_RATE": str(int(self.rate)),
             "D_WHITELIST": self.whitelist,
-            "D_ASSET_ID": self.token_address,
+            "D_ASSET_ID": asset_id,
             "D_SOFT_CAP_WAVES": str(int(self.soft_cap)),
-            "D_HARD_CAP_WAVES": str(int(self.hard_cap))
+            "D_HARD_CAP_WAVES": str(int(self.hard_cap)),
+            "D_MAX_INVESTMENT": str(int(self.max_wei)),
+            "D_MIN_INVESTMENT": str(int(self.min_wei))
     }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
@@ -165,7 +170,6 @@ class ContractDetailsSTO(CommonDetails):
     @blocking
     @postponable
     def deploy(self):
-        self.compile()
         if NETWORKS[self.contract.network.name]['is_free']:
             pw.setNode(
                 node='https://{addr}'.format(
@@ -186,6 +190,19 @@ class ContractDetailsSTO(CommonDetails):
         sending = deploy_address.sendWaves(contract_address, 10000000)
         print('sending', sending, flush=True)
         time.sleep(8)
+        asset_id = ''
+        if not self.reused_token:
+            token = contract_address.issueAsset(
+                self.token_short_name,
+                self.token_name,
+                self.total_supply,
+                self.decimals
+            )
+            time.sleep(8)
+            if token.status() == 'Issued':
+                asset_id = token.assetId
+        token_address = self.asset_id if self.reused_token else asset_id
+        self.compile(asset_id=token_address)
         pw.setOnline()
         trx = contract_address.setScript(
             self.waves_contract.source_code,
