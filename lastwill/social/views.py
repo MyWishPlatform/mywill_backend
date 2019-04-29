@@ -112,9 +112,9 @@ class GoogleLogin(ProfileAndTotpSocialLoginView):
 
 
 class MetamaskLoginSerializer(SocialLoginSerializer):
-    eth_address = serializers.CharField(required=False, allow_blank=True)
-    message = serializers.CharField(required=False, allow_blank=True)
-    signed_message = serializers.CharField(required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+    msg = serializers.CharField(required=False, allow_blank=True)
+    signed_msg = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, attrs):
         address = attrs['address']
