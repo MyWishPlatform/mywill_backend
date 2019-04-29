@@ -111,7 +111,7 @@ class GoogleLogin(ProfileAndTotpSocialLoginView):
     adapter_class = GoogleOAuth2Adapter
 
 
-class MetamaskLoginSerializer(LoginSerializer):
+class MetamaskLoginSerializer(SocialLoginSerializer):
     eth_address = serializers.CharField(required=False, allow_blank=True)
     message = serializers.CharField(required=False, allow_blank=True)
     signed_message = serializers.CharField(required=False, allow_blank=True)
