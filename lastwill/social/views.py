@@ -134,7 +134,7 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
         return attrs
 
 
-class MetamaskLogin(SocialLoginSerializer):
+class MetamaskLogin(LoginView):
     serializer_class = MetamaskLoginSerializer
 
     def login(self):

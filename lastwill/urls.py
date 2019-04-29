@@ -92,7 +92,7 @@ urlpatterns = [
     url(r'^api/get_metamask_message/', generate_metamask_message),
     url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
-    url(r'^api/rest-auth/metamask/$', MetamaskLogin.as_view(), name='metamask_login'),
+    url(r'^api/rest-auth/metamask/$', MetamaskLogin, name='metamask_login'),
     url(r'^api/resend_email/', resend_email),
     url(r'^api/get_discount/', get_discount),
     url(r'^/$', index, name='socialaccount_signup'),
