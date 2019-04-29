@@ -1,7 +1,7 @@
 from django.db import models
 
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 
 class AirdropAddress(models.Model):

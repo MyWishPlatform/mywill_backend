@@ -9,8 +9,8 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, CONTRACTS_TEMP_DIR
-from lastwill.consts import CONTRACT_PRICE_ETH, NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
 
 
@@ -124,10 +124,8 @@ class ContractDetailsICO(CommonDetails):
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system(
-                # "/bin/bash -c 'cd {dest} && ./compile-crowdsale.sh'".format(dest=dest)
                 "/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
                     dest=dest)
-
         ):
             raise Exception('compiler error while deploying')
         with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json'),
@@ -150,8 +148,6 @@ class ContractDetailsICO(CommonDetails):
                 token_json['compiler']['version'], self.contract, source_code
             )
         self.save()
-
-    #        shutil.rmtree(dest)
 
     @blocking
     @postponable
@@ -366,7 +362,6 @@ class ContractDetailsToken(CommonDetails):
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        # if os.system('cd {dest} && ./compile-token.sh'.format(dest=dest)):
         if os.system('cd {dest} && yarn compile-token'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 

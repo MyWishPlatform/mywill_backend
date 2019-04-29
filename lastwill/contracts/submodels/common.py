@@ -1,4 +1,3 @@
-from subprocess import Popen, PIPE
 from os import path
 import os
 import uuid
@@ -20,10 +19,10 @@ from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
 
-from lastwill.settings import SIGNER, SOLC, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
+from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
-from lastwill.deploy.models import DeployAddress, Network
+from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
 
@@ -35,7 +34,6 @@ def address_to_scripthash(address):
         raise ValueError('Not correct Address, wrong length.')
     if data[0] != settings.ADDRESS_VERSION:
         raise ValueError('Not correct Coin Version')
-
     checksum = Crypto.Default().Hash256(data[:21])[:4]
     if checksum != data[21:]:
         raise Exception('Address format error')
@@ -201,6 +199,7 @@ def test_neo_token_params(config, params, dest):
     if os.system("/bin/bash -c 'cd {dest} && ./3_test_token.sh'".format(dest=dest)):
         raise Exception('compiler error while deploying')
 
+
 def test_neo_ico_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
@@ -340,6 +339,7 @@ class Contract(models.Model):
         eth_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsLostKeyTokens')
         swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
         waves = apps.get_model('contracts', 'ContractDetailsSTO')
+        swap2 = apps.get_model('contracts', 'ContractDetailsSWAPS2')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -364,6 +364,7 @@ class Contract(models.Model):
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
         contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
         contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
+        contract_details_types[21] = {'name': 'SWAPS Contract', 'model': swap2}
         return contract_details_types
 
     @classmethod
@@ -411,10 +412,8 @@ class CommonDetails(models.Model):
         sol_path = path.join(CONTRACTS_DIR, sol_path)
         with open(path.join(sol_path, self.source_filename), 'rb') as f:
             source = f.read().decode('utf-8-sig')
-#        os.system('cd {dir} && yarn compile'.format(dir=sol_path))
-#        os.system('cd {dir} && yarn combine-contracts'.format(dir=sol_path))
         result_name = path.join(sol_path, self.result_filename)
-        with open (result_name, 'rb') as f:
+        with open(result_name, 'rb') as f:
             result =json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
         eth_contract.source_code = source

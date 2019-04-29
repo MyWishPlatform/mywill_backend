@@ -1,20 +1,16 @@
-import json
-import time
 from threading import Timer
+from subprocess import Popen, PIPE
 
 from django.db import models
 from django.utils import timezone
 from django.core.mail import send_mail
-from django.contrib.postgres.fields import JSONField
 from rest_framework.exceptions import ValidationError
 
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, CONTRACT_PRICE_ETH, CONTRACT_PRICE_EOS, NET_DECIMALS
-from lastwill.contracts.submodels.common import *
+from lastwill.consts import CONTRACT_PRICE_EOS
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.json_templates import create_eos_json
-from lastwill.settings import CONTRACTS_DIR, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
-# from lastwill.settings import EOS_TEST_URL_ENV, EOS_TEST_ICO_FOLDER, EOS_TEST_ICO_URL
-from exchange_API import to_wish, convert
+from lastwill.settings import EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from exchange_API import convert
 
 
 def unlock_eos_account(wallet_name, password):
@@ -46,7 +42,6 @@ def implement_cleos_command(command_list):
             stdout, stderr = proc.communicate()
         finally:
             timer.cancel()
-#        print(stdout, stderr, flush=True)
         result = stdout.decode()
         if result:
             break
@@ -158,10 +153,8 @@ class ContractDetailsEOSToken(CommonDetails):
         eos_contract.address = builder
         eos_contract.contract=self.contract
         eos_contract.save()
-
         self.eos_contract = eos_contract
         self.save()
-
         self.contract.state='WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
@@ -216,7 +209,6 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        # cost = 0.05 *10**18
         eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         print('convert eos cost', cost, flush=True)
@@ -275,10 +267,8 @@ class ContractDetailsEOSAccount(CommonDetails):
         eos_contract.address = self.account_name
         eos_contract.contract=self.contract
         eos_contract.save()
-
         self.eos_contract = eos_contract
         self.save()
-
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
@@ -405,33 +395,11 @@ class ContractDetailsEOSICO(CommonDetails):
         print('command = ', command, flush=True)
         if os.system(command):
             raise Exception('error generate config')
-        # command = (
-        #     "/bin/bash -c 'cp {sour} {dest}'").format(
-        #     sour=path.join(dest, 'config.h'),
-        #     dest=EOS_TEST_ICO_FOLDER
-        # )
-        # if os.system(command):
-        #     raise Exception('error cp config')
-        # command = (
-        #     "/bin/bash -c 'cd {dest} && ./enable-debug.sh' ".format(
-        #         dest=EOS_TEST_ICO_FOLDER
-        #     ))
-        # if os.system(command):
-        #     raise Exception('error enable debug')
         if os.system(
                 "/bin/bash -c 'cd {dest} && make'".format(
                     dest=dest)
         ):
             raise Exception('compiler error while deploying')
-        #
-        # if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_ICO_FOLDER)):
-        #     raise Exception('make in test folder error')
-        # if os.system(
-        #         "/bin/bash -c 'cd {dest} && {env} {command}'".format(
-        #             dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_ICO_URL)
-        #
-        # ):
-        #     raise Exception('compiler error ico')
 
         with open(path.join(dest, 'crowdsale/crowdsale.abi'), 'rb') as f:
             abi = binascii.hexlify(f.read()).decode('utf-8')
@@ -642,7 +610,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 str(NETWORKS[network.name]['host']),
                 str(NETWORKS[network.name]['port'])
             )
-
         command1 = [
             'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
             'rammarket'
@@ -687,7 +654,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         print('result', result)
         decimals = len(result.split(' ')[0].split('.')[1])
         print('decimals', decimals)
-
         command = ['cleos', '-u', eos_url, 'push',  'action', airdrop_address, 'create',
                    '["{pk}", "{admin}", "{token}", "{decimals},{token_short_name}", "{addr_count}"]'.format(
                        pk=self.contract.id,
@@ -737,7 +703,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 active=True,
                 state=old_state,
             ).exclude(id__in=ids).first()
-            # in case 'pending' msg was lost or dropped, but 'commited' is there
             if addr is None and message['status'] == 'COMMITTED':
                 old_state = 'added'
                 addr = EOSAirdropAddress.objects.filter(

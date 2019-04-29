@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import *
 
+
 @api_view()
 def snapshot_get_value(request):
     address = request.query_params['address']

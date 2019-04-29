@@ -217,3 +217,15 @@ Please contact support@swaps.network if you have any questions.
 Best wishes,
 Swaps Team.
 """
+
+swaps_support_subject = """ Swaps user notification"""
+swaps_support_message = """Hello,
+
+User with email {email} want to send next message:
+{msg}
+
+to swap with id {id}
+contract's link {link}
+
+Best wishes,
+Swaps Team."""

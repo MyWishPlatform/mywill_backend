@@ -16,15 +16,11 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from lastwill.settings import CONTRACTS_DIR, BASE_DIR, ETHERSCAN_API_KEY, EOSPARK_API_KEY, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, DEFAULT_FROM_EMAIL, SUPPORT_EMAIL, AUTHIO_EMAIL, CONTRACTS_TEMP_DIR, TRON_URL, SWAPS_URL
-from lastwill.settings import CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
-from lastwill.parint import *
-from lastwill.promo.models import Promo, User2Promo, Promo2ContractType
 from lastwill.promo.api import check_and_get_discount
-from lastwill.profile.models import *
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
 from lastwill.deploy.models import Network
@@ -46,8 +42,6 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
            promo_str = None
         else:
            cost = cost - cost * discount / 100
-        # promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        # User2Promo(user=user, promo=promo_object, contract_id=cid).save()
         if promo_str:
             Promo.objects.select_for_update().filter(
                     promo_str=promo_str.upper()
@@ -58,6 +52,22 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     return cost
 
 
+def sendEMail(sub, text, mail):
+    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server.starttls()
+    server.ehlo()
+    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
+    message = "\r\n".join([
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
+        "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub),
+        "",
+        str(text)
+    ])
+    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
+    server.quit()
+
+
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
@@ -65,7 +75,7 @@ class ContractViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT'):
+        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
             try:
                 self.perform_destroy(instance)
             except Http404:
@@ -84,7 +94,7 @@ class ContractViewSet(ModelViewSet):
         if host == TRON_URL:
             result = result.filter(contract_type__in=(15, 16, 17, 18))
         if host == SWAPS_URL:
-            result = result.filter(contract_type=20)
+            result = result.filter(contract_type__in=[20, 21])
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
@@ -112,10 +122,10 @@ def get_token_contracts(request):
         return Response([])
     res = []
     eth_contracts = EthContract.objects.filter(
-             contract__contract_type__in=(4,5),
+             contract__contract_type__in=(4, 5),
              contract__user=request.user,
-             address__isnull = False,
-             contract__network = request.query_params['network'],
+             address__isnull=False,
+             contract__network=request.query_params['network'],
     )
     for ec in eth_contracts:
         details = ec.contract.get_details()
@@ -155,11 +165,11 @@ def check_error_promocode(promo_str, contract_type):
 def check_promocode(promo_str, user, cost, contract, details):
     # check token with authio
     if contract.contract_type == 5 and details.authio:
-        price_without_brand_report = contract.cost - 105 * NET_DECIMALS['USDT']
+        price_without_brand_report = contract.cost - 450 * NET_DECIMALS['USDT']
         cost = check_and_apply_promocode(
             promo_str, user, price_without_brand_report, contract.contract_type, contract.id
         )
-        total_cost = cost + 105 * NET_DECIMALS['USDT']
+        total_cost = cost + 450 * NET_DECIMALS['USDT']
     else:
         # count discount
         total_cost = check_and_apply_promocode(
@@ -170,7 +180,6 @@ def check_promocode(promo_str, user, cost, contract, details):
 
 @api_view(http_method_names=['POST'])
 def deploy(request):
-    host = request.META['HTTP_HOST']
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
@@ -182,25 +191,6 @@ def deploy(request):
     currency = 'USDT'
     site_id = 1
 
-    # if host == EOSISH_URL:
-    #     kwargs = ContractSerializer().get_details_serializer(
-    #         contract.contract_type
-    #     )().to_representation(contract_details)
-    #     cost = contract_details.calc_cost_eos(kwargs, contract.network)
-    #     currency = 'EOS'
-    #     site_id = 2
-    # elif host == MY_WISH_URL:
-    #     cost = contract.cost
-    #     currency = 'ETH'
-    #     site_id = 1
-    # else:
-    #     kwargs = ContractSerializer().get_details_serializer(
-    #         contract.contract_type
-    #     )().to_representation(contract_details)
-    #     cost = contract_details.calc_cost_tron(kwargs, contract.network)
-    #     # cost = eth_cost * convert('ETH', 'TRX')['TRX'] * 10 ** 6
-    #     currency = 'TRX'
-    #     site_id = 3
     promo_str = request.data.get('promo', None)
     if promo_str:
         promo_str = promo_str.upper()
@@ -634,16 +624,6 @@ def get_cost_all_contracts(request):
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
             ) * convert('USDT', 'WISH')['WISH'])
         }
-        # if i in [10, 11, 12, 13, 14]:
-        #     # print(host, EOSISH_URL, flush=True)
-        #     answer[i] = contract_details_types[i]['model'].min_cost_eos() / 10 ** 4
-        # elif i in [15, 16, 17, 18]:
-        #     # eth_cost = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
-        #     # print('price', i, 'eth_cost', eth_cost, flush=True)
-        #     # answer[i] = (eth_cost * convert('ETH', 'TRX')['TRX'])
-        #     answer[i] = contract_details_types[i]['model'].min_cost_tron() / NET_DECIMALS['TRX']
-        # else:
-        #     answer[i] = contract_details_types[i]['model'].min_cost() / NET_DECIMALS['ETH']
     return JsonResponse(answer)
 
 
@@ -953,8 +933,8 @@ def buy_brand_report(request):
     details = contract.get_details()
     if host != MY_WISH_URL:
         raise PermissionDenied
-    cost = BRAND_REPORT_PRICE * NET_DECIMALS['ETH']
-    currency = 'ETH'
+    cost = 450 * NET_DECIMALS['USDT']
+    currency = 'USDT'
     site_id = 1
     create_payment(request.user.id, '', currency, -cost, site_id)
     details.authio_date_payment = datetime.datetime.now().date()
@@ -1001,7 +981,6 @@ def get_tokens_for_eth_address(request):
     if network == 'mainnet':
         check.is_address(address)
         result = get_parsing_tokenholdings(address)
-        # result = []
         if not result:
             result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()
             if 'tokens' in result:
@@ -1028,7 +1007,6 @@ def get_tokens_for_eth_address(request):
                     'balance': 0
                 }
             )
-
     return Response(result)
 
 
@@ -1050,7 +1028,6 @@ def get_tronish_balance(request):
             return Response({
                 'balance': tronish_info.balance / 10 ** 18 * 10 ** 6
             })
-
     tron_address = request.query_params.get('tron_address', None)
     if tron_address:
         tronish_info = TRONSnapshotTRON.objects.filter(
@@ -1059,7 +1036,6 @@ def get_tronish_balance(request):
             return Response({
                 'balance': tronish_info.balance / 10000
             })
-
     return Response({'balance': 0})
 
 
@@ -1108,6 +1084,8 @@ def get_contract_for_unique_link(request):
         raise PermissionDenied
     details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
     if not details:
+        details = ContractDetailsSWAPS2.objects.filter(unique_link=link).first()
+    if not details:
         raise PermissionDenied
     contract = details.contract
     return JsonResponse(ContractSerializer().to_representation(contract))
@@ -1115,11 +1093,47 @@ def get_contract_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_public_contracts(request):
-    contracts = Contract.objects.filter(contract_type=20, network__name='ETHEREUM_MAINNET', state='ACTIVE')
-    result =[]
+    contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    result = []
     for contract in contracts:
         d = contract.get_details()
         if d.public:
             result.append(ContractSerializer().to_representation(contract))
 
     return JsonResponse(result, safe=False)
+
+
+@api_view(http_method_names=['POST'])
+def change_contract_state(request):
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state != 'CREATED':
+        raise PermissionDenied
+    if contract.contract_type != 21:
+        raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
+    if host != SWAPS_URL:
+        raise PermissionDenied
+    contract.state = 'WAITING_FOR_ACTIVATION'
+    contract.save()
+    return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['POST'])
+def send_message_author_swap(request):
+    contract_id = int(request.data.get('contract_id'))
+    link = request.data.get('link')
+    email = request.data.get('email')
+    message = request.data.get('message')
+    sendEMail(
+        swaps_support_subject,
+        swaps_support_message.format(
+            id=contract_id,
+            email=email,
+            link=link,
+            msg=message
+        ),
+        [SWAPS_SUPPORT_MAIL]
+    )
+    return Response('ok')
