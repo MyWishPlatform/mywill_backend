@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from lastwill.consts import MAX_WEI_DIGITS
 
+
 class Profile(models.Model):
     user = models.OneToOneField(User)
     balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
@@ -14,6 +15,7 @@ class Profile(models.Model):
     lang = models.CharField(max_length=2, default='en')
     last_used_totp = models.CharField(max_length=64, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
+    metamask_address = models.CharField(max_length=50, null=True, default=None)
 
 
 class SubSite(models.Model):
