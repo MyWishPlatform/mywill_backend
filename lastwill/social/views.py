@@ -125,7 +125,7 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
             metamask_profile = Profile.objects.filter(metamask_address=address).first()
             if metamask_profile is not None:
                 metamask_user = User.objects.filter(id=metamask_profile.user.id).first()
-            else
+            else:
                 metamask_user = User.objects.create_user(username='metamask_user')
             attrs['user'] = metamask_user
         else:
