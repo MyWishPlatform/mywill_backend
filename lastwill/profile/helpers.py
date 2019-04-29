@@ -40,7 +40,7 @@ def valid_metamask_message(address, message, signature):
 
 
 @api_view(http_method_names=['GET'])
-def generate_metamask_message():
+def generate_metamask_message(request):
     startwordlist = [
         "Hello!", "Greetings!", "Howdy!", "Hi!"
     ]
