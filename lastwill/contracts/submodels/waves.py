@@ -174,13 +174,13 @@ class ContractDetailsSTO(CommonDetails):
             pw.setNode(
                 node='https://{addr}'.format(
                     addr=NETWORKS[self.contract.network.name]['host']),
-                chain='testnet'
+                chain=NETWORKS[self.contract.network.name]['type']
             )
         else:
             pw.setNode(
                 node='https://{addr}'.format(
                     addr=NETWORKS[self.contract.network.name]['host']),
-                chain='mainnet'
+                chain=NETWORKS[self.contract.network.name]['type']
             )
 
         deploy_address = pw.Address(privateKey=NETWORKS[self.contract.network.name]['private_key'])
