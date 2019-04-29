@@ -89,7 +89,7 @@ urlpatterns = [
     url(r'^api/generate_key/', generate_key),
     url(r'^api/enable_2fa/', enable_2fa),
     url(r'^api/disable_2fa/', disable_2fa),
-    url(r'^api/get_metamask_message', generate_metamask_message),
+    url(r'^api/get_metamask_message/', generate_metamask_message),
     url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
     url(r'^api/rest-auth/metamask/$', MetamaskLogin.as_view(), name='metamask_login'),
