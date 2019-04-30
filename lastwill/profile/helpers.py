@@ -40,14 +40,10 @@ def valid_metamask_message(address, message, signature):
     return True
 
 
-@api_view(http_method_names=['GET'])
+@api_view(http_method_names=['POST'])
 def generate_metamask_message(request):
-    startwordlist = [
-        "Hello!", "Greetings!", "Howdy!", "Hi!"
-    ]
+    address = request.data['address']
 
-    endword = "MyWish Platform welcomes you"
-    startword = choice(startwordlist)
-    fullword = " ".join([startword, endword])
+    generated_message = ''.join(choice(address for ch in address))
 
-    return Response(fullword)
+    return Response(generated_message)
