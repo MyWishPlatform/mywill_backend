@@ -932,8 +932,6 @@ def buy_brand_report(request):
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
     details = contract.get_details()
-    if host != MY_WISH_URL:
-        raise PermissionDenied
     cost = 450 * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
