@@ -1597,4 +1597,10 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             raise ValidationError
         if 'stop_date' not in details:
             raise ValidationError
+        details['stop_date'] = datetime.datetime.strptime(
+            details['stop_date'], '%Y-%m-%d %H:%M'
+        )
+        details['start_date'] = datetime.datetime.strptime(
+            details['start_date'], '%Y-%m-%d %H:%M'
+        )
         return details
