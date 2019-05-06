@@ -921,6 +921,7 @@ def send_authio_info(contract, details, authio_email):
 
 @api_view(http_method_names=['POST'])
 def buy_brand_report(request):
+    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
