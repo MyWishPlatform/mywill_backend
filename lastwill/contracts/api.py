@@ -925,7 +925,7 @@ def buy_brand_report(request):
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
-    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE'):
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
     if contract.contract_type != 5:
         raise PermissionDenied
