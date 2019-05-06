@@ -1593,7 +1593,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        if 'owner_address' not in details:
+        if 'admin_address' not in details:
             raise ValidationError
         if 'stop_date' not in details:
             raise ValidationError
