@@ -60,9 +60,9 @@ def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
 class WavesContract(EthContract):
     pass
 
-'''
+
 @contract_details('Waves STO')
-class ContractDetailsSTO(CommonDetails):
+class ContractDetailsWavesSTO(CommonDetails):
 
     soft_cap = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
@@ -231,4 +231,3 @@ class ContractDetailsSTO(CommonDetails):
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
-'''

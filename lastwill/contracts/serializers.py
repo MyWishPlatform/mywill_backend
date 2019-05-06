@@ -28,7 +28,7 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
+        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -1563,9 +1563,7 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
 
 class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     class Meta:
-        pass
-        '''
-        model = ContractDetailsSTO
+        model = ContractDetailsWavesSTO
         fields = (
             'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
             'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
@@ -1606,4 +1604,3 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             details['start_date'], '%Y-%m-%d %H:%M'
         )
         return details
-'''
