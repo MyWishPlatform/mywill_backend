@@ -44,7 +44,7 @@ def valid_metamask_message(address, message, signature):
 def generate_metamask_message(request):
     address = request.data['address']
 
-    generated_message = ''.join(choice(address for ch in address))
+    generated_message = ''.join(choice(address) for ch in address)
     request.session['metamask_message'] = generated_message
 
     return Response(generated_message)
