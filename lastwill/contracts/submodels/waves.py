@@ -72,8 +72,8 @@ class ContractDetailsSTO(CommonDetails):
     )
     asset_id = models.CharField(max_length=512, null=True, default=None)
     admin_address = models.CharField(max_length=50)
-    start_date = models.IntegerField()
-    stop_date = models.IntegerField()
+    start_date = models.DateTimeField()
+    stop_date = models.DateTimeField()
     rate = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
