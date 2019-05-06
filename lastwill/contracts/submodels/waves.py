@@ -57,7 +57,7 @@ def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
     return publicKey, privateKey, address
 
 
-class WavesContract(EthContract):
+class RideContract(EthContract):
     pass
 
 
@@ -89,8 +89,8 @@ class ContractDetailsWavesSTO(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
 
-    waves_contract = models.ForeignKey(
-        WavesContract,
+    ride_contract = models.ForeignKey(
+        RideContract,
         null=True,
         default=None,
         on_delete=models.SET_NULL
@@ -159,12 +159,12 @@ class ContractDetailsWavesSTO(CommonDetails):
 
         with open(path.join(dest, 'build/sto_contract.ride'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        waves_contract = WavesContract()
-        waves_contract.contract = self.contract
-        waves_contract.original_contract = self.contract
-        waves_contract.source_code = source_code
-        waves_contract.save()
-        self.waves_contract = waves_contract
+        ride_contract = RideContract()
+        ride_contract.contract = self.contract
+        ride_contract.original_contract = self.contract
+        ride_contract.source_code = source_code
+        ride_contract.save()
+        self.ride_contract = ride_contract
         self.save()
 
     @blocking
@@ -207,14 +207,14 @@ class ContractDetailsWavesSTO(CommonDetails):
         self.compile(asset_id=token_address)
         pw.setOnline()
         trx = contract_address.setScript(
-            self.waves_contract.source_code,
+            self.ride_contract.source_code,
             txFee=1000000,
             timestamp=0
         )
         print('trx', trx, flush=True)
-        self.waves_contract.address = address
-        self.waves_contract.tx_hash = trx['id']
-        self.waves_contract.save()
+        self.ride_contract.address = address
+        self.ride_contract.tx_hash = trx['id']
+        self.ride_contract.save()
 
     @blocking
     @postponable
@@ -223,7 +223,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             take_off_blocking(self.contract.network.name)
             return
-        if self.waves_contract.id == message['contractId']:
+        if self.ride_contract.id == message['contractId']:
             self.contract.state = 'ACTIVE'
             self.contract.save()
             return
