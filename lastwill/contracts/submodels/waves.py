@@ -60,7 +60,7 @@ def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
 class WavesContract(EthContract):
     pass
 
-
+'''
 @contract_details('Waves STO')
 class ContractDetailsSTO(CommonDetails):
 
@@ -231,3 +231,4 @@ class ContractDetailsSTO(CommonDetails):
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
+'''
