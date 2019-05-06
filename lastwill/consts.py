@@ -10,6 +10,8 @@ MAIL_NETWORK = {
     'EOS_TESTNET': 'EOS Testnet',
     'TRON_MAINNET': 'TRON',
     'TRON_TESTNET': 'TRON Testnet',
+    'WAVES_MAINNET': 'WAVES',
+    'WAVES_TESTNET': 'WAVES Testnet'
 }
 
 API_NETWORK = {
