@@ -115,6 +115,12 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
     address = serializers.CharField(required=False, allow_blank=True)
     signed_msg = serializers.CharField(required=False, allow_blank=True)
 
+    def validate(self, attrs):
+    #     address = attrs['address']
+    #     message = attrs['msg']
+    #     signature = attrs['signed_msg']
+        return attrs
+
 
 class MetamaskLogin(SocialLoginView):
     serializer_class = MetamaskLoginSerializer
