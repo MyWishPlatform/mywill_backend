@@ -122,7 +122,11 @@ class MetamaskLogin(SocialLoginView):
     def login(self):
         address = self.serializer.validated_data['address']
         signature = self.serializer.validated_data['signed_msg']
-        message = self.serializer.context['request'].session.get('metamask_message')
+
+        session = self.serializer.context['request'].session
+
+        if session.get('metamask_address') == address:
+            message = session.get('metamask_message')
 
         if valid_metamask_message(address, message, signature):
             metamask_profile = Profile.objects.filter(metamask_address=address).first()
