@@ -113,39 +113,58 @@ class GoogleLogin(ProfileAndTotpSocialLoginView):
 
 class MetamaskLoginSerializer(SocialLoginSerializer):
     address = serializers.CharField(required=False, allow_blank=True)
-    msg = serializers.CharField(required=False, allow_blank=True)
+    #msg = serializers.CharField(required=False, allow_blank=True)
     signed_msg = serializers.CharField(required=False, allow_blank=True)
 
-    def validate(self, attrs):
-        address = attrs['address']
-        message = attrs['msg']
-        signature = attrs['signed_msg']
-
-        if valid_metamask_message(address, message, signature):
-            metamask_profile = Profile.objects.filter(metamask_address=address).first()
-            if metamask_profile is not None:
-                metamask_user = User.objects.filter(id=metamask_profile.user.id).first()
-            else:
-                metamask_user = User.objects.create_user(username='metamask_user')
-            attrs['user'] = metamask_user
-        else:
-            raise PermissionDenied(1034)
-
-        return attrs
+    # def validate(self, attrs):
+    #     address = attrs['address']
+    #     message = attrs['msg']
+    #     signature = attrs['signed_msg']
+    #
+    #
+    #     if valid_metamask_message(address, message, signature):
+    #         metamask_profile = Profile.objects.filter(metamask_address=address).first()
+    #         if metamask_profile is not None:
+    #             metamask_user = User.objects.filter(id=metamask_profile.user.id).first()
+    #         else:
+    #             metamask_user = User.objects.create_user(username='metamask_user')
+    #         attrs['user'] = metamask_user
+    #     else:
+    #         raise PermissionDenied(1034)
+    #
+    #     return attrs
 
 
 class MetamaskLogin(SocialLoginView):
     serializer_class = MetamaskLoginSerializer
 
     def login(self):
-        self.user = self.serializer.validated_data['user']
-        self.metamask_address = self.serializer.validated_data['address']
+        address = self.serializer.validated_data['address']
+        #message = self.serializer.validated_data['message']
+        signature = self.serializer.validated_data['signed_msg']
+        message = self.serializer.context['request'].session.get('metamask_message')
+
+
+        if valid_metamask_message(address, message, signature):
+            metamask_profile = Profile.objects.filter(metamask_address=address).first()
+            if metamask_profile is not None:
+                self.user = User.objects.filter(id=metamask_profile.user.id).first()
+            else:
+                self.user = User.objects.create_user(username='metamask_user')
+            #attrs['user'] = metamask_user
+        else:
+            raise PermissionDenied(1034)
+
+        #self.user = self.serializer.validated_data['user']
+        #self.metamask_address = self.serializer.validated_data['address']
         try:
             p = Profile.objects.get(user=self.user)
         except ObjectDoesNotExist:
-            self.user.username = str(self.metamask_address)
-            init_profile(self.user, is_social=True, metamask_address=self.metamask_address,
+            self.user.username = str(address)
+            init_profile(self.user, is_social=True,
                          lang=self.serializer.context['request'].COOKIES.get('lang', 'en'))
+            user_profile = Profile.objects.filter(user=self.user)
+            user_profile.metamask_address = address
             self.user.save()
         return super().login()
 
