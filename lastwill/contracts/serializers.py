@@ -1596,19 +1596,19 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     def validate(self, details):
         if details['rate'] < 1 or details['rate'] > 10**18:
             raise ValidationError
-        if details['hard_cap'] < details['soft_cap']:
+        if int(details['hard_cap']) < int(details['soft_cap']):
             raise ValidationError
-        if details['soft_cap'] < 0:
+        if int(details['soft_cap']) < 0:
             raise ValidationError
         if 'admin_address' not in details:
             raise ValidationError
-        if details['hard_cap'] > 9223372036854775807:
+        if int(details['hard_cap']) > 9223372036854775807:
             raise ValidationError
         if 'total_supply' in details:
-            if details['total_supply'] > 9223372036854775807:
+            if int(details['total_supply']) > 9223372036854775807:
                 raise ValidationError
         if 'max_wei' in details and 'min_wei' in details:
-            if details['min_wei'] > details['max_wei'] or details['max_wei'] > 9223372036854775807:
+            if int(details['min_wei']) > int(details['max_wei']) or int(details['max_wei']) > 9223372036854775807:
                 raise ValidationError
         if 'decimals' in details:
             if details['decimals'] > 8 or details['decimals'] < 0:
