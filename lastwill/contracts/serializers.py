@@ -1576,11 +1576,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         if not contract_details:
            print('*'*50, contract_details.id, flush=True)
-        # res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
         res['ride_contract'] = EthContractSerializer().to_representation(contract_details.ride_contract)
-
-        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
-            res['ride_contract']['source_code'] = ''
         return res
 
     def create(self, contract, contract_details):
