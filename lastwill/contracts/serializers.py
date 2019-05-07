@@ -1594,10 +1594,26 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
+        if details['rate'] < 1 or details['rate'] > 10**18:
+            raise ValidationError
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5 * 60:
+            raise ValidationError({'result': 1}, code=400)
+        if details['stop_date'] < details['start_date'] + 5 * 60:
+            raise ValidationError
+        if details['hard_cap'] < details['soft_cap']:
+            raise ValidationError
+        if details['soft_cap'] < 0:
+            raise ValidationError
         if 'admin_address' not in details:
             raise ValidationError
-        if 'stop_date' not in details:
+        if details['hard_cap'] > 9223372036854775807:
             raise ValidationError
+        if 'total_supply' in details:
+            if details['total_supply'] > 9223372036854775807:
+                raise ValidationError
+        if 'max_wei' in details and 'min_wei' in details:
+            if details['min_wei'] > details['max_wei'] or details['max_wei'] > 9223372036854775807:
+                raise ValidationError
         details['stop_date'] = datetime.datetime.strptime(
             details['stop_date'], '%Y-%m-%d %H:%M'
         )
