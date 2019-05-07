@@ -206,7 +206,8 @@ class ContractDetailsWavesSTO(CommonDetails):
                 raise Exception('token creation error in deploying')
         token_address = self.asset_id if self.reused_token else asset_id
         self.compile(asset_id=token_address)
-        pw.setOnline()
+        # pw.setOnline()
+        pw.setOffline()
         trx = contract_address.setScript(
             self.ride_contract.source_code,
             txFee=1000000,
