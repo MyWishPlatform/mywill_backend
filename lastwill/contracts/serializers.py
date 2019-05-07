@@ -1614,6 +1614,9 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         if 'max_wei' in details and 'min_wei' in details:
             if details['min_wei'] > details['max_wei'] or details['max_wei'] > 9223372036854775807:
                 raise ValidationError
+        if 'decimals' in details:
+            if details['decimals'] > 8 or details['decimals'] < 0:
+                raise ValidationError
         details['stop_date'] = datetime.datetime.strptime(
             details['stop_date'], '%Y-%m-%d %H:%M'
         )
