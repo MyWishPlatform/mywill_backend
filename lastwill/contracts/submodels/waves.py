@@ -199,6 +199,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                 int(self.decimals)
             )
             time.sleep(8)
+            print('token', token, flush=True)
             if token.status() == 'Issued':
                 asset_id = token.assetId
             else:
