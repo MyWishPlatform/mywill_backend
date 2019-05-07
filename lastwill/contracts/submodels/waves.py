@@ -195,7 +195,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             token = contract_address.issueAsset(
                 self.token_short_name,
                 self.token_name,
-                int(self.total_supply / 10 ** int(self.decimals)),
+                int(self.total_supply),
                 int(self.decimals)
             )
             time.sleep(8)
