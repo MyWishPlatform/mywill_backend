@@ -187,7 +187,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         pubKey, privKey, address = create_waves_privkey()
         contract_address = pw.Address(privateKey=privKey)
         print('account created', pubKey, privKey, address, flush=True)
-        sending = deploy_address.sendWaves(contract_address, 100000000)
+        sending = deploy_address.sendWaves(contract_address, 110000000)
         print('sending', sending, flush=True)
         time.sleep(8)
         asset_id = ''
