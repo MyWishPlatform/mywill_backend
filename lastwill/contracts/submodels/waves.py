@@ -198,7 +198,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                 int(self.total_supply),
                 int(self.decimals)
             )
-            time.sleep(40)
+            time.sleep(50)
             print('token', token, flush=True)
             if token.status() == 'Issued':
                 asset_id = token.assetId
@@ -207,7 +207,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         token_address = self.asset_id if self.reused_token else asset_id
         self.compile(asset_id=token_address)
         # pw.setOnline()
-        pw.setOffline()
+        # pw.setOffline()
         trx = contract_address.setScript(
             self.ride_contract.source_code,
             txFee=1000000,
