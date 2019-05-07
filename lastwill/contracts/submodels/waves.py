@@ -195,8 +195,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             token = contract_address.issueAsset(
                 self.token_short_name,
                 self.token_name,
-                self.total_supply,
-                self.decimals
+                int(self.total_supply),
+                int(self.decimals)
             )
             time.sleep(8)
             if token.status() == 'Issued':
