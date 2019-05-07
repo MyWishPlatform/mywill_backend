@@ -214,6 +214,9 @@ class ContractDetailsWavesSTO(CommonDetails):
             timestamp=0
         )
         print('trx', trx, flush=True)
+        if not self.asset_id:
+            self.asset_id = token_address
+            self.save()
         self.ride_contract.address = address
         self.ride_contract.tx_hash = trx['id']
         self.ride_contract.save()
