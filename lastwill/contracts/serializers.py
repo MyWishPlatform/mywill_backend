@@ -1596,10 +1596,6 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     def validate(self, details):
         if details['rate'] < 1 or details['rate'] > 10**18:
             raise ValidationError
-        if details['start_date'] < datetime.datetime.now().timestamp() + 5 * 60:
-            raise ValidationError({'result': 1}, code=400)
-        if details['stop_date'] < details['start_date'] + 5 * 60:
-            raise ValidationError
         if details['hard_cap'] < details['soft_cap']:
             raise ValidationError
         if details['soft_cap'] < 0:
