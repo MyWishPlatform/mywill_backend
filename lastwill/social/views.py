@@ -138,14 +138,14 @@ class MetamaskLogin(SocialLoginView):
             if metamask_profile is not None:
                 self.user = User.objects.filter(id=metamask_profile.user.id).first()
             else:
-                self.user = User.objects.create_user(username='metamask_user')
+                self.user = User.objects.create_user(username=address)
         else:
             raise PermissionDenied(1034)
 
         try:
             p = Profile.objects.get(user=self.user)
         except ObjectDoesNotExist:
-            self.user.username = str(address)
+            #self.user.username = str(address)
             init_profile(self.user, is_social=True,
                          lang=self.serializer.context['request'].COOKIES.get('lang', 'en'))
             user_profile = Profile.objects.filter(user=self.user)
