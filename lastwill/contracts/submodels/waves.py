@@ -236,3 +236,10 @@ class ContractDetailsWavesSTO(CommonDetails):
     def finalized(self, message):
         self.contract.state = 'ENDED'
         self.contract.save()
+
+    def timesChanged(self, message):
+        if 'startTime' in message and message['startTime']:
+            self.start_date = message['startTime']
+        if 'endTime' in message and message['endTime']:
+            self.stop_date = message['endTime']
+        self.save()
