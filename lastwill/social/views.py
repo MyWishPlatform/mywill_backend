@@ -134,11 +134,13 @@ class MetamaskLogin(SocialLoginView):
         message = session.get('metamask_message')
 
         if valid_metamask_message(address, message, signature):
-            metamask_profile = Profile.objects.filter(metamask_address=address).first()
-            if metamask_profile is not None:
-                self.user = User.objects.filter(id=metamask_profile.user.id).first()
-            else:
+            #metamask_profile = Profile.objects.filter(metamask_address=address).first()
+            metamask_user = User.objects.filter(username=address).first()
+            if metamask_user is None:
                 self.user = User.objects.create_user(username=address)
+            else:
+                self.user = metamask_user
+
         else:
             raise PermissionDenied(1034)
 
