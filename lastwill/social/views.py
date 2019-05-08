@@ -117,9 +117,22 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
     signed_msg = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, attrs):
-    #     address = attrs['address']
-    #     message = attrs['msg']
-    #     signature = attrs['signed_msg']
+        address = attrs['address']
+        signature = attrs['signed_msg']
+        session = self.context['request'].session
+        message = session.get('metamask_message')
+
+        if valid_metamask_message(address, message, signature):
+            metamask_user = User.objects.filter(username=address).first()
+            if metamask_user is None:
+                self.user = User.objects.create_user(username=address)
+            else:
+                self.user = metamask_user
+
+            attrs['user'] = self.user
+        else:
+            raise PermissionDenied(1034)
+
         return attrs
 
 
@@ -127,33 +140,16 @@ class MetamaskLogin(SocialLoginView):
     serializer_class = MetamaskLoginSerializer
 
     def login(self):
-        address = self.serializer.validated_data['address']
-        signature = self.serializer.validated_data['signed_msg']
-
-        session = self.serializer.context['request'].session
-
-        message = session.get('metamask_message')
-
-        if valid_metamask_message(address, message, signature):
-            #metamask_profile = Profile.objects.filter(metamask_address=address).first()
-            metamask_user = User.objects.filter(username=address).first()
-            if metamask_user is None:
-                self.user = User.objects.create_user(username=address)
-            else:
-                self.user = metamask_user
-
-        else:
-            raise PermissionDenied(1034)
-
+        self.user = self.serializer.validated_data['user']
+        metamask_address = self.serializer.validated_data['address']
         try:
             p = Profile.objects.get(user=self.user)
         except ObjectDoesNotExist:
-            #self.user.username = str(address)
             init_profile(self.user, is_social=True,
                          lang=self.serializer.context['request'].COOKIES.get('lang', 'en'))
-            user_profile = Profile.objects.filter(user=self.user)
-            user_profile.metamask_address = address
+            user_profile = Profile.objects.filter(user=self.user).first()
+            user_profile.metamask_address = metamask_address
             self.user.save()
-        return django_login(self.request, self.user)
+        return super.login()
 
 
