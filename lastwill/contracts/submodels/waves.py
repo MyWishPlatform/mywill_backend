@@ -82,7 +82,7 @@ class ContractDetailsWavesSTO(CommonDetails):
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
     reused_token = models.BooleanField(default=False)
-    token_name = models.CharField(max_length=512, null=True, default=None)
+    token_description = models.CharField(max_length=512, null=True, default=None)
     token_short_name = models.CharField(max_length=64, null=True, default=None)
     decimals = models.IntegerField(null=True, default=None)
     total_supply = models.DecimalField(
@@ -194,7 +194,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         if not self.reused_token:
             token = contract_address.issueAsset(
                 self.token_short_name,
-                self.token_name,
+                self.token_description,
                 int(self.total_supply),
                 int(self.decimals)
             )
