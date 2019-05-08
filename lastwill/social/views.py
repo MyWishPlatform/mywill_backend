@@ -150,6 +150,7 @@ class MetamaskLogin(SocialLoginView):
             user_profile = Profile.objects.filter(user=self.user).first()
             user_profile.metamask_address = metamask_address
             self.user.save()
-        return super.login()
+
+        return super().login()
 
 
