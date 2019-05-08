@@ -18,6 +18,7 @@ from rest_framework import serializers
 from lastwill.profile.serializers import init_profile
 from lastwill.profile.models import *
 from lastwill.profile.helpers import valid_totp, valid_metamask_message
+from django.contrib.auth import login as django_login
 
 
 
@@ -153,6 +154,6 @@ class MetamaskLogin(SocialLoginView):
             user_profile = Profile.objects.filter(user=self.user)
             user_profile.metamask_address = address
             self.user.save()
-        return super().login()
+        return django_login(self.request, self.user)
 
 
