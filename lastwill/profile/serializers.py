@@ -79,7 +79,7 @@ def create_swaps_balance(user, eth_address, btc_address, memo_str):
     ).save()
 
 
-def init_profile(user, is_social=False, lang='en'):
+def init_profile(user, is_social=False, metamask_address=None, lang='en'):
     m = hashlib.sha256()
     memo_str1 = generate_memo(m)
     # memo_str2 = generate_memo(m)
@@ -100,7 +100,7 @@ def init_profile(user, is_social=False, lang='en'):
     # eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address4 = keys.PublicKey(swaps_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
-    Profile(user=user, is_social=is_social, lang=lang).save()
+    Profile(user=user, is_social=is_social, metamask_address=metamask_address, lang=lang).save()
     create_wish_balance(user, eth_address1, btc_address1, memo_str1)
     # create_eosish_balance(user, eth_address2, btc_address2, memo_str2)
     # create_tron_balance(user, eth_address3, btc_address3, memo_str3)
@@ -136,7 +136,7 @@ class UserLoginSerializer2FA(LoginSerializer):
 
 class PasswordChangeSerializer2FA(PasswordChangeSerializer):
     totp = serializers.CharField(required=False, allow_blank=True)
-    
+
     def validate(self, attrs):
         res = super().validate(attrs)
         if self.user.profile.use_totp:
@@ -148,7 +148,7 @@ class PasswordChangeSerializer2FA(PasswordChangeSerializer):
 
 class PasswordResetConfirmSerializer2FA(PasswordResetConfirmSerializer):
     totp = serializers.CharField(required=False, allow_blank=True)
-    
+
     def custom_validation(self, attrs):
         if self.user.profile.use_totp:
             totp = attrs.get('totp', None)
