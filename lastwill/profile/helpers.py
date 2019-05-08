@@ -40,7 +40,7 @@ def valid_metamask_message(address, message, signature):
     return True
 
 
-@api_view(http_method_names=['POST'])
+@api_view(http_method_names=['GET'])
 def generate_metamask_message(request):
     address = request.data['address']
 
