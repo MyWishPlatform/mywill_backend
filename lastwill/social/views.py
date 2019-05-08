@@ -145,10 +145,8 @@ class MetamaskLogin(SocialLoginView):
         try:
             p = Profile.objects.get(user=self.user)
         except ObjectDoesNotExist:
-            init_profile(self.user, is_social=True,
+            init_profile(self.user, is_social=True, metamask_address=metamask_address,
                          lang=self.serializer.context['request'].COOKIES.get('lang', 'en'))
-            user_profile = Profile.objects.filter(user=self.user).first()
-            user_profile.metamask_address = metamask_address
             self.user.save()
 
         return super().login()
