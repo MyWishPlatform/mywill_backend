@@ -79,7 +79,7 @@ def create_swaps_balance(user, eth_address, btc_address, memo_str):
     ).save()
 
 
-def init_profile(user, is_social=False, lang='en'):
+def init_profile(user, is_social=False, metamask_address=None, lang='en'):
     m = hashlib.sha256()
     memo_str1 = generate_memo(m)
     # memo_str2 = generate_memo(m)
@@ -136,7 +136,7 @@ class UserLoginSerializer2FA(LoginSerializer):
 
 class PasswordChangeSerializer2FA(PasswordChangeSerializer):
     totp = serializers.CharField(required=False, allow_blank=True)
-    
+
     def validate(self, attrs):
         res = super().validate(attrs)
         if self.user.profile.use_totp:
@@ -148,7 +148,7 @@ class PasswordChangeSerializer2FA(PasswordChangeSerializer):
 
 class PasswordResetConfirmSerializer2FA(PasswordResetConfirmSerializer):
     totp = serializers.CharField(required=False, allow_blank=True)
-    
+
     def custom_validation(self, attrs):
         if self.user.profile.use_totp:
             totp = attrs.get('totp', None)
