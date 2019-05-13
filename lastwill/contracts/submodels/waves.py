@@ -226,6 +226,8 @@ class ContractDetailsWavesSTO(CommonDetails):
         # self.ride_contract.address = address
         self.ride_contract.tx_hash = trx['id']
         self.ride_contract.save()
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
 
     @postponable
     def msg_deployed(self, message):
