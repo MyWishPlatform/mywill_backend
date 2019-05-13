@@ -104,9 +104,10 @@ class ContractDetailsWavesSTO(CommonDetails):
     )
 
     def predeploy_validate(self):
-        last_block = int(pw.height())
-        if self.start_height < last_block or self.stop_height < last_block:
-            raise ValidationError({'result': 1}, code=400)
+        # last_block = int(pw.height())
+        # if self.start_height < last_block or self.stop_height < last_block:
+        #     raise ValidationError({'result': 1}, code=400)
+        pass
 
     @classmethod
     def min_cost(cls):
@@ -222,7 +223,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         if not self.asset_id:
             self.asset_id = token_address
             self.save()
-        self.ride_contract.address = address
+        # self.ride_contract.address = address
         self.ride_contract.tx_hash = trx['id']
         self.ride_contract.save()
 
@@ -234,6 +235,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             return
         if self.ride_contract.id == message['contractId']:
             self.contract.state = 'ACTIVE'
+            self.ride_contract.address = message['address']
+            self.ride_contract.save()
             self.contract.save()
             return
 
