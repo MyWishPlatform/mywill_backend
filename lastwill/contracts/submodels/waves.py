@@ -72,8 +72,8 @@ class ContractDetailsWavesSTO(CommonDetails):
     )
     asset_id = models.CharField(max_length=512, null=True, default=None)
     admin_address = models.CharField(max_length=50)
-    start_date = models.DateTimeField()
-    stop_date = models.DateTimeField()
+    start_height = models.IntegerField()
+    stop_height = models.IntegerField()
     rate = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
@@ -142,8 +142,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             # "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
             "D_MANAGEMENT_ADDRESS": self.admin_address,
             "D_COLD_VAULT_ADDR": self.cold_wallet_address,
-            "D_START_DATE": str(int(time.mktime(self.start_date.timetuple()))),
-            "D_FINISH_DATE": str(int(time.mktime(self.stop_date.timetuple()))),
+            "D_START_DATE": str(self.start_height),
+            "D_FINISH_DATE": str(self.stop_height),
             "D_RATE": str(int(self.rate)),
             "D_WHITELIST": self.whitelist,
             "D_ASSET_ID": asset_id,
@@ -238,7 +238,7 @@ class ContractDetailsWavesSTO(CommonDetails):
 
     def timesChanged(self, message):
         if 'startTime' in message and message['startTime']:
-            self.start_date = message['startTime']
+            self.start_height = message['startTime']
         if 'endTime' in message and message['endTime']:
-            self.stop_date = message['endTime']
+            self.stop_height = message['endTime']
         self.save()

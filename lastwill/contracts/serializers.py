@@ -1566,8 +1566,8 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsWavesSTO
         fields = (
-            'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
-            'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
+            'asset_id', 'admin_address', 'cold_wallet_address', 'start_height',
+            'stop_height', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
             'max_wei', 'reused_token', 'token_description', 'token_short_name',
             'decimals', 'allow_change_dates', 'total_supply'
         )
@@ -1607,12 +1607,12 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         if 'decimals' in details:
             if details['decimals'] > 8 or details['decimals'] < 0:
                 raise ValidationError
-        details['stop_date'] = datetime.datetime.strptime(
-            details['stop_date'], '%Y-%m-%d %H:%M'
-        )
-        details['start_date'] = datetime.datetime.strptime(
-            details['start_date'], '%Y-%m-%d %H:%M'
-        )
+        if details['stop_height'] <= 0:
+            raise ValidationError
+        if  details['start_height'] <= 0:
+            raise ValidationError
+        if details['stop_height'] < details['start_height']:
+            raise ValidationError
         if 'soft_cap' not in details:
             details['soft_cap'] = 0
         return details
