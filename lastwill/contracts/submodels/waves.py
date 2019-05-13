@@ -221,7 +221,6 @@ class ContractDetailsWavesSTO(CommonDetails):
         self.ride_contract.tx_hash = trx['id']
         self.ride_contract.save()
 
-    @blocking
     @postponable
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
