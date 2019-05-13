@@ -104,10 +104,9 @@ class ContractDetailsWavesSTO(CommonDetails):
     )
 
     def predeploy_validate(self):
-        # last_block = int(pw.height())
-        # if self.start_height < last_block or self.stop_height < last_block:
-        #     raise ValidationError({'result': 1}, code=400)
-        pass
+        last_block = int(pw.height())
+        if self.start_height < last_block or self.stop_height < last_block:
+            raise ValidationError({'result': 1}, code=400)
 
     @classmethod
     def min_cost(cls):
