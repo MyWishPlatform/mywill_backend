@@ -1594,8 +1594,6 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             raise ValidationError
         if int(details['hard_cap']) < int(details['soft_cap']):
             raise ValidationError
-        if int(details['soft_cap']) < 0:
-            raise ValidationError
         if 'admin_address' not in details:
             raise ValidationError
         if int(details['hard_cap']) > 9223372036854775807:
@@ -1615,4 +1613,6 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         details['start_date'] = datetime.datetime.strptime(
             details['start_date'], '%Y-%m-%d %H:%M'
         )
+        if 'soft_cap' not in details:
+            details['soft_cap'] = 0
         return details
