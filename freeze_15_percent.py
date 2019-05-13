@@ -6,6 +6,7 @@ django.setup()
 import base58
 from ethereum import abi
 from threading import Timer
+from subprocess import Popen, PIPE
 
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL

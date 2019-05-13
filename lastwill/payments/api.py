@@ -144,7 +144,7 @@ def get_payment_statistics(start, stop=None):
     for pay in payments:
         print(
             pay.datetime.date(),
-            pay.user.id,
+            pay.user.id, pay.user.email,
             float(pay.original_delta)/NET_DECIMALS[pay.original_currency],
             pay.original_currency,
             'site id', pay.site.id,
