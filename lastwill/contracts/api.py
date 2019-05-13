@@ -921,18 +921,17 @@ def send_authio_info(contract, details, authio_email):
 
 @api_view(http_method_names=['POST'])
 def buy_brand_report(request):
+    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
-    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE'):
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
     if contract.contract_type != 5:
         raise PermissionDenied
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
     details = contract.get_details()
-    if host != MY_WISH_URL:
-        raise PermissionDenied
     cost = 450 * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1

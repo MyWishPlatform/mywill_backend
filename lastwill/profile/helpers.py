@@ -4,6 +4,7 @@ from eth_utils.hexadecimal import encode_hex, decode_hex, add_0x_prefix
 from eth_account.messages import defunct_hash_message
 from rest_framework.exceptions import ValidationError
 from random import choice
+from string import ascii_letters
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -42,10 +43,8 @@ def valid_metamask_message(address, message, signature):
 
 @api_view(http_method_names=['GET'])
 def generate_metamask_message(request):
-    address = request.data['address']
 
-    generated_message = ''.join(choice(address) for ch in address)
-    request.session['metamask_address'] = address
+    generated_message = ''.join(choice(ascii_letters) for ch in range(30))
     request.session['metamask_message'] = generated_message
 
     return Response(generated_message)

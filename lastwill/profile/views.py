@@ -150,8 +150,16 @@ def profile_view(request):
         site_name = site_name[5:]
     site = SubSite.objects.get(site_name=site_name)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
+
+    if request.user.email:
+        user_name = request.user.email
+    elif request.user.first_name or request.user.last_name:
+        user_name = '{} {}'.format(request.user.first_name, request.user.last_name)
+    else:
+        user_name = request.user.username
+
     answer = {
-            'username': request.user.email if request.user.email else '{} {}'.format(request.user.first_name, request.user.last_name),
+            'username': user_name,
             'contracts': Contract.objects.filter(user=request.user).count(),
             'balance': str(user_balance.balance),
             'internal_address': user_balance.eth_address,
