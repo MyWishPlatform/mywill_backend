@@ -116,7 +116,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     addr=NETWORKS[self.contract.network.name]['host']),
                 chain=NETWORKS[self.contract.network.name]['type']
             )
-            
+
         last_block = int(pw.height())
         if self.start_height < last_block or self.stop_height < last_block:
             raise ValidationError({'result': 1}, code=400)
