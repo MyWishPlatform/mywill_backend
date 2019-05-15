@@ -262,7 +262,9 @@ class ContractDetailsWavesSTO(CommonDetails):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
+    @blocking
     @postponable
+    @check_transaction
     def msg_deployed(self, message):
         print('msg_deployed method of the ico contract')
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
