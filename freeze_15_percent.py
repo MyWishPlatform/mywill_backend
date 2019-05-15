@@ -115,6 +115,7 @@ def freeze_tronish():
     result = requests.post(tron_url + '/wallet/triggersmartcontract',
                             data=deploy_params)
     print('transaction created', flush=True)
+    print(result, flush=True)
     trx_info1 = json.loads(result.content.decode())
     trx_info1 = {'transaction': trx_info1['transaction']}
     print('trx info', trx_info1, flush=True)
