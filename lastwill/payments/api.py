@@ -21,6 +21,8 @@ def create_payment(uid, tx, currency, amount, site_id):
         if currency == 'BWISH':
             currency = 'WISH'
             amount = amount * 10 ** 10
+        if currency == 'BBNB':
+            pass
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
