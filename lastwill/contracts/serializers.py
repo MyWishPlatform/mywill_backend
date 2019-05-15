@@ -1594,13 +1594,13 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             raise ValidationError
         if 'admin_address' not in details:
             raise ValidationError
-        if int(details['hard_cap']) > 9223372036854775807:
+        if int(details['hard_cap']) > 922337203685477580:
             raise ValidationError
         if 'total_supply' in details:
-            if int(details['total_supply']) > 9223372036854775807:
+            if int(details['total_supply']) > 922337203685477580:
                 raise ValidationError
         if 'max_wei' in details and 'min_wei' in details:
-            if int(details['min_wei']) > int(details['max_wei']) or int(details['max_wei']) > 9223372036854775807:
+            if int(details['min_wei']) > int(details['max_wei']) or int(details['max_wei']) > 922337203685477580:
                 raise ValidationError
         if 'decimals' in details:
             if details['decimals'] > 8 or details['decimals'] < 0:
