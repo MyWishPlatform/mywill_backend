@@ -223,7 +223,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     asset_id = token.assetId
                 else:
                     raise Exception('token creation error in deploying')
-            except:
+            except KeyError:
                 pw.setOffline()
                 token_trx = contract_address.issueAsset(
                     self.token_short_name,
@@ -243,7 +243,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             txFee=1000000,
             timestamp=0
             )
-        except:
+        except KeyError:
             pw.setOffline()
             trx = contract_address.setScript(
                 self.ride_contract.source_code,
