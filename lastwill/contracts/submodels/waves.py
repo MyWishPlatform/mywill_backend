@@ -275,6 +275,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.ride_contract.address = message['address']
             self.ride_contract.save()
             self.contract.save()
+            take_off_blocking(self.contract.network.name)
             return
 
     def finalized(self, message):
