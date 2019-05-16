@@ -93,15 +93,16 @@ def freeze_eosish(amount):
 def freeze_tronish():
     print('freeze tronish', flush=True)
     print('before encode', flush=True)
-    # params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], amount])
+    params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], 450000000])
     print('after encode', flush=True)
     # print('params', params, flush=True)
-    # freeze_encoded_parameter = binascii.hexlify(params)
-    # print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
+    freeze_encoded_parameter = binascii.hexlify(params)
+    print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
     deploy_params = {
         'contract_address': convert_address_to_hex(TRON_ADDRESS),
         'function_selector': 'transfer(address,uint256)',
-        'parameter': '0000000000000000000000005762bf8b4c6826f082cc75b5d8e4f9263260c90e0000000000000000000000000000000000000000000000343530303030303030',
+        'parameter': freeze_encoded_parameter.decode(),
+        # 'parameter': '0000000000000000000000005762bf8b4c6826f082cc75b5d8e4f9263260c90e000000000000000000000000000000000000000000000000000000001ad27480',
         'fee_limit': 1000000000,
         'call_value': 0,
         'owner_address': convert_address_to_hex(UPDATE_TRON_ADDRESS)
@@ -114,6 +115,7 @@ def freeze_tronish():
     result = requests.post(tron_url + '/wallet/triggersmartcontract',
                             data=deploy_params)
     print('transaction created', flush=True)
+    print(result.content.decode(), flush=True)
     trx_info1 = json.loads(result.content.decode())
     trx_info1 = {'transaction': trx_info1['transaction']}
     print('trx info', trx_info1, flush=True)
