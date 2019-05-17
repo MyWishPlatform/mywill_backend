@@ -233,6 +233,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                 )
                 print('issueAsset trx not broadcasted', token_trx, flush=True)
                 pw.setOnline()
+                raise Exception('token creation error in deploying')
         token_address = self.asset_id if self.reused_token else asset_id
         self.compile(asset_id=token_address)
         # pw.setOnline()
