@@ -18,9 +18,11 @@ def create_payment(uid, tx, currency, amount, site_id):
         return
     print('create payment')
     if SubSite.objects.get(id=site_id).site_name == MY_WISH_URL:
-        if currency == 'WISH-1EF':
+        if currency == 'BWISH':
             currency = 'WISH'
             amount = amount * 10 ** 10
+        if currency == 'BBNB':
+            currency = 'BNB'
         value = amount if currency == 'WISH' else to_wish(
             currency, amount
         )
@@ -144,7 +146,7 @@ def get_payment_statistics(start, stop=None):
     for pay in payments:
         print(
             pay.datetime.date(),
-            pay.user.id,
+            pay.user.id, pay.user.email,
             float(pay.original_delta)/NET_DECIMALS[pay.original_currency],
             pay.original_currency,
             'site id', pay.site.id,

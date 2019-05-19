@@ -79,7 +79,7 @@ def create_swaps_balance(user, eth_address, btc_address, memo_str):
     ).save()
 
 
-def init_profile(user, is_social=False, metamask_address=None, lang='en'):
+def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=False):
     m = hashlib.sha256()
     memo_str1 = generate_memo(m)
     # memo_str2 = generate_memo(m)
@@ -100,7 +100,7 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en'):
     # eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address4 = keys.PublicKey(swaps_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
-    Profile(user=user, is_social=is_social, metamask_address=metamask_address, lang=lang).save()
+    Profile(user=user, is_social=is_social, metamask_address=metamask_address, lang=lang, is_swaps=swaps).save()
     create_wish_balance(user, eth_address1, btc_address1, memo_str1)
     # create_eosish_balance(user, eth_address2, btc_address2, memo_str2)
     # create_tron_balance(user, eth_address3, btc_address3, memo_str3)
@@ -114,7 +114,12 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en'):
 class UserRegisterSerializer(RegisterSerializer):
     def save(self, request):
         user = super().save(request)
-        init_profile(user, lang=request.COOKIES.get('lang', 'en'))
+        host = request.META['HTTP_HOST']
+        if host == SWAPS_URL:
+            swaps = True
+        else:
+            swaps = False
+        init_profile(user, lang=request.COOKIES.get('lang', 'en'), swaps=swaps)
         return user
 
 
