@@ -115,6 +115,7 @@ class GoogleLogin(ProfileAndTotpSocialLoginView):
 class MetamaskLoginSerializer(SocialLoginSerializer):
     address = serializers.CharField(required=False, allow_blank=True)
     signed_msg = serializers.CharField(required=False, allow_blank=True)
+    totp = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, attrs):
         address = attrs['address']
@@ -150,7 +151,14 @@ class MetamaskLogin(SocialLoginView):
                          lang=self.serializer.context['request'].COOKIES.get('lang', 'en'))
             self.user.save()
             print('user_created', flush=True)
-
+        if self.user.profile.use_totp:
+            totp = self.serializer.validated_data.get('totp', None)
+            if not totp:
+                logout(self.request)
+                raise PermissionDenied(1032)
+            if not valid_totp(self.user, totp):
+                logout(self.request)
+                raise PermissionDenied(1033)
         return super().login()
 
 
