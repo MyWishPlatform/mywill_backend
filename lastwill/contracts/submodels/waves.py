@@ -237,6 +237,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     )
                     print('issueAsset trx not broadcasted', token_trx, flush=True)
                     pw.setOnline()
+                    time.sleep(5)
                     if attempt < issue_attempts - 1:
                         continue
                     else:
