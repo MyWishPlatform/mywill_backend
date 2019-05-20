@@ -210,30 +210,38 @@ class ContractDetailsWavesSTO(CommonDetails):
         time.sleep(8)
         asset_id = ''
         if not self.reused_token:
-            try:
-                token = contract_address.issueAsset(
-                    self.token_short_name,
-                    self.token_description,
-                    int(self.total_supply),
-                    int(self.decimals)
-                )
-                time.sleep(80)
-                print('token', token, flush=True)
-                if token.status() == 'Issued':
-                    asset_id = token.assetId
-                else:
-                    raise Exception('token creation error in deploying')
-            except KeyError:
-                pw.setOffline()
-                token_trx = contract_address.issueAsset(
-                    self.token_short_name,
-                    self.token_description,
-                    int(self.total_supply),
-                    int(self.decimals)
-                )
-                print('issueAsset trx not broadcasted', token_trx, flush=True)
-                pw.setOnline()
-                raise Exception('token creation error in deploying')
+            issue_attempts = 5
+            for attempt in range(issue_attempts):
+                print('token creating attempt', attempt, flush=True)
+                try:
+                    token = contract_address.issueAsset(
+                        self.token_short_name,
+                        self.token_description,
+                        int(self.total_supply),
+                        int(self.decimals)
+                    )
+                    time.sleep(80)
+                    print('token', token, flush=True)
+                    if token.status() == 'Issued':
+                        asset_id = token.assetId
+                    else:
+                        raise Exception('token creation error in deploying')
+                except KeyError:
+                    print('token creation attempt {attempt} failed, retry'.format(attempt=attempt))
+                    pw.setOffline()
+                    token_trx = contract_address.issueAsset(
+                        self.token_short_name,
+                        self.token_description,
+                        int(self.total_supply),
+                        int(self.decimals)
+                    )
+                    print('issueAsset trx not broadcasted', token_trx, flush=True)
+                    pw.setOnline()
+                    if attempt < issue_attempts - 1:
+                        continue
+                    else:
+                        raise Exception('token creation error in deploying')
+                break
         token_address = self.asset_id if self.reused_token else asset_id
         self.compile(asset_id=token_address)
         # pw.setOnline()
