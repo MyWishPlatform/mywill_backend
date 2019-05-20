@@ -82,7 +82,7 @@ class ContractDetailsWavesSTO(CommonDetails):
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
     reused_token = models.BooleanField(default=False)
-    token_description = models.CharField(max_length=512, null=True, default=None)
+    token_description = models.CharField(max_length=1000, null=True, default=None)
     token_short_name = models.CharField(max_length=64, null=True, default=None)
     decimals = models.IntegerField(null=True, default=None)
     total_supply = models.DecimalField(
