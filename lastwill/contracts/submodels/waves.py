@@ -210,7 +210,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         time.sleep(8)
         asset_id = ''
         if not self.reused_token:
-            issue_attempts = 5
+            issue_attempts = 10
             for attempt in range(issue_attempts):
                 print('token creating attempt', attempt, flush=True)
                 try:
