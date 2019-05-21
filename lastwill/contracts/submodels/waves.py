@@ -226,7 +226,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     asset_attempts = 15
                     for asset_attempt in range(asset_attempts):
                         if token.status() == 'Issued':
-                            print('Asset {assetId} issued')
+                            print('Asset {assetId} issued'.format(assetId=asset_id))
                             break
                         else:
                             print('Asset {assetId} status is {asset_status}, waiting to issue, reattempt {attempt}'
