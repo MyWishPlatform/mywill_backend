@@ -212,8 +212,8 @@ class ContractDetailsWavesSTO(CommonDetails):
         asset_id = ''
         if not self.reused_token:
             issue_attempts = 10
-            for attempt in range(issue_attempts):
-                print('token creating attempt', attempt, flush=True)
+            for issue_attempt in range(issue_attempts):
+                print('token creating attempt', issue_attempt, flush=True)
                 try:
                     token = contract_address.issueAsset(
                         self.token_short_name,
@@ -221,12 +221,23 @@ class ContractDetailsWavesSTO(CommonDetails):
                         int(self.total_supply),
                         int(self.decimals)
                     )
-                    time.sleep(80)
                     print('token', token, flush=True)
-                    if token.status() == 'Issued':
-                        asset_id = token.assetId
-                    else:
-                        raise Exception('token creation error in deploying')
+                    asset_id = token.assetId
+                    asset_attempts = 15
+                    for asset_attempt in range(asset_attempts):
+                        if token.status() == 'Issued':
+                            print('Asset {assetId} issued')
+                            break
+                        else:
+                            print('Asset {assetId} status is {asset_status}, waiting to issue, reattempt {attempt}'
+                                  .format(
+                                      assetId=asset_id,
+                                      asset_status=token.status(),
+                                      attempt=asset_attempt,
+                                      flush=True
+                                  ))
+                            time.sleep(10)
+                            continue
                 except KeyError:
                     print('token creation attempt {attempt} failed, retry'.format(attempt=attempt))
                     pw.setOffline()
