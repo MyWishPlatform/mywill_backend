@@ -200,6 +200,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     addr=NETWORKS[self.contract.network.name]['host']),
                 chain=NETWORKS[self.contract.network.name]['type']
             )
+        pw.setOnline()
 
         deploy_address = pw.Address(privateKey=NETWORKS[self.contract.network.name]['private_key'])
         pubKey, privKey, address = create_waves_privkey()
