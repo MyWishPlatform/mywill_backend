@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
@@ -88,13 +88,15 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=[20, 21])
+            result = result.exclude(contract_type__in=[20, 21, 22])
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
         if host == SWAPS_URL:
             result = result.filter(contract_type__in=[20, 21])
+        if host == WAVES_URL:
+            result = result.filter(contract_type=22)
         if self.request.user.is_staff:
             return result
         return result.filter(user=self.request.user)
