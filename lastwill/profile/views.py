@@ -148,6 +148,8 @@ def profile_view(request):
     if site_name.startswith('local'):
         print('cut local')
         site_name = site_name[5:]
+    if site_name.startswith('trondev'):
+        site_name = site_name.replace('trondev', 'dev')
     site = SubSite.objects.get(site_name=site_name)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
 
