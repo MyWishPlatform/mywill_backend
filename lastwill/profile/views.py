@@ -34,7 +34,7 @@ from allauth.account.models import EmailAddress, EmailConfirmation, EmailConfirm
 from exchange_API import to_wish, convert
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL
+from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 from tron_wif.hex2wif import hex2tronwif
 
@@ -150,6 +150,8 @@ def profile_view(request):
         site_name = site_name[5:]
     if site_name.startswith('trondev'):
         site_name = site_name.replace('trondev', 'dev')
+    if site_name == WAVES_URL:
+        site_name = MY_WISH_URL
     site = SubSite.objects.get(site_name=site_name)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
 
