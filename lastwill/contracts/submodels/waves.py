@@ -313,7 +313,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     waves_sto_subject,
                     waves_sto_text.format(
                         link1=network_asset.format(
-                            address=self.asset_id,
+                            asset=self.asset_id,
                         ),
                         link2=network_link.format(
                             address=self.ride_contract.address
