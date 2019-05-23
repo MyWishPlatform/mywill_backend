@@ -16,6 +16,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS
+from email_messages import waves_sto_subject, waves_sto_text
 
 
 def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
@@ -304,6 +305,24 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.ride_contract.save()
             self.contract.save()
             take_off_blocking(self.contract.network.name)
+            if self.contract.user.email:
+                network_link = NETWORKS[self.contract.network.name]['link_address']
+                network_asset = NETWORKS[self.contract.network.name]['link_asset']
+                network_name = MAIL_NETWORK[self.contract.network.name]
+                send_mail(
+                    waves_sto_subject,
+                    waves_sto_text.format(
+                        link1=network_asset.format(
+                            address=self.eth_contract_token.address,
+                        ),
+                        link2=network_link.format(
+                            address=self.eth_contract_crowdsale.address
+                        ),
+                        network_name=network_name
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
+                )
             return
 
     def finalized(self, message):

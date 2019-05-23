@@ -229,3 +229,16 @@ contract's link {link}
 
 Best wishes,
 Swaps Team."""
+
+
+waves_sto_subject = """Your contract is ready"""
+waves_sto_text = """Hello,
+
+We are happy to inform you that your Waves STO smart account was successfully created and deployed to {network_name} network.
+Asset:  {link1}
+STO contract: {link2}
+
+Please contact support@mywish.io if you have any questions.
+
+Best wishes,
+MyWish Team."""
