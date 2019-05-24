@@ -154,10 +154,10 @@ class MetamaskLogin(SocialLoginView):
         if self.user.profile.use_totp:
             totp = self.serializer.validated_data.get('totp', None)
             if not totp:
-                logout(self.request)
+                #logout(self.request)
                 raise PermissionDenied(1032)
             if not valid_totp(self.user, totp):
-                logout(self.request)
+                l#ogout(self.request)
                 raise PermissionDenied(1033)
         return super().login()
 
