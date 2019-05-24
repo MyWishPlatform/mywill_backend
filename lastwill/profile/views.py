@@ -34,7 +34,7 @@ from allauth.account.models import EmailAddress, EmailConfirmation, EmailConfirm
 from exchange_API import to_wish, convert
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import TRON_URL, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
+from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 from tron_wif.hex2wif import hex2tronwif
 
@@ -174,7 +174,7 @@ def profile_view(request):
             'lang': request.user.profile.lang,
             'memo': user_balance.memo,
             'eos_address': 'mywishcoming',
-            'bnb_address': 'tbnb1pxwzr62lhdn27mpkdauuf7r4f56mkgmn2zznkc',
+            'bnb_address': BINANCE_PAYMENT_ADDRESS,
             'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else '',
             'usdt_balance': str(int(int(user_balance.balance) / 10 ** 18 * convert('WISH', 'USDT')['USDT'] * 10 ** 6))
     }
