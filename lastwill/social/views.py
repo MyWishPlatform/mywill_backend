@@ -157,7 +157,7 @@ class MetamaskLogin(SocialLoginView):
                 #logout(self.request)
                 raise PermissionDenied(1032)
             if not valid_totp(self.user, totp):
-                l#ogout(self.request)
+                #logout(self.request)
                 raise PermissionDenied(1033)
         return super().login()
 
