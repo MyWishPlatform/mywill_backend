@@ -176,6 +176,11 @@ class ContractDetailsSWAPS2(CommonDetails):
     unique_link = models.CharField(max_length=50)
     memo_contract = models.CharField(max_length=70)
 
+    broker_fee = models.BooleanField(default=False)
+    broker_fee_address = models.CharField(max_length=50, null=True, default=None)
+    broker_fee_base = models.FloatField(null=True, default=None)
+    broker_fee_quote = models.FloatField(null=True, default=None)
+
     eth_contract = models.ForeignKey(
         EthContract,
         null=True,
