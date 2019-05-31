@@ -160,8 +160,6 @@ Thank you for using our service.
 
 Your contract is ready for the report preparation. 
 
-Please fill out the request form - https://goo.gl/BnMeSi
-
 If you have any questions - please mail to support@mywish.io. We will contact you as soon as possible.
 
 Thank you,
