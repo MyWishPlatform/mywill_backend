@@ -223,7 +223,7 @@ def get_freeze_wish_abi():
 ]
 
 def create_eos_json(
-        crowdsale_address, public_key, bytecode, abi, token_address,
+        crowdsale_address, public_key, bytecode, abi, token_address, deployer_address,
         max_supply, token_short_name, is_transferable_at_once, init_data
 ):
     return {"actions": [
@@ -278,7 +278,7 @@ def create_eos_json(
                         "account": token_address,
                         "name": "create" if is_transferable_at_once else "createlocked",
                         "authorization": [{
-                            "actor": token_address,
+                            "actor": deployer_address,
                             "permission": "active"
                         }],
                         "data": {

@@ -503,7 +503,7 @@ class ContractDetailsEOSICO(CommonDetails):
         actions = create_eos_json(
             self.crowdsale_address, our_public_key,
             self.eos_contract_crowdsale.bytecode,
-            abi, token_address, max_supply, self.token_short_name,
+            abi, token_address, acc_name, max_supply, self.token_short_name,
             self.is_transferable_at_once, init_data
         )
 
