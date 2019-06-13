@@ -493,12 +493,14 @@ class ContractDetailsEOSICO(CommonDetails):
             contract_addr = 'dubravaleriy'
         else:
             contract_addr = 'mywishtest15'
+            acc_name = token_address
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
             contract_addr, 'init', str(dates)
         ]
         print('command:', command, flush=True)
         init_data = implement_cleos_command(command)
+
 
         actions = create_eos_json(
             self.crowdsale_address, our_public_key,
