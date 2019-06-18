@@ -27,9 +27,12 @@ def convert(fsym, tsyms):
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
-        requests.get('https://api.chaince.com/tickers/eosisheos/',
-                     headers={'accept-version': 'v1'}).json()['price']
+        requests.get('https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos')
+            .json()['eosish']['eos']
         )
+        #requests.get('https://api.chaince.com/tickers/eosisheos/',
+        #             headers={'accept-version': 'v1'}).json()['price']
+        #)
         print('eosish factor', eosish_factor, flush=True)
         if fsym == 'EOSISH':
             fsym = 'EOS'
