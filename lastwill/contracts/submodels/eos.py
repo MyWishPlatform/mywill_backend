@@ -209,12 +209,16 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        #eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
-        #cost = eos_cost * convert('EOS', 'ETH')['ETH']
-        #print('convert eos cost', cost, flush=True)
-        #return round(cost, 2) * NET_DECIMALS['USDT']
-        eos_cost = 20 * NET_DECIMALS['USDT']
-        return eos_cost
+        eos_cost_base = 20 * NET_DECIMALS['USDT']
+        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
+        cost = eos_cost * convert('EOS', 'ETH')['ETH']
+        print('convert eos cost', cost, flush=True)
+        converted_cost = round(cost, 2) * NET_DECIMALS['USDT']
+        if converted_cost < eos_cost_base:
+            final_cost = eos_cost_base
+        else:
+            final_cost = converted_cost
+        return final_cost
 
     def get_arguments(self, eth_contract_attr_name):
         return []
