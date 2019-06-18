@@ -209,10 +209,12 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
-        cost = eos_cost * convert('EOS', 'ETH')['ETH']
-        print('convert eos cost', cost, flush=True)
-        return round(cost, 2) * NET_DECIMALS['USDT']
+        #eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
+        #cost = eos_cost * convert('EOS', 'ETH')['ETH']
+        #print('convert eos cost', cost, flush=True)
+        #return round(cost, 2) * NET_DECIMALS['USDT']
+        eos_cost = 20 * NET_DECIMALS['USDT']
+        return eos_cost
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -596,10 +598,8 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         eos_cost = ContractDetailsEOSAirdrop.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
-        #usdt_cost = eos_cost * 5
-        #return round(usdt_cost, 2) * NET_DECIMALS['USDT']
-        usdt_cost = 20
-        return usdt_cost * NET_DECIMALS['USDT']
+        usdt_cost = eos_cost * 5
+        return round(usdt_cost, 2) * NET_DECIMALS['USDT']
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
