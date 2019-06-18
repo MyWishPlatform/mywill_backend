@@ -44,7 +44,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(245 * NET_DECIMALS['USDT'])
+        return int(295 * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
@@ -110,7 +110,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
-        command = [ 
+        command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
             our_public_key, '--stake-net', '10' + ' EOS',

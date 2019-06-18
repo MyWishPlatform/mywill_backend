@@ -84,7 +84,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(95 * NET_DECIMALS['USDT'])
+        result = int(145 * NET_DECIMALS['USDT'])
         return result
 
     @classmethod

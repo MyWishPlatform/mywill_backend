@@ -88,7 +88,7 @@ class ContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(170 * NET_DECIMALS['USDT'])
+        return int(245 * NET_DECIMALS['USDT'])
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -338,9 +338,9 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(95 * NET_DECIMALS['USDT'])
+        result = int(145 * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(95 + 450 * NET_DECIMALS['USDT'])
+            result = int(145 + 450 * NET_DECIMALS['USDT'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
