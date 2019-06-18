@@ -108,7 +108,7 @@ URL_STATS_CURRENCY = {
     'BTC': URL_STATS_CURRENCY_BODY + "bitcoin/",
     'EOS': URL_STATS_CURRENCY_BODY + "eos/",
     'ETH': URL_STATS_CURRENCY_BODY + "ethereum/",
-    'EOSISH': "https://api.chaince.com/tickers/eosisheos/",
+    'EOSISH': "https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos",
 }
 
 URL_STATS_ETH_QUERY = 'api?module=account&action=balance&address='

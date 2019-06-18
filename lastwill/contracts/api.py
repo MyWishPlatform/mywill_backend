@@ -268,8 +268,7 @@ def get_currency_statistics():
     eos_info = json.loads(requests.get(URL_STATS_CURRENCY['EOS']).content.decode())[0]
     eth_info = json.loads(requests.get(URL_STATS_CURRENCY['ETH']).content.decode())[0]
     eosish_info = float(
-        requests.get(URL_STATS_CURRENCY['EOSISH'],
-                     headers={'accept-version': 'v1'}).json()['price']
+        requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos']
         )
     answer = {
         'wish_price_usd': round(
