@@ -7,3 +7,12 @@ class Tokens(models.Model):
     token_short_name = models.CharField(max_length=64)
     decimals = models.IntegerField()
     image_link = models.CharField(max_length=512)
+
+
+class TokensCoinMarketCap(models.Model):
+    token_cmc_id = models.IntegerField()
+    token_name = models.CharField(max_length=512)
+    token_short_name = models.CharField(max_length=64)
+    token_platform = models.CharField(max_length=64)
+    token_address = models.CharField(max_length=64)
+    image_link = models.CharField(max_length=512)
