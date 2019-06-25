@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from lastwill.swaps_tokentable.models import Tokens
+from lastwill.swaps_tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK
 
@@ -100,3 +100,22 @@ def get_standarts_tokens(request):
             'image_link': t.image_link
         })
     return Response(result)
+
+
+@api_view()
+def get_all_coinmarketcap_tokens(request):
+    result = []
+    token_list = TokensCoinMarketCap.objects.all()
+
+    for t in token_list:
+        result.append({
+            'cmc_id': t.token_cmc_id,
+            'token_name': t.token_name,
+            'token_short_name': t.token_short_name,
+            'platform': t.token_platform,
+            'address': t.token_address,
+            'image_link': t.image_link
+        })
+    return Response(result)
+
+

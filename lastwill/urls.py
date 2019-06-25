@@ -53,7 +53,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens
+from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens
 from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
@@ -146,6 +146,7 @@ urlpatterns = [
     url(r'^api/get_tronish_balance/$', get_tronish_balance),
     url(r'^api/get_all_tokens/$', get_all_tokens),
     url(r'^api/get_standarts_tokens/$', get_standarts_tokens),
+    url(r'^api/get_coinmarketcap_tokens/$', get_all_coinmarketcap_tokens),
     url(r'^api/confirm_swaps_info/$', confirm_swaps_info),
     url(r'^api/get_contract_for_unique_link/$', get_contract_for_unique_link),
     url(r'^api/get_public_contracts/$', get_public_contracts),
