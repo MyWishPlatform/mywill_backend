@@ -1168,3 +1168,8 @@ def create_contract_swaps_backend(request):
 
     backend_contract.save()
     backend_contract_details.save()
+
+    saved_details = backend_contract.__dict__
+    saved_details['contract_details'] = backend_contract_details.__dict__
+
+    return Response(saved_details)
