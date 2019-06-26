@@ -277,7 +277,8 @@ class ContractSerializer(serializers.ModelSerializer):
             18: ContractDetailsTRONLostkeySerializer,
             19: ContractDetailsLostKeyTokensSerializer,
             20: ContractDetailsSWAPSSerializer,
-            21: ContractDetailsSWAPS2Serializer
+            21: ContractDetailsSWAPS2Serializer,
+            23: ContractDetailsSWAPS3Serializer
         }[contract_type]
 
 
