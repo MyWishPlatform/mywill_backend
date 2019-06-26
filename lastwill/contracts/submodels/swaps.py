@@ -331,5 +331,5 @@ class OrderBookSwaps(models.Model):
     quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     stop_date = models.DateTimeField()
     public = models.BooleanField(default=True)
-    owner_address = models.CharField(max_length=50, null=True, default=None,
+    owner_address = models.CharField(max_length=50, null=True, default=None)
     name = models.CharField(max_length=512, null=True)
