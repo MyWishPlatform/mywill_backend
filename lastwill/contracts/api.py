@@ -23,7 +23,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
-from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS3
+from lastwill.contracts.submodels.swaps import OrderBookSwaps
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1148,16 +1148,12 @@ def create_contract_swaps_backend(request):
     contract_details = contract_params['contract_details']
 
     contract_name = contract_params['name'] if 'name' in contract_params else ""
-    backend_contract = Contract(
+    stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
+    backend_contract = OrderBookSwaps(
             contract_type=23,
             network=contract_params['network'],
             name=contract_name,
-            state='ACTIVE'
-    )
-
-    stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
-
-    backend_contract_details = ContractDetailsSWAPS3(
+            state='ACTIVE',
             base_address=contract_details['base_address'],
             base_limit=contract_details['base_limit'],
             quote_address=contract_details['quote_address'],
@@ -1167,9 +1163,6 @@ def create_contract_swaps_backend(request):
     )
 
     backend_contract.save()
-    backend_contract_details.save()
-
     saved_details = backend_contract.__dict__
-    saved_details['contract_details'] = backend_contract_details.__dict__
 
     return Response(saved_details)

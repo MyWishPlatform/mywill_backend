@@ -322,3 +322,13 @@ class ContractDetailsSWAPS3(CommonDetails):
             return 0
         result = int(0.5 * NET_DECIMALS['ETH'])
         return result
+
+
+class OrderBookSwaps(models.Model):
+    base_address = models.CharField(max_length=50)
+    base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    quote_address = models.CharField(max_length=50)
+    quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    stop_date = models.DateTimeField()
+    public = models.BooleanField(default=True)
+    owner_address = models.CharField(max_length=50, null=True, default=None)
