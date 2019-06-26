@@ -1161,6 +1161,7 @@ def create_contract_swaps_backend(request):
 
     backend_contract.save()
     saved_details = {
+        'id': backend_contract.id,
         'name': backend_contract.name,
         'base_address': backend_contract.base_address,
         'base_limit': backend_contract.base_limit,
