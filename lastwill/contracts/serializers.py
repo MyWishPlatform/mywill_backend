@@ -135,7 +135,6 @@ class ContractSerializer(serializers.ModelSerializer):
             contract_type
         )(context=self.context)
         contract_details = validated_data.pop('contract_details')
-        print('validated data in create', contract_details, flush=True)
         details_serializer.validate(contract_details)
         validated_data['cost'] = Contract.get_details_model(
             contract_type
@@ -182,8 +181,6 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract):
         res = super().to_representation(contract)
-        print('contract:', contract, flush=True)
-        print('contract_det1:', contract.get_details(), flush=True)
         res['contract_details'] = self.get_details_serializer(
             contract.contract_type
         )(context=self.context).to_representation(contract.get_details())
@@ -280,8 +277,7 @@ class ContractSerializer(serializers.ModelSerializer):
             18: ContractDetailsTRONLostkeySerializer,
             19: ContractDetailsLostKeyTokensSerializer,
             20: ContractDetailsSWAPSSerializer,
-            21: ContractDetailsSWAPS2Serializer,
-            23: ContractDetailsSWAPS3Serializer
+            21: ContractDetailsSWAPS2Serializer
         }[contract_type]
 
 
@@ -1563,65 +1559,4 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
         details['quote_limit'] = int(details['quote_limit'])
         if details['base_address'].lower() == details['quote_address'].lower():
             raise ValidationError({'result': 1}, code=400)
-        return details
-
-
-class ContractDetailsSWAPS3Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContractDetailsSWAPS2
-        fields = (
-            'base_address', 'quote_address', 'stop_date', 'base_limit',
-            'quote_limit', 'public', 'owner_address', 'unique_link', 'min_quote_wei',
-            'memo_contract', 'whitelist', 'whitelist_address', 'min_base_wei',
-            'broker_fee', 'broker_fee_address', 'broker_fee_base', 'broker_fee_quote'
-        )
-        extra_kwargs = {
-            'unique_link': {'read_only': True},
-            'memo_contract': {'read_only': True}
-        }
-
-    def to_representation(self, contract_details):
-        now = timezone.now()
-        print('contract_det2', contract_details, flush=True)
-        print('contract2:', contract_details.contract, flush=True)
-        if contract_details.contract.state == 'ACTIVE' and contract_details.stop_date < now:
-            contract_details.contract.state = 'EXPIRED'
-            contract_details.contract.save()
-        res = super().to_representation(contract_details)
-        if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
-        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-
-        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
-            res['eth_contract']['source_code'] = ''
-        return res
-
-    def create(self, contract, contract_details):
-        contract_details['memo_contract'] = '0x' + ''.join(
-            random.choice('abcdef' + string.digits) for _ in
-            range(64)
-        )
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        return super().create(kwargs)
-
-    def update(self, contract, details, contract_details):
-        kwargs = contract_details.copy()
-        kwargs['contract'] = contract
-        return super().update(details, kwargs)
-
-    def validate(self, details):
-        #if 'owner_address' not in details:
-        #    raise ValidationError
-        #if 'stop_date' not in details:
-        #    raise ValidationError
-        #check.is_address(details['owner_address'])
-        #details['owner_address'] = details['owner_address'].lower()
-        #details['stop_date'] = datetime.datetime.strptime(
-        #    details['stop_date'], '%Y-%m-%d %H:%M'
-        #)
-        #details['base_limit'] = int(details['base_limit'])
-        #details['quote_limit'] = int(details['quote_limit'])
-        #if details['base_address'].lower() == details['quote_address'].lower():
-        #    raise ValidationError({'result': 1}, code=400)
         return details
