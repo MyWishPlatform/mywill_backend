@@ -28,6 +28,21 @@ def sendEMail(sub, text, mail):
     server.quit()
 
 
+def get_swap_from_orderbook(swap_id):
+    backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
+    saved_details = {
+        'id': backend_contract.id,
+        'name': backend_contract.name,
+        'base_address': backend_contract.base_address,
+        'base_limit': backend_contract.base_limit,
+        'quote_address': backend_contract.quote_address,
+        'quote_limit': backend_contract.quote_limit,
+        'owner_address': backend_contract.owner_address,
+        'stop_date': backend_contract.stop_date
+    }
+    return saved_details
+
+
 class InvestAddresses(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)

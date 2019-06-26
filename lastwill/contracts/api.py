@@ -23,7 +23,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
-from lastwill.contracts.submodels.swaps import OrderBookSwaps
+from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1157,15 +1157,19 @@ def create_contract_swaps_backend(request):
     )
 
     backend_contract.save()
-    saved_details = {
-        'id': backend_contract.id,
-        'name': backend_contract.name,
-        'base_address': backend_contract.base_address,
-        'base_limit': backend_contract.base_limit,
-        'quote_address': backend_contract.quote_address,
-        'quote_limit': backend_contract.quote_limit,
-        'owner_address': backend_contract.owner_address,
-        'stop_date': backend_contract.stop_date
-    }
+    details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
-    return Response(saved_details)
+    return Response(details)
+
+
+@api_view(http_method_names=['GET'])
+def show_contract_swaps_backend(request):
+    if 'id' in request.data:
+        swap_backend_id = request.data['id']
+    else:
+        raise ParseError
+
+    details = get_swap_from_orderbook(swap_id=swap_backend_id)
+
+    return Response(details)
+
