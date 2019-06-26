@@ -1160,6 +1160,14 @@ def create_contract_swaps_backend(request):
     )
 
     backend_contract.save()
-    saved_details = backend_contract.__dict__
+    saved_details = {
+        'name': backend_contract.name,
+        'base_address': backend_contract.base_address,
+        'base_limit': backend_contract.base_limit,
+        'quote_address': backend_contract.quote_address,
+        'quote_limit': backend_contract.quote_limit,
+        'owner_address': backend_contract.owner_address,
+        'stop_date': backend_contract.stop_date
+    }
 
     return Response(saved_details)
