@@ -234,7 +234,7 @@ class ContractDetailsSWAPS2(CommonDetails):
 
 
 @contract_details('SWAPS contract')
-class ContractDetailsSWAPS2(CommonDetails):
+class ContractDetailsSWAPS3(CommonDetails):
     base_address = models.CharField(max_length=50)
     base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     quote_address = models.CharField(max_length=50)
