@@ -110,6 +110,7 @@ def get_all_coinmarketcap_tokens(request):
     for t in token_list:
         result.append({
             'cmc_id': t.token_cmc_id,
+            'mywish_id': t.id,
             'token_name': t.token_name,
             'token_short_name': t.token_short_name,
             'platform': t.token_platform,
