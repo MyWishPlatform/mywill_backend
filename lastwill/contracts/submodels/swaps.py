@@ -232,6 +232,19 @@ class ContractDetailsSWAPS2(CommonDetails):
         self.contract.state = 'CANCELLED'
         self.contract.save()
 
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(0.5 * NET_DECIMALS['ETH'])
+        return result
+
 
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS3(CommonDetails):
@@ -296,3 +309,16 @@ class ContractDetailsSWAPS3(CommonDetails):
     def cancelled(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='ETHEREUM_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(0.5 * NET_DECIMALS['ETH'])
+        return result
