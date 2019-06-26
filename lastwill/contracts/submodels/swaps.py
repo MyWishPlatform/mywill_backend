@@ -299,8 +299,8 @@ class ContractDetailsSWAPS3(CommonDetails):
         #     )
         return
 
-    def save(self):
-        self.deploy()
+    #def save(self):
+    #    self.deploy()
 
     def finalized(self, message):
         self.contract.state = 'DONE'
