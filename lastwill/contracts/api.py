@@ -1142,12 +1142,9 @@ def send_message_author_swap(request):
 
 @api_view(http_method_names=['POST'])
 def create_contract_swaps_backend(request):
-    contract_params = request.data
-    if 'contract_details' not in contract_params:
-        raise ParseError
-    contract_details = contract_params['contract_details']
+    contract_details = request.data
 
-    contract_name = contract_params['name'] if 'name' in contract_params else ""
+    contract_name = contract_details['name'] if 'name' in contract_details else ""
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     backend_contract = OrderBookSwaps(
             name=contract_name,
