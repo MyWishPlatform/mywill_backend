@@ -88,13 +88,13 @@ class ContractViewSet(ModelViewSet):
         host = self.request.META['HTTP_HOST']
         print('host is', host, flush=True)
         if host == MY_WISH_URL:
-            result = result.exclude(contract_type__in=[20, 21, 22])
+            result = result.exclude(contract_type__in=[20, 21, 22, 23])
         if host == EOSISH_URL:
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
         if host == SWAPS_URL:
-            result = result.filter(contract_type__in=[20, 21])
+            result = result.filter(contract_type__in=[20, 21, 23])
         if host == WAVES_URL:
             result = result.filter(contract_type=22)
         if self.request.user.is_staff:
@@ -1093,7 +1093,7 @@ def get_contract_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_public_contracts(request):
-    contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    contracts = Contract.objects.filter(contract_type__in=[20, 21, 23], network__name='ETHEREUM_MAINNET', state='ACTIVE')
     result = []
     for contract in contracts:
         d = contract.get_details()

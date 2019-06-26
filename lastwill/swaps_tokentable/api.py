@@ -120,3 +120,5 @@ def get_all_coinmarketcap_tokens(request):
     return Response(result)
 
 
+def get_cmc_token_by_id(token_mywish_id):
+    return TokensCoinMarketCap.objects.filter(id=token_mywish_id).first()
