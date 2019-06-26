@@ -11,7 +11,7 @@ from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ParseError
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
@@ -23,6 +23,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
+from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS3
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1137,3 +1138,33 @@ def send_message_author_swap(request):
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def create_contract_swaps_backend(request):
+    contract_params = request.data
+    if 'contract_details' not in contract_params:
+        raise ParseError
+    contract_details = contract_params['contract_details']
+
+    contract_name = contract_params['name'] if 'name' in contract_params else ""
+    backend_contract = Contract(
+            contract_type=23,
+            network=contract_params['network'],
+            name=contract_name,
+            state='ACTIVE'
+    )
+
+    stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
+
+    backend_contract_details = ContractDetailsSWAPS3(
+            base_address=contract_details['base_address'],
+            base_limit=contract_details['base_limit'],
+            quote_address=contract_details['quote_address'],
+            quote_limit=contract_details['quote_limit'],
+            owner_address=contract_details['owner_address'],
+            stop_date=stop_date_conv
+    )
+
+    backend_contract.save()
+    backend_contract_details.save()
