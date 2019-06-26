@@ -131,7 +131,7 @@ class ContractSerializer(serializers.ModelSerializer):
             validated_data['state'] = 'CREATED'
 
         contract_type = validated_data['contract_type']
-        print(validated_data)
+        print(validated_data, flush=True)
         details_serializer = self.get_details_serializer(
             contract_type
         )(context=self.context)
@@ -1611,17 +1611,17 @@ class ContractDetailsSWAPS3Serializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        if 'owner_address' not in details:
-            raise ValidationError
-        if 'stop_date' not in details:
-            raise ValidationError
+        #if 'owner_address' not in details:
+        #    raise ValidationError
+        #if 'stop_date' not in details:
+        #    raise ValidationError
         #check.is_address(details['owner_address'])
         #details['owner_address'] = details['owner_address'].lower()
-        details['stop_date'] = datetime.datetime.strptime(
-            details['stop_date'], '%Y-%m-%d %H:%M'
-        )
-        details['base_limit'] = int(details['base_limit'])
-        details['quote_limit'] = int(details['quote_limit'])
-        if details['base_address'].lower() == details['quote_address'].lower():
-            raise ValidationError({'result': 1}, code=400)
+        #details['stop_date'] = datetime.datetime.strptime(
+        #    details['stop_date'], '%Y-%m-%d %H:%M'
+        #)
+        #details['base_limit'] = int(details['base_limit'])
+        #details['quote_limit'] = int(details['quote_limit'])
+        #if details['base_address'].lower() == details['quote_address'].lower():
+        #    raise ValidationError({'result': 1}, code=400)
         return details
