@@ -131,11 +131,11 @@ class ContractSerializer(serializers.ModelSerializer):
             validated_data['state'] = 'CREATED'
 
         contract_type = validated_data['contract_type']
-        print(validated_data, flush=True)
         details_serializer = self.get_details_serializer(
             contract_type
         )(context=self.context)
         contract_details = validated_data.pop('contract_details')
+        print('validated data in create', contract_details, flush=True)
         details_serializer.validate(contract_details)
         validated_data['cost'] = Contract.get_details_model(
             contract_type
