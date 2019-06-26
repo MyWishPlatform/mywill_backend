@@ -1150,10 +1150,7 @@ def create_contract_swaps_backend(request):
     contract_name = contract_params['name'] if 'name' in contract_params else ""
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     backend_contract = OrderBookSwaps(
-            contract_type=23,
-            network=contract_params['network'],
             name=contract_name,
-            state='ACTIVE',
             base_address=contract_details['base_address'],
             base_limit=contract_details['base_limit'],
             quote_address=contract_details['quote_address'],
