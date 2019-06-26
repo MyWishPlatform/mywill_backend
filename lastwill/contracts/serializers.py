@@ -181,6 +181,8 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract):
         res = super().to_representation(contract)
+        print('contract:', contract, flush=True)
+        print('contract_det1:', contract.get_details(), flush=True)
         res['contract_details'] = self.get_details_serializer(
             contract.contract_type
         )(context=self.context).to_representation(contract.get_details())
@@ -1579,6 +1581,8 @@ class ContractDetailsSWAPS3Serializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         now = timezone.now()
+        print('contract_det2', contract_details, flush=True)
+        print('contract2:', contract_details.contract, flush=True)
         if contract_details.contract.state == 'ACTIVE' and contract_details.stop_date < now:
             contract_details.contract.state = 'EXPIRED'
             contract_details.contract.save()
