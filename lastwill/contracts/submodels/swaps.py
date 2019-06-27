@@ -264,10 +264,10 @@ class ContractDetailsSWAPS2(CommonDetails):
 class OrderBookSwaps(models.Model):
     base_address = models.CharField(max_length=50, null=True, default=None)
     base_limit = models.CharField(max_length=512, null=True, default=None)
-    base_coin_id = models.IntegerField(default=None)
+    base_coin_id = models.IntegerField(default=0)
     quote_address = models.CharField(max_length=50, null=True, default=None)
     quote_limit = models.CharField(max_length=512, null=True, default=None)
-    quote_coin_id = models.IntegerField(default=None)
+    quote_coin_id = models.IntegerField(default=0)
     stop_date = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
