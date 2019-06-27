@@ -1178,10 +1178,11 @@ def show_contract_swaps_backend(request):
 
 @api_view(http_method_names=['POST'])
 def edit_contract_swaps_backend(request):
-    params = request.data
-
-    if 'swap_id' not in params:
+    swap_id = request.query_params.get('swap_id', None)
+    if swap_id is None:
         raise ParseError
+
+    params = request.data
 
     swap_order = OrderBookSwaps.objects.filter(id=params['swap_id']).first()
 
