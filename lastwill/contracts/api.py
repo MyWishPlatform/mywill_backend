@@ -1174,3 +1174,46 @@ def show_contract_swaps_backend(request):
         return Response(details)
     else:
         raise ParseError
+
+
+@api_view(http_method_names=['GET'])
+def show_contract_swaps_backend(request):
+    params = request.data
+
+    if 'swap_id' not in params:
+        raise ParseError
+
+    swap_order = OrderBookSwaps.objects.filter(id=params['swap_id']).first()
+
+    if 'name' in params:
+        swap_order.name = params['name']
+
+    if 'stop_date' in params:
+        stop_date = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
+        swap_order.stop_date = stop_date
+
+    if 'base_address' in params:
+        swap_order.base_address = params['base_address']
+
+    if 'base_limit' in params:
+        swap_order.base_limit = params['base_limit']
+
+    if 'base_coin_id' in params:
+        swap_order.base_coin_id = params['base_coin_id']
+
+    if 'quote_address' in params:
+        swap_order.quote_address = params['quote_address']
+
+    if 'quote_limit' in params:
+        swap_order.quote_limit = params['quote_limit']
+
+    if 'quote_coin_id' in params:
+        swap_order.quote_coin_id = params['quote_coin_id']
+
+    if 'owner_address' in params:
+        swap_order.owner_address = params['owner_address']
+
+    swap_order.save()
+    details = get_swap_from_orderbook(swap_id=swap_order.id)
+
+    return Response(details)
