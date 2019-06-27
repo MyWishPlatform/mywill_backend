@@ -1164,12 +1164,6 @@ def create_contract_swaps_backend(request):
 
 @api_view(http_method_names=['GET'])
 def show_contract_swaps_backend(request):
-    if 'id' in request.data:
-        swap_backend_id = request.data['id']
-    else:
-        raise ParseError
-
-    details = get_swap_from_orderbook(swap_id=swap_backend_id)
-
-    return Response(details)
-
+    if request.GET['swap_id'] is not None:
+        details = get_swap_from_orderbook(swap_id=request.GET['swap_id'])
+        return Response(details)
