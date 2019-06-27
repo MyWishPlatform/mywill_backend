@@ -1150,8 +1150,10 @@ def create_contract_swaps_backend(request):
             name=contract_name,
             base_address=contract_details['base_address'],
             base_limit=contract_details['base_limit'],
+            base_coin_id=contract_details['base_coin_id'],
             quote_address=contract_details['quote_address'],
             quote_limit=contract_details['quote_limit'],
+            quote_coin_id=contract_details['quote_coin_id'],
             owner_address=contract_details['owner_address'],
             stop_date=stop_date_conv
     )
