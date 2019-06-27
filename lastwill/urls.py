@@ -39,7 +39,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_tronish_balance, confirm_swaps_info,
                                     get_contract_for_unique_link, get_public_contracts,
                                     change_contract_state, send_message_author_swap,
-                                    create_contract_swaps_backend, show_contract_swaps_backend)
+                                    create_contract_swaps_backend, show_contract_swaps_backend,
+                                    edit_contract_swaps_backend)
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
@@ -154,7 +155,9 @@ urlpatterns = [
     url(r'^api/change_contract_state/$', change_contract_state),
     url(r'^api/send_message_author_swap/$', send_message_author_swap),
     url(r'^api/create_swap3/$', create_contract_swaps_backend),
-    url(r'^api/get_swap3/$', show_contract_swaps_backend)
+    url(r'^api/get_swap3/$', show_contract_swaps_backend),
+    url(r'^api/edit_swap3/$', edit_contract_swaps_backend)
+
 
 ]
 
