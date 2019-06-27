@@ -267,7 +267,7 @@ class OrderBookSwaps(models.Model):
     base_coin_id = models.IntegerField(default=None)
     quote_address = models.CharField(max_length=50, null=True, default=None)
     quote_limit = models.CharField(max_length=512, null=True, default=None)
-    quote_coin_id = models.IntegerField(defaul=None)
+    quote_coin_id = models.IntegerField(default=None)
     stop_date = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
