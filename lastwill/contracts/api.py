@@ -1177,8 +1177,7 @@ def show_contract_swaps_backend(request):
 
 
 @api_view(http_method_names=['POST'])
-def edit_contract_swaps_backend(request):
-    swap_id = request.query_params.get('swap_id', None)
+def edit_contract_swaps_backend(request, swap_id):
     if swap_id is None:
         raise ParseError
 

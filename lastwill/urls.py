@@ -156,7 +156,7 @@ urlpatterns = [
     url(r'^api/send_message_author_swap/$', send_message_author_swap),
     url(r'^api/create_swap3/$', create_contract_swaps_backend),
     url(r'^api/get_swap3/$', show_contract_swaps_backend),
-    url(r'^api/edit_swap3/$', edit_contract_swaps_backend)
+    url(r'^api/edit_swap3/<int:swap_id>/$', edit_contract_swaps_backend)
 
 
 ]
