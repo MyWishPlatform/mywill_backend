@@ -263,9 +263,9 @@ class ContractDetailsSWAPS2(CommonDetails):
 
 class OrderBookSwaps(models.Model):
     base_address = models.CharField(max_length=50)
-    base_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    base_limit = models.CharField(max_length=512)
     quote_address = models.CharField(max_length=50)
-    quote_limit = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    quote_limit = models.CharField(max_length=512)
     stop_date = models.DateTimeField()
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
