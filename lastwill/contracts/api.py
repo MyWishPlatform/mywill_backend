@@ -1192,7 +1192,7 @@ def edit_contract_swaps_backend(request, swap_id):
 
     params = request.data
 
-    swap_order = OrderBookSwaps.objects.filter(id=params['swap_id']).first()
+    swap_order = OrderBookSwaps.objects.filter(id=swap_id).first()
 
     if 'name' in params:
         swap_order.name = params['name']
