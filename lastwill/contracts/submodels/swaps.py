@@ -276,8 +276,8 @@ class OrderBookSwaps(models.Model):
     owner_address = models.CharField(max_length=50, null=True, default=None)
     name = models.CharField(max_length=512, null=True)
     state = models.CharField(max_length=63, default='CREATED')
-    unique_link = models.CharField(max_length=50, default=None)
-    memo_contract = models.CharField(max_length=70, default=None)
+    unique_link = models.CharField(max_length=50, null=True, default=None)
+    memo_contract = models.CharField(max_length=70, null=True, default=None)
 
     @postponable
     @check_transaction
