@@ -80,20 +80,20 @@ class Receiver(threading.Thread):
 
     def orderCreated(self, message):
         print('deployed message received', flush=True)
-        details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-        if details.contract.state == 'ACTIVE':
-            print('ignored because already active', flush=True)
-            return
-        details.msg_deployed(message)
-        print('deployed ok!', flush=True)
-
-    def orderbookSaved(self, message):
-        print('order save message received', flush=True)
+        # commenting because of upgrade to orderboook
+        #
+        #details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
+        #if details.contract.state == 'ACTIVE':
+        #    print('ignored because already active', flush=True)
+        #    return
+        #details.msg_deployed(message)
         order = OrderBookSwaps.objects.get(memo_contract=message['id'])
         if order.state == 'ACTIVE':
             print('ignored because already active', flush=True)
             return
         order.msg_deployed(message)
+        print('deployed ok!', flush=True)
+
 
     def killed(self, message):
         print('killed message', flush=True)
