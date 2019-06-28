@@ -272,3 +272,19 @@ class OrderBookSwaps(models.Model):
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
     name = models.CharField(max_length=512, null=True)
+    state = models.CharField(max_length=63, default='CREATED')
+    unique_link = models.CharField(max_length=50)
+    memo_contract = models.CharField(max_length=70)
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        if self.public:
+            link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
+            self.unique_link = link
+            self.save()
+
+        self.state = 'ACTIVE'
+        self.save()
+        return
+
