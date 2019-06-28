@@ -18,7 +18,7 @@ from django.db.models.signals import post_save
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
-    WhitelistAddress, ContractDetailsSWAPS2
+    WhitelistAddress, ContractDetailsSWAPS2, OrderBookSwaps
 )
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.contracts.api import autodeploing
@@ -86,6 +86,14 @@ class Receiver(threading.Thread):
             return
         details.msg_deployed(message)
         print('deployed ok!', flush=True)
+
+    def orderbookSaved(self, message):
+        print('order save message received', flush=True)
+        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
+        if order..state == 'ACTIVE':
+            print('ignored because already active', flush=True)
+            return
+        order.msg_deployed(message)
 
     def killed(self, message):
         print('killed message', flush=True)
