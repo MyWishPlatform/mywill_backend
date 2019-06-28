@@ -28,7 +28,7 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
+        ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2, OrderBookSwaps
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -1560,3 +1560,19 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
         if details['base_address'].lower() == details['quote_address'].lower():
             raise ValidationError({'result': 1}, code=400)
         return details
+
+
+class SwapsOrderbookSerializer(serializers.ModelSerializer):
+    details = serializers.JSONField(write_only=True)
+
+    class Meta:
+        model = OrderBookSwaps
+        fields = (
+            'base_address', 'quote_address', 'stop_date', 'base_limit',
+            'quote_limit', 'base_coin_id', 'quote_coin_id', 'owner_address', 'public', 'name'
+        )
+
+        fields = (
+            'id', 'base_address', 'owner_address', 'state', 'created_date', 'balance',
+            'cost', 'name', 'contract_type', 'contract_details', 'network',
+        )

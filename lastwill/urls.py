@@ -33,7 +33,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     WhitelistAddressViewSet, AirdropAddressViewSet,
                                     load_airdrop, get_contract_for_link,
                                     get_invest_balance_day, check_status,
-                                    get_eos_cost, EOSAirdropAddressViewSet, get_eos_airdrop_cost,
+                                    get_eos_cost, EOSAirdropAddressViewSet, SWAPSOrderbookViewSet,
+                                    get_eos_airdrop_cost,
                                     check_eos_accounts_exists, buy_brand_report, get_authio_cost,
                                     get_testnet_tron_tokens, get_tokens_for_eth_address,
                                     get_tronish_balance, confirm_swaps_info,
@@ -64,6 +65,7 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
+router.register(r'swaps_orders', SWAPSOrderbookViewSet)
 
 
 urlpatterns = [
