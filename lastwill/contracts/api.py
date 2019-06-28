@@ -1146,6 +1146,7 @@ def create_contract_swaps_backend(request):
 
     base_address = contract_details['base_address'] if 'base_address' in contract_details else ""
     quote_address = contract_details['quote_address'] if 'quote_address' in contract_details else ""
+    owner_address = contract_details['owner_address'] if 'owner_address' in contract_details else ""
     contract_name = contract_details['name'] if 'name' in contract_details else ""
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
@@ -1168,7 +1169,7 @@ def create_contract_swaps_backend(request):
             quote_address=quote_address,
             quote_limit=contract_details['quote_limit'],
             quote_coin_id=quote_coin_id_param,
-            owner_address=contract_details['owner_address'],
+            owner_address=owner_address,
             stop_date=stop_date_conv,
             memo_contract=memo,
             public=contract_details['public'],
