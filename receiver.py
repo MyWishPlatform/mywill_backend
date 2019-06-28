@@ -90,7 +90,7 @@ class Receiver(threading.Thread):
     def orderbookSaved(self, message):
         print('order save message received', flush=True)
         order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-        if order..state == 'ACTIVE':
+        if order.state == 'ACTIVE':
             print('ignored because already active', flush=True)
             return
         order.msg_deployed(message)
