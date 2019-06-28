@@ -1202,12 +1202,9 @@ def create_swap2_for_events(order):
             name=order_details['name'],
             state='CREATED'
     )
-
-    order_details.pop('state')
-    order_details.pop('id')
-    order_details.pop('name')
-
-    swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, order_details)
+    excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id']
+    swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
+    swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
 
     swap2_contract.save()
     swap2_details.save()
