@@ -48,6 +48,38 @@ def get_swap_from_orderbook(swap_id):
     return saved_details
 
 
+def create_swap2_for_events(details):
+
+    swap2_contract = Contract(
+            contract_type=21,
+            cost=0,
+            user=details.user,
+            name=details.name,
+            state='CREATED'
+    )
+
+    swap2_details = ContractDetailsSWAPS2(
+            base_address=details.base_address,
+            base_limit=details.base_limit,
+            quote_address=details.quote_address,
+            quote_limit=details.quote_limit,
+            stop_date=details.stop_date,
+            public=details.public,
+            owner_address=details.owner_address,
+            unique_link=details.unique_link,
+            memo_contract=details.memo_contract,
+            broker_fee=details.broker_fee,
+            broker_fee_address=details.broker_fee_address,
+            broker_fee_base=details.broker_fee_base,
+            broker_fee_quote=details.broker_fee_quote
+    )
+
+    swap2_contract.save()
+    swap2_details.save()
+
+    return swap2_contract.id
+
+
 class InvestAddresses(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)
@@ -280,15 +312,16 @@ class OrderBookSwaps(models.Model):
     state = models.CharField(max_length=63, default='CREATED')
     unique_link = models.CharField(max_length=50, null=True, default=None)
     memo_contract = models.CharField(max_length=70, null=True, default=None)
+    user = models.ForeignKey(User)
+
+    broker_fee = models.BooleanField(default=False)
+    broker_fee_address = models.CharField(max_length=50, null=True, default=None)
+    broker_fee_base = models.FloatField(null=True, default=None)
+    broker_fee_quote = models.FloatField(null=True, default=None)
 
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        if self.public:
-            link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
-            self.unique_link = link
-            self.save()
-
         self.state = 'ACTIVE'
         self.save()
         return

@@ -23,7 +23,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
-from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook
+from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook, create_swap2_for_events
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1142,6 +1142,9 @@ def send_message_author_swap(request):
 
 @api_view(http_method_names=['POST'])
 def create_contract_swaps_backend(request):
+    if request.user.is_anonymous:
+        raise PermissionDenied
+
     contract_details = request.data
 
     base_address = contract_details['base_address'] if 'base_address' in contract_details else ""
@@ -1151,6 +1154,8 @@ def create_contract_swaps_backend(request):
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
+
+
     memo = '0x' + ''.join(
             random.choice('abcdef' + string.digits) for _ in
             range(64)
@@ -1173,10 +1178,14 @@ def create_contract_swaps_backend(request):
             stop_date=stop_date_conv,
             memo_contract=memo,
             public=contract_details['public'],
-            unique_link=link
+            unique_link=link,
+            user=request.user,
     )
 
     backend_contract.save()
+    create_fake_swap = create_swap2_for_events(backend_contract)
+    print(create_fake_swap)
+
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
     return Response(details)
