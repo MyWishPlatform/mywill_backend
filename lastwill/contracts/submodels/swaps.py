@@ -6,7 +6,6 @@ from ethereum.utils import checksum_encode
 from django.db import models
 
 from lastwill.contracts.submodels.common import *
-from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
@@ -47,29 +46,6 @@ def get_swap_from_orderbook(swap_id):
         'state': backend_contract.state
     }
     return saved_details
-
-
-def create_swap2_for_events(order):
-
-    order_details = get_swap_from_orderbook(order.id)
-
-    swap2_contract = Contract(
-            contract_type=21,
-            cost=0,
-            user=order.user,
-            name=order_details.name,
-            state='CREATED'
-    )
-
-    order_details.pop('state')
-    order_details.pop('id')
-
-    swap2_details = ContractDetailsSWAPS2Serializer.create(swap2_contract, order_details)
-
-    swap2_contract.save()
-    swap2_details.save()
-
-    return swap2_contract.id
 
 
 class InvestAddresses(models.Model):

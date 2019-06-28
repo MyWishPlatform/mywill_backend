@@ -23,12 +23,12 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
-from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook, create_swap2_for_events
+from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps, ContractDetailsSWAPS2Serializer
 from lastwill.consts import *
 
 
@@ -1189,6 +1189,29 @@ def create_contract_swaps_backend(request):
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
     return Response(details)
+
+
+def create_swap2_for_events(order):
+
+    order_details = get_swap_from_orderbook(order.id)
+
+    swap2_contract = Contract(
+            contract_type=21,
+            cost=0,
+            user=order.user,
+            name=order_details.name,
+            state='CREATED'
+    )
+
+    order_details.pop('state')
+    order_details.pop('id')
+
+    swap2_details = ContractDetailsSWAPS2Serializer.create(swap2_contract, order_details)
+
+    swap2_contract.save()
+    swap2_details.save()
+
+    return swap2_contract.id
 
 
 @api_view(http_method_names=['GET'])
