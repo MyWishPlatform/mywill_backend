@@ -1148,11 +1148,15 @@ def create_contract_swaps_backend(request):
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
-    memo = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
+    memo = '0x' + ''.join(
+            random.choice('abcdef' + string.digits) for _ in
+            range(64)
+        )
 
-    link = ""
-    if contract_details['public']:
-        link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
+    link = ''.join(
+            random.choice(string.ascii_lowercase + string.digits) for _ in
+            range(6)
+        )
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
