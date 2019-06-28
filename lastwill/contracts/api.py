@@ -1148,6 +1148,7 @@ def create_contract_swaps_backend(request):
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
+    memo = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
     backend_contract = OrderBookSwaps(
             name=contract_name,
             base_address=contract_details['base_address'],
@@ -1158,7 +1159,7 @@ def create_contract_swaps_backend(request):
             quote_coin_id=quote_coin_id_param,
             owner_address=contract_details['owner_address'],
             stop_date=stop_date_conv,
-            memo_contract=contract_details['memo_contract']
+            memo_contract=memo
     )
 
     backend_contract.save()
