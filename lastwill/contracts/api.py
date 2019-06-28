@@ -1162,10 +1162,10 @@ def create_contract_swaps_backend(request):
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
-            base_address=contract_details['base_address'],
+            base_address=base_address,
             base_limit=contract_details['base_limit'],
             base_coin_id=base_coin_id_param,
-            quote_address=contract_details['quote_address'],
+            quote_address=quote_address,
             quote_limit=contract_details['quote_limit'],
             quote_coin_id=quote_coin_id_param,
             owner_address=contract_details['owner_address'],
