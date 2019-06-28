@@ -1198,7 +1198,7 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.name = params['name']
 
     if 'stop_date' in params:
-        stop_date = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
+        stop_date = datetime.datetime.strptime(params['stop_date'], '%Y-%m-%d %H:%M')
         swap_order.stop_date = stop_date
 
     if 'base_address' in params:
