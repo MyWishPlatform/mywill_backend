@@ -1157,7 +1157,8 @@ def create_contract_swaps_backend(request):
             quote_limit=contract_details['quote_limit'],
             quote_coin_id=quote_coin_id_param,
             owner_address=contract_details['owner_address'],
-            stop_date=stop_date_conv
+            stop_date=stop_date_conv,
+            memo_contract=contract_details['memo_contract']
     )
 
     backend_contract.save()

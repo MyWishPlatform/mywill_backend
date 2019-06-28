@@ -38,7 +38,10 @@ def get_swap_from_orderbook(swap_id):
         'quote_address': backend_contract.quote_address,
         'quote_limit': backend_contract.quote_limit,
         'owner_address': backend_contract.owner_address,
-        'stop_date': backend_contract.stop_date
+        'stop_date': backend_contract.stop_date,
+        'memo_contract': backend_contract.memo_contract,
+        'unique_link': backend_contract.unique_link,
+        'state': backend_contract.state
     }
     return saved_details
 
@@ -273,8 +276,8 @@ class OrderBookSwaps(models.Model):
     owner_address = models.CharField(max_length=50, null=True, default=None)
     name = models.CharField(max_length=512, null=True)
     state = models.CharField(max_length=63, default='CREATED')
-    unique_link = models.CharField(max_length=50)
-    memo_contract = models.CharField(max_length=70)
+    unique_link = models.CharField(max_length=50, default=None)
+    memo_contract = models.CharField(max_length=70, default=None)
 
     @postponable
     @check_transaction
