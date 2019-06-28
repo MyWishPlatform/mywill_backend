@@ -103,15 +103,6 @@ class ContractViewSet(ModelViewSet):
         return result.filter(user=self.request.user)
 
 
-class SWAPSOrderbookViewSet(viewsets.ModelViewSet):
-    queryset = OrderBookSwaps.objects.all()
-    serializer_class = SwapsOrderbookSerializer
-    permission_classes = (IsAuthenticated, IsStaff | IsOwner)
-
-    def get_queryset(self):
-        result = self.queryset.order_by('-created_date')
-        return result
-
 @api_view()
 def get_code(request):
     with open(path.join(CONTRACTS_DIR, Contract.get_details_model(
