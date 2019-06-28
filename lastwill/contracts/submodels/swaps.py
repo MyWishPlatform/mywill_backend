@@ -287,7 +287,6 @@ class OrderBookSwaps(models.Model):
     broker_fee_base = models.FloatField(null=True, default=None)
     broker_fee_quote = models.FloatField(null=True, default=None)
 
-    @postponable
     @check_transaction
     def msg_deployed(self, message):
         self.state = 'ACTIVE'
