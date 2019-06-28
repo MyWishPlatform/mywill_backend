@@ -1205,6 +1205,7 @@ def create_swap2_for_events(order):
 
     order_details.pop('state')
     order_details.pop('id')
+    order_details.pop('name')
 
     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, order_details)
 
