@@ -1199,7 +1199,7 @@ def create_swap2_for_events(order):
             contract_type=21,
             cost=0,
             user=order.user,
-            name=order_details.name,
+            name=order_details['name'],
             state='CREATED'
     )
 
