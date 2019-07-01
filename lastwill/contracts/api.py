@@ -1184,7 +1184,7 @@ def create_contract_swaps_backend(request):
 
     backend_contract.save()
     create_fake_swap = create_swap2_for_events(backend_contract)
-    print(create_fake_swap)
+    print(create_fake_swap, flush=True)
 
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
@@ -1206,6 +1206,10 @@ def create_swap2_for_events(order):
     swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
     swap2_contract.save()
     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
+    swap2_contract.state = 'WAITING_FOR_ACTIVATION'
+    swap2_contract.save()
+    order.state = 'WAITING_FOR_ACTIVATION'
+    order.save()
 
     return swap2_contract.id
 
