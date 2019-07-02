@@ -34,7 +34,7 @@ from allauth.account.models import EmailAddress, EmailConfirmation, EmailConfirm
 from exchange_API import to_wish, convert
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
+from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL,SWAPS_URL,SWAPS_EMAIL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 from tron_wif.hex2wif import hex2tronwif
 
@@ -310,3 +310,31 @@ def delete_api_tokens(request):
         token.active = False
         token.save()
     return Response({"result": "ok"})
+
+def send_confirmation_mail(self, request, emailconfirmation, signup):
+        welcome_head = ''
+        current_site = get_current_site(request)
+        activate_url = self.get_email_confirmation_url(
+            request,
+            emailconfirmation)
+        if self.request.META['HTTP_HOST'] == MY_WISH_URL:
+            from_email= DEFAULT_FROM_EMAIL
+            welcome_head = "SWAPS Netework"
+        if self.request.META['HTTP_HOST'] == SWAPS_URL:
+            from_email = SWAPS_EMAIL
+            welcome_head = 'MyWish platform'
+
+        ctx = {
+            "user": emailconfirmation.email_address.user,
+            "activate_url": activate_url,
+            "current_site": current_site,
+            "key": emailconfirmation.key,
+        }
+        if signup:
+            email_template = 'account/email/email_confirmation_signup'
+        else:
+            email_template = 'account/email/email_confirmation'
+
+        self.send_mail(email_template,
+                       emailconfirmation.email_address.email,
+                       ctx)
