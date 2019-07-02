@@ -1,3 +1,16 @@
+register_subject = """Please Confirm Your E-mail Address"""
+
+register_text = """{subsite_name} team welcomes you!
+
+You're receiving this e-mail because user {user_display} has given yours as an e-mail address to connect their account.
+
+To confirm the registration, click on the link below:
+
+{activate_url}
+
+Best regards!
+{subsite_name} Team."""
+
 common_subject = """Your contract is ready"""
 common_text = """Hello,
 

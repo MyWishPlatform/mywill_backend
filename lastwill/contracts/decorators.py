@@ -64,7 +64,7 @@ def postponable(f):
             send_mail(
                 postponed_subject,
                 postponed_message.format(
-                    contract_id=contract.id
+                    contruact_id=contract.id
                 ),
                 DEFAULT_FROM_EMAIL,
                 [EMAIL_FOR_POSTPONED_MESSAGE]
