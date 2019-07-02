@@ -34,7 +34,7 @@ from allauth.account.models import EmailAddress, EmailConfirmation, EmailConfirm
 from exchange_API import to_wish, convert
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL,SWAPS_URL,SWAPS_EMAIL
+from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 from tron_wif.hex2wif import hex2tronwif
 
