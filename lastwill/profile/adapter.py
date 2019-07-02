@@ -1,7 +1,7 @@
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import send_mail
 from django.contrib.sites.shortcuts import get_current_site
 from allauth.account.adapter import DefaultAccountAdapter
-from lastwill.settings import MY_WISH_URL, DEFAULT_FROM_EMAIL,SWAPS_URL, SWAPS_MAIL
+from lastwill.settings import MY_WISH_URL, SWAPS_URL, EMAIL_HOST_USER, EMAIL_HOST_USER_SWAPS
 from email_messages import register_subject, register_text
 
 
@@ -14,10 +14,10 @@ class SubSiteRegistrationAdapter(DefaultAccountAdapter):
             request,
             emailconfirmation)
         if self.request.META['HTTP_HOST'] == MY_WISH_URL:
-            from_email= DEFAULT_FROM_EMAIL
+            from_email= EMAIL_HOST_USER
             welcome_head = 'MyWish Platform'
         if self.request.META['HTTP_HOST'] == SWAPS_URL:
-            from_email = SWAPS_MAIL
+            from_email = EMAIL_HOST_USER_SWAPS
             welcome_head = "SWAPS Network"
 
         to_user = emailconfirmation.email_address.user
