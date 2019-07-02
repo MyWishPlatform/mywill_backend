@@ -18,22 +18,10 @@ class SubSiteRegistrationAdapter(DefaultAccountAdapter):
             welcome_head = 'MyWish Platform'
         if self.request.META['HTTP_HOST'] == SWAPS_URL:
             from_email = SWAPS_MAIL
-            welcome_head = "SWAPS Netwwork"
+            welcome_head = "SWAPS Network"
 
         to_user = emailconfirmation.email_address.user
         to_email = emailconfirmation.email_address.email
-
-        #ctx = {
-        #    "user": emailconfirmation.email_address.user,
-        #    "activate_url": activate_url,
-        #    "current_site": current_site,
-        #    "key": emailconfirmation.key,
-        #}
-
-
-        #send_mail(email_template,
-        #          emailconfirmation.email_address.email,
-        #          ctx)
 
         send_mail(
             register_subject,
