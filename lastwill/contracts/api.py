@@ -1170,7 +1170,6 @@ def create_contract_swaps_backend(request):
             quote_coin_id=quote_coin_id_param,
             owner_address=owner_address,
             stop_date=stop_date_conv,
-            memo_contract=memo,
             public=contract_details['public'],
             unique_link=link,
             user=request.user,
@@ -1203,7 +1202,7 @@ def create_swap2_for_events(order):
     swap2_contract.state = 'WAITING_FOR_ACTIVATION'
     swap2_contract.save()
     order.state = 'WAITING_FOR_ACTIVATION'
-    order.memo = swap2_contract.memo
+    order.memo_contract = swap2_contract.memo_contract
     order.save()
 
     return swap2_contract.id
