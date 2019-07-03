@@ -1155,12 +1155,6 @@ def create_contract_swaps_backend(request):
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
 
-
-    memo = '0x' + ''.join(
-            random.choice('abcdef' + string.digits) for _ in
-            range(64)
-        )
-
     link = ''.join(
             random.choice(string.ascii_lowercase + string.digits) for _ in
             range(6)
@@ -1209,6 +1203,7 @@ def create_swap2_for_events(order):
     swap2_contract.state = 'WAITING_FOR_ACTIVATION'
     swap2_contract.save()
     order.state = 'WAITING_FOR_ACTIVATION'
+    order.memo = swap2_contract.memo
     order.save()
 
     return swap2_contract.id
