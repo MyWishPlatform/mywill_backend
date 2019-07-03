@@ -1202,7 +1202,7 @@ def create_swap2_for_events(order):
     swap2_contract.state = 'WAITING_FOR_ACTIVATION'
     swap2_contract.save()
     order.state = 'WAITING_FOR_ACTIVATION'
-    order.memo_contract = swap2_contract.memo_contract
+    order.memo_contract = swap2_details.memo_contract
     order.save()
 
     return swap2_contract.id
