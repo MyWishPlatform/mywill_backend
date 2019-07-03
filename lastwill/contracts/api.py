@@ -1210,6 +1210,10 @@ def create_swap2_for_events(order):
 
 @api_view(http_method_names=['GET'])
 def show_contract_swaps_backend(request):
+    if request.user.is_anonymous:
+        raise PermissionDenied
+
+
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
@@ -1220,6 +1224,9 @@ def show_contract_swaps_backend(request):
 
 @api_view(http_method_names=['POST'])
 def edit_contract_swaps_backend(request, swap_id):
+    if request.user.is_anonymous:
+        raise PermissionDenied
+
     if swap_id is None:
         raise ParseError
 
