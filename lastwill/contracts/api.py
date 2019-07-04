@@ -1227,6 +1227,9 @@ def edit_contract_swaps_backend(request, swap_id):
     if request.user.is_anonymous:
         raise PermissionDenied
 
+    if not request.user.profile.is_swaps_admin:
+        raise PermissionDenied
+
     if swap_id is None:
         raise ParseError
 
