@@ -23,7 +23,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
-from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook
+from lastwill.contracts.submodels.swaps import OrderBookSwaps, get_swap_from_orderbook, SwapsMailing
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1269,3 +1269,14 @@ def edit_contract_swaps_backend(request, swap_id):
     details = get_swap_from_orderbook(swap_id=swap_order.id)
 
     return Response(details)
+
+
+@api_view(http_method_names=['POST'])
+def save_swaps_mail(request):
+    mail = SwapsMailing(email=request.data.get('email'))
+    mail.save()
+
+    return Response({
+        'id': mail.id,
+        'email': mail.email
+    })

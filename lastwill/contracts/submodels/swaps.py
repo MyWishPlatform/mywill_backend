@@ -293,3 +293,6 @@ class OrderBookSwaps(models.Model):
         self.save()
         return
 
+
+class SwapsMailing(models.Model):
+    email = models.EmailField(null=False, unique=True)
