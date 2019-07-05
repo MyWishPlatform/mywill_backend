@@ -1274,7 +1274,7 @@ def edit_contract_swaps_backend(request, swap_id):
 @api_view(http_method_names=['POST'])
 def save_swaps_mail(request):
     mail = request.data['email'] if 'email' in request.data else None
-    telegram = request.data['telegram_name'] if 'telegram_name' in request.data else None
+    telegram = request.data['telegram'] if 'telegram' in request.data else None
 
     mail = SwapsMailing(email=mail, telegram_name=telegram)
     mail.save()
@@ -1282,5 +1282,5 @@ def save_swaps_mail(request):
     return Response({
         'id': mail.id,
         'email': mail.email,
-        'telegram_name': mail.telegram_name
+        'telegram': mail.telegram_name
     })
