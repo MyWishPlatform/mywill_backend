@@ -20,11 +20,11 @@ def create_payment(uid, tx, currency, amount, site_id):
     if (SubSite.objects.get(id=site_id).site_name == MY_WISH_URL
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):
         if currency == 'BWISH':
-            currency = 'WISH'
+            #currency = 'WISH'
             amount = amount * 10 ** 10
         if currency == 'BBNB':
             currency = 'BNB'
-        value = amount if currency == 'WISH' else to_wish(
+        value = amount if (currency == 'WISH' or currency == 'BWISH') else to_wish(
             currency, amount
         )
         if currency == 'BTC':
@@ -103,7 +103,7 @@ def freeze_payments(amount, original_value, currency):
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value
         )
-        print('FREEZE', value, 'EOSISH')
+        print('FREEZE', value, 'EOSISH', flush=True)
     elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
@@ -113,14 +113,20 @@ def freeze_payments(amount, original_value, currency):
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + wish_value
         )
-        print('FREEZE', value, 'TRONISH')
-        print('FREEZE', wish_value, 'WISH')
+        print('FREEZE', value, 'TRONISH', flush=True)
+        print('FREEZE', wish_value, 'WISH', flush=True)
+    elif currency in ('BNB', 'BWISH'):
+        value = amount * 0.15
+        FreezeBalance.objects.select_for_update().filter(id=1),update(
+            bwish=F('bwish') + value
+        )
+        print('FREEZE', value, 'BWISH', flush=True)
     else:
         value = original_value * 0.15
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + value
         )
-        print('FREEZE', value, 'WISH')
+        print('FREEZE', value, 'WISH', flush=True)
 
 
 def positive_payment(user, value, site_id, currency, amount):
