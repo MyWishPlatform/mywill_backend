@@ -241,3 +241,8 @@ class ContractDetailsSWAPS2(CommonDetails):
     @staticmethod
     def calc_cost(kwargs, network):
         return 0
+
+
+class SwapsMailing(models.Model):
+    email = models.CharField(max_length=50, null=True, default=None)
+    telegram_name = models.CharField(max_length=50, null=True, default=None)

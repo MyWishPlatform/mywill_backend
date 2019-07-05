@@ -23,6 +23,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
+from lastwill.contracts.submodels.swaps import SwapsMailing
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1137,3 +1138,18 @@ def send_message_author_swap(request):
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def save_swaps_mail(request):
+    mail = request.data['email'] if 'email' in request.data else None
+    telegram = request.data['telegram'] if 'telegram' in request.data else None
+
+    mail = SwapsMailing(email=mail, telegram_name=telegram)
+    mail.save()
+
+    return Response({
+        'id': mail.id,
+        'email': mail.email,
+        'telegram': mail.telegram_name
+    })
