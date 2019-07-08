@@ -213,7 +213,7 @@ Your SWAP is created and ready for deployment to Ethereum.
 If you have any questions please contact support@swaps.network.
 
 Best wishes,
-Swaps Team.
+SWAPS.NETWORK Team.
 
 """
 
@@ -226,7 +226,7 @@ You can use your SWAP now: {swaps_link}
 Please contact support@swaps.network if you have any questions.
 
 Best wishes,
-Swaps Team.
+SWAPS.NETWORK Team.
 """
 
 swaps_support_subject = """ Swaps user notification"""
