@@ -9,10 +9,11 @@ from threading import Timer
 from subprocess import Popen, PIPE
 
 from lastwill.payments.models import *
-from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL
+from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, FREEZE_THRESHOLD_BWISH, MYWISH_ADDRESS, \
+    NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, NETWORK_SIGN_TRANSACTION_BWISH, COLD_TOKEN_SYMBOL_EOS, COLD_TOKEN_SYMBOL_BNB
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
-from lastwill.settings import BINANCE_PAYMENT_PASSWORD, FREEZE_BNB_ENV, FREEZE_BNB_WISH_SYMBOL, COLD_BNB_ADDRESS
+from lastwill.settings import BINANCE_PAYMENT_PASSWORD, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 from lastwill.json_templates import get_freeze_wish_abi
@@ -25,6 +26,7 @@ from binance_chain.messages import TransferMsg
 from binance_chain.wallet import Wallet
 from binance_chain.http import HttpApiClient
 from binance_chain.environment import BinanceEnvironment
+
 
 def convert_address_to_hex(address):
     # short_addresss = address[1:]
@@ -70,7 +72,7 @@ def freeze_eosish(amount):
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
             amount=amount_with_decimals,
-            token_name=COLD_TOKEN_SYMBOL
+            token_name=COLD_TOKEN_SYMBOL_EOS
         ),
         '-p', UPDATE_EOSISH_ADDRESS
     ]
@@ -149,7 +151,7 @@ def freeze_tronish():
 
 def freeze_bnb_wish(amount):
     freeze_env = BinanceEnvironment.get_production_env()
-    if FREEZE_BNB_ENV == 'testnet':
+    if NETWORK_SIGN_TRANSACTION_BWISH == 'testnet':
         freeze_env = BinanceEnvironment.get_testnet_env()
 
     client = HttpApiClient(env=freeze_env)
@@ -157,7 +159,7 @@ def freeze_bnb_wish(amount):
     value = float(amount / 10 ** 18)
     freeze_msg = TransferMsg(
             wallet=bep_wallet,
-            symbol=FREEZE_BNB_WISH_SYMBOL,
+            symbol=COLD_TOKEN_SYMBOL_BNB,
             amount=value,
             to_address=COLD_BNB_ADDRESS,
             memo='freeze bnb wish'
