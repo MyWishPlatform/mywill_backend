@@ -70,8 +70,8 @@ def create_payment(uid, tx, currency, amount, site_id):
         site=site
     ).save()
     print('PAYMENT: Created', flush=True)
-    print('PAYMENT: Received {amount} {curr} from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-          .format(amount=value, curr=currency, email=user, user_id=uid, txid=tx, sitename=site_id),
+    print('PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
+          .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
           flush=True)
 
 
@@ -116,7 +116,7 @@ def freeze_payments(amount, original_value, currency):
         print('FREEZE', value, 'TRONISH', flush=True)
         print('FREEZE', wish_value, 'WISH', flush=True)
     elif currency in ('BNB', 'BWISH'):
-        value = amount * 0.15
+        value = original_value * 0.15
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             bwish=F('bwish') + value
         )
