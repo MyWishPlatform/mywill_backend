@@ -161,7 +161,7 @@ def freeze_bnb_wish(amount):
             to_address=COLD_BNB_ADDRESS,
             memo='freeze bnb wish'
     )
-    res = client.brodcast_msg(freeze_msg, sync=True)
+    res = client.broadcast_msg(freeze_msg, sync=True)
     print(res, flush=True)
 
 
