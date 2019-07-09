@@ -166,6 +166,8 @@ def freeze_bnb_wish(amount):
     )
     res = client.broadcast_msg(freeze_msg, sync=True)
     print('result', res, flush=True)
+    if not res[0]['ok']:
+        raise Exception('cannot make bnb wish freeze tx')
 
 
 def check_payments():
