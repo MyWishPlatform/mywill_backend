@@ -12,7 +12,7 @@ from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
-from lastwill.settings import COLD_BNB_ADDRESS, UPDATE_BNB_ADDRESS, BNB_COLD_PASSWORD, FREEZE_BNB_ENV, FREEZE_BNB_WISH_SYMBOL
+from lastwill.settings import BINANCE_PAYMENT_PASSWORD, FREEZE_BNB_ENV, FREEZE_BNB_WISH_SYMBOL, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 from lastwill.json_templates import get_freeze_wish_abi
@@ -153,7 +153,7 @@ def freeze_bnb_wish(amount):
         freeze_env = BinanceEnvironment.get_testnet_env()
 
     client = HttpApiClient(env=freeze_env)
-    bep_wallet = Wallet(BNB_COLD_PASSWORD, env=freeze_env)  # from settings
+    bep_wallet = Wallet(BINANCE_PAYMENT_PASSWORD, env=freeze_env)  # from settings
     freeze_msg = TransferMsg(
             wallet=bep_wallet,
             symbol=FREEZE_BNB_WISH_SYMBOL,
@@ -161,7 +161,7 @@ def freeze_bnb_wish(amount):
             to_address=COLD_BNB_ADDRESS,
             memo='freeze bnb wish'
     )
-    res = client.brodcast_msg(freeze_msg,sync=True)
+    res = client.brodcast_msg(freeze_msg, sync=True)
     print(res, flush=True)
 
 
