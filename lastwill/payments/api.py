@@ -117,7 +117,7 @@ def freeze_payments(amount, original_value, currency):
         print('FREEZE', wish_value, 'WISH', flush=True)
     elif currency in ('BNB', 'BWISH'):
         value = amount * 0.15
-        FreezeBalance.objects.select_for_update().filter(id=1),update(
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
             bwish=F('bwish') + value
         )
         print('FREEZE', value, 'BWISH', flush=True)
