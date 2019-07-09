@@ -154,15 +154,16 @@ def freeze_bnb_wish(amount):
 
     client = HttpApiClient(env=freeze_env)
     bep_wallet = Wallet(BINANCE_PAYMENT_PASSWORD, env=freeze_env)  # from settings
+    value = float(amount / 10 ** 18)
     freeze_msg = TransferMsg(
             wallet=bep_wallet,
             symbol=FREEZE_BNB_WISH_SYMBOL,
-            amount=amount,
+            amount=value,
             to_address=COLD_BNB_ADDRESS,
             memo='freeze bnb wish'
     )
     res = client.broadcast_msg(freeze_msg, sync=True)
-    print(res, flush=True)
+    print('result', res, flush=True)
 
 
 def check_payments():
