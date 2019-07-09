@@ -210,7 +210,7 @@ def check_payments():
             attempt += 1
             print(e, flush=True)
             print("Freezing BNB WISH failed")
-            send_mail_attempt("BWISH", freeze_balance.bnb, e)
+            send_mail_attempt("BWISH", freeze_balance.bwish, e)
 
 
 def send_failed_freezing(token, balance, trace):
