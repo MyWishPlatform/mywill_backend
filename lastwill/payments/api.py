@@ -24,7 +24,7 @@ def create_payment(uid, tx, currency, amount, site_id):
             amount = amount * 10 ** 10
         if currency == 'BBNB':
             currency = 'BNB'
-        value = amount if (currency == 'WISH' or currency == 'BWISH') else to_wish(
+        value = amount if (currency in ['WISH', 'BWISH']) else to_wish(
             currency, amount
         )
         if currency == 'BTC':
@@ -69,10 +69,10 @@ def create_payment(uid, tx, currency, amount, site_id):
         original_delta=str(amount),
         site=site
     ).save()
-    print('PAYMENT: Created')
+    print('PAYMENT: Created', flush=True)
     print('PAYMENT: Received {amount} {curr} from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-          .format(amount=value, curr=currency, email=user, user_id=uid, txid=tx, sitename=site_id)
-          )
+          .format(amount=value, curr=currency, email=user, user_id=uid, txid=tx, sitename=site_id),
+          flush=True)
 
 
 def calculate_decimals(currency, amount):
