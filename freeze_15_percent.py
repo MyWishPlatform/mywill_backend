@@ -205,7 +205,7 @@ def check_payments():
             print(e, flush=True)
             print('Freezing TRONISH failed')
             send_mail_attempt("TRONISH", freeze_balance.tronish, e)
-    if freeze_balance.bwish > 1000:
+    if freeze_balance.bwish > FREEZE_THRESHOLD_BWISH:
         try:
             print('try send bnb wish',flush=True)
             freeze_bnb_wish(freeze_balance.bwish)
