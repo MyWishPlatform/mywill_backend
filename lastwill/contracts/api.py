@@ -1232,8 +1232,9 @@ def edit_contract_swaps_backend(request, swap_id):
 
     swap_order = OrderBookSwaps.objects.filter(id=swap_id).first()
 
-    if not request.user.profile.is_swaps_admin or request.user != swap_order.user:
-        raise PermissionDenied
+    if request.user != swap_order.user:
+        if not request.user.profile.is_swaps_admin:
+            raise PermissionDenied
 
     params = request.data
 
@@ -1273,14 +1274,20 @@ def edit_contract_swaps_backend(request, swap_id):
 
 @api_view(http_method_names=['POST'])
 def save_swaps_mail(request):
-    mail = request.data['email'] if 'email' in request.data else None
+    email = request.data['email'] if 'email' in request.data else None
     telegram = request.data['telegram'] if 'telegram' in request.data else None
+    name = request.data['email'] if 'email' in request.data else None
 
-    mail = SwapsMailing(email=mail, telegram_name=telegram)
+    mail = SwapsMailing(
+            email=email,
+            telegram_name=telegram,
+            name=name
+    )
     mail.save()
 
     return Response({
         'id': mail.id,
         'email': mail.email,
-        'telegram': mail.telegram_name
+        'telegram': mail.telegram_name,
+        'name': mail.name
     })
