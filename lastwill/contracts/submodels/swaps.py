@@ -43,7 +43,8 @@ def get_swap_from_orderbook(swap_id):
         'stop_date': backend_contract.stop_date,
         'memo_contract': backend_contract.memo_contract,
         'unique_link': backend_contract.unique_link,
-        'state': backend_contract.state
+        'state': backend_contract.state,
+        'user': backend_contract.user
     }
     return saved_details
 

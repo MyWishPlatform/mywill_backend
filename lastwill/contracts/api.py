@@ -1240,29 +1240,21 @@ def edit_contract_swaps_backend(request, swap_id):
 
     if 'name' in params:
         swap_order.name = params['name']
-
     if 'stop_date' in params:
         stop_date = datetime.datetime.strptime(params['stop_date'], '%Y-%m-%d %H:%M')
         swap_order.stop_date = stop_date
-
     if 'base_address' in params:
         swap_order.base_address = params['base_address']
-
     if 'base_limit' in params:
         swap_order.base_limit = params['base_limit']
-
     if 'base_coin_id' in params:
         swap_order.base_coin_id = params['base_coin_id']
-
     if 'quote_address' in params:
         swap_order.quote_address = params['quote_address']
-
     if 'quote_limit' in params:
         swap_order.quote_limit = params['quote_limit']
-
     if 'quote_coin_id' in params:
         swap_order.quote_coin_id = params['quote_coin_id']
-
     if 'owner_address' in params:
         swap_order.owner_address = params['owner_address']
 
@@ -1270,6 +1262,19 @@ def edit_contract_swaps_backend(request, swap_id):
     details = get_swap_from_orderbook(swap_id=swap_order.id)
 
     return Response(details)
+
+
+@api_view(http_method_names=['GET'])
+def get_swap_v3_for_unique_link(request):
+    link = request.query_params.get('unique_link', None)
+    if not link:
+        raise PermissionDenied
+    swaps_order = OrderBookSwaps.objects.filter(unique_link=link).first()
+    if not swaps_order:
+        raise PermissionDenied
+
+    details = get_swap_from_orderbook(swaps_order.id)
+    return details
 
 
 @api_view(http_method_names=['POST'])
