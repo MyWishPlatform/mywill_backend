@@ -44,6 +44,10 @@ def get_swap_from_orderbook(swap_id):
         'memo_contract': backend_contract.memo_contract,
         'unique_link': backend_contract.unique_link,
         'state': backend_contract.state,
+        'broker_fee': backend_contract.broker_fee,
+        'broker_fee_address': backend_contract.broker_fee_address,
+        'broker_fee_base': backend_contract.broker_fee_base,
+        'broker_fee_quote': backend_contract.broker_fee_quote
     }
     return saved_details
 

@@ -1155,6 +1155,8 @@ def create_contract_swaps_backend(request):
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
 
+    broker_fee = contract_details['broker_fee'] if 'broker_fee' in contract_details else False
+
     link = ''.join(
             random.choice(string.ascii_lowercase + string.digits) for _ in
             range(6)
@@ -1173,7 +1175,16 @@ def create_contract_swaps_backend(request):
             public=contract_details['public'],
             unique_link=link,
             user=request.user,
+            broker_fee=broker_fee,
     )
+
+    if broker_fee:
+        if 'broker_fee_address' in contract_details:
+            backend_contract.broker_fee_address = contract_details['broker_fee']
+        if 'broker_fee_base' in contract_details:
+            backend_contract.broker_fee_base = contract_details['broker_fee_base']
+        if 'broker_fee_quote' in contract_details:
+            backend_contract.broker_fee_quote = contract_details['broker_fee_quote']
 
     backend_contract.save()
     create_fake_swap = create_swap2_for_events(backend_contract)
