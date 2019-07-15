@@ -104,23 +104,12 @@ class ContractDetailsWavesSTO(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
-    def predeploy_validate(self):
-        if NETWORKS[self.contract.network.name]['is_free']:
-            pw.setNode(
-                node='https://{addr}'.format(
-                    addr=NETWORKS[self.contract.network.name]['host']),
-                chain=NETWORKS[self.contract.network.name]['type']
-            )
-        else:
-            pw.setNode(
-                node='https://{addr}'.format(
-                    addr=NETWORKS[self.contract.network.name]['host']),
-                chain=NETWORKS[self.contract.network.name]['type']
-            )
 
-        last_block = int(pw.height())
-        if self.start_date < last_block or self.stop_date < last_block:
+    def predeploy_validate(self):
+        now = timezone.now()
+        if self.start_date < now.timestamp():
             raise ValidationError({'result': 1}, code=400)
+
 
     @classmethod
     def min_cost(cls):
