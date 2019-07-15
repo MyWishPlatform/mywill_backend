@@ -1268,15 +1268,15 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.quote_coin_id = params['quote_coin_id']
     if 'owner_address' in params:
         swap_order.owner_address = params['owner_address']
-    if 'broker_fee' in contract_details:
-        swap_order.broker_fee = contract_details['broker_fee']
-    if contract_details['broker_fee']:
-        if 'broker_fee_address' in contract_details:
-            swap_order.broker_fee_address = contract_details['broker_fee']
-        if 'broker_fee_base' in contract_details:
-            swap_order.broker_fee_base = contract_details['broker_fee_base']
-        if 'broker_fee_quote' in contract_details:
-            swap_order.broker_fee_quote = contract_details['broker_fee_quote']
+    if 'broker_fee' in params:
+        swap_order.broker_fee = params['broker_fee']
+    if params['broker_fee']:
+        if 'broker_fee_address' in params:
+            swap_order.broker_fee_address = params['broker_fee']
+        if 'broker_fee_base' in params:
+            swap_order.broker_fee_base = params['broker_fee_base']
+        if 'broker_fee_quote' in params:
+            swap_order.broker_fee_quote = params['broker_fee_quote']
 
     swap_order.save()
     details = get_swap_from_orderbook(swap_id=swap_order.id)
