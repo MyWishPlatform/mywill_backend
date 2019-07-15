@@ -1227,15 +1227,15 @@ def edit_contract_swaps_backend(request, swap_id):
     if request.user.is_anonymous:
         raise PermissionDenied
 
-    if not request.user.profile.is_swaps_admin:
-        raise PermissionDenied
-
     if swap_id is None:
         raise ParseError
 
-    params = request.data
-
     swap_order = OrderBookSwaps.objects.filter(id=swap_id).first()
+
+    if not request.user.profile.is_swaps_admin or request.user != swap_order.user:
+        raise PermissionDenied
+
+    params = request.data
 
     if 'name' in params:
         swap_order.name = params['name']
