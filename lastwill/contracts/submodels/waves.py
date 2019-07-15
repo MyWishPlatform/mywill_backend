@@ -17,6 +17,43 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS
 from email_messages import waves_sto_subject, waves_sto_text
+import json
+
+
+def sign_send_waves(tx_from, tx_to, tx_amount):
+    pub = tx_from['pub']
+    pk = tx_from['pk']
+    attachment = ''
+    txFee = pw.DEFAULT_TX_FEE
+    timestamp = int(time.time() * 1000)
+
+    sData = b'\4' + \
+            b'\2' + \
+            base58.b58decode(pub) + \
+            b'\0\0' + \
+            struct.pack(">Q", timestamp) + \
+            struct.pack(">Q", tx_amount) + \
+            struct.pack(">Q", txFee) + \
+            base58.b58decode(tx_to) + \
+            struct.pack(">H", len(attachment)) + \
+            crypto.str2bytes(attachment)
+    signature = crypto.sign(pk, sData)
+    data = json.dumps({
+        "type": 4,
+        "version": 2,
+        "senderPublicKey": pub,
+        "recipient": tx_to,
+        "amount": tx_amount,
+        "fee": txFee,
+        "timestamp": timestamp,
+        "attachment": base58.b58encode(crypto.str2bytes(attachment)),
+        "signature": signature,
+        "proofs": [ signature ]
+    })
+
+    print('signed tx', data, flush=True)
+
+    return pw.wrapper('/transactions/broadcast', data)
 
 
 def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
