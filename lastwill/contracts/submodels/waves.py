@@ -73,8 +73,8 @@ class ContractDetailsWavesSTO(CommonDetails):
     )
     asset_id = models.CharField(max_length=512, null=True, default=None)
     admin_address = models.CharField(max_length=50)
-    start_height = models.IntegerField()
-    stop_height = models.IntegerField()
+    start_date = models.IntegerField()
+    stop_date = models.IntegerField()
     rate = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
@@ -119,7 +119,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             )
 
         last_block = int(pw.height())
-        if self.start_height < last_block or self.stop_height < last_block:
+        if self.start_date < last_block or self.stop_date < last_block:
             raise ValidationError({'result': 1}, code=400)
 
     @classmethod
@@ -162,8 +162,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             # "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
             "D_MANAGEMENT_ADDRESS": self.admin_address,
             "D_COLD_VAULT_ADDR": self.cold_wallet_address,
-            "D_START_DATE": str(self.start_height),
-            "D_FINISH_DATE": str(self.stop_height),
+            "D_START_DATE": str(self.start_date),
+            "D_FINISH_DATE": str(self.stop_date),
             "D_RATE": str(int(self.rate)),
             "D_DECIMALS_MULTIPLIER": str(int(parsed_decimals)),
             "D_WHITELIST": self.whitelist,
@@ -331,7 +331,7 @@ class ContractDetailsWavesSTO(CommonDetails):
 
     def timesChanged(self, message):
         if 'startTime' in message and message['startTime']:
-            self.start_height = message['startTime']
+            self.start_date = message['startTime']
         if 'endTime' in message and message['endTime']:
-            self.stop_height = message['endTime']
+            self.stop_date = message['endTime']
         self.save()
