@@ -1274,7 +1274,7 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
-    return details
+    return Response(details)
 
 
 @api_view(http_method_names=['POST'])
