@@ -1566,8 +1566,8 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsWavesSTO
         fields = (
-            'asset_id', 'admin_address', 'cold_wallet_address', 'start_height',
-            'stop_height', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
+            'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
+            'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
             'max_wei', 'reused_token', 'token_description', 'token_short_name',
             'decimals', 'allow_change_dates', 'total_supply'
         )
