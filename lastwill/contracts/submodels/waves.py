@@ -92,7 +92,9 @@ def issue_asset_waves(params, address_from):
 
 
 def set_script_waves(script_source, address_from):
-    script = pw.wrapper('/utils/script/compile', script_source)['script'][7:]
+    compile_res = pw.wrapper('/utils/script/compile', script_source)
+    print('compiling answer', compile_res, flush=True)
+    script = compile_res['script'][7:]
     compiled_script = base64.b64decode(script)
     script_length = len(compiled_script)
     timestamp = int(time.time() * 1000)
