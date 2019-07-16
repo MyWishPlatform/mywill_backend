@@ -250,12 +250,14 @@ class ContractDetailsWavesSTO(CommonDetails):
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/waves-sto-contract/*')
         parsed_decimals = 10 ** int(self.decimals)
+        start_date_timestamp = int(self.start_date.timestamp())
+        stop_date_timestamp = int(self.start_date.timestamp())
         preproc_params = {"constants": {
             # "D_MANAGEMENT_ADDRESS_PK": self.admin_address,
             "D_MANAGEMENT_ADDRESS": self.admin_address,
             "D_COLD_VAULT_ADDR": self.cold_wallet_address,
-            "D_START_DATE": str(self.start_date),
-            "D_FINISH_DATE": str(self.stop_date),
+            "D_START_DATE": start_date_timestamp,
+            "D_FINISH_DATE": stop_date_timestamp,
             "D_RATE": str(int(self.rate)),
             "D_DECIMALS_MULTIPLIER": str(int(parsed_decimals)),
             "D_WHITELIST": self.whitelist,
