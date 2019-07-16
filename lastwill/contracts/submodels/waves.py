@@ -78,10 +78,10 @@ def issue_asset_waves(params, address_from):
     data = json.dumps({
         "senderPublicKey": pub.decode('utf-8'),
         "name": params['name'],
-        "quantity": params['total_supply'],
+        "quantity": int(params['total_supply']),
         "timestamp": timestamp,
         "description": params['description'],
-        "decimals": params['decimals'],
+        "decimals": int(params['decimals']),
         "reissuable": False,
         "fee": txFee,
         "signature": signature.decode('utf-8')
