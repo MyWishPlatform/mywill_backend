@@ -86,6 +86,7 @@ def issue_asset_waves(params, address_from):
         "fee": txFee,
         "signature": signature.decode('utf-8')
     })
+    print('issue asset tx', data, flush=True)
     return pw.wrapper('/assets/broadcast/issue', data)
 
 
@@ -275,7 +276,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         sending = sign_send_waves(deploy_address, created_address['address'], 110000000)
         #sending = deploy_address.sendWaves(contract_address, 110000000)
         print('sending', sending, flush=True)
-        time.sleep(8)
+        time.sleep(30)
         asset_id = ''
         if not self.reused_token:
             issue_attempts = 10
