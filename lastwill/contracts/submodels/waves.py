@@ -20,9 +20,10 @@ from email_messages import waves_sto_subject, waves_sto_text
 import json
 
 
-def sign_send_waves(tx_from, tx_to, tx_amount):
-    pub = tx_from['pub']
-    pk = tx_from['pk']
+def sign_send_waves(address_from, address_to, tx_amount):
+    address_from
+    pub = address_from.publicKey
+    pk = address_from.privateKey
     attachment = ''
     txFee = pw.DEFAULT_TX_FEE
     timestamp = int(time.time() * 1000)
@@ -34,7 +35,7 @@ def sign_send_waves(tx_from, tx_to, tx_amount):
             struct.pack(">Q", timestamp) + \
             struct.pack(">Q", tx_amount) + \
             struct.pack(">Q", txFee) + \
-            base58.b58decode(tx_to) + \
+            base58.b58decode(address_to) + \
             struct.pack(">H", len(attachment)) + \
             crypto.str2bytes(attachment)
     signature = crypto.sign(pk, sData)
@@ -42,13 +43,13 @@ def sign_send_waves(tx_from, tx_to, tx_amount):
         "type": 4,
         "version": 2,
         "senderPublicKey": pub,
-        "recipient": tx_to,
+        "recipient": address_to,
         "amount": tx_amount,
         "fee": txFee,
         "timestamp": timestamp,
-        "attachment": base58.b58encode(crypto.str2bytes(attachment)),
-        "signature": signature,
-        "proofs": [ signature ]
+        "attachment": base58.b58encode(crypto.str2bytes(attachment)).decode('utf-8'),
+        "signature": signature.decode('utf-8'),
+        "proofs": [signature.decode('utf-8')]
     })
 
     print('signed tx', data, flush=True)
@@ -234,7 +235,8 @@ class ContractDetailsWavesSTO(CommonDetails):
         pubKey, privKey, address = create_waves_privkey()
         contract_address = pw.Address(privateKey=privKey)
         print('account created', pubKey, privKey, address, flush=True)
-        sending = deploy_address.sendWaves(contract_address, 110000000)
+        sending = sign_send_waves(deploy_address, contract_address, 110000000)
+        #sending = deploy_address.sendWaves(contract_address, 110000000)
         print('sending', sending, flush=True)
         time.sleep(8)
         asset_id = ''
