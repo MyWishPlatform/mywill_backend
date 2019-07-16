@@ -24,6 +24,7 @@ def sign_send_waves(address_from, address_to, tx_amount):
     address_from
     pub = address_from.publicKey
     pk = address_from.privateKey
+
     attachment = ''
     txFee = pw.DEFAULT_TX_FEE
     timestamp = int(time.time() * 1000)
@@ -232,10 +233,10 @@ class ContractDetailsWavesSTO(CommonDetails):
         pw.setOnline()
 
         deploy_address = pw.Address(privateKey=NETWORKS[self.contract.network.name]['private_key'])
-        pubKey, privKey, address = create_waves_privkey()
+        pubKey, privKey, created_address = create_waves_privkey()
         contract_address = pw.Address(privateKey=privKey)
-        print('account created', pubKey, privKey, address, flush=True)
-        sending = sign_send_waves(deploy_address, contract_address, 110000000)
+        print('account created', pubKey, privKey, created_address, flush=True)
+        sending = sign_send_waves(deploy_address, created_address, 110000000)
         #sending = deploy_address.sendWaves(contract_address, 110000000)
         print('sending', sending, flush=True)
         time.sleep(8)
