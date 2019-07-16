@@ -141,10 +141,9 @@ class ContractDetailsWavesSTO(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
-
     def predeploy_validate(self):
-        now = timezone.now()
-        if self.start_date < now.timestamp():
+        now = datetime.datetime.now()
+        if self.start_date < now:
             raise ValidationError({'result': 1}, code=400)
 
 
