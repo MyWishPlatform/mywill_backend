@@ -1,20 +1,11 @@
-from django.utils import timezone
-from django.db.models import F
 from django.http import Http404
-from django.http import JsonResponse
 from django.views.generic import View
-from django.contrib.auth.models import User
-from django.core.mail import send_mail, EmailMessage
 
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL
@@ -22,8 +13,7 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
-from lastwill.contracts.submodels.swaps import SwapsMailing
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -1146,23 +1136,3 @@ def send_message_author_swap(request):
     )
     return Response('ok')
 
-
-@api_view(http_method_names=['POST'])
-def save_swaps_mail(request):
-    email = request.data['email'] if 'email' in request.data else None
-    telegram = request.data['telegram'] if 'telegram' in request.data else None
-    name = request.data['email'] if 'email' in request.data else None
-
-    mail = SwapsMailing(
-            email=email,
-            telegram_name=telegram,
-            name=name
-    )
-    mail.save()
-
-    return Response({
-        'id': mail.id,
-        'email': mail.email,
-        'telegram': mail.telegram_name,
-        'name': mail.name
-    })

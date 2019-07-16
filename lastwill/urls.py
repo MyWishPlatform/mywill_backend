@@ -37,8 +37,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_testnet_tron_tokens, get_tokens_for_eth_address,
                                     get_tronish_balance, confirm_swaps_info,
                                     get_contract_for_unique_link, get_public_contracts,
-                                    change_contract_state, send_message_author_swap,
-                                    save_swaps_mail)
+                                    change_contract_state, send_message_author_swap)
+from lastwill.swaps_common.mailing.api import save_swaps_mail
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,

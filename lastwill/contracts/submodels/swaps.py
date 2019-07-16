@@ -3,8 +3,6 @@ import string
 import smtplib
 from ethereum.utils import checksum_encode
 
-from django.db import models
-
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
@@ -242,7 +240,3 @@ class ContractDetailsSWAPS2(CommonDetails):
     def calc_cost(kwargs, network):
         return 0
 
-
-class SwapsMailing(models.Model):
-    email = models.CharField(max_length=50, null=True, default=None)
-    telegram_name = models.CharField(max_length=50, null=True, default=None)
