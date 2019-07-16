@@ -69,10 +69,10 @@ def issue_asset_waves(params, address_from):
             crypto.str2bytes(params['name']) + \
             struct.pack(">H", len(params['description'])) + \
             crypto.str2bytes(params['description']) + \
-            struct.pack(">Q", params['total_supply']) + \
-            struct.pack(">B", params['decimals']) + \
+            struct.pack(">Q", int(params['total_supply'])) + \
+            struct.pack(">B", int(params['decimals'])) + \
             b'\0' + \
-            struct.pack(">Q", txFee) + \
+            struct.pack(">Q", int(txFee)) + \
             struct.pack(">Q", timestamp)
     signature=crypto.sign(pk, sData)
     data = json.dumps({
