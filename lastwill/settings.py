@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'lastwill.deploy',
     'lastwill.promo',
     'lastwill.snapshot',
-    'lastwill.swaps_tokentable',
+    'lastwill.swaps_common',
 ]
 
 MIDDLEWARE = [
