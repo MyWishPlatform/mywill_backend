@@ -44,7 +44,7 @@ def sign_send_waves(address_from, address_to, tx_amount):
         "type": 4,
         "version": 2,
         "senderPublicKey": pub.decode('utf-8'),
-        "recipient": address_to,
+        "recipient": address_to.decode('utf-8'),
         "amount": tx_amount,
         "fee": txFee,
         "timestamp": timestamp,
