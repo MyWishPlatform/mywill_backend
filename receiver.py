@@ -18,8 +18,9 @@ from django.db.models.signals import post_save
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
-    WhitelistAddress, ContractDetailsSWAPS2, OrderBookSwaps
+    WhitelistAddress, ContractDetailsSWAPS2
 )
+from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.contracts.api import autodeploing
 from lastwill.settings import NETWORKS
