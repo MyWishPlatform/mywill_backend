@@ -1,9 +1,7 @@
-from django.db.models import Q
-
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from lastwill.swaps_tokentable.models import Tokens
+from lastwill.swaps_common.tokentable.models import Tokens
 from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK
 

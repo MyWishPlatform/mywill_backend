@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
-from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 # from allauth.account.views import confirm_email as allauthemailconfirmation
@@ -54,7 +53,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens
+from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens
 from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
