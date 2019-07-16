@@ -111,7 +111,7 @@ def set_script_waves(script_source, address_from):
     data = json.dumps({
         "type": 13,
         "version": 1,
-        "senderPublicKey": address_from['publicKey'],
+        "senderPublicKey": address_from['publicKey'].decode('utf-8'),
         "fee": txFee,
         "timestamp": timestamp,
         "script": 'base64:' + script,
