@@ -1,5 +1,6 @@
 import datetime
 import base58
+import base64
 import time
 
 from ethereum import abi
@@ -88,6 +89,36 @@ def issue_asset_waves(params, address_from):
     })
     print('issue asset tx', data, flush=True)
     return pw.wrapper('/assets/broadcast/issue', data)
+
+
+def set_script_waves(script_source, address_from):
+    script = pw.wrapper('/utils/script/compile', script_source)['script'][7:]
+    compiled_script = base64.b64decode(script)
+    script_length = len(compiled_script)
+    timestamp = int(time.time() * 1000)
+    txFee = pw.DEFAULT_SCRIPT_FEE
+    sData = b'\x0d' + \
+        b'\1' + \
+        crypto.str2bytes(str(pw.CHAIN_ID)) + \
+        base58.b58decode(address_from['publicKey']) + \
+        b'\1' + \
+        struct.pack(">H", script_length) + \
+        compiled_script + \
+        struct.pack(">Q", txFee) + \
+        struct.pack(">Q", timestamp)
+    signature = crypto.sign(address_from['privateKey'], sData)
+
+    data = json.dumps({
+        "type": 13,
+        "version": 1,
+        "senderPublicKey": address_from['publicKey'],
+        "fee": txFee,
+        "timestamp": timestamp,
+        "script": 'base64:' + script,
+        "proofs": [signature.decode('utf-8')]
+    })
+
+    return pw.wrapper('/transactions/broadcast', data)
 
 
 def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
@@ -279,87 +310,42 @@ class ContractDetailsWavesSTO(CommonDetails):
         time.sleep(30)
         asset_id = ''
         if not self.reused_token:
-            issue_attempts = 10
-            for issue_attempt in range(issue_attempts):
-                print('token creating attempt', issue_attempt, flush=True)
-                try:
-                    token_params = {
-                        'name': self.token_short_name,
-                        'description': self.token_description,
-                        'total_supply': self.total_supply,
-                        'decimals': self.decimals
-                    }
-                    token_tx = issue_asset_waves(token_params, created_address)
-                    #token = contract_address.issueAsset(
-                    #    self.token_short_name,
-                    #    self.token_description,
-                    #    int(self.total_supply),
-                    #    int(self.decimals)
-                    #)
-                    print('token tx', token_tx, flush=True)
+            token_params = {
+                'name': self.token_short_name,
+                'description': self.token_description,
+                'total_supply': self.total_supply,
+                'decimals': self.decimals
+            }
+            token_tx = issue_asset_waves(token_params, created_address)
+            print('token tx', token_tx, flush=True)
+            asset_id = token_tx['assetId']
 
-                    asset_id = token.assetId
-                    asset_attempt = 0
-                    while token.status() != 'Issued':
-                    #for asset_attempt in range(asset_attempts)
-                        if token.status() == 'Issued':
-                            print('Asset {assetId} issued'.format(assetId=asset_id))
-                            break
-                        else:
-                            asset_attempt += 1
-                            print('Asset {assetId} status is {asset_status}, waiting to issue, reattempt {attempt}'
-                                  .format(
-                                      assetId=asset_id,
-                                      asset_status=token.status(),
-                                      attempt=asset_attempt,
-                                      flush=True
-                                  ))
-                            time.sleep(10)
-                            if asset_attempt >= 30:
-                                raise Exception('cannot issue asset in %s attempts' % asset_attempt)
-                            continue
-                except KeyError:
-                    print('token creation attempt {attempt} failed, retry'.format(attempt=issue_attempt))
-                    pw.setOffline()
-                    token_trx = contract_address.issueAsset(
-                        self.token_short_name,
-                        self.token_description,
-                        int(self.total_supply),
-                        int(self.decimals)
-                    )
-                    print('issueAsset trx not broadcasted', token_trx, flush=True)
-                    pw.setOnline()
-                    time.sleep(5)
-                    if issue_attempt < issue_attempts - 1:
-                        continue
-                    else:
-                        raise Exception('token creation error in deploying')
-                break
         token_address = self.asset_id if self.reused_token else asset_id
         self.compile(asset_id=token_address)
-        # pw.setOnline()
-        # pw.setOffline()
-        try:
-            trx = contract_address.setScript(
-                self.ride_contract.source_code,
-            txFee=1000000,
-            timestamp=0
-            )
-        except KeyError:
-            pw.setOffline()
-            trx = contract_address.setScript(
-                self.ride_contract.source_code,
-            txFee=1000000,
-            timestamp=0
-            )
-            print('setScript trx not broadcasted', token_trx, flush=True)
-            pw.setOffline()
-        print('trx', trx, flush=True)
+
+        script_trx = set_script_waves(self.ride_contract.source_code, created_address)
+
+        # try:
+        #     trx = contract_address.setScript(
+        #         self.ride_contract.source_code,
+        #     txFee=1000000,
+        #     timestamp=0
+        #     )
+        # except KeyError:
+        #     pw.setOffline()
+        #     trx = contract_address.setScript(
+        #         self.ride_contract.source_code,
+        #     txFee=1000000,
+        #     timestamp=0
+        #     )
+        #     print('setScript trx not broadcasted', token_trx, flush=True)
+        #     pw.setOffline()
+        print('trx', script_trx, flush=True)
         if not self.asset_id:
             self.asset_id = token_address
             self.save()
         # self.ride_contract.address = address
-        self.ride_contract.tx_hash = trx['id']
+        self.ride_contract.tx_hash = script_trx['id']
         self.ride_contract.save()
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
