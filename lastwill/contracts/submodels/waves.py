@@ -21,7 +21,6 @@ import json
 
 
 def sign_send_waves(address_from, address_to, tx_amount):
-    address_from
     pub = address_from.publicKey
     pk = address_from.privateKey
 
@@ -56,6 +55,38 @@ def sign_send_waves(address_from, address_to, tx_amount):
     print('signed tx', data, flush=True)
 
     return pw.wrapper('/transactions/broadcast', data)
+
+
+def issue_asset_waves(params, address_from):
+    pub = address_from.publicKey
+    pk = address_from.privateKey
+
+    txFee = pw.DEFAULT_ASSET_FEE
+    timestamp = int(time.time() * 1000)
+    sData = b'\3' + \
+            base58.b58decode(pub) + \
+            struct.pack(">H", len(params['name'])) + \
+            crypto.str2bytes(params['name']) + \
+            struct.pack(">H", len(params['description'])) + \
+            crypto.str2bytes(params['description']) + \
+            struct.pack(">Q", params['total_supply']) + \
+            struct.pack(">B", params['decimals']) + \
+            b'\0' + \
+            struct.pack(">Q", txFee) + \
+            struct.pack(">Q", timestamp)
+    signature=crypto.sign(pk, sData)
+    data = json.dumps({
+        "senderPublicKey": pub,
+        "name": params['name'],
+        "quantity": params['total_supply'],
+        "timestamp": timestamp,
+        "description": params['description'],
+        "decimals": params['decimals'],
+        "reissuable": False,
+        "fee": txFee,
+        "signature": signature
+    })
+    return pw.wrapper('/assets/broadcast/issue', data)
 
 
 def create_waves_privkey(publicKey='', privateKey='', seed='', nonce=0):
@@ -246,13 +277,21 @@ class ContractDetailsWavesSTO(CommonDetails):
             for issue_attempt in range(issue_attempts):
                 print('token creating attempt', issue_attempt, flush=True)
                 try:
-                    token = contract_address.issueAsset(
-                        self.token_short_name,
-                        self.token_description,
-                        int(self.total_supply),
-                        int(self.decimals)
-                    )
-                    print('token', token, flush=True)
+                    token_params = {
+                        'name': self.token_short_name,
+                        'description': self.token_description,
+                        'total_supply': self.total_supply,
+                        'decimals': self.decimals
+                    }
+                    token_tx = issue_asset_waves(token_params, created_address)
+                    #token = contract_address.issueAsset(
+                    #    self.token_short_name,
+                    #    self.token_description,
+                    #    int(self.total_supply),
+                    #    int(self.decimals)
+                    #)
+                    print('token tx', token_tx, flush=True)
+                    
                     asset_id = token.assetId
                     asset_attempt = 0
                     while token.status() != 'Issued':
