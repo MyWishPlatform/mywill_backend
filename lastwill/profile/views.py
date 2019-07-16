@@ -310,3 +310,4 @@ def delete_api_tokens(request):
         token.active = False
         token.save()
     return Response({"result": "ok"})
+

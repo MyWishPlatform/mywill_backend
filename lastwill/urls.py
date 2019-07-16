@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
-from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 # from allauth.account.views import confirm_email as allauthemailconfirmation
@@ -38,8 +37,8 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
                                     get_testnet_tron_tokens, get_tokens_for_eth_address,
                                     get_tronish_balance, confirm_swaps_info,
                                     get_contract_for_unique_link, get_public_contracts,
-                                    change_contract_state, send_message_author_swap,
-                                    save_swaps_mail)
+                                    change_contract_state, send_message_author_swap)
+from lastwill.swaps_common.mailing.api import save_swaps_mail
 from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, show_contract_swaps_backend, \
     edit_contract_swaps_backend, get_swap_v3_for_unique_link
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
@@ -56,7 +55,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens
+from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens
 from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
@@ -155,13 +154,11 @@ urlpatterns = [
     url(r'^api/get_public_contracts/$', get_public_contracts),
     url(r'^api/change_contract_state/$', change_contract_state),
     url(r'^api/send_message_author_swap/$', send_message_author_swap),
+    url(r'^api/save_swaps_mail/$', save_swaps_mail),
     url(r'^api/create_swap3/$', create_contract_swaps_backend),
     url(r'^api/get_swap3/$', show_contract_swaps_backend),
     url(r'^api/get_swap3_for_unique_link/$', get_swap_v3_for_unique_link),
     url(r'^api/edit_swap3/(?P<swap_id>\d+)/$', edit_contract_swaps_backend),
-    url(r'^api/save_swaps_mail/$', save_swaps_mail)
-
-
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

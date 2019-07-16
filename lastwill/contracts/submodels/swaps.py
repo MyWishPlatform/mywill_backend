@@ -268,8 +268,3 @@ class ContractDetailsSWAPS2(CommonDetails):
         result = int(0.5 * NET_DECIMALS['ETH'])
         return result
 
-
-class SwapsMailing(models.Model):
-    email = models.CharField(max_length=50, null=True, default=None)
-    telegram_name = models.CharField(max_length=50, null=True, default=None)
-    name = models.CharField(max_length=50, null=True, default=None)
