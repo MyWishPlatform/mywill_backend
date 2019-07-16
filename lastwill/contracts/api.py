@@ -30,6 +30,7 @@ from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps
 from lastwill.consts import *
+import requests
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -470,6 +471,11 @@ def get_balances_statistics():
     }
 
 
+def get_ieo_statistics():
+    res = requests.get('https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
+    return res.json()
+
+
 def get_contracts_for_network(net, all_contracts, now, day):
     contracts = all_contracts.filter(network=net)
     new_contracts = contracts.filter(created_date__lte=now,
@@ -550,7 +556,8 @@ def get_statistics(request):
     answer = {
         'user_statistics': {'users': len(users), 'new_users': len(new_users)},
         'currency_statistics': get_currency_statistics(),
-        'balances_statistics': get_balances_statistics()
+        'balances_statistics': get_balances_statistics(),
+        'ieo': get_ieo_statistics()
     }
     networks = Network.objects.all()
     contracts = Contract.objects.all().exclude(
