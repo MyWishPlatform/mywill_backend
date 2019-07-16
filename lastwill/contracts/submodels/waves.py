@@ -98,7 +98,8 @@ def set_script_waves(script_source, address_from):
     compiled_script = base64.b64decode(script)
     script_length = len(compiled_script)
     timestamp = int(time.time() * 1000)
-    txFee = pw.DEFAULT_SCRIPT_FEE
+    #txFee = pw.DEFAULT_SCRIPT_FEE
+    txFee = 1000000
     sData = b'\x0d' + \
         b'\1' + \
         crypto.str2bytes(str(pw.CHAIN_ID)) + \
