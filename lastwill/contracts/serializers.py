@@ -32,7 +32,6 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
-from lastwill.swaps_tokentable.api import get_cmc_token_by_id
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
