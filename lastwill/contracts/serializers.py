@@ -1605,14 +1605,20 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         if 'decimals' in details:
             if details['decimals'] > 8 or details['decimals'] < 0:
                 raise ValidationError
-        if details['start_date'] < datetime.datetime.now().timestamp() + 560:
+        details['start_date'] = datetime.datetime.strptime(
+            details['start_date'], '%Y-%m-%d %H:%M'
+        )
+        details['stop_date'] = datetime.datetime.strptime(
+            details['stop_date'], '%Y-%m-%d %H:%M'
+        )
+        if details['start_date'] < datetime.datetime.now() + datetime.timedelta(minutes=5):
             raise ValidationError({'result': 1}, code=400)
-        if details['stop_date'] < details['start_date'] + 560:
+        if details['stop_date'] < details['start_date'] + datetime.timedelta(minutes=5):
             raise ValidationError
         if details['stop_date'] < details['start_date']:
             raise ValidationError
-        details['start_date'] = details['start_date'] // 1000
-        details['stop_date'] = details['stop_date'] // 1000
+        # details['start_date'] = details['start_date'] // 1000
+        # details['stop_date'] = details['stop_date'] // 1000
         if 'soft_cap' not in details:
             details['soft_cap'] = 0
         return details
