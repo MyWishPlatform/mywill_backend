@@ -76,7 +76,7 @@ def issue_asset_waves(params, address_from):
             struct.pack(">Q", timestamp)
     signature=crypto.sign(pk, sData)
     data = json.dumps({
-        "senderPublicKey": pub,
+        "senderPublicKey": pub.decode('utf-8'),
         "name": params['name'],
         "quantity": params['total_supply'],
         "timestamp": timestamp,
@@ -84,7 +84,7 @@ def issue_asset_waves(params, address_from):
         "decimals": params['decimals'],
         "reissuable": False,
         "fee": txFee,
-        "signature": signature
+        "signature": signature.decode('utf-8')
     })
     return pw.wrapper('/assets/broadcast/issue', data)
 
@@ -291,7 +291,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     #    int(self.decimals)
                     #)
                     print('token tx', token_tx, flush=True)
-                    
+
                     asset_id = token.assetId
                     asset_attempt = 0
                     while token.status() != 'Issued':
