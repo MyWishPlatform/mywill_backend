@@ -1611,6 +1611,8 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['stop_date'] < details['start_date']:
             raise ValidationError
+        details['start_date'] = details['start_date'] // 1000
+        details['stop_date'] = details['stop_date'] // 1000
         if 'soft_cap' not in details:
             details['soft_cap'] = 0
         return details
