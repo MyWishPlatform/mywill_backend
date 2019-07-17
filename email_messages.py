@@ -2,7 +2,7 @@ register_subject = """Please Confirm Your E-mail Address"""
 
 register_text = """{subsite_name} team welcomes you!
 
-You're receiving this e-mail because user {user_display} has given yours as an e-mail address to connect their account.
+You're receiving this e-mail because user {user_display} has entered this e-mail address to connect to their account.
 
 To confirm the registration, click on the link below:
 
@@ -213,7 +213,7 @@ Your SWAP is created and ready for deployment to Ethereum.
 If you have any questions please contact support@swaps.network.
 
 Best wishes,
-Swaps Team.
+SWAPS.NETWORK Team.
 
 """
 
@@ -226,7 +226,7 @@ You can use your SWAP now: {swaps_link}
 Please contact support@swaps.network if you have any questions.
 
 Best wishes,
-Swaps Team.
+SWAPS.NETWORK Team.
 """
 
 swaps_support_subject = """ Swaps user notification"""

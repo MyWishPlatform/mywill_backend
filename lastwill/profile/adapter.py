@@ -33,7 +33,7 @@ class SubSiteRegistrationAdapter(DefaultAccountAdapter):
 
         if self.request.META['HTTP_HOST'] == SWAPS_URL:
             #from_email = EMAIL_HOST_USER_SWAPS
-            welcome_head = "SWAPS Network"
+            welcome_head = "SWAPS.NETWORK"
 
             sendEMail(
                 register_subject,

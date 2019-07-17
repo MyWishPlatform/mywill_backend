@@ -1,20 +1,11 @@
-from django.utils import timezone
-from django.db.models import F
 from django.http import Http404
-from django.http import JsonResponse
 from django.views.generic import View
-from django.contrib.auth.models import User
-from django.core.mail import send_mail, EmailMessage
 
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL
@@ -22,13 +13,14 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, unlock_eos_account
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps
 from lastwill.consts import *
+import requests
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -469,6 +461,11 @@ def get_balances_statistics():
     }
 
 
+def get_ieo_statistics():
+    res = requests.get('https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
+    return res.json()
+
+
 def get_contracts_for_network(net, all_contracts, now, day):
     contracts = all_contracts.filter(network=net)
     new_contracts = contracts.filter(created_date__lte=now,
@@ -549,7 +546,8 @@ def get_statistics(request):
     answer = {
         'user_statistics': {'users': len(users), 'new_users': len(new_users)},
         'currency_statistics': get_currency_statistics(),
-        'balances_statistics': get_balances_statistics()
+        'balances_statistics': get_balances_statistics(),
+        'ieo': get_ieo_statistics()
     }
     networks = Network.objects.all()
     contracts = Contract.objects.all().exclude(
@@ -1137,3 +1135,4 @@ def send_message_author_swap(request):
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
+
