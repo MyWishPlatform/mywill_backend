@@ -26,4 +26,4 @@ class FreezeBalance(models.Model):
     eosish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     wish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     tronish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
-    bwish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+    #bwish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
