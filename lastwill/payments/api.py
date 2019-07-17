@@ -100,6 +100,7 @@ def freeze_payments(amount, network):
     if network == 'EOS_MAINNET':
     #if currency in ('EOS', 'EOSISH'):
         value = amount * 0.15 * NET_DECIMALS['EOS'] / NET_DECIMALS['ETH']
+        value = value * convert('WISH', 'EOSISH')['EOSISH']
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value
         )
@@ -107,6 +108,7 @@ def freeze_payments(amount, network):
     elif network == 'TRON_MAINNET':
     #elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10 * NET_DECIMALS['TRX'] / NET_DECIMALS['ETH']
+        value = value * convert('WISH', 'TRONISH')['TRONISH']
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             tronish=F('tronish') + value
         )
