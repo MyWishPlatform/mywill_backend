@@ -308,7 +308,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             'address': address
         }
         contract_address = pw.Address(privateKey=privKey)
-        print('account created', pubKey, privKey, created_address, flush=True)
+        print('account created', pubKey, privKey, address, flush=True)
         sending = sign_send_waves(deploy_address, created_address['address'], 110000000)
         #sending = deploy_address.sendWaves(contract_address, 110000000)
         print('sending', sending, flush=True)
@@ -351,9 +351,12 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.save()
         # self.ride_contract.address = address
         self.ride_contract.tx_hash = script_trx['id']
+        self.ride_contract.address = script_trx['sender']
+        self.ride_contract.bytecode = script_trx['script']
         self.ride_contract.save()
-        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.state = 'ACTIVE'
         self.contract.save()
+        take_off_blocking(self.contract.network.name)
 
     @blocking
     @postponable
