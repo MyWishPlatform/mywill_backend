@@ -7,12 +7,12 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, NETWORKS
 from lastwill.consts import NET_DECIMALS
 from exchange_API import to_wish, convert
 
 
-def create_payment(uid, tx, currency, amount, site_id):
+def create_payment(uid, tx, currency, amount, site_id, network):
     amount = float(amount)
     if amount == 0.0:
         return
@@ -50,13 +50,13 @@ def create_payment(uid, tx, currency, amount, site_id):
     if amount < 0.0:
         if site_id == 4:
             try:
-                negative_payment(user, -value, site_id)
+                negative_payment(user, -value, site_id, network)
             except:
                 print('-5% payment', flush=True)
                 value = value * 0.95
-                negative_payment(user, -value, site_id)
+                negative_payment(user, -value, site_id, network)
         else:
-            negative_payment(user, -value, site_id)
+            negative_payment(user, -value, site_id, network)
     else:
         positive_payment(user, value, site_id, currency, amount)
     site = SubSite.objects.get(id=site_id)
@@ -96,32 +96,35 @@ def add_decimals(currency, amount):
     return amount
 
 
-def freeze_payments(amount, original_value, currency):
-    if currency in ('EOS', 'EOSISH'):
+def freeze_payments(amount, network):
+    if network == 'EOS_MAINNET':
+    #if currency in ('EOS', 'EOSISH'):
         value = amount * 0.15
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value
         )
         print('FREEZE', value, 'EOSISH', flush=True)
-    elif currency in ('TRON', 'TRONISH'):
+    elif network == 'TRON_MAINNET':
+    #elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             tronish=F('tronish') + value
         )
-        wish_value = original_value * 0.10
+        wish_value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + wish_value
         )
         print('FREEZE', value, 'TRONISH', flush=True)
         print('FREEZE', wish_value, 'WISH', flush=True)
-    elif currency in ('BNB', 'BWISH'):
-        value = original_value * 0.15
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            bwish=F('bwish') + value
-        )
-        print('FREEZE', value, 'BWISH', flush=True)
+    #elif currency in ('BNB', 'BWISH'):
+    #    value = original_value * 0.15
+    #    FreezeBalance.objects.select_for_update().filter(id=1).update(
+    #        bwish=F('bwish') + value
+    #    )
+    #    print('FREEZE', value, 'BWISH', flush=True)
     else:
-        value = original_value * 0.15
+    # if network == 'ETHEREUM_MAINNET':
+        value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + value
         )
@@ -132,14 +135,15 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
             balance=F('balance') + value)
-    freeze_payments(amount, value, currency)
 
 
-def negative_payment(user, value, site_id):
+def negative_payment(user, value, site_id, network):
     if not UserSiteBalance.objects.select_for_update().filter(
             user=user, subsite__id=site_id, balance__gte=value
     ).update(balance=F('balance') - value):
         raise ValidationError({'result': 3}, code=400)
+    if not NETWORKS[network]['is_free']:
+        freeze_payments(value, network)
 
 
 def get_payment_statistics(start, stop=None):
