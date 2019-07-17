@@ -99,7 +99,7 @@ def add_decimals(currency, amount):
 def freeze_payments(amount, network):
     if network == 'EOS_MAINNET':
     #if currency in ('EOS', 'EOSISH'):
-        value = amount * 0.15
+        value = amount * 0.15 * NET_DECIMALS['ETH'] / NET_DECIMALS['EOS']
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value
         )
