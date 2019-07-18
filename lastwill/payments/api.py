@@ -109,7 +109,7 @@ def freeze_payments(amount, network):
     elif network == 'TRON_MAINNET':
     #elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10 * NET_DECIMALS['TRX'] / NET_DECIMALS['ETH']
-        value = convert('WISH', 'TRONISH')['TRONISH']
+        value *= convert('WISH', 'TRONISH')['TRONISH']
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             tronish=F('tronish') + int(value)
         )
