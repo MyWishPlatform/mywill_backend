@@ -11,7 +11,7 @@ from subprocess import Popen, PIPE
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, FREEZE_THRESHOLD_BWISH, MYWISH_ADDRESS, \
     NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, NETWORK_SIGN_TRANSACTION_BWISH, COLD_TOKEN_SYMBOL_EOS, COLD_TOKEN_SYMBOL_BNB
-from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT, EOS_COLD_ABI
 from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
 from lastwill.settings import BINANCE_PAYMENT_PASSWORD, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
@@ -68,8 +68,9 @@ def freeze_eosish(amount):
             + '.0000'
     )
     command_list = [
-        'cleos', '-u', eos_url, 'push', 'action', 'buildertoken', 'transfer',
+        'cleos', '-u', eos_url, 'push', 'action', "{token_account}", 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} {token_name}", "m" ]'.format(
+            token_account=EOS_COLD_ABI,
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
             amount=amount_with_decimals,
