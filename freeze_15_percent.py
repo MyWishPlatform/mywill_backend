@@ -17,6 +17,7 @@ from lastwill.settings import BINANCE_PAYMENT_PASSWORD, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 from lastwill.json_templates import get_freeze_wish_abi
+from lastwill.consts import NET_DECIMALS
 
 from django.core.mail import send_mail, EmailMessage
 from lastwill.settings import DEFAULT_FROM_EMAIL, SUPPORT_EMAIL
@@ -100,7 +101,11 @@ def freeze_eosish(amount):
 def freeze_tronish():
     print('freeze tronish', flush=True)
     print('before encode', flush=True)
-    params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], 450000000])
+    params = abi.encode_abi(
+            ['address', 'uint256'],
+            ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:],
+            450 * NET_DECIMALS['TRONISH']]
+    )
     print('after encode', flush=True)
     # print('params', params, flush=True)
     freeze_encoded_parameter = binascii.hexlify(params)
