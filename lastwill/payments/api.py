@@ -99,8 +99,9 @@ def add_decimals(currency, amount):
 def freeze_payments(amount, network):
     if network == 'EOS_MAINNET':
     #if currency in ('EOS', 'EOSISH'):
-        value = amount * 0.15 * NET_DECIMALS['EOS'] / NET_DECIMALS['ETH']
-        value = value * convert('WISH', 'EOSISH')['EOSISH']
+        value = amount * 0.15 * NET_DECIMALS['EOSISH'] / NET_DECIMALS['ETH']
+        value *= convert('WISH', 'EOSISH')['EOSISH']
+        #value = float(':.4f'.format(value)
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value
         )
@@ -108,15 +109,15 @@ def freeze_payments(amount, network):
     elif network == 'TRON_MAINNET':
     #elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10 * NET_DECIMALS['TRX'] / NET_DECIMALS['ETH']
-        value = value * convert('WISH', 'TRONISH')['TRONISH']
+        value = convert('WISH', 'TRONISH')['TRONISH']
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            tronish=F('tronish') + value
+            tronish=F('tronish') + int(value)
         )
         wish_value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             wish=F('wish') + wish_value
         )
-        print('FREEZE', value, 'TRONISH', flush=True)
+        print('FREEZE', int(value), 'TRONISH', flush=True)
         print('FREEZE', wish_value, 'WISH', flush=True)
     #elif currency in ('BNB', 'BWISH'):
     #    value = original_value * 0.15
