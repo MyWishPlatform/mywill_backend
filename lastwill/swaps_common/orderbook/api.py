@@ -105,6 +105,20 @@ def show_contract_swaps_backend(request):
         raise ParseError
 
 
+@api_view(http_method_names=['GET'])
+def show_user_contract_swaps_backend(request):
+    if request.user.is_anonymous:
+        raise PermissionDenied
+
+    orders_list = []
+    orders = OrderBookSwaps.objects.filter(user=request.user)
+    for order in orders:
+        details = get_swap_from_orderbook(swap_id=order.id)
+        orders_list.append(details)
+
+    return Response(orders_list)
+
+
 @api_view(http_method_names=['POST'])
 def edit_contract_swaps_backend(request, swap_id):
     if request.user.is_anonymous:
