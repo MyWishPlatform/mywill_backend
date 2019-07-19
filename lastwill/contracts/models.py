@@ -10,3 +10,4 @@ from .submodels.eos import *
 from .submodels.eos_token_standalone import *
 from .submodels.tron import *
 from .submodels.swaps import *
+from .submodels.waves import *

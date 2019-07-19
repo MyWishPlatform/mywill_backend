@@ -28,7 +28,7 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
+        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -276,6 +276,7 @@ class ContractSerializer(serializers.ModelSerializer):
             18: ContractDetailsTRONLostkeySerializer,
             19: ContractDetailsLostKeyTokensSerializer,
             20: ContractDetailsSWAPSSerializer,
+            22: ContractDetailsSTOSerializer,
             21: ContractDetailsSWAPS2Serializer
         }[contract_type]
 
@@ -666,6 +667,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         res['neo_contract_token'] = NeoContractSerializer().to_representation(contract_details.neo_contract)
         if res['neo_contract_token']['address']:
             res['neo_contract_token']['script_hash'] = res['neo_contract_token']['address']
+            print('neo contract id', contract_details.contract.id, flush=True)
             res['neo_contract_token']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_token']['address']))
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
@@ -1558,4 +1560,66 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
         details['quote_limit'] = int(details['quote_limit'])
         if details['base_address'].lower() == details['quote_address'].lower():
             raise ValidationError({'result': 1}, code=400)
+        return details
+
+
+class ContractDetailsSTOSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsWavesSTO
+        fields = (
+            'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
+            'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
+            'max_wei', 'reused_token', 'token_description', 'token_short_name',
+            'decimals', 'allow_change_dates', 'total_supply'
+        )
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        if not contract_details:
+           print('*'*50, contract_details.id, flush=True)
+        res['ride_contract'] = EthContractSerializer().to_representation(contract_details.ride_contract)
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, details):
+        if details['rate'] < 1 or details['rate'] > 10**18:
+            raise ValidationError
+        if 'admin_address' not in details:
+            raise ValidationError
+        if int(details['hard_cap']) > 922337203685477580:
+            raise ValidationError
+        if 'total_supply' in details:
+            if int(details['total_supply']) > 922337203685477580:
+                raise ValidationError
+        if 'max_wei' in details and 'min_wei' in details:
+            if int(details['min_wei']) > int(details['max_wei']) or int(details['max_wei']) > 922337203685477580:
+                raise ValidationError
+        if 'decimals' in details:
+            if details['decimals'] > 8 or details['decimals'] < 0:
+                raise ValidationError
+        details['start_date'] = datetime.datetime.strptime(
+            details['start_date'], '%Y-%m-%d %H:%M'
+        )
+        details['stop_date'] = datetime.datetime.strptime(
+            details['stop_date'], '%Y-%m-%d %H:%M'
+        )
+        if details['start_date'] < datetime.datetime.now() + datetime.timedelta(minutes=5):
+            raise ValidationError({'result': 1}, code=400)
+        if details['stop_date'] < details['start_date'] + datetime.timedelta(minutes=5):
+            raise ValidationError
+        if details['stop_date'] < details['start_date']:
+            raise ValidationError
+        # details['start_date'] = details['start_date'] // 1000
+        # details['stop_date'] = details['stop_date'] // 1000
+        if 'soft_cap' not in details:
+            details['soft_cap'] = 0
         return details

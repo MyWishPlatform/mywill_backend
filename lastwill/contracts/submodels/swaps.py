@@ -11,7 +11,7 @@ from email_messages import *
 
 
 def sendEMail(sub, text, mail):
-    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server = smtplib.SMTP('smtp.yandex.ru', 587)
     server.starttls()
     server.ehlo()
     server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)

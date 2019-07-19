@@ -24,7 +24,7 @@ class memoize_timeout:
 def convert(fsym, tsyms):
     eosish_factor = 1.0
     revesre_convert = False
-    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT'}
+    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
         requests.get('https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos')
