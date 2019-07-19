@@ -266,7 +266,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             "D_SOFT_CAP_WAVES": str(int(self.soft_cap)),
             "D_HARD_CAP_WAVES": str(int(self.hard_cap)),
             "D_MAX_INVESTMENT": str(int(self.max_wei)) if self.max_wei else '0',
-            "D_MIN_INVESTMENT": str(int(self.min_wei)) if self.min_wei else '0'
+            "D_MIN_INVESTMENT": str(int(self.min_wei)) if self.min_wei else '0',
+            "D_CHANGING_DATES": self.allow_change_dates
     }}
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
