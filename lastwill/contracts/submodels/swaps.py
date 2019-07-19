@@ -8,7 +8,6 @@ from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from email_messages import *
-from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 
 def sendEMail(sub, text, mail):
@@ -25,30 +24,6 @@ def sendEMail(sub, text, mail):
     ])
     server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
     server.quit()
-
-
-def get_swap_from_orderbook(swap_id):
-    backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
-    saved_details = {
-        'id': backend_contract.id,
-        'name': backend_contract.name,
-        'base_address': backend_contract.base_address,
-        'base_limit': backend_contract.base_limit,
-        'base_coin_id': backend_contract.base_coin_id,
-        'quote_address': backend_contract.quote_address,
-        'quote_limit': backend_contract.quote_limit,
-        'quote_coin_id': backend_contract.quote_coin_id,
-        'owner_address': backend_contract.owner_address,
-        'stop_date': backend_contract.stop_date,
-        'memo_contract': backend_contract.memo_contract,
-        'unique_link': backend_contract.unique_link,
-        'state': backend_contract.state,
-        'broker_fee': backend_contract.broker_fee,
-        'broker_fee_address': backend_contract.broker_fee_address,
-        'broker_fee_base': backend_contract.broker_fee_base,
-        'broker_fee_quote': backend_contract.broker_fee_quote
-    }
-    return saved_details
 
 
 class InvestAddresses(models.Model):
