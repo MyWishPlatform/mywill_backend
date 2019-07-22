@@ -181,7 +181,7 @@ def check_payments():
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
         try:
             #freeze_wish(freeze_balance.wish)
-            freeze_bnb_wish(freeze_balance.bwish)
+            freeze_bnb_wish(freeze_balance.wish)
             freeze_balance.wish = 0
             freeze_balance.save()
         except Exception as e:
