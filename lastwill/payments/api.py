@@ -115,23 +115,23 @@ def freeze_payments(amount, network):
         )
         wish_value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + wish_value
+            bwish=F('bwish') + wish_value
         )
         print('FREEZE', int(value), 'TRONISH', flush=True)
         print('FREEZE', wish_value, 'WISH', flush=True)
     #elif currency in ('BNB', 'BWISH'):
-    #    value = original_value * 0.15
-    #    FreezeBalance.objects.select_for_update().filter(id=1).update(
-    #        bwish=F('bwish') + value
-    #    )
-    #    print('FREEZE', value, 'BWISH', flush=True)
     else:
-    # if network == 'ETHEREUM_MAINNET':
         value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + value
+            bwish=F('bwish') + value
         )
-        print('FREEZE', value, 'WISH', flush=True)
+        print('FREEZE', value, 'BWISH', flush=True)
+    # if network == 'ETHEREUM_MAINNET':
+    #    value = amount * 0.10
+    #    FreezeBalance.objects.select_for_update().filter(id=1).update(
+    #        wish=F('wish') + value
+    #    )
+    #    print('FREEZE', value, 'WISH', flush=True)
 
 
 def positive_payment(user, value, site_id, currency, amount):
