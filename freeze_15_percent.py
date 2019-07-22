@@ -12,7 +12,7 @@ from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, FREEZE_THRESHOLD_BWISH, MYWISH_ADDRESS, \
     NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, NETWORK_SIGN_TRANSACTION_BWISH, COLD_TOKEN_SYMBOL_EOS, COLD_TOKEN_SYMBOL_BNB
 from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT, EOS_COLD_ABI
-from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
+from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS, FREEZE_THRESHOLD_TRONISH
 from lastwill.settings import BINANCE_PAYMENT_PASSWORD, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
@@ -198,12 +198,12 @@ def check_payments():
             print(e)
             print('Freezing EOSISH failed')
             send_mail_attempt("EOSISH", freeze_balance.eosish, e)
-    if freeze_balance.tronish >= 450000000:
+    if freeze_balance.tronish >= FREEZE_THRESHOLD_TRONISH:  # 450000000
         print('tronish > 0', flush=True)
         try:
             print('try send tronish', flush=True)
             freeze_tronish()
-            freeze_balance.tronish = freeze_balance.tronish - 450000000
+            freeze_balance.tronish = freeze_balance.tronish - FREEZE_THRESHOLD_TRONISH
             freeze_balance.save()
         except Exception as e:
             attempt += 1
