@@ -90,9 +90,12 @@ def create_contract_swaps_backend(request):
 
     if base_address or quote_address:
         backend_contract.state = 'WAITING_FOR_ACTIVATION'
+        fake_swap = create_swap2_for_events(backend_contract)
+        print(fake_swap, flush=True)
     else:
         backend_contract.state = 'ACTIVE'
 
+    backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
     return Response(details)
@@ -214,3 +217,14 @@ def get_swap_v3_for_unique_link(request):
 
     details = get_swap_from_orderbook(swaps_order.id)
     return Response(details)
+
+
+@api_view(http_method_names=['GET'])
+def get_swap_v3_public(request):
+    backend_contracts = OrderBookSwaps.objects.filter(public=True)
+
+    res = []
+    for order in backend_contracts:
+        res.append(get_swap_from_orderbook(order.id))
+
+    return Response(res)
