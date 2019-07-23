@@ -83,8 +83,15 @@ def create_contract_swaps_backend(request):
             backend_contract.broker_fee_quote = contract_details['broker_fee_quote']
 
     backend_contract.save()
-    create_fake_swap = create_swap2_for_events(backend_contract)
-    print(create_fake_swap, flush=True)
+    fake_swap = create_swap2_for_events(backend_contract)
+    print(fake_swap, flush=True)
+
+    backend_contract.memo_contract = fake_swap.memo_contract
+
+    if base_address or quote_address:
+        backend_contract.state = 'WAITING_FOR_ACTIVATION'
+    else:
+        backend_contract.state = 'ACTIVE'
 
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
@@ -109,7 +116,7 @@ def create_swap2_for_events(order):
     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
     swap2_contract.state = 'WAITING_FOR_ACTIVATION'
     swap2_contract.save()
-    order.state = 'WAITING_FOR_ACTIVATION'
+    order.state = 'ACTIVE'
     order.memo_contract = swap2_details.memo_contract
     order.save()
 
