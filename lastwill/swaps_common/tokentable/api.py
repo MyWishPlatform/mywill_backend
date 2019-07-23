@@ -114,7 +114,8 @@ def get_all_coinmarketcap_tokens(request):
             'token_short_name': t.token_short_name,
             'platform': t.token_platform,
             'address': t.token_address,
-            'image_link': t.image_link
+            'image_link': t.image_link,
+            'rank': t.token_rank
         })
     return Response(result)
 
