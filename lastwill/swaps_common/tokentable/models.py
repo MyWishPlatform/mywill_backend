@@ -16,4 +16,4 @@ class TokensCoinMarketCap(models.Model):
     token_platform = models.CharField(max_length=64)
     token_address = models.CharField(max_length=64)
     image_link = models.CharField(max_length=512)
-    token_rank = models.IntegerField()
+    token_rank = models.IntegerField(null=True, default=None)
