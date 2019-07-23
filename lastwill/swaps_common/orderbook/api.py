@@ -140,7 +140,10 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        details['contract_state'] = add_swap2_state(swap_id)
+        if details['base_address'] or details['quote_address']:
+            details['contract_state'] = add_swap2_state(swap_id)
+        else:
+            details['contract_state'] = ""
         return Response(details)
     else:
         raise ParseError
@@ -223,7 +226,10 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
-    details['contract_state'] = add_swap2_state(swaps_order.id)
+    if details['base_address'] or details['quote_address']:
+        details['contract_state'] = add_swap2_state(swaps_order.id)
+    else:
+        details['contract_state'] = ""
     return Response(details)
 
 
