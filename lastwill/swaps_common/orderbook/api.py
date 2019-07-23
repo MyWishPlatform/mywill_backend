@@ -129,7 +129,7 @@ def create_swap2_for_events(order):
 
 def add_swap2_state(order_id):
     swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
-    return swap_contract.contract_id
+    return swap_contract.contract_id.state
 
 
 @api_view(http_method_names=['GET'])
