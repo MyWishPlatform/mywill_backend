@@ -12,7 +12,7 @@ from lastwill.consts import NET_DECIMALS
 from exchange_API import to_wish, convert
 
 
-def create_payment(uid, tx, currency, amount, site_id, network):
+def create_payment(uid, tx, currency, amount, site_id, network=None):
     amount = float(amount)
     if amount == 0.0:
         return
