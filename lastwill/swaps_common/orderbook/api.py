@@ -86,7 +86,7 @@ def create_contract_swaps_backend(request):
     fake_swap = create_swap2_for_events(backend_contract)
     print(fake_swap, flush=True)
 
-    backend_contract.memo_contract = fake_swap.memo_contract
+    #backend_contract.memo_contract = fake_swap.memo_contract
 
     if base_address or quote_address:
         backend_contract.state = 'WAITING_FOR_ACTIVATION'
