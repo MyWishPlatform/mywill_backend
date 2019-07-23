@@ -86,7 +86,8 @@ class ContractViewSet(ModelViewSet):
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
         if host == SWAPS_URL:
-            result = result.filter(contract_type__in=[20, 21, 23])
+            #result = result.filter(contract_type__in=[20, 21, 23])
+            result = result.filter(contract_type__in=[20])
         if host == WAVES_URL:
             result = result.filter(contract_type=22)
         if self.request.user.is_staff:
