@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract
+from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 
@@ -126,6 +127,11 @@ def create_swap2_for_events(order):
     return swap2_contract.id
 
 
+def add_swap2_state(order_id):
+    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id)
+    return swap_contract.contract_id
+
+
 @api_view(http_method_names=['GET'])
 def show_contract_swaps_backend(request):
     if request.user.is_anonymous:
@@ -134,6 +140,7 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
+        details['contract_state'] = add_swap2_state(swap_id)
         return Response(details)
     else:
         raise ParseError
@@ -216,6 +223,7 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
+    details['contract_state'] = add_swap2_state(swaps_order.id)
     return Response(details)
 
 
