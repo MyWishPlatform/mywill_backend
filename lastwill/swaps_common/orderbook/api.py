@@ -32,7 +32,8 @@ def get_swap_from_orderbook(swap_id):
         'broker_fee': backend_contract.broker_fee,
         'broker_fee_address': backend_contract.broker_fee_address,
         'broker_fee_base': backend_contract.broker_fee_base,
-        'broker_fee_quote': backend_contract.broker_fee_quote
+        'broker_fee_quote': backend_contract.broker_fee_quote,
+        'comment': backend_contract.comment
     }
     return saved_details
 
