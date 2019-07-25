@@ -114,7 +114,7 @@ def create_swap2_for_events(order):
             name=order_details['name'],
             state='CREATED'
     )
-    excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id']
+    excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id', 'comment']
     swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
     swap2_params['order_id'] = order_details['id']
     swap2_contract.save()
