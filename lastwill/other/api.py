@@ -20,15 +20,17 @@ class SentenceViewSet(ModelViewSet):
 def send_unblocking_info(request):
     name = request.data.get('name')
     email = request.data.get('email')
+    telegram = request.data.get('socialNetwork')
     message = request.data.get('message')
     page = request.data.get('page')
     text = """
     Name: {name}
     E-mail: {email}
     Message: {message}
+    Telegram: {telegram}
     Page: {page}
     """.format(
-        name=name, email=email, message=message, page=page
+        name=name, email=email, telegram=telegram, message=message, page=page
     )
     send_mail(
         'Request from rocknblock.io contact form',
