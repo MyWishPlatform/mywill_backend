@@ -141,10 +141,10 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        if details['base_address'] or details['quote_address']:
-            details['contract_state'] = add_swap2_state(swap_id)
-        else:
-            details['contract_state'] = ""
+        #if details['base_address'] or details['quote_address']:
+        #    details['contract_state'] = add_swap2_state(swap_id)
+        #else:
+        #    details['contract_state'] = ""
         return Response(details)
     else:
         raise ParseError
