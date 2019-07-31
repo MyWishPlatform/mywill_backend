@@ -85,15 +85,15 @@ def create_contract_swaps_backend(request):
             backend_contract.broker_fee_quote = contract_details['broker_fee_quote']
 
     backend_contract.save()
-    fake_swap = create_swap2_for_events(backend_contract)
-    print(fake_swap, flush=True)
+    #fake_swap = create_swap2_for_events(backend_contract)
+    #print(fake_swap, flush=True)
 
     #backend_contract.memo_contract = fake_swap.memo_contract
 
     if base_address or quote_address:
         backend_contract.state = 'WAITING_FOR_ACTIVATION'
-        fake_swap = create_swap2_for_events(backend_contract)
-        print(fake_swap, flush=True)
+        ethereum_swap = create_swap2_for_events(backend_contract)
+        print(ethereum_swap, flush=True)
     else:
         backend_contract.state = 'ACTIVE'
 
