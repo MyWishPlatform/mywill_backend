@@ -60,6 +60,8 @@ def create_contract_swaps_backend(request):
             range(6)
         )
 
+    memo = '0x' + ''.join(random.choice('abcdef' + string.digits) for _ in range(64))
+
     backend_contract = OrderBookSwaps(
             name=contract_name,
             base_address=base_address,
@@ -74,6 +76,7 @@ def create_contract_swaps_backend(request):
             unique_link=link,
             user=request.user,
             broker_fee=broker_fee,
+            memo_contract=memo
     )
 
     if broker_fee:
