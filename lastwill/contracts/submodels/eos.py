@@ -402,7 +402,7 @@ class ContractDetailsEOSICO(CommonDetails):
         if os.system(command):
             raise Exception('error generate config')
         if os.system(
-                "/bin/bash -c 'cd {dest} && make'".format(
+                "/bin/bash -c 'cd {dest} && make build'".format(
                     dest=dest)
         ):
             raise Exception('compiler error while deploying')
