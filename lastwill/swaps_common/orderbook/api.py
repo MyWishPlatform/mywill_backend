@@ -227,10 +227,10 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
-    if details['base_address'] or details['quote_address']:
-        details['contract_state'] = add_swap2_state(swaps_order.id)
-    else:
-        details['contract_state'] = ""
+    #if details['base_address'] or details['quote_address']:
+    #    details['contract_state'] = add_swap2_state(swaps_order.id)
+    #else:
+    #    details['contract_state'] = ""
     return Response(details)
 
 
