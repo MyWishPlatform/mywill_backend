@@ -83,16 +83,16 @@ class Receiver(threading.Thread):
         print('deployed message received', flush=True)
         # commenting because of upgrade to orderboook
         #
-        #details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-        #if details.contract.state == 'ACTIVE':
-        #    print('ignored because already active', flush=True)
-        #    return
-        #details.msg_deployed(message)
-        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-        if order.state == 'ACTIVE':
+        details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
+        if details.contract.state == 'ACTIVE':
             print('ignored because already active', flush=True)
             return
-        order.msg_deployed(message)
+        details.msg_deployed(message)
+        #order = OrderBookSwaps.objects.get(memo_contract=message['id'])
+        #if order.state == 'ACTIVE':
+        #    print('ignored because already active', flush=True)
+        #    return
+        #order.msg_deployed(message)
         print('deployed ok!', flush=True)
 
 
