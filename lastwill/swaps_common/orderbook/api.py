@@ -54,6 +54,7 @@ def create_contract_swaps_backend(request):
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
 
     broker_fee = contract_details['broker_fee'] if 'broker_fee' in contract_details else False
+    comment = contract_details['comment'] if 'comment' in contract_details else ""
 
     link = ''.join(
             random.choice(string.ascii_lowercase + string.digits) for _ in
@@ -76,7 +77,8 @@ def create_contract_swaps_backend(request):
             unique_link=link,
             user=request.user,
             broker_fee=broker_fee,
-            memo_contract=memo
+            memo_contract=memo,
+            comment=comment
     )
 
     if broker_fee:
