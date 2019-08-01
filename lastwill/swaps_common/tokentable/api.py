@@ -70,6 +70,7 @@ def get_all_tokens(request):
         token_list = token_list.filter(address=address.lower())
 
     result = []
+    results_count = 20
     for t in token_list:
         result.append({
             'address': t.address,
@@ -78,6 +79,10 @@ def get_all_tokens(request):
             'decimals': t.decimals,
             'image_link': t.image_link
         })
+        results_count -= 1
+
+        if results_count == 0:
+            break
     return Response(result)
 
 
