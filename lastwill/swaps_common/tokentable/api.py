@@ -1,7 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from lastwill.swaps_common.tokentable.models import Tokens
+
+from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK
 
@@ -69,6 +70,7 @@ def get_all_tokens(request):
         token_list = token_list.filter(address=address.lower())
 
     result = []
+    results_count = 20
     for t in token_list:
         result.append({
             'address': t.address,
@@ -77,6 +79,10 @@ def get_all_tokens(request):
             'decimals': t.decimals,
             'image_link': t.image_link
         })
+        results_count -= 1
+
+        if results_count == 0:
+            break
     return Response(result)
 
 
@@ -98,3 +104,26 @@ def get_standarts_tokens(request):
             'image_link': t.image_link
         })
     return Response(result)
+
+
+@api_view()
+def get_all_coinmarketcap_tokens(request):
+    result = []
+    token_list = TokensCoinMarketCap.objects.all()
+
+    for t in token_list:
+        result.append({
+            'cmc_id': t.token_cmc_id,
+            'mywish_id': t.id,
+            'token_name': t.token_name,
+            'token_short_name': t.token_short_name,
+            'platform': t.token_platform,
+            'address': t.token_address,
+            'image_link': t.image_link,
+            'rank': t.token_rank
+        })
+    return Response(result)
+
+
+def get_cmc_token_by_id(token_mywish_id):
+    return TokensCoinMarketCap.objects.filter(id=token_mywish_id).first()

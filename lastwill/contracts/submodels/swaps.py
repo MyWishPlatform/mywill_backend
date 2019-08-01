@@ -179,6 +179,8 @@ class ContractDetailsSWAPS2(CommonDetails):
     broker_fee_base = models.FloatField(null=True, default=None)
     broker_fee_quote = models.FloatField(null=True, default=None)
 
+    order_id = models.IntegerField(null=True, default=None)
+
     eth_contract = models.ForeignKey(
         EthContract,
         null=True,
@@ -238,5 +240,8 @@ class ContractDetailsSWAPS2(CommonDetails):
 
     @staticmethod
     def calc_cost(kwargs, network):
-        return 0
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        result = int(0.5 * NET_DECIMALS['ETH'])
+        return result
 

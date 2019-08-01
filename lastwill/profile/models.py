@@ -17,6 +17,7 @@ class Profile(models.Model):
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
     metamask_address = models.CharField(max_length=50, null=True, default=None)
     is_swaps = models.BooleanField(default=False)
+    is_swaps_admin = models.BooleanField(default=False)
 
 
 class SubSite(models.Model):
