@@ -252,7 +252,8 @@ def get_swap_v3_public(request):
 
 @api_view(http_method_names=['POST'])
 def set_swaps_expired(request):
-    expired = request.POST.dict()
+    expired = request.POST
+    print(expired)
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
 
