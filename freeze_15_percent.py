@@ -9,17 +9,25 @@ from threading import Timer
 from subprocess import Popen, PIPE
 
 from lastwill.payments.models import *
-from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, MYWISH_ADDRESS, NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, COLD_TOKEN_SYMBOL
-from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
-from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS
+from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, FREEZE_THRESHOLD_BWISH, MYWISH_ADDRESS, \
+    NETWORK_SIGN_TRANSACTION_WISH, NETWORK_SIGN_TRANSACTION_EOSISH, NETWORK_SIGN_TRANSACTION_BWISH, COLD_TOKEN_SYMBOL_EOS, COLD_TOKEN_SYMBOL_BNB
+from lastwill.settings import COLD_EOSISH_ADDRESS, COLD_WISH_ADDRESS,UPDATE_EOSISH_ADDRESS, UPDATE_WISH_ADDRESS, EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT, EOS_COLD_ABI
+from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_PASSWORD, TRON_ADDRESS, FREEZE_THRESHOLD_TRONISH
+from lastwill.settings import BINANCE_PAYMENT_PASSWORD, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
 from lastwill.json_templates import get_freeze_wish_abi
+from lastwill.consts import NET_DECIMALS
 
 from django.core.mail import send_mail, EmailMessage
 from lastwill.settings import DEFAULT_FROM_EMAIL, SUPPORT_EMAIL
 from email_messages import freeze_15_failed_subject, freeze_15_failed_message
 from ethereum.abi import encode_abi
+from binance_chain.messages import TransferMsg
+from binance_chain.wallet import Wallet
+from binance_chain.http import HttpApiClient
+from binance_chain.environment import BinanceEnvironment
+
 
 def convert_address_to_hex(address):
     # short_addresss = address[1:]
@@ -60,12 +68,12 @@ def freeze_eosish(amount):
             + '.0000'
     )
     command_list = [
-        'cleos', '-u', eos_url, 'push', 'action', 'buildertoken', 'transfer',
+        'cleos', '-u', eos_url, 'push', 'action', EOS_COLD_ABI, 'transfer',
         '[ "{address_from}", "{address_to}", "{amount} {token_name}", "m" ]'.format(
             address_from=UPDATE_EOSISH_ADDRESS,
             address_to=COLD_EOSISH_ADDRESS,
             amount=amount_with_decimals,
-            token_name=COLD_TOKEN_SYMBOL
+            token_name=COLD_TOKEN_SYMBOL_EOS
         ),
         '-p', UPDATE_EOSISH_ADDRESS
     ]
@@ -93,7 +101,11 @@ def freeze_eosish(amount):
 def freeze_tronish():
     print('freeze tronish', flush=True)
     print('before encode', flush=True)
-    params = abi.encode_abi(['address', 'uint256'], ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:], 450000000])
+    params = abi.encode_abi(
+            ['address', 'uint256'],
+            ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:],
+            450 * NET_DECIMALS['TRONISH']]
+    )
     print('after encode', flush=True)
     # print('params', params, flush=True)
     freeze_encoded_parameter = binascii.hexlify(params)
@@ -142,12 +154,34 @@ def freeze_tronish():
         raise Exception('cannot make tx with 5 attempts')
 
 
+def freeze_bnb_wish(amount):
+    freeze_env = BinanceEnvironment.get_production_env()
+    if NETWORK_SIGN_TRANSACTION_BWISH == 'testnet':
+        freeze_env = BinanceEnvironment.get_testnet_env()
+
+    client = HttpApiClient(env=freeze_env)
+    bep_wallet = Wallet(BINANCE_PAYMENT_PASSWORD, env=freeze_env)  # from settings
+    value = float(amount / 10 ** 18)
+    freeze_msg = TransferMsg(
+            wallet=bep_wallet,
+            symbol=COLD_TOKEN_SYMBOL_BNB,
+            amount=value,
+            to_address=COLD_BNB_ADDRESS,
+            memo='freeze bnb wish'
+    )
+    res = client.broadcast_msg(freeze_msg, sync=True)
+    print('result', res, flush=True)
+    if not res[0]['ok']:
+        raise Exception('cannot make bnb wish freeze tx')
+
+
 def check_payments():
     global attempt
     freeze_balance = FreezeBalance.objects.all().first()
     if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
         try:
-            freeze_wish(freeze_balance.wish)
+            #freeze_wish(freeze_balance.wish)
+            freeze_bnb_wish(freeze_balance.wish)
             freeze_balance.wish = 0
             freeze_balance.save()
         except Exception as e:
@@ -165,22 +199,41 @@ def check_payments():
             print(e)
             print('Freezing EOSISH failed')
             send_mail_attempt("EOSISH", freeze_balance.eosish, e)
-    if freeze_balance.tronish >= 450000000:
+    if freeze_balance.tronish >= FREEZE_THRESHOLD_TRONISH:  # 450000000
         print('tronish > 0', flush=True)
         try:
             print('try send tronish', flush=True)
             freeze_tronish()
-            freeze_balance.tronish = freeze_balance.tronish - 450000000
+            freeze_balance.tronish = freeze_balance.tronish - FREEZE_THRESHOLD_TRONISH
             freeze_balance.save()
         except Exception as e:
             attempt += 1
             print(e, flush=True)
             print('Freezing TRONISH failed')
-            send_mail_attempt("WISH", freeze_balance.tronish, e)
+            send_mail_attempt("TRONISH", freeze_balance.tronish, e)
+    # if freeze_balance.bwish > FREEZE_THRESHOLD_BWISH:
+    #     try:
+    #         print('try send bnb wish',flush=True)
+    #         freeze_bnb_wish(freeze_balance.bwish)
+    #         freeze_balance.bwish = 0
+    #         freeze_balance.save()
+    #     except Exception as e:
+    #         attempt += 1
+    #         print(e, flush=True)
+    #         print("Freezing BNB WISH failed")
+    #         send_mail_attempt("BWISH", freeze_balance.bwish, e)
 
 
 def send_failed_freezing(token, balance, trace):
-    check_address = "ETH addresses" if token == "WISH" else "EOS accounts"
+    check_address = 'ETH addresses'
+
+    if token == 'EOSISH':
+        check_address = 'EOS accounts'
+    if token == 'TRONISH':
+        check_address = 'TRON addresses'
+    if token == 'BWISH':
+        check_address = 'BNB WISH payment address'
+
     mail = EmailMessage(
         subject=freeze_15_failed_subject,
         body=freeze_15_failed_message.format(

@@ -85,7 +85,7 @@ def deploy_swaps(contract_id):
         currency = 'USDT'
         user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
         if user_info.balance >= cost or int(user_info.balance) * 0.95 >= cost:
-            create_payment(contract.user.id, '', currency, -cost, site_id)
+            create_payment(contract.user.id, '', currency, -cost, site_id, 'ETHEREUM_MAINNET')
             contract.state = 'WAITING_FOR_DEPLOYMENT'
             contract.save()
             queue = NETWORKS[contract.network.name]['queue']

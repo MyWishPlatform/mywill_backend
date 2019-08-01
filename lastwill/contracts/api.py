@@ -184,13 +184,13 @@ def deploy(request):
     cost = contract.cost
     currency = 'USDT'
     site_id = 1
-
+    network = contract.network.name
     promo_str = request.data.get('promo', None)
     if promo_str:
         promo_str = promo_str.upper()
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
     cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
-    create_payment(request.user.id, '', currency, -cost, site_id)
+    create_payment(request.user.id, '', currency, -cost, site_id, network)
     if promo_str:
         promo_object = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo_object,
