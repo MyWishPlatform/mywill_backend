@@ -245,7 +245,8 @@ def get_swap_v3_public(request):
 
     res = []
     for order in backend_contracts:
-        res.append(get_swap_from_orderbook(order.id))
+        if order.state is not 'EXPIRED':
+            res.append(get_swap_from_orderbook(order.id))
 
     return Response(res)
 
@@ -263,6 +264,7 @@ def set_swaps_expired(request):
 
         order = order.first()
         order.state = 'EXPIRED'
+        order.save()
 
     for id in swaps_ids:
         swaps = Contract.objects.filter(id=id)
@@ -271,5 +273,6 @@ def set_swaps_expired(request):
 
         swaps = swaps.first()
         swaps.contract.state = 'EXPIRED'
+        swaps.contract.save()
 
     return Response({'result': 'ok'})
