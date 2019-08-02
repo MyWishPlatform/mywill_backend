@@ -271,14 +271,17 @@ def set_swaps_expired(request):
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
 
+    now = datetime.datetime.now()
+
     for id in orders_ids:
         order = OrderBookSwaps.objects.filter(id=id)
         if not order:
             raise ParseError('trade with id {order_id} not exist'.format(order_id=id))
 
         order = order.first()
-        order.state = 'EXPIRED'
-        order.save()
+        if now > order.stop_date:
+            order.state = 'EXPIRED'
+            order.save()
 
     for id in swaps_ids:
         swaps = Contract.objects.filter(id=id)
@@ -286,7 +289,8 @@ def set_swaps_expired(request):
             raise ParseError('contract with {swaps_id} not exist'.format(swaps_id=id))
 
         swaps = swaps.first()
-        swaps.contract.state = 'EXPIRED'
-        swaps.contract.save()
+        if now > swaps.get_details().stop_date:
+            swaps.contract.state = 'EXPIRED'
+            swaps.contract.save()
 
     return Response({'result': 'ok'})
