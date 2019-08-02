@@ -35,8 +35,10 @@ class OrderBookSwaps(models.Model):
             max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
+    contract_state = models.CharField(max_length=63, default='CREATED')
+
     @check_transaction
     def msg_deployed(self, message):
-        self.state = 'ACTIVE'
+        self.contract_state = 'ACTIVE'
         self.save()
         return
