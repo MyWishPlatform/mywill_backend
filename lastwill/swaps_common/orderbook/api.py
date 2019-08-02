@@ -15,7 +15,7 @@ from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 def get_swap_from_orderbook(swap_id, force=False):
     backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
-    if backend_contract.state != 'CANCELLED' and force:
+    if backend_contract.state != 'CANCELLED':
         saved_details = {
             'id': backend_contract.id,
             'name': backend_contract.name,
@@ -324,4 +324,4 @@ def delete_swaps_v3(request):
     order = order.first()
     order.state = 'CANCELLED'
     order.save()
-    return Response(get_swap_from_orderbook(order.id, force=True))
+    return Response({"result": order.id})
