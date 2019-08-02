@@ -44,8 +44,6 @@ def get_swap_from_orderbook(swap_id, force=False):
             'whitelist_address': backend_contract.whitelist_address
         }
         return saved_details
-    else:
-        return {}
 
 
 @api_view(http_method_names=['POST'])
