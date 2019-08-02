@@ -271,7 +271,7 @@ def set_swaps_expired(request):
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
 
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(datetime.timezone.utc())
 
     for id in orders_ids:
         order = OrderBookSwaps.objects.filter(id=id)
