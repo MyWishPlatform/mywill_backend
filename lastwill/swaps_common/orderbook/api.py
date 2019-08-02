@@ -38,7 +38,9 @@ def get_swap_from_orderbook(swap_id):
         'min_base_wei': backend_contract.min_base_wei,
         'min_quote_wei': backend_contract.min_quote_wei,
         'contract_state': backend_contract.contract_state,
-        'created_date': backend_contract.created_date
+        'created_date': backend_contract.created_date,
+        'whitelist': backend_contract.whitelist,
+        'whitelist_address': backend_contract.whitelist_address
     }
     return saved_details
 
@@ -70,6 +72,9 @@ def create_contract_swaps_backend(request):
 
     min_base_wei = contract_details['min_base_wei'] if 'min_base_wei' in contract_details else ""
     min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
+    whitelist = contract_details['whitelist'] if 'whitelist' in contract_details else False
+
+
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
@@ -88,10 +93,12 @@ def create_contract_swaps_backend(request):
             memo_contract=memo,
             comment=comment,
             min_base_wei=min_base_wei,
-            min_quote_wei=min_quote_wei
+            min_quote_wei=min_quote_wei,
+            whitelist=whitelist
     )
 
     if broker_fee:
+        backend_contract.broker_fee = contract_details['broker_fee']
         if 'broker_fee_address' in contract_details:
             backend_contract.broker_fee_address = contract_details['broker_fee_address']
         if 'broker_fee_base' in contract_details:
@@ -99,6 +106,8 @@ def create_contract_swaps_backend(request):
         if 'broker_fee_quote' in contract_details:
             backend_contract.broker_fee_quote = contract_details['broker_fee_quote']
 
+    if whitelist:
+        backend_contract.whitelist_address = contract_details['whitelist_address']
 
     backend_contract.save()
     #fake_swap = create_swap2_for_events(backend_contract)
@@ -220,8 +229,9 @@ def edit_contract_swaps_backend(request, swap_id):
     if 'broker_fee' in params:
         swap_order.broker_fee = params['broker_fee']
     if params['broker_fee']:
+        swap_order.broker_fee = params['broker_fee']
         if 'broker_fee_address' in params:
-            swap_order.broker_fee_address = params['broker_fee']
+            swap_order.broker_fee_address = params['broker_fee_address']
         if 'broker_fee_base' in params:
             swap_order.broker_fee_base = params['broker_fee_base']
         if 'broker_fee_quote' in params:
@@ -230,6 +240,9 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.min_base_wei = params['min_base_wei']
     if 'min_quote_wei' in params:
         swap_order.min_quote_wei = params['min_quote_wei']
+    if 'whitelist' in params:
+        swap_order.whitelist = params['whitelist']
+        swap_order.whitelist_address = params['whitelist']
 
     swap_order.save()
     details = get_swap_from_orderbook(swap_id=swap_order.id)
