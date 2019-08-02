@@ -15,35 +15,34 @@ from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 def get_swap_from_orderbook(swap_id, force=False):
     backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
-    if backend_contract.state != 'CANCELLED':
-        saved_details = {
-            'id': backend_contract.id,
-            'name': backend_contract.name,
-            'base_address': backend_contract.base_address,
-            'base_limit': backend_contract.base_limit,
-            'base_coin_id': backend_contract.base_coin_id,
-            'quote_address': backend_contract.quote_address,
-            'quote_limit': backend_contract.quote_limit,
-            'quote_coin_id': backend_contract.quote_coin_id,
-            'owner_address': backend_contract.owner_address,
-            'stop_date': backend_contract.stop_date,
-            'memo_contract': backend_contract.memo_contract,
-            'unique_link': backend_contract.unique_link,
-            'state': backend_contract.state,
-            'public': backend_contract.public,
-            'broker_fee': backend_contract.broker_fee,
-            'broker_fee_address': backend_contract.broker_fee_address,
-            'broker_fee_base': backend_contract.broker_fee_base,
-            'broker_fee_quote': backend_contract.broker_fee_quote,
-            'comment': backend_contract.comment,
-            'min_base_wei': backend_contract.min_base_wei,
-            'min_quote_wei': backend_contract.min_quote_wei,
-            'contract_state': backend_contract.contract_state,
-            'created_date': backend_contract.created_date,
-            'whitelist': backend_contract.whitelist,
-            'whitelist_address': backend_contract.whitelist_address
-        }
-        return saved_details
+    saved_details = {
+        'id': backend_contract.id,
+        'name': backend_contract.name,
+        'base_address': backend_contract.base_address,
+        'base_limit': backend_contract.base_limit,
+        'base_coin_id': backend_contract.base_coin_id,
+        'quote_address': backend_contract.quote_address,
+        'quote_limit': backend_contract.quote_limit,
+        'quote_coin_id': backend_contract.quote_coin_id,
+        'owner_address': backend_contract.owner_address,
+        'stop_date': backend_contract.stop_date,
+        'memo_contract': backend_contract.memo_contract,
+        'unique_link': backend_contract.unique_link,
+        'state': backend_contract.state,
+        'public': backend_contract.public,
+        'broker_fee': backend_contract.broker_fee,
+        'broker_fee_address': backend_contract.broker_fee_address,
+        'broker_fee_base': backend_contract.broker_fee_base,
+        'broker_fee_quote': backend_contract.broker_fee_quote,
+        'comment': backend_contract.comment,
+        'min_base_wei': backend_contract.min_base_wei,
+        'min_quote_wei': backend_contract.min_quote_wei,
+        'contract_state': backend_contract.contract_state,
+        'created_date': backend_contract.created_date,
+        'whitelist': backend_contract.whitelist,
+        'whitelist_address': backend_contract.whitelist_address
+    }
+    return saved_details
 
 
 @api_view(http_method_names=['POST'])
@@ -185,7 +184,8 @@ def show_user_contract_swaps_backend(request):
     orders = OrderBookSwaps.objects.filter(user=request.user)
     for order in orders:
         details = get_swap_from_orderbook(swap_id=order.id)
-        orders_list.append(details)
+        if details.state != 'CANCELLED':
+            orders_list.append(details)
 
     return Response(orders_list)
 
