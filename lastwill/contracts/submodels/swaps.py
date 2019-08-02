@@ -242,6 +242,7 @@ class ContractDetailsSWAPS2(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(0.5 * NET_DECIMALS['ETH'])
+        #result = int(0.5 * NET_DECIMALS['ETH'])
+        result = int(10 * NET_DECIMALS['USDT'])
         return result
 
