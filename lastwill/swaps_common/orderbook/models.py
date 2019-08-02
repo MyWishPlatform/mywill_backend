@@ -36,6 +36,7 @@ class OrderBookSwaps(models.Model):
     )
 
     contract_state = models.CharField(max_length=63, default='CREATED')
+    created_date = models.DateTimeField(auto_now_add=True)
 
     @check_transaction
     def msg_deployed(self, message):
