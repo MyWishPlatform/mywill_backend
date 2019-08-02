@@ -91,6 +91,9 @@ def create_contract_swaps_backend(request):
         if 'broker_fee_quote' in contract_details:
             backend_contract.broker_fee_quote = contract_details['broker_fee_quote']
 
+    min_base_wei = contract_details['min_base_wei'] if 'min_base_wei' in contract_details else ""
+    min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
+
     backend_contract.save()
     #fake_swap = create_swap2_for_events(backend_contract)
     #print(fake_swap, flush=True)
@@ -217,6 +220,10 @@ def edit_contract_swaps_backend(request, swap_id):
             swap_order.broker_fee_base = params['broker_fee_base']
         if 'broker_fee_quote' in params:
             swap_order.broker_fee_quote = params['broker_fee_quote']
+    if 'min_base_wei' in params:
+        swap_order.min_base_wei = params['min_base_wei']
+    if 'min_quote_wei' in params:
+        swap_order.min_quote_wei = params['min_quote_wei']
 
     swap_order.save()
     details = get_swap_from_orderbook(swap_id=swap_order.id)
