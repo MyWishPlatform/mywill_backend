@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied, ParseError
 from rest_framework.response import Response
 
+from django.utils import timezone
 from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
@@ -271,7 +272,7 @@ def set_swaps_expired(request):
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
 
-    now = datetime.datetime.now(datetime.timezone.utc())
+    now = datetime.datetime.now(timezone.utc)
 
     for id in orders_ids:
         order = OrderBookSwaps.objects.filter(id=id)
