@@ -184,7 +184,7 @@ def show_user_contract_swaps_backend(request):
     orders = OrderBookSwaps.objects.filter(user=request.user)
     for order in orders:
         details = get_swap_from_orderbook(swap_id=order.id)
-        if details.state != 'CANCELLED':
+        if details['state'] != 'CANCELLED':
             orders_list.append(details)
 
     return Response(orders_list)
