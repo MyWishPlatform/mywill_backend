@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from lastwill.contracts.decorators import check_transaction
+from lastwill.consts import MAX_WEI_DIGITS
 
 
 class OrderBookSwaps(models.Model):
@@ -26,6 +27,13 @@ class OrderBookSwaps(models.Model):
     broker_fee_quote = models.FloatField(null=True, default=None)
 
     comment = models.TextField()
+
+    min_base_wei = models.DecimalField(
+            max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
+    min_quote_wei = models.DecimalField(
+            max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
+    )
 
     @check_transaction
     def msg_deployed(self, message):

@@ -33,7 +33,9 @@ def get_swap_from_orderbook(swap_id):
         'broker_fee_address': backend_contract.broker_fee_address,
         'broker_fee_base': backend_contract.broker_fee_base,
         'broker_fee_quote': backend_contract.broker_fee_quote,
-        'comment': backend_contract.comment
+        'comment': backend_contract.comment,
+        'min_base_wei': backend_contract.min_base_wei,
+        'min_quote_wei': backend_contract.min_quote_wei
     }
     return saved_details
 
@@ -83,7 +85,7 @@ def create_contract_swaps_backend(request):
 
     if broker_fee:
         if 'broker_fee_address' in contract_details:
-            backend_contract.broker_fee_address = contract_details['broker_fee']
+            backend_contract.broker_fee_address = contract_details['broker_fee_address']
         if 'broker_fee_base' in contract_details:
             backend_contract.broker_fee_base = contract_details['broker_fee_base']
         if 'broker_fee_quote' in contract_details:
