@@ -163,7 +163,7 @@ urlpatterns = [
     url(r'^api/get_user_swap3/$', show_user_contract_swaps_backend),
     url(r'^api/get_public_swap3/$', get_swap_v3_public),
     url(r'^api/set_swap3_expired/$', set_swaps_expired),
-    url(r'^api/delete_swap3/$', set_swaps_expired)
+    url(r'^api/delete_swap3/$', delete_swaps_v3)
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
