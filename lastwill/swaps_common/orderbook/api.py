@@ -35,7 +35,9 @@ def get_swap_from_orderbook(swap_id):
         'broker_fee_quote': backend_contract.broker_fee_quote,
         'comment': backend_contract.comment,
         'min_base_wei': backend_contract.min_base_wei,
-        'min_quote_wei': backend_contract.min_quote_wei
+        'min_quote_wei': backend_contract.min_quote_wei,
+        'contract_state': backend_contract.contract_state,
+        'created_date': backend_contract.created_date
     }
     return saved_details
 
@@ -65,6 +67,9 @@ def create_contract_swaps_backend(request):
 
     memo = '0x' + ''.join(random.choice('abcdef' + string.digits) for _ in range(64))
 
+    min_base_wei = contract_details['min_base_wei'] if 'min_base_wei' in contract_details else ""
+    min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
+
     backend_contract = OrderBookSwaps(
             name=contract_name,
             base_address=base_address,
@@ -80,7 +85,9 @@ def create_contract_swaps_backend(request):
             user=request.user,
             broker_fee=broker_fee,
             memo_contract=memo,
-            comment=comment
+            comment=comment,
+            min_base_wei=min_base_wei,
+            min_quote_wei=min_quote_wei
     )
 
     if broker_fee:
@@ -91,8 +98,6 @@ def create_contract_swaps_backend(request):
         if 'broker_fee_quote' in contract_details:
             backend_contract.broker_fee_quote = contract_details['broker_fee_quote']
 
-    min_base_wei = contract_details['min_base_wei'] if 'min_base_wei' in contract_details else ""
-    min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
 
     backend_contract.save()
     #fake_swap = create_swap2_for_events(backend_contract)
@@ -113,34 +118,34 @@ def create_contract_swaps_backend(request):
     return Response(details)
 
 
-def create_swap2_for_events(order):
-
-    order_details = get_swap_from_orderbook(order.id)
-
-    swap2_contract = Contract(
-            contract_type=21,
-            cost=0,
-            user=order.user,
-            name=order_details['name'],
-            state='CREATED'
-    )
-    excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id', 'comment']
-    swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
-    swap2_params['order_id'] = order_details['id']
-    swap2_contract.save()
-    swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
-    swap2_contract.state = 'WAITING_FOR_ACTIVATION'
-    swap2_contract.save()
-    order.state = 'ACTIVE'
-    order.memo_contract = swap2_details.memo_contract
-    order.save()
-
-    return swap2_contract.id
-
-
-def add_swap2_state(order_id):
-    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
-    return swap_contract.contract.state
+# def create_swap2_for_events(order):
+#
+#     order_details = get_swap_from_orderbook(order.id)
+#
+#     swap2_contract = Contract(
+#             contract_type=21,
+#             cost=0,
+#             user=order.user,
+#             name=order_details['name'],
+#             state='CREATED'
+#     )
+#     excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id', 'comment']
+#     swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
+#     swap2_params['order_id'] = order_details['id']
+#     swap2_contract.save()
+#     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
+#     swap2_contract.state = 'WAITING_FOR_ACTIVATION'
+#     swap2_contract.save()
+#     order.state = 'ACTIVE'
+#     order.memo_contract = swap2_details.memo_contract
+#     order.save()
+#
+#     return swap2_contract.id
+#
+#
+# def add_swap2_state(order_id):
+#     swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
+#     return swap_contract.contract.state
 
 
 @api_view(http_method_names=['GET'])
