@@ -184,7 +184,7 @@ def show_user_contract_swaps_backend(request):
     orders = OrderBookSwaps.objects.filter(user=request.user)
     for order in orders:
         details = get_swap_from_orderbook(swap_id=order.id)
-        if details['state'] != 'CANCELLED':
+        if details['state'] != 'HIDDEN':
             orders_list.append(details)
 
     return Response(orders_list)
@@ -320,6 +320,6 @@ def delete_swaps_v3(request):
         raise ParseError
 
     order = order.first()
-    order.state = 'CANCELLED'
+    order.state = 'HIDDEN'
     order.save()
     return Response({"result": order.id})
