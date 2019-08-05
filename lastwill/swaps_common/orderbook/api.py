@@ -125,6 +125,7 @@ def create_contract_swaps_backend(request):
 
     if not(base_address or quote_address):
         backend_contract.state = 'ACTIVE'
+        backend_contract.contract_state = 'ACTIVE'
     #    backend_contract.state = 'WAITING_FOR_ACTIVATION'
     #    #ethereum_swap = create_swap2_for_events(backend_contract)
     #    #print(ethereum_swap, flush=True)

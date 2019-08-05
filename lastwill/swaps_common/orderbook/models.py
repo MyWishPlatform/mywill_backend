@@ -67,10 +67,10 @@ class OrderBookSwaps(models.Model):
 
     def finalized(self, message):
         self.contract_state = 'DONE'
-        self.contract.save()
+        self.save()
 
     def cancelled(self, message):
         self.contract_state = 'CANCELLED'
-        self.contract.save()
+        self.save()
 
 
