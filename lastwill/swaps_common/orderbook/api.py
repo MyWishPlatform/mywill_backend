@@ -29,7 +29,7 @@ def get_swap_from_orderbook(swap_id, force=False):
         'memo_contract': backend_contract.memo_contract,
         'unique_link': backend_contract.unique_link,
         'state': backend_contract.state,
-        'user': backend_contract.id,
+        'user': backend_contract.user.id,
         'public': backend_contract.public,
         'broker_fee': backend_contract.broker_fee,
         'broker_fee_address': backend_contract.broker_fee_address,
