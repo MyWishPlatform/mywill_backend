@@ -345,5 +345,6 @@ def cancel_swaps_v3(request):
     order = order.first()
     if not (order.base_address and order.quote_address):
         order.state = 'CANCELLED'
+        order.contract_state = 'CANCELLED'
         order.save()
         return Response({"result": order.id})
