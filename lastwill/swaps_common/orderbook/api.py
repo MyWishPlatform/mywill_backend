@@ -283,7 +283,7 @@ def get_swap_v3_public(request):
 
     res = []
     for order in backend_contracts:
-        if order.state != 'EXPIRED':
+        if order.state != 'EXPIRED' and order.state == 'ACTIVE':
             res.append(get_swap_from_orderbook(order.id))
 
     return Response(res)
