@@ -305,6 +305,7 @@ def set_swaps_expired(request):
         order = order.first()
         if now > order.stop_date:
             order.state = 'EXPIRED'
+            order.contract_state = 'EXPIRED'
             order.save()
 
     for id in swaps_ids:
