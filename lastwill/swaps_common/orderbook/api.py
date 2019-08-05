@@ -15,6 +15,13 @@ from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 def get_swap_from_orderbook(swap_id, force=False):
     backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
+    now = datetime.timezonew.now()
+    if backend_contract.stop_date > now:
+        backend_contract.state = 'EXPIRED'
+        backend_contract.contract_state = 'EXPIRED'
+        backend_contract.save()
+        backend_contract.refresh_from_db()
+
     saved_details = {
         'id': backend_contract.id,
         'name': backend_contract.name,
