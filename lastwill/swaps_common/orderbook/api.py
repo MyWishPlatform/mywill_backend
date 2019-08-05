@@ -335,7 +335,7 @@ def cancel_swaps_v3(request):
         raise ParseError
 
     order = order.first()
-    if order.base_address or order.quote_address:
+    if not (order.base_address or order.quote_address):
         order.state = 'HIDDEN'
         order.save()
         return Response({"result": order.id})
