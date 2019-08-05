@@ -1,8 +1,16 @@
+import random
+import string
+import smtplib
+
 from django.contrib.auth.models import User
 from django.db import models
 
+from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
+from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.contracts.decorators import check_transaction
+from lastwill.contracts.submodels.swaps import sendEMail
 from lastwill.consts import MAX_WEI_DIGITS
+from email_messages import *
 
 
 class OrderBookSwaps(models.Model):
@@ -42,6 +50,27 @@ class OrderBookSwaps(models.Model):
 
     @check_transaction
     def msg_deployed(self, message):
+
         self.contract_state = 'ACTIVE'
         self.save()
+        if self.contract.user.email:
+            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
+                    protocol=SITE_PROTOCOL,
+                    unique_link=self.unique_link, url=SWAPS_URL
+            )
+            sendEMail(
+                    swaps_deploed_subject,
+                    swaps_deploed_message.format(swaps_link=swaps_link),
+                    [self.contract.user.email]
+            )
         return
+
+    def finalized(self, message):
+        self.contract_state = 'DONE'
+        self.contract.save()
+
+    def cancelled(self, message):
+        self.contract_state = 'CANCELLED'
+        self.contract.save()
+
+
