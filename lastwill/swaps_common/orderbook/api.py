@@ -29,6 +29,7 @@ def get_swap_from_orderbook(swap_id, force=False):
         'memo_contract': backend_contract.memo_contract,
         'unique_link': backend_contract.unique_link,
         'state': backend_contract.state,
+        'user': backend_contract.user
         'public': backend_contract.public,
         'broker_fee': backend_contract.broker_fee,
         'broker_fee_address': backend_contract.broker_fee_address,
@@ -323,3 +324,18 @@ def delete_swaps_v3(request):
     order.state = 'HIDDEN'
     order.save()
     return Response({"result": order.id})
+
+
+@api_view(http_method_names=['POST'])
+def cancel_swaps_v3(request):
+    order_id = request.data['id']
+
+    order = OrderBookSwaps.objects.filter(id=order_id)
+    if not order:
+        raise ParseError
+
+    order = order.first()
+    if order.base_address or order.quote_address:
+        order.state = 'HIDDEN'
+        order.save()
+        return Response({"result": order.id})
