@@ -123,7 +123,7 @@ def create_contract_swaps_backend(request):
 
     #backend_contract.memo_contract = fake_swap.memo_contract
 
-    if not(base_address or quote_address):
+    if not(base_address and quote_address):
         backend_contract.state = 'ACTIVE'
         backend_contract.contract_state = 'ACTIVE'
     #    backend_contract.state = 'WAITING_FOR_ACTIVATION'
@@ -343,7 +343,7 @@ def cancel_swaps_v3(request):
         raise ParseError
 
     order = order.first()
-    if not (order.base_address or order.quote_address):
-        order.state = 'HIDDEN'
+    if not (order.base_address and order.quote_address):
+        order.state = 'CANCELLED'
         order.save()
         return Response({"result": order.id})
