@@ -9,6 +9,7 @@ from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.contracts.decorators import check_transaction
 from lastwill.contracts.submodels.swaps import sendEMail
+from lastwill.contracts.submodels.common import Contract
 from lastwill.consts import MAX_WEI_DIGITS
 from email_messages import *
 
@@ -47,11 +48,14 @@ class OrderBookSwaps(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
     whitelist_address = models.CharField(max_length=50)
+    swap_ether_contract = models.ForeignKey(Contract)
 
     @check_transaction
     def msg_deployed(self, message):
 
         self.contract_state = 'ACTIVE'
+        self.state = 'ACTIVE'
+        self.swap_ether_contract.state = 'ACTIVE'
         self.save()
         if self.contract.user.email:
             swaps_link = '{protocol}://{url}/public/{unique_link}'.format(

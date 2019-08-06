@@ -82,8 +82,6 @@ def create_contract_swaps_backend(request):
     min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
     whitelist = contract_details['whitelist'] if 'whitelist' in contract_details else False
 
-
-
     backend_contract = OrderBookSwaps(
             name=contract_name,
             base_address=base_address,
@@ -118,18 +116,19 @@ def create_contract_swaps_backend(request):
         backend_contract.whitelist_address = contract_details['whitelist_address']
 
     backend_contract.save()
-    #fake_swap = create_swap2_for_events(backend_contract)
-    #print(fake_swap, flush=True)
+
 
     #backend_contract.memo_contract = fake_swap.memo_contract
 
     if not(base_address and quote_address):
         backend_contract.state = 'ACTIVE'
         backend_contract.contract_state = 'ACTIVE'
-    #    backend_contract.state = 'WAITING_FOR_ACTIVATION'
-    #    #ethereum_swap = create_swap2_for_events(backend_contract)
-    #    #print(ethereum_swap, flush=True)
-#    else:
+    else:
+        backend_contract.state = 'WAITING_FOR_ACTIVATION'
+        backend_contract.contract_state = 'WAITING_FOR_ACTIVATION'
+        ethereum_swap = create_swap2_for_ether(backend_contract)
+        backend_contract.swap_ether_contract = ethereum_swap
+        # print(ethereum_swap, flush=True)
 
     backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
@@ -137,34 +136,33 @@ def create_contract_swaps_backend(request):
     return Response(details)
 
 
-# def create_swap2_for_events(order):
-#
-#     order_details = get_swap_from_orderbook(order.id)
-#
-#     swap2_contract = Contract(
-#             contract_type=21,
-#             cost=0,
-#             user=order.user,
-#             name=order_details['name'],
-#             state='CREATED'
-#     )
-#     excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id', 'comment']
-#     swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
-#     swap2_params['order_id'] = order_details['id']
-#     swap2_contract.save()
-#     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
-#     swap2_contract.state = 'WAITING_FOR_ACTIVATION'
-#     swap2_contract.save()
-#     order.state = 'ACTIVE'
-#     order.memo_contract = swap2_details.memo_contract
-#     order.save()
-#
-#     return swap2_contract.id
-#
-#
-# def add_swap2_state(order_id):
-#     swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
-#     return swap_contract.contract.state
+def create_swap2_for_ether(order):
+
+    order_details = get_swap_from_orderbook(order.id)
+
+    swap2_contract = Contract(
+            contract_type=21,
+            cost=0,
+            user=order.user,
+            name=order_details['name'],
+            state='CREATED'
+    )
+    excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id', 'comment']
+    swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
+    swap2_params['order_id'] = order_details['id']
+    swap2_contract.save()
+    swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
+    swap2_details.save()
+    swap2_contract.state = 'WAITING_FOR_ACTIVATION'
+    swap2_contract.save()
+    order.save()
+
+    return swap2_contract.id
+
+
+def add_swap2_state(order_id):
+    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
+    return swap_contract.contract.state
 
 
 @api_view(http_method_names=['GET'])
@@ -175,10 +173,10 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        #if details['base_address'] or details['quote_address']:
-        #    details['contract_state'] = add_swap2_state(swap_id)
-        #else:
-        #    details['contract_state'] = ""
+        if details['base_address'] and details['quote_address']:
+            details['contract_state'] = add_swap2_state(swap_id)
+        else:
+            details['contract_state'] = "ACTIVE"
         return Response(details)
     else:
         raise ParseError
