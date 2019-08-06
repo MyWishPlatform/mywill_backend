@@ -299,6 +299,8 @@ def set_swaps_expired(request):
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
 
+    excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
+
     now = datetime.datetime.now(timezone.utc)
 
     for id in orders_ids:
@@ -308,9 +310,11 @@ def set_swaps_expired(request):
 
         order = order.first()
         if now > order.stop_date:
-            order.state = 'EXPIRED'
-            order.contract_state = 'EXPIRED'
-            order.save()
+            if order.state not in excluded_states:
+                order.state = 'EXPIRED'
+                order.swap_ether_contract.state = 'EXPIRED'
+                order.contract_state = order.swap_ether_contract.state
+                order.save()
 
     for id in swaps_ids:
         swaps = Contract.objects.filter(id=id)
@@ -319,8 +323,9 @@ def set_swaps_expired(request):
 
         swaps = swaps.first()
         if now > swaps.get_details().stop_date:
-            swaps.contract.state = 'EXPIRED'
-            swaps.contract.save()
+            if swaps.contract.state not in excluded_states:
+                swaps.contract.state = 'EXPIRED'
+                swaps.contract.save()
 
     return Response({'result': 'ok'})
 
