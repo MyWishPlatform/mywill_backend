@@ -312,8 +312,11 @@ def set_swaps_expired(request):
         if now > order.stop_date:
             if order.state not in excluded_states:
                 order.state = 'EXPIRED'
-                order.swap_ether_contract.state = 'EXPIRED'
-                order.contract_state = order.swap_ether_contract.state
+                if order.swap_ether_contract:
+                    order.swap_ether_contract.state = 'EXPIRED'
+                    order.contract_state = order.swap_ether_contract.state
+                else:
+                    order.contract_state = 'EXPIRED'
                 order.save()
 
     for id in swaps_ids:
