@@ -57,7 +57,7 @@ class OrderBookSwaps(models.Model):
         self.swap_ether_contract.state = 'ACTIVE'
         self.contract_state = self.swap_ether_contract.state
         self.save()
-        if self.contract.user.email:
+        if self.user.email:
             swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
                     protocol=SITE_PROTOCOL,
                     unique_link=self.unique_link, url=SWAPS_URL
@@ -65,7 +65,7 @@ class OrderBookSwaps(models.Model):
             sendEMail(
                     swaps_deploed_subject,
                     swaps_deploed_message.format(swaps_link=swaps_link),
-                    [self.contract.user.email]
+                    [self.user.email]
             )
         return
 
