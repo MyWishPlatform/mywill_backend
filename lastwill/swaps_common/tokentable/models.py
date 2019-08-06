@@ -10,7 +10,7 @@ class Tokens(models.Model):
 
 
 class TokensCoinMarketCap(models.Model):
-    token_cmc_id = models.IntegerField()
+    token_cmc_id = models.IntegerField(null=True)
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     token_platform = models.CharField(max_length=64)
