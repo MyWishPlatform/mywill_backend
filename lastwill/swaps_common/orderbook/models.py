@@ -53,9 +53,9 @@ class OrderBookSwaps(models.Model):
     @check_transaction
     def msg_deployed(self, message):
 
-        self.contract_state = 'ACTIVE'
         self.state = 'ACTIVE'
         self.swap_ether_contract.state = 'ACTIVE'
+        self.contract_state = self.swap_ether_contract.state
         self.save()
         if self.contract.user.email:
             swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
@@ -70,11 +70,15 @@ class OrderBookSwaps(models.Model):
         return
 
     def finalized(self, message):
-        self.contract_state = 'DONE'
+        self.state = 'DONE'
+        self.swap_ether_contract.state = 'DONE'
+        self.contract_state = self.swap_ether_contract.state
         self.save()
 
     def cancelled(self, message):
-        self.contract_state = 'CANCELLED'
+        self.state = 'CANCELLED'
+        self.swap_ether_contract.state = 'CANCELLED'
+        self.contract_state = self.swap_ether_contract.state
         self.save()
 
 

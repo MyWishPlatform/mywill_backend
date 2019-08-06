@@ -124,9 +124,9 @@ def create_contract_swaps_backend(request):
         backend_contract.state = 'ACTIVE'
         backend_contract.contract_state = 'ACTIVE'
     else:
-        backend_contract.state = 'WAITING_FOR_ACTIVATION'
-        backend_contract.contract_state = 'WAITING_FOR_ACTIVATION'
         ethereum_swap = create_swap2_for_ether(backend_contract)
+        backend_contract.state = 'ACTIVE'
+        backend_contract.contract_state = ethereum_swap.state
         backend_contract.swap_ether_contract = ethereum_swap
         # print(ethereum_swap, flush=True)
 
@@ -153,16 +153,16 @@ def create_swap2_for_ether(order):
     swap2_contract.save()
     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
     swap2_details.save()
-    swap2_contract.state = 'WAITING_FOR_ACTIVATION'
+    swap2_contract.state = 'CREATED'
     swap2_contract.save()
     order.save()
 
-    return swap2_contract.id
+    return swap2_contract
 
 
-def add_swap2_state(order_id):
-    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
-    return swap_contract.contract.state
+#def add_swap2_state(order_id):
+#    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
+#    return swap_contract.contract.state
 
 
 @api_view(http_method_names=['GET'])
@@ -173,10 +173,10 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        if details['base_address'] and details['quote_address']:
-            details['contract_state'] = add_swap2_state(swap_id)
-        else:
-            details['contract_state'] = "ACTIVE"
+        # if details['base_address'] and details['quote_address']:
+        #     details['contract_state'] = add_swap2_state(swap_id)
+        # else:
+        #     details['contract_state'] = "ACTIVE"
         return Response(details)
     else:
         raise ParseError
@@ -269,7 +269,7 @@ def get_swap_v3_for_unique_link(request):
 
     details = get_swap_from_orderbook(swaps_order.id)
     #if details['base_address'] or details['quote_address']:
-    #    details['contract_state'] = add_swap2_state(swaps_order.id)
+    #    details['contract_state'] = add_swap2_daфвaфвфывps_order.id)
     #else:
     #    details['contract_state'] = ""
     return Response(details)
@@ -345,5 +345,7 @@ def cancel_swaps_v3(request):
     if not (order.base_address and order.quote_address):
         order.state = 'CANCELLED'
         order.contract_state = 'CANCELLED'
+        if order.swap_ether_contract:
+            order.swap_ether_contract.state = 'CANCELLED'
         order.save()
         return Response({"result": order.id})
