@@ -147,8 +147,14 @@ def create_swap2_for_ether(order):
             name=order_details['name'],
             state='CREATED'
     )
-    excluded_fields = ['name', 'id', 'state', 'base_coin_id','quote_coin_id', 'comment']
-    swap2_params = {k:v for k,v in order_details.items() if k not in excluded_fields}
+    excluded_fields = ['name', 'id', 'state', 'base_coin_id', 'quote_coin_id', 'comment', 'user']
+    included_fields = [
+        'base_address', 'base_limit', 'quote_address', 'quote_limit', 'stop_date', 'public', 'owner_address',
+        'whitelist', 'whitelist_address', 'unique_link', 'broker_fee', 'broker_fee_address', 'broker_fee_base',
+        'broker_fee_quote', 'min_base_wei', 'min_quote_wei'
+    ]
+
+    swap2_params = {k: v for k, v in order_details.items() if k in included_fields}
     swap2_params['order_id'] = order_details['id']
     swap2_contract.save()
     swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
