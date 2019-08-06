@@ -48,7 +48,7 @@ class OrderBookSwaps(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
     whitelist_address = models.CharField(max_length=50)
-    swap_ether_contract = models.ForeignKey(Contract)
+    swap_ether_contract = models.ForeignKey(Contract, null=True)
 
     @check_transaction
     def msg_deployed(self, message):
