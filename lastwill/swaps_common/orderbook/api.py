@@ -386,3 +386,5 @@ def admin_delete_swaps_v3(request):
             order.delete()
     else:
         order.delete()
+
+    return Response({"result": order_id})
