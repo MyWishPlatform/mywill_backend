@@ -363,3 +363,25 @@ def cancel_swaps_v3(request):
             order.swap_ether_contract.state = 'CANCELLED'
         order.save()
         return Response({"result": order.id})
+
+
+def admin_delete_swaps_v3(request):
+    order_id = request.data['id']
+
+    if not request.user.profile.is_swaps_admin:
+        raise PermissionDenied
+
+    order = OrderBookSwaps.objects.filter(id=order_id)
+    if not order:
+        raise ParseError
+
+    order = order.first()
+
+    if order.base_address and order.quote_address:
+        if not order.contract_state == 'CREATED':
+            raise ParseError  # only for created
+        else:
+            order.swap_ether_contract.delete()
+            order.delete()
+    else:
+        order.delete()

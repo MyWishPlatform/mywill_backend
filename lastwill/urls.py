@@ -41,7 +41,7 @@ from lastwill.contracts.api import (ContractViewSet, get_code, test_comp,
 from lastwill.swaps_common.mailing.api import save_swaps_mail
 from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, show_contract_swaps_backend, \
     edit_contract_swaps_backend, get_swap_v3_for_unique_link, show_user_contract_swaps_backend, \
-    get_swap_v3_public, set_swaps_expired, delete_swaps_v3, cancel_swaps_v3
+    get_swap_v3_public, set_swaps_expired, delete_swaps_v3, cancel_swaps_v3, admin_delete_swaps_v3
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
@@ -164,7 +164,8 @@ urlpatterns = [
     url(r'^api/get_public_swap3/$', get_swap_v3_public),
     url(r'^api/set_swap3_expired/$', set_swaps_expired),
     url(r'^api/delete_swap3/$', delete_swaps_v3),
-    url(r'^api/cancel_swap3/$', cancel_swaps_v3)
+    url(r'^api/cancel_swap3/$', cancel_swaps_v3),
+    url(r'^api/admin_delete_swap3', admin_delete_swaps_v3)
 
 ]
 
