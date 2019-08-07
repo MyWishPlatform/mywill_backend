@@ -165,7 +165,7 @@ urlpatterns = [
     url(r'^api/set_swap3_expired/$', set_swaps_expired),
     url(r'^api/delete_swap3/$', delete_swaps_v3),
     url(r'^api/cancel_swap3/$', cancel_swaps_v3),
-    url(r'^api/admin_delete_swap3', admin_delete_swaps_v3)
+    url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3)
 
 ]
 
