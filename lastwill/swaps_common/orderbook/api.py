@@ -365,6 +365,7 @@ def cancel_swaps_v3(request):
         return Response({"result": order.id})
 
 
+@api_view(http_method_names=['POST', 'DELETE'])
 def admin_delete_swaps_v3(request):
     order_id = request.data['id']
 
