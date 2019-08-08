@@ -243,13 +243,24 @@ def create_eos_json(
                                       [{
                                         "key": public_key,
                                         "weight": 1}],
-                                        "accounts":
-                                            [{"permission": {
-                                        "actor": crowdsale_address,
-                                        "permission": "eosio.code"},
-                                                "weight": 1}],
-                                    "waits": []}}},
-
+                                        "accounts": [
+                                                {"permission": {
+                                                    "actor": crowdsale_address,
+                                                    "permission": "eosio.code"
+                                                },
+                                                "weight": 1
+                                                },
+                                                {"permission": {
+                                                    "actor":      token_address,
+                                                    "permission": "eosio.code"
+                                                },
+                                                    "weight":  1
+                                                }
+                                        ],
+                                    "waits": []
+                             }
+                         }
+                        },
                         {
                         "account": "eosio",
                         "name": "setcode",
@@ -334,13 +345,22 @@ def create_eos_json(
                             "auth": {
                                 "threshold": 1,
                                 "keys": [],
-                                "accounts": [{
+                                "accounts": [
+                                    {
                                     "permission": {
                                         "actor": crowdsale_address,
                                         "permission": "eosio.code"
+                                        },
+                                        "weight": 1
                                     },
-                                    "weight": 1
-                                }],
+                                    {
+                                        "permission": {
+                                            "actor":      token_address,
+                                            "permission": "eosio.code"
+                                        },
+                                        "weight":     1
+                                    }
+                                ],
                                 "waits": []
                             }
                         }
