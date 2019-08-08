@@ -12,15 +12,23 @@ from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
+excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
+
 
 def get_swap_from_orderbook(swap_id, force=False):
     backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
     now = datetime.datetime.now(timezone.utc)
+
     if now > backend_contract.stop_date:
-        backend_contract.state = 'EXPIRED'
-        backend_contract.contract_state = 'EXPIRED'
-        backend_contract.save()
-        backend_contract.refresh_from_db()
+        if backend_contract.state not in excluded_states:
+            backend_contract.state = 'EXPIRED'
+            if backend_contract.swap_ether_contract:
+                backend_contract.swap_ether_contract.state = 'EXPIRED'
+                backend_contract.contract_state = backend_contract.swap_ether_contract.state
+            else:
+                backend_contract.contract_state = 'EXPIRED'
+            backend_contract.save()
+            backend_contract.refresh_from_db()
 
     saved_details = {
         'id': backend_contract.id,
