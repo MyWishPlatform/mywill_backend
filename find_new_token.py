@@ -59,6 +59,9 @@ def find_by_parameters():
             if key in result:
                 id_rank[key] = value
 #    print(id_rank)
+    if len(id_rank) == 0:
+        return
+
     info_for_save = second_request(id_rank)
     rank = [value for i in id_rank.values()]
     count = 0
