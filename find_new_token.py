@@ -3,6 +3,7 @@ import django
 import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
+import time
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
@@ -118,4 +119,8 @@ def find_by_parameters():
 
 
 if __name__ == '__main__':
-    find_by_parameters()
+    while 1:
+        print('token parsing start', flush=True)
+        find_by_parameters()
+        time.sleep(3600 * 24)
+
