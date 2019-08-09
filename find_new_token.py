@@ -60,6 +60,7 @@ def find_by_parameters():
     rank = [value for i in id_rank.values()]
     count = 0
 
+    original_urls = []
     for key, value in info_for_save['data'].items():
         count =+ 1
 
@@ -73,14 +74,15 @@ def find_by_parameters():
         logo_url_mywish_base = 'https://github.com/MyWishPlatform/coinmarketcap_coin_images/raw/master'
 
         logo_url = value['logo']
-        print('save this image and commit it:', logo_url)
+        original_urls.append(logo_url)
+
         split_url = logo_url.split('/')
         img_name = split_url[7]
 
         logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
 
         print('saving token to db',
-              value['id'], value['name'], value['symbol'], value['logo'],
+              value['id'], value['name'], value['symbol'], logo_mywish_url,
               rank[count], token_platform, token_address,
               flush=True)
         print('original logo url is:', logo_url)
@@ -96,6 +98,8 @@ def find_by_parameters():
         )
 
 #        token_from_cmc.save()
+
+
 
 
 if __name__ == '__main__':
