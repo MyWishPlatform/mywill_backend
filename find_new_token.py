@@ -55,7 +55,7 @@ def find_by_parameters():
         for key,value in ids.items():
             if key in result:
                 id_rank[key] = value
-    print(id_rank)
+#    print(id_rank)
     info_for_save = second_request(id_rank)
     rank = [value for i in id_rank.values()]
     count = 0
@@ -69,6 +69,11 @@ def find_by_parameters():
         if value['platform'] is not None:
             token_platform = value['platform']['slug']
             token_address = value['platform']['token_address']
+
+        print('saving token to db',
+              value['id'], value['name'], value['symbol'], value['logo'],
+              rank[count], token_platform, token_address,
+              flush=True)
 
         token_from_cmc = TokensCoinMarketCap(
                 token_cmc_id=value['id'],
