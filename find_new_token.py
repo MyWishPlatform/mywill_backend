@@ -103,11 +103,13 @@ def find_by_parameters():
 
     url_list = " ".join(url for url in original_urls)
 
-    subj = """CoimMarketCap tokens update: found new {c}tokens""".format(c=len(url_list)),
+    subj = """ CoimMarketCap tokens update: found new {c} tokens """.format(c=len(original_urls)),
     mail = EmailMessage(
         subject=subj,
         body="""
+        
         {urls}
+        
         """.format(urls=url_list),
         from_email=DEFAULT_FROM_EMAIL,
         to=[CMC_TOKEN_UPDATE_MAIL]
