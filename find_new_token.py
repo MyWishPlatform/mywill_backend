@@ -67,7 +67,7 @@ def find_by_parameters():
     for key, value in info_for_save['data'].items():
         count =+ 1
 
-        token_platform = None
+        token_platform = 'False'
         token_address = '0x0000000000000000000000000000000000000000'
 
         if value['platform'] is not None:
