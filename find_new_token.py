@@ -60,6 +60,7 @@ def find_by_parameters():
                 id_rank[key] = value
 #    print(id_rank)
     if len(id_rank) == 0:
+        print('No new tokens', flush=True)
         return
 
     info_for_save = second_request(id_rank)
