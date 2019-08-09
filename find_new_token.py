@@ -48,12 +48,12 @@ def find_by_parameters():
     # convert to list
     ids = first_request()
     id_from_market = [i for i in ids.keys()]
-    id_from_db = [id for id in db ]
+    id_from_db = [id for id in db]
     if len(list(id_from_market)) != len(id_from_db):
         result = list(set(id_from_market)-set(id_from_db))
-        id_rank ={}
+        id_rank = {}
         for key,value in ids.items():
-            if key in  result:
+            if key in result:
                 id_rank[key] = value
     print(id_rank)
     info_for_save = second_request(id_rank)
@@ -61,20 +61,26 @@ def find_by_parameters():
     count = 0
 
     for key, value in info_for_save['data'].items():
-        count += 1
-        if value['platform'] is not None:
-            obj = TokensCoinMarketCap(token_cmc_id=value['id'], token_name=value['name'],
-                                      token_short_name=value['symbol'], image_link=value['logo'],
-                                      token_rank=rank[count], token_platform=value['platform']['slug'],
-                                      token_address=value['platform']['token_address'])
- #           obj.save()
+        count =+ 1
 
-        else:
-            obj = TokensCoinMarketCap(token_cmc_id=value ['id'], token_name=value['name'],
-                                      token_short_name=value['symbol'], image_link=value['logo'],
-                                      token_rank=rank[count], token_platform=None,
-                                      token_address='0x0000000000000000000000000000000000000000')
-#            obj.save()
+        token_platform = None
+        token_address = '0x0000000000000000000000000000000000000000'
+
+        if value['platform'] is not None:
+            token_platform = value['platform']['slug']
+            token_address = value['platform']['token_address']
+
+        token_from_cmc = TokensCoinMarketCap(
+                token_cmc_id=value['id'],
+                token_name=value['name'],
+                token_short_name=value['symbol'],
+                image_link=value['logo'],
+                token_rank=rank[count],
+                token_platform=token_platform,
+                token_address=token_address
+        )
+
+#        token_from_cmc.save()
 
 
 if __name__ == '__main__':
