@@ -3,10 +3,11 @@ import django
 import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
-from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
+
+from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
 
 
 def first_request():
