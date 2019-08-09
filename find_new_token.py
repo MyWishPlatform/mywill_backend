@@ -8,6 +8,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
 
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
+from django.core.mail import send_mail, EmailMessage
+from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL
 
 
 def first_request():
@@ -99,6 +101,13 @@ def find_by_parameters():
 
 #        token_from_cmc.save()
 
+    mail = EmailMessage(
+        subject='CoimMarketCap tokens update',
+        body=original_urls,
+        from_email=DEFAULT_FROM_EMAIL,
+        to=CMC_TOKEN_UPDATE_MAIL
+    )
+    mail.send()
 
 
 
