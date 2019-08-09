@@ -36,7 +36,7 @@ def second_request(token_list):
     session.headers.update(headers)
     try:
         response = session.get(url, params=parameters)
-        print(response.text)
+        # print(response.text)
         data = json.loads(response.text)
     except (ConnectionError, Timeout, TooManyRedirects) as e:
         print(e)
