@@ -101,14 +101,18 @@ def find_by_parameters():
 
 #        token_from_cmc.save()
 
+    url_list = " ".join(url for url in original_urls)
+
+    subj = """CoimMarketCap tokens update: found new {c}tokens""".format(c=len(url_list)),
     mail = EmailMessage(
-        subject='CoimMarketCap tokens update',
-        body=original_urls,
+        subject=subj,
+        body="""
+        {urls}
+        """.format(urls=url_list),
         from_email=DEFAULT_FROM_EMAIL,
         to=CMC_TOKEN_UPDATE_MAIL
     )
     mail.send()
-
 
 
 if __name__ == '__main__':
