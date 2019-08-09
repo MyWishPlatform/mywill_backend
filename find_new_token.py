@@ -1,13 +1,12 @@
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
-django.setup()
-
-
 import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
+django.setup()
 
 
 def first_request():
@@ -70,16 +69,26 @@ def find_by_parameters():
             token_platform = value['platform']['slug']
             token_address = value['platform']['token_address']
 
+        logo_url_mywish_base = 'https://github.com/MyWishPlatform/coinmarketcap_coin_images/raw/master'
+
+        logo_url = value['logo']
+        print('save this image and commit it:', logo_url)
+        split_url = logo_url.split('/')
+        img_name = split_url[7]
+
+        logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
+
         print('saving token to db',
               value['id'], value['name'], value['symbol'], value['logo'],
               rank[count], token_platform, token_address,
               flush=True)
+        print('original logo url is:', logo_url)
 
         token_from_cmc = TokensCoinMarketCap(
                 token_cmc_id=value['id'],
                 token_name=value['name'],
                 token_short_name=value['symbol'],
-                image_link=value['logo'],
+                image_link=logo_mywish_url,
                 token_rank=rank[count],
                 token_platform=token_platform,
                 token_address=token_address
