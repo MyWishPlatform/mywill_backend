@@ -100,7 +100,7 @@ def find_by_parameters():
                 token_address=token_address
         )
 
-#        token_from_cmc.save()
+        token_from_cmc.save()
 
     url_list = " ".join(url for url in original_urls)
 
