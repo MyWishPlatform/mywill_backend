@@ -110,7 +110,7 @@ def find_by_parameters():
         {urls}
         """.format(urls=url_list),
         from_email=DEFAULT_FROM_EMAIL,
-        to=CMC_TOKEN_UPDATE_MAIL
+        to=[CMC_TOKEN_UPDATE_MAIL]
     )
     mail.send()
 
