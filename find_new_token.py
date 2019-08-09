@@ -1,3 +1,9 @@
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
+import django
+django.setup()
+
+
 import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
