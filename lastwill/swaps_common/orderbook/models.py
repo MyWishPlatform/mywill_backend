@@ -37,12 +37,8 @@ class OrderBookSwaps(models.Model):
 
     comment = models.TextField()
 
-    min_base_wei = models.DecimalField(
-            max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
-    min_quote_wei = models.DecimalField(
-            max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
+    min_base_wei = models.CharField(max_length=512, default=None, null=True)
+    min_quote_wei = models.CharField(max_length=512, default=None, null=True)
 
     contract_state = models.CharField(max_length=63, default='CREATED')
     created_date = models.DateTimeField(auto_now_add=True)
