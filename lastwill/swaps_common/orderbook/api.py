@@ -8,9 +8,10 @@ from rest_framework.response import Response
 
 from django.utils import timezone
 from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
-from lastwill.contracts.submodels.common import Contract
+from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
+from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
 
 excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
 
@@ -141,6 +142,7 @@ def create_contract_swaps_backend(request):
     backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
+    send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
     return Response(details)
 
 
