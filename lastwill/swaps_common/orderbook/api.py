@@ -142,7 +142,7 @@ def create_contract_swaps_backend(request):
     backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
-    print('sending swap order in queue ', backend_contract.id)
+    print('sending swap order in queue ', backend_contract.id, flush=True)
     send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
     return Response(details)
 
