@@ -10,7 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
 from rest_auth.registration.serializers import RegisterSerializer
 from rest_auth.serializers import (
-    LoginSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer
+    LoginSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer,PasswordResetSerializer
 )
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
@@ -161,3 +161,21 @@ class PasswordResetConfirmSerializer2FA(PasswordResetConfirmSerializer):
                 raise PermissionDenied(1021)
             if not valid_totp(self.user, totp):
                 raise PermissionDenied(1022)
+
+
+class CustomPasswordResetSerializer(PasswordResetSerializer):
+
+    email = serializers.EmailField()
+    password_reset_form_class = CustomPasswordResetForm
+
+
+    def save(self):
+        request = self.context.get('request')
+        # Set some values to trigger the send_email method.
+        opts = {
+            'use_https': request.is_secure(),
+            'from_email': getattr(settings, 'DEFAULT_FROM_EMAIL'),
+            'request': request,
+        }
+        opts.update(self.get_email_options())
+        self.reset_form.save(**opts)
