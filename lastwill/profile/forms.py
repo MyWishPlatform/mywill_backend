@@ -1,6 +1,6 @@
 from django import forms
 from django.core.mail import send_mail
-from django.contrib.auth.forms import PasswordResetForm,
+from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode

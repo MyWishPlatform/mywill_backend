@@ -163,7 +163,7 @@ class PasswordResetConfirmSerializer2FA(PasswordResetConfirmSerializer):
                 raise PermissionDenied(1022)
 
 
-class CustomPasswordResetSerializer(PasswordResetSerializer):
+class SubSitePasswordResetSerializer(PasswordResetSerializer):
     email = serializers.EmailField()
     password_reset_form_class = SubSitePasswordResetForm
 
