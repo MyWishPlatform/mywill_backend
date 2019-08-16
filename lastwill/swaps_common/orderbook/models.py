@@ -46,30 +46,30 @@ class OrderBookSwaps(models.Model):
     whitelist_address = models.CharField(max_length=50)
     swap_ether_contract = models.ForeignKey(Contract, null=True)
 
-    base_amount_contributed = model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
-    base_amount_total = model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
-    quote_amount_contributed = model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
-    quote_amount_total= model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
+    base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    base_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    quote_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
+    def deposit_order(self, message):
+        msg_amount = message['amount']
+        if message['token'] == self.base_address:
+            self.base_amount_contributed += msg_amount
+            self.base_amount_total += msg_amount
+        else:
+            self.quote_amount_contributed += msg_amount
+            self.quote_amount_total += msg_amount
 
-    def depositOrder(self,message):
-      if self.quote_address == message['token']:
-          self.base_amount_contributed = message['amount']
-          self.base_amount_total=+ message['balance']
-          self.save()
-      if self.base_address == message['token']:
-          self.quote_amount_contributed = message['amount']
-          self.quote_amount_total=+ message['balance']
-          self.save()
+        self.save()
 
+    def refund_order(self, message):
+        msg_amount = message['amount']
+        if message['token'] == self.base_address:
+            self.quote_amount_contributed -= msg_amount
+        else:
+            self.base_amount_contributed -= msg_amount
 
-    def refoundOrder(self,message):
-        if self.quote_address == message['token']:
-            self.quote_amount_contributed =-message['amount']
-            self.save()
-        if self.base_address == message['token']:
-            self.base_amount_contributed =-message['amount']
-            self.save()
+        self.save()
 
     @check_transaction
     def msg_deployed(self, message):

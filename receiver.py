@@ -341,13 +341,13 @@ class Receiver(threading.Thread):
         details = contract.get_details()
         details.setcode(message)
 
-    def refund_order(self,message):
-        order = OrderBookSwaps.objects.get(memo_contract = message['id'])
-        order.refoundOrder(message)
+    def refundOrder(self, message):
+        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
+        order.refund_order(message)
 
-    def deposit_order(self,message):
-        order = OrderBookSwaps.objects.get(memo_contract = message['id'])
-        order.depositOrder(message)
+    def depositOrder(self, message):
+        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
+        order.deposit_order(message)
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
