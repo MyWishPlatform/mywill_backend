@@ -11,6 +11,21 @@ To confirm the registration, click on the link below:
 Best regards!
 {subsite_name} Team."""
 
+
+password_reset_subject = """Password reset on {subsite_name} """
+password_reset_text = """
+You're receiving this email because you requested a password reset for your user account at {subsite_name}.
+
+Please go to the following page and choose a new password:
+
+{password_reset_url}
+
+Your username, in case you've forgotten: {user_display}
+
+Thanks for using our site!
+
+{subsite_name} Team."""
+
 common_subject = """Your contract is ready"""
 common_text = """Hello,
 
@@ -253,12 +268,4 @@ Please contact support@mywish.io if you have any questions.
 
 Best wishes,
 MyWish Team."""
-password_reset_subject  = """Password reset on {site_name} """
-password_reset_text= """
-You're receiving this email because you requested a password reset for your user account at {site_name}.
-Please go to the following page and choose a new password:
-{password_reset_url}
-Your username, in case you've forgotten:
-{email_user}
-Thanks for using our site!
-{site_name}"""
+

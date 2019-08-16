@@ -1,54 +1,67 @@
-
+from django import forms
+from django.core.mail import send_mail
 from django.contrib.auth.forms import PasswordResetForm,
+from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from lastwill.settings import MY_WISH_URL, SWAPS_URL, EMAIL_HOST_USER, EMAIL_HOST_USER_SWAPS
+from lastwill.contracts.submodels.swaps import sendEMail
+from email_messages import password_reset_subject, password_reset_text
 
 
+class SubSitePasswordResetForm(PasswordResetForm):
 
-
-class CustomPasswordResetForm(PasswordResetForm):
-    email = forms.EmailField(
-        label=_("Email"),
-        max_length=254,
-        widget=forms.EmailInput(attrs={'autocomplete': 'email'})
-    )
-
-    def save(self, domain_override=None,
-             subject_template_name='registration/password_reset_subject.txt',
-             email_template_name='registration/password_reset_email.html',
+    def save(self,
              use_https=False, token_generator=default_token_generator,
-             from_email=None, request=None, html_email_template_name=None,
-             extra_email_context=None):
+             request=None):
         """
         Generate a one-use only link for resetting password and send it to the
         user.
         """
-        email = self.cleaned_data["email"]
+        to_email = self.cleaned_data["email"]
 
-        for user in self.get_users(email):
-            if not domain_override:
-                current_site = get_current_site(request)
-                site_name = current_site.name
-                domain = current_site.domain
-            else:
-                site_name = domain = domain_override
-            context = {
-                'email': email,
-                'user': user,
-                **(extra_email_context or {}),
-            }
+        for user in self.get_users(to_email):
+            current_site = get_current_site(request)
+            subsite_domain = current_site.domain
+
+            protocol = 'https' if use_https else 'http'
+            u_id = urlsafe_base64_encode(force_bytes(user.pk))
+            u_token = token_generator.make_token(user)
+
+            token_generator_link = '{protocol}://{domain}/{uid}/{token}'.format(
+                    protocol=protocol,
+                    domain=subsite_domain,
+                    uid=u_id,
+                    token=u_token
+            )
+
             if self.request.META['HTTP_HOST'] == MY_WISH_URL:
-                email_user = EMAIL_HOST_USER
-                site_name = 'MyWish Platform'
+                from_email = EMAIL_HOST_USER
+                subsite_name = 'MyWish Platform'
 
-                self.send_mail(
-                subject_template_name, email_template_name, context, from_email,
-                email, html_email_template_name=html_email_template_name,
+                send_mail(
+                        password_reset_subject,
+                        password_reset_text.format(
+                                subsite_name=subsite_name,
+                                user_display=user,
+                                password_reset_url=token_generator_link
+                        ),
+                        from_email,
+                        [to_email]
+                )
 
             if self.request.META['HTTP_HOST'] == SWAPS_URL:
                 #from_email = EMAIL_HOST_USER_SWAPS
-                email_user = EMAIL_HOST_USER
-                site_name = "SWAPS.NETWORK"
+                subsite_name = "SWAPS.NETWORK"
 
-                self.send_mail(
-                subject_template_name, email_template_name, context, from_email,
-                email, html_email_template_name=html_email_template_name,
-            )
+                sendEMail(
+                        password_reset_subject,
+                        password_reset_text.format(
+                                subsite_name=subsite_name,
+                                user_display=user,
+                                password_reset_url=token_generator_link
+                        ),
+                        # from_email,
+                        [to_email]
+                )

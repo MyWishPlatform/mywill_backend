@@ -16,7 +16,7 @@ from rest_auth.serializers import (
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL, ROOT_PUBLIC_KEY_TRON, ROOT_PUBLIC_KEY_SWAPS, SWAPS_URL
 from lastwill.profile.helpers import valid_totp
-
+from lastwill.profile.forms import SubSitePasswordResetForm
 
 def generate_memo(m):
     memo_str = os.urandom(8)
@@ -164,17 +164,14 @@ class PasswordResetConfirmSerializer2FA(PasswordResetConfirmSerializer):
 
 
 class CustomPasswordResetSerializer(PasswordResetSerializer):
-
     email = serializers.EmailField()
-    password_reset_form_class = CustomPasswordResetForm
-
+    password_reset_form_class = SubSitePasswordResetForm
 
     def save(self):
         request = self.context.get('request')
         # Set some values to trigger the send_email method.
         opts = {
             'use_https': request.is_secure(),
-            'from_email': getattr(settings, 'DEFAULT_FROM_EMAIL'),
             'request': request,
         }
         opts.update(self.get_email_options())
