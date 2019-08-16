@@ -22,12 +22,10 @@ class SubSitePasswordResetForm(PasswordResetForm):
         to_email = self.cleaned_data["email"]
 
         for user in self.get_users(to_email):
-            current_site = get_current_site(request)
-            subsite_domain = current_site.domain
-
             protocol = 'https' if use_https else 'http'
             u_id = urlsafe_base64_encode(force_bytes(user.pk)).decode('utf-8')
             u_token = token_generator.make_token(user)
+            subsite_domain = request.META['HTTP_HOST']
 
             token_generator_link = '{protocol}://{domain}/{uid}/{token}/'.format(
                     protocol=protocol,
@@ -38,7 +36,7 @@ class SubSitePasswordResetForm(PasswordResetForm):
 
             print(request.META, flush=True)
 
-            if request.META['HTTP_HOST'] == MY_WISH_URL:
+            if subsite_domain == MY_WISH_URL:
                 from_email = EMAIL_HOST_USER
                 subsite_name = 'MyWish Platform'
 
@@ -50,10 +48,10 @@ class SubSitePasswordResetForm(PasswordResetForm):
                                 password_reset_url=token_generator_link
                         ),
                         from_email,
-                        [to_email]
+                        [user]
                 )
 
-            if request.META['HTTP_HOST'] == SWAPS_URL:
+            if subsite_domain == SWAPS_URL:
                 #from_email = EMAIL_HOST_USER_SWAPS
                 subsite_name = "SWAPS.NETWORK"
 
@@ -65,5 +63,5 @@ class SubSitePasswordResetForm(PasswordResetForm):
                                 password_reset_url=token_generator_link
                         ),
                         # from_email,
-                        [to_email]
+                        [user]
                 )
