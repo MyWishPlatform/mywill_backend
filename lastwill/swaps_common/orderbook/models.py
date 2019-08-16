@@ -67,9 +67,9 @@ class OrderBookSwaps(models.Model):
         msg_amount = message['amount']
         if message['token'] == self.base_address or message['token'] == self.quote_address:
             if message['token'] == self.base_address:
-                self.quote_amount_contributed -= msg_amount
-            else:
                 self.base_amount_contributed -= msg_amount
+            else:
+                self.quote_amount_contributed -= msg_amount
 
             self.save()
 
