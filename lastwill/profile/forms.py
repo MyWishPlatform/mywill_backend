@@ -27,7 +27,7 @@ class SubSitePasswordResetForm(PasswordResetForm):
             u_token = token_generator.make_token(user)
             subsite_domain = request.META['HTTP_HOST']
 
-            token_generator_link = '{protocol}://{domain}/{uid}/{token}/'.format(
+            token_generator_link = '{protocol}://{domain}/reset/{uid}/{token}/'.format(
                     protocol=protocol,
                     domain=subsite_domain,
                     uid=u_id,
@@ -63,5 +63,5 @@ class SubSitePasswordResetForm(PasswordResetForm):
                                 password_reset_url=token_generator_link
                         ),
                         # from_email,
-                        [user.username]
+                        user.username
                 )
