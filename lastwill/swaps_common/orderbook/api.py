@@ -109,7 +109,11 @@ def create_contract_swaps_backend(request):
             comment=comment,
             min_base_wei=min_base_wei,
             min_quote_wei=min_quote_wei,
-            whitelist=whitelist
+            whitelist=whitelist,
+            base_amount_contributed=0,
+            base_amount_total=0,
+            quote_amount_contributed=0,
+            quote_amount_total=0
     )
 
     if broker_fee:
