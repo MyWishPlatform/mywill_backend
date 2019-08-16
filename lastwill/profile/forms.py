@@ -36,7 +36,7 @@ class SubSitePasswordResetForm(PasswordResetForm):
                     token=u_token
             )
 
-            if self.request.META['HTTP_HOST'] == MY_WISH_URL:
+            if request.META['HTTP_HOST'] == MY_WISH_URL:
                 from_email = EMAIL_HOST_USER
                 subsite_name = 'MyWish Platform'
 
@@ -51,7 +51,7 @@ class SubSitePasswordResetForm(PasswordResetForm):
                         [to_email]
                 )
 
-            if self.request.META['HTTP_HOST'] == SWAPS_URL:
+            if request.META['HTTP_HOST'] == SWAPS_URL:
                 #from_email = EMAIL_HOST_USER_SWAPS
                 subsite_name = "SWAPS.NETWORK"
 
