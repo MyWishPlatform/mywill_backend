@@ -16,7 +16,7 @@ from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
 excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
 
 
-def get_swap_from_orderbook(swap_id, force=False):
+def get_swap_from_orderbook(swap_id):
     backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
     now = datetime.datetime.now(timezone.utc)
 
@@ -128,16 +128,12 @@ def create_contract_swaps_backend(request):
 
 
     #backend_contract.memo_contract = fake_swap.memo_contract
+    backend_contract.state = 'ACTIVE'
 
     if not(base_address and quote_address):
-        backend_contract.state = 'ACTIVE'
         backend_contract.contract_state = 'ACTIVE'
     else:
-        ethereum_swap = create_swap2_for_ether(backend_contract)
-        backend_contract.state = 'ACTIVE'
-        backend_contract.contract_state = ethereum_swap.state
-        backend_contract.swap_ether_contract = ethereum_swap
-        # print(ethereum_swap, flush=True)
+        backend_contract.contract_state = 'CREATED'
 
     backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
@@ -145,41 +141,6 @@ def create_contract_swaps_backend(request):
     print('sending swap order in queue ', backend_contract.id, flush=True)
     send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
     return Response(details)
-
-
-def create_swap2_for_ether(order):
-
-    order_details = get_swap_from_orderbook(order.id)
-
-    swap2_contract = Contract(
-            contract_type=21,
-            cost=0,
-            user=order.user,
-            name=order_details['name'],
-            state='CREATED'
-    )
-    excluded_fields = ['name', 'id', 'state', 'base_coin_id', 'quote_coin_id', 'comment', 'user']
-    included_fields = [
-        'base_address', 'base_limit', 'quote_address', 'quote_limit', 'stop_date', 'public', 'owner_address',
-        'whitelist', 'whitelist_address', 'unique_link', 'broker_fee', 'broker_fee_address', 'broker_fee_base',
-        'broker_fee_quote', 'min_base_wei', 'min_quote_wei'
-    ]
-
-    swap2_params = {k: v for k, v in order_details.items() if k in included_fields}
-    swap2_params['order_id'] = order_details['id']
-    swap2_contract.save()
-    swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
-    swap2_details.save()
-    swap2_contract.state = 'CREATED'
-    swap2_contract.save()
-    order.save()
-
-    return swap2_contract
-
-
-#def add_swap2_state(order_id):
-#    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
-#    return swap_contract.contract.state
 
 
 @api_view(http_method_names=['GET'])
@@ -190,10 +151,6 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        # if details['base_address'] and details['quote_address']:
-        #     details['contract_state'] = add_swap2_state(swap_id)
-        # else:
-        #     details['contract_state'] = "ACTIVE"
         return Response(details)
     else:
         raise ParseError
@@ -285,10 +242,6 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
-    #if details['base_address'] or details['quote_address']:
-    #    details['contract_state'] = add_swap2_daфвaфвфывps_order.id)
-    #else:
-    #    details['contract_state'] = ""
     return Response(details)
 
 
@@ -309,8 +262,6 @@ def set_swaps_expired(request):
     expired = request.data
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
-
-    excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
 
     now = datetime.datetime.now(timezone.utc)
 
