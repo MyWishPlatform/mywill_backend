@@ -34,8 +34,6 @@ class SubSitePasswordResetForm(PasswordResetForm):
                     token=u_token
             )
 
-            print(request.META, flush=True)
-
             if subsite_domain == MY_WISH_URL:
                 from_email = EMAIL_HOST_USER
                 subsite_name = 'MyWish Platform'
