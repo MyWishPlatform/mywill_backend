@@ -53,23 +53,25 @@ class OrderBookSwaps(models.Model):
 
     def deposit_order(self, message):
         msg_amount = message['amount']
-        if message['token'] == self.base_address:
-            self.base_amount_contributed += msg_amount
-            self.base_amount_total += msg_amount
-        else:
-            self.quote_amount_contributed += msg_amount
-            self.quote_amount_total += msg_amount
+        if message['token'] == self.base_address or message['token'] == self.quote_address:
+            if message['token'] == self.base_address:
+                self.base_amount_contributed += msg_amount
+                self.base_amount_total += msg_amount
+            else:
+                self.quote_amount_contributed += msg_amount
+                self.quote_amount_total += msg_amount
 
-        self.save()
+            self.save()
 
     def refund_order(self, message):
         msg_amount = message['amount']
-        if message['token'] == self.base_address:
-            self.quote_amount_contributed -= msg_amount
-        else:
-            self.base_amount_contributed -= msg_amount
+        if message['token'] == self.base_address or message['token'] == self.quote_address:
+            if message['token'] == self.base_address:
+                self.quote_amount_contributed -= msg_amount
+            else:
+                self.base_amount_contributed -= msg_amount
 
-        self.save()
+            self.save()
 
     @check_transaction
     def msg_deployed(self, message):
