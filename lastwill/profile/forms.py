@@ -26,22 +26,24 @@ class SubSitePasswordResetForm(PasswordResetForm):
             subsite_domain = current_site.domain
 
             protocol = 'https' if use_https else 'http'
-            u_id = urlsafe_base64_encode(force_bytes(user.pk))
+            u_id = urlsafe_base64_encode(force_bytes(user.pk)).decode('utf-8')
             u_token = token_generator.make_token(user)
 
-            token_generator_link = '{protocol}://{domain}/{uid}/{token}'.format(
+            token_generator_link = '{protocol}://{domain}/{uid}/{token}/'.format(
                     protocol=protocol,
                     domain=subsite_domain,
                     uid=u_id,
                     token=u_token
             )
 
+            print(request.META, flush=True)
+
             if request.META['HTTP_HOST'] == MY_WISH_URL:
                 from_email = EMAIL_HOST_USER
                 subsite_name = 'MyWish Platform'
 
                 send_mail(
-                        password_reset_subject,
+                        password_reset_subject.format(subsite_name=subsite_name),
                         password_reset_text.format(
                                 subsite_name=subsite_name,
                                 user_display=user,
@@ -56,7 +58,7 @@ class SubSitePasswordResetForm(PasswordResetForm):
                 subsite_name = "SWAPS.NETWORK"
 
                 sendEMail(
-                        password_reset_subject,
+                        password_reset_subject.format(subsite_name=subsite_name),
                         password_reset_text.format(
                                 subsite_name=subsite_name,
                                 user_display=user,
