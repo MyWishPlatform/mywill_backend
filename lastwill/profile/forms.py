@@ -48,7 +48,7 @@ class SubSitePasswordResetForm(PasswordResetForm):
                                 password_reset_url=token_generator_link
                         ),
                         from_email,
-                        [user]
+                        [user.username]
                 )
 
             if subsite_domain == SWAPS_URL:
@@ -63,5 +63,5 @@ class SubSitePasswordResetForm(PasswordResetForm):
                                 password_reset_url=token_generator_link
                         ),
                         # from_email,
-                        [user]
+                        [user.username]
                 )
