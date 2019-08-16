@@ -46,6 +46,31 @@ class OrderBookSwaps(models.Model):
     whitelist_address = models.CharField(max_length=50)
     swap_ether_contract = models.ForeignKey(Contract, null=True)
 
+    base_amount_contributed = model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
+    base_amount_total = model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
+    quote_amount_contributed = model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
+    quote_amount_total= model.DecimalField(max_digits = MAX_WEI_DIGITS,decimal_places = 0)
+
+
+    def depositOrder(self,message):
+      if self.quote_address == message['token']:
+          self.base_amount_contributed = message['amount']
+          self.base_amount_total=+ message['balance']
+          self.save()
+      if self.base_address == message['token']:
+          self.quote_amount_contributed = message['amount']
+          self.quote_amount_total=+ message['balance']
+          self.save()
+
+
+    def refoundOrder(self,message):
+        if self.quote_address == message['token']:
+            self.quote_amount_contributed =-message['amount']
+            self.save()
+        if self.base_address == message['token']:
+            self.base_amount_contributed =-message['amount']
+            self.save()
+
     @check_transaction
     def msg_deployed(self, message):
 
