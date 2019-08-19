@@ -111,6 +111,7 @@ URL_STATS_CURRENCY = {
     'EOS': URL_STATS_CURRENCY_BODY + "eos/",
     'ETH': URL_STATS_CURRENCY_BODY + "ethereum/",
     'EOSISH': "https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos",
+    'RUB': "https://www.freeforexapi.com/api/live?pairs=USDRUB",
 }
 
 URL_STATS_ETH_QUERY = 'api?module=account&action=balance&address='

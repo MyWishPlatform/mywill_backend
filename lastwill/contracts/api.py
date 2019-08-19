@@ -263,6 +263,7 @@ def get_currency_statistics():
     eosish_info = float(
         requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos']
         )
+    usd_info = json.loads(requests.get(URL_STATS_CURRENCY['RUB']).content.decode())
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -294,7 +295,8 @@ def get_currency_statistics():
     'bitcoin_rank': btc_info['rank'],
     'eth_rank': eth_info['rank'],
     'eosish_price_eos': eosish_info,
-    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10)
+    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
+    'usd_price_rub': round(float(usd_info['rates']['USDRUB']['rate']), 10)
     }
     return answer
 
