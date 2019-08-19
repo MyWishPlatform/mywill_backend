@@ -3,7 +3,7 @@ import random
 import string
 
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import PermissionDenied, ParseError
+from rest_framework.exceptions import PermissionDenied, ParseError, NotFound
 from rest_framework.response import Response
 
 from django.utils import timezone
@@ -155,7 +155,10 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        return Response(details)
+        if details['state'] != 'HIDDEN':
+            return Response(details)
+        else:
+            raise NotFound
     else:
         raise ParseError
 
@@ -184,6 +187,9 @@ def edit_contract_swaps_backend(request, swap_id):
         raise ParseError
 
     swap_order = OrderBookSwaps.objects.filter(id=swap_id).first()
+
+    if swap_order.state == 'HIDDEN':
+        raise NotFound
 
     if request.user != swap_order.user:
         if not request.user.profile.is_swaps_admin:
@@ -246,6 +252,10 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
+
+    if details['state'] == 'HIDDEN':
+        raise NotFound
+
     return Response(details)
 
 
