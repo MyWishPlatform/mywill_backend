@@ -53,6 +53,11 @@ class ContractDetailsSWAPS(CommonDetails):
     )
     temp_directory = models.CharField(max_length=36)
 
+    base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+    base_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+    quote_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+    quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+
     def predeploy_validate(self):
         pass
 
@@ -160,6 +165,33 @@ class ContractDetailsSWAPS(CommonDetails):
         self.contract.save()
 
 
+    def deposit_swaps(self, message):
+        msg_amount = message['amount']
+        base_address = self.base_address.lower()
+        quote_address = self.quote_address.lower()
+        if message['token'] == base_address or message['token'] == quote_address:
+            if message['token'] == self.base_address:
+                self.base_amount_contributed += msg_amount
+                self.base_amount_total += msg_amount
+            else:
+                self.quote_amount_contributed += msg_amount
+                self.quote_amount_total += msg_amount
+
+            self.save()
+
+    def refund_swaps(self, message):
+        msg_amount = message['amount']
+        base_address = self.base_address.lower()
+        quote_address = self.quote_address.lower()
+        if message['token'] == base_address or message['token'] == quote_address:
+            if message['token'] == self.base_address:
+                self.base_amount_contributed -= msg_amount
+            else:
+                self.quote_amount_contributed -= msg_amount
+
+            self.save()
+
+
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS2(CommonDetails):
     base_address = models.CharField(max_length=50)
@@ -196,6 +228,11 @@ class ContractDetailsSWAPS2(CommonDetails):
     min_quote_wei = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
+
+    base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    base_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    quote_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
+    quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
     @postponable
     @check_transaction
