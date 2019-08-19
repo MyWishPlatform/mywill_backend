@@ -297,7 +297,7 @@ def get_currency_statistics():
     'eosish_price_eos': eosish_info,
     'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
     'usd_price_rub': round(float(usd_info['ticker']['price']), 10),
-    'usd_percent_change_24h': round(float(usd_info['ticker']['change']))
+    'usd_percent_change_24h': round(float(usd_info['ticker']['change']), 10)
     }
     return answer
 
