@@ -350,12 +350,12 @@ class Receiver(threading.Thread):
         order.deposit_order(message)
 
     def refundSwaps(self, message):
-        contract = Contract.objects.get(id=message['contractId'])
+        contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
         details.refund_swaps(message)
 
     def depositSwaps(self, message):
-        contract = Contract.objects.get(id=message['contractId'])
+        contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
         details.deposit_swaps(message)
 

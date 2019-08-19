@@ -229,11 +229,6 @@ class ContractDetailsSWAPS2(CommonDetails):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
     )
 
-    base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
-    base_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
-    quote_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
-    quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
-
     @postponable
     @check_transaction
     def msg_deployed(self, message):
