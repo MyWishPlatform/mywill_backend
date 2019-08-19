@@ -296,7 +296,8 @@ def get_currency_statistics():
     'eth_rank': eth_info['rank'],
     'eosish_price_eos': eosish_info,
     'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
-    'usd_price_rub': round(float(usd_info['rates']['USDRUB']['rate']), 10)
+    'usd_price_rub': round(float(usd_info['ticker']['price']), 10),
+    'usd_percent_change_24h': round(float(usd_info['change']))
     }
     return answer
 
