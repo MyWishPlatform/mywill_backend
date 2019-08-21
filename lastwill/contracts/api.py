@@ -6,6 +6,7 @@ from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.permissions import IsAuthenticated
+from bs4 import BeautifulSoup
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL
@@ -263,7 +264,7 @@ def get_currency_statistics():
     eosish_info = float(
         requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos']
         )
-    usd_info = json.loads(requests.get(URL_STATS_CURRENCY['RUB']).content.decode())
+    usd_info = get_usd_rub_rates()
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -296,8 +297,8 @@ def get_currency_statistics():
     'eth_rank': eth_info['rank'],
     'eosish_price_eos': eosish_info,
     'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
-    'usd_price_rub': round(float(usd_info['ticker']['price']), 10),
-    'usd_percent_change_24h': round(float(usd_info['ticker']['change']), 10)
+    'usd_price_rub': round(float(usd_info['price']), 10),
+    'usd_percent_change_24h': round(float(usd_info['change_24h']), 10)
     }
     return answer
 
@@ -468,6 +469,17 @@ def get_balances_statistics():
 def get_ieo_statistics():
     res = requests.get('https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
     return res.json()
+
+
+def get_usd_rub_rates():
+    page = requests.get("https://www.fxempire.com/markets/usd-rub/overview")
+    soup = BeautifulSoup(page.content,'html.parser')
+    actual = (soup.find_all("div", class_='DirectionBackgroundColor__BackgroundColor-sc-1qjm64q-0 fgRxHG'))
+    course_change = (soup.find_all("span", class_="Span-sc-1abytr7-0 bJRcAQ"))
+    actual_course = actual[0].get_text()
+    course_change = course_change[0].get_text()[1:-2]
+    rub_rate = {'base': 'USD', 'target': 'RUB', 'price': actual_course, 'change_24h': course_change}
+    return rub_rate
 
 
 def get_contracts_for_network(net, all_contracts, now, day):
