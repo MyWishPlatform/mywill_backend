@@ -10,7 +10,7 @@ django.setup()
 
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
 from django.core.mail import send_mail, EmailMessage
-from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL
+from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, CMC_TOKEN_REFRESH_API_KEY
 
 
 def first_request():
@@ -32,7 +32,7 @@ def second_request(token_list):
     }
     headers = {
         'Accepts': 'application/json',
-        'X-CMC_PRO_API_KEY': 'f66f6d8d-742d-4ba7-af33-e61a55c7c135',
+        'X-CMC_PRO_API_KEY': CMC_TOKEN_REFRESH_API_KEY,
     }
     # rebuild to list values
     session = Session()
