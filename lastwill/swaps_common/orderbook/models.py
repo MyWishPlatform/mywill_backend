@@ -52,7 +52,7 @@ class OrderBookSwaps(models.Model):
     quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
     is_exchange = models.BooleanField(default=False, null=True)
-    exchange_user = models.CharFeild(max_length=512)
+    exchange_user = models.CharField(max_length=512)
 
     @check_transaction
     def msg_deployed(self, message):
