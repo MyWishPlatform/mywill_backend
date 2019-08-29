@@ -1,7 +1,7 @@
 import datetime
 import random
 import string
-import pyjwt
+import jwt
 
 from django.utils import timezone
 
