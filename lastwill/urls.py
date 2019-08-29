@@ -168,7 +168,7 @@ urlpatterns = [
     url(r'^api/cancel_swap3/$', cancel_swaps_v3),
     url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
     url(r'^api/create_swap_order/$', create_swaps_order_api),
-    url(r'^api/get_swap_order_token/&', create_token_for_session)
+    url(r'^api/get_swap_order_token/$', create_token_for_session)
 
 ]
 
