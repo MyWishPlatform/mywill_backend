@@ -17,7 +17,7 @@ from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, SECRET_KEY
 from lastwill.profile.models import *
 
 
-@api_view(http_method_names=['POST'])
+@api_view(http_method_names=['POST', 'OPTIONS'])
 def create_swaps_order_api(request):
     token = request.META['SESSION_TOKEN']
     if not token:
@@ -101,10 +101,10 @@ def create_swaps_order_api(request):
     return Response(details)
 
 
-@api_view(http_method_names=['POST'])
+@api_view(http_method_names=['POST', 'OPTIONS'])
 def create_token_for_session(request):
     api_key = request.META['HTTP_TOKEN']
-    if not api_key:
+    if not api_key: 
         raise ValidationError({'result': 'API key not found'}, code=404)
 
     user = get_user_for_token(api_key)
