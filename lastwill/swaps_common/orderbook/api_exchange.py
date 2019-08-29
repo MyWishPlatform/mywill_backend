@@ -103,17 +103,30 @@ def create_swaps_order_api(request):
 
 @api_view(http_method_names=['POST', 'OPTIONS'])
 def create_token_for_session(request):
-    api_key = request.META['HTTP_TOKEN']
-    if not api_key:
-        raise ValidationError({'result': 'API key not found'}, code=404)
+    if request.method == 'OPTIONS':
+        return Response(
+            #data=data,
+            status=200,
+            headers={
+                'access-control-allow-headers': 'Content-Type',
+                'access-control-allow-headers': 'POST',
+                'access-control-allow-headers': 'HTTP_TOKEN',
+                'access-control-allow-origin': '*',
+            }
+    )
+    else:
+        api_key = request.META['HTTP_TOKEN']
+        if not api_key:
+            raise ValidationError({'result': 'API key not found'}, code=404)
 
-    user = get_user_for_token(api_key)
+        user = get_user_for_token(api_key)
 
-    exchange_user_id = request.data['user_id']
-    exchange_domain = request.META['HTTP_HOST']
+        exchange_user_id = request.data['user_id']
+        exchange_domain = request.META['HTTP_HOST']
 
-    session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_key)
-    return Response({'session_token': session_token})
+        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_key)
+        data = {'session_token': session_token}
+        return Response(data)
 
 
 def encode_session_token(domain, profile, user_id, api_key):
