@@ -1,6 +1,7 @@
 import datetime
 import random
 import string
+import pyjwt
 
 from django.utils import timezone
 
@@ -12,17 +13,24 @@ from lastwill.contracts.submodels.common import send_in_queue
 from lastwill.contracts.api_eos import get_user_for_token
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.orderbook.api import get_swap_from_orderbook
-from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
+from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, SECRET_KEY
+from lastwill.profile.models import *
 
 
 @api_view(http_method_names=['POST'])
 def create_swaps_order_api(request):
-    if request.user.is_anonymous:
-        raise PermissionDenied
+    token = request.META['SESSION_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Session token not found'}, code=404)
 
-    token = request.META['HTTP_TOKEN']
+    data = decode_session_token(token)
 
-    exchange_account = get_user_for_token(token)
+    exchange_domain_name = data['exchange_domain']
+    exchange_account = User.objects.get(username=data['exchange_profile'])
+    if exchange_account.username != exchange_domain_name:
+        raise ValidationError('Domain name not matching username')
+
+    user_from_exchange = data['exchange_user']
 
     base_coin_id = quote_coin_id = 0
     base_address = quote_address = None
@@ -48,7 +56,6 @@ def create_swaps_order_api(request):
 
     memo = '0x' + ''.join(random.choice('abcdef' + string.digits) for _ in range(64))
 
-    user_from_exchange = request.date['exchange_user_id']
 
     backend_contract = OrderBookSwaps(
             name='exchange_order',
@@ -94,3 +101,45 @@ def create_swaps_order_api(request):
     return Response(details)
 
 
+@api_view(http_method_names=['POST'])
+def create_token_for_session(request):
+    api_key = request.META['HTTP_TOKEN']
+    if not api_key:
+        raise ValidationError({'result': 'API key not found'}, code=404)
+
+    user = get_user_for_token(api_key)
+
+    exchange_user_id = request.data['user_id']
+    exchange_domain = request.META['HTTP_HOST']
+
+    session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_key)
+    return Response({'session_token': session_token})
+
+
+def encode_session_token(domain, profile, user_id, api_key):
+    now = datetime.datetime.now(timezone.utc)
+    data = {
+        'exchange_domain':  domain,
+        'exchange_profile': profile,
+        'user':             user_id,
+    }
+    payload = {
+        'exp': now + datetime.timedelta(days=3),
+        'iat': now,
+        'data': data
+    }
+    return jwt.encode(
+            payload,
+            SECRET_KEY,
+            algorithm='HS256'
+    )
+
+
+def decode_session_token(token):
+    try:
+        payload = jwt.decode(token, SECRET_KEY)
+        return payload['data']
+    except jwt.ExpiredSignatureError:
+        return Response('Expired signature')
+    except jwt.InvalidTokenError:
+        return Response('Invalid token')
