@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
 
+    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'allauth',
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # 'lastwill.profile.middleware.session_middleware.SessionHostDomainMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'lastwill.profile.middleware.session_middleware.CrossDomainSessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
