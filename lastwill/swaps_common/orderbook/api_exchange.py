@@ -102,8 +102,9 @@ def create_swaps_order_api(request):
     return Response(details)
 
 
-#@api_view(http_method_names=['POST', 'OPTIONS'])
+
 @xframe_options_exempt
+@api_view(http_method_names=['POST', 'OPTIONS'])
 def create_token_for_session(request):
     if request.method == 'OPTIONS':
         return Response(
