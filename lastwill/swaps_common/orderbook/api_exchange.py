@@ -4,6 +4,7 @@ import string
 import jwt
 
 from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied, ParseError, NotFound, ValidationError
@@ -101,17 +102,19 @@ def create_swaps_order_api(request):
     return Response(details)
 
 
-@api_view(http_method_names=['POST', 'OPTIONS'])
+#@api_view(http_method_names=['POST', 'OPTIONS'])
+@xframe_options_exempt
 def create_token_for_session(request):
     if request.method == 'OPTIONS':
         return Response(
             #data=data,
             status=200,
             headers={
-                'access-control-allow-headers': 'Content-Type',
-                'access-control-allow-headers': 'POST',
+                #'access-control-allow-headers': 'Content-Type',
+                'access-control-allow-methods': 'POST',
                 'access-control-allow-headers': 'HTTP_TOKEN',
                 'access-control-allow-origin': '*',
+
             }
     )
     else:
