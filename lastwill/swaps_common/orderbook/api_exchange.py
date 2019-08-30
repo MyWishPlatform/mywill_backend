@@ -102,22 +102,19 @@ def create_swaps_order_api(request):
     return Response(details)
 
 
-
 @xframe_options_exempt
 @api_view(http_method_names=['POST', 'OPTIONS'])
 def create_token_for_session(request):
-    if request.method == 'OPTIONS':
-        return Response(
-            #data=data,
-            status=200,
-            headers={
-                #'access-control-allow-headers': 'Content-Type',
+    cors_headers = {
                 'access-control-allow-methods': 'POST',
-                'access-control-allow-headers': 'HTTP_TOKEN',
+                'access-control-allow-headers': 'Content-Type, TOKEN',
                 'access-control-allow-origin': '*',
+                'vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
 
             }
-    )
+
+    if request.method == 'OPTIONS':
+        return Response(status=200, headers=cors_headers)
     else:
         api_key = request.META['HTTP_TOKEN']
         if not api_key:
@@ -130,7 +127,11 @@ def create_token_for_session(request):
 
         session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_key)
         data = {'session_token': session_token}
-        return Response(data)
+        return Response(
+                data=data,
+                status=200,
+                headers=cors_headers
+        )
 
 
 def encode_session_token(domain, profile, user_id, api_key):
