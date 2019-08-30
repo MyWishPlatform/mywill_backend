@@ -169,6 +169,7 @@ def encode_session_token(domain, profile, user_id, api_key):
             payload,
             SECRET_KEY,
             algorithm='HS256'
+    )
 
 
 def set_cors_headers(additional_header):
