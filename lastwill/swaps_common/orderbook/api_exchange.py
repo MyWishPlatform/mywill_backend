@@ -22,7 +22,7 @@ from lastwill.profile.models import *
 @xframe_options_exempt
 @api_view(http_method_names=['POST', 'OPTIONS'])
 def create_swaps_order_api(request):
-    session_token_headers = set_cors_headers('HTTP_SESSION_TOKEN')
+    session_token_headers = set_cors_headers('SESSION-TOKEN')
     if request.method == 'OPTIONS':
         return Response(status=200, headers=session_token_headers)
     else:
@@ -134,7 +134,7 @@ def create_token_for_session(request):
 
 @api_view(http_method_names=['GET', 'OPTIONS'])
 def get_cmc_tokens_for_api(request):
-    list_headers = set_cors_headers('HTTP_SESSION_TOKEN')
+    list_headers = set_cors_headers('SESSION-TOKEN')
 
     if request.method == 'OPTIONS':
         return Response(status=200, headers=list_headers)
