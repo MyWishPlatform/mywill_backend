@@ -154,7 +154,7 @@ def encode_session_token(domain, profile, user_id, api_key):
         'user':             user_id,
     }
     payload = {
-        'exp': now + datetime.timedelta(days=3),
+        'exp': now + datetime.timedelta(seconds=10),
         'iat': now,
         'data': data
     }
