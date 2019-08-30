@@ -134,7 +134,7 @@ def create_token_for_session(request):
 
 @api_view(http_method_names=['GET', 'OPTIONS'])
 def get_cmc_tokens_for_api(request):
-    list_headers = set_cors_headers('SESSION_TOKEN')
+    list_headers = set_cors_headers('HTTP_SESSION_TOKEN')
 
     if request.method == 'OPTIONS':
         return Response(status=200, headers=list_headers)
