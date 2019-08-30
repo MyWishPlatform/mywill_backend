@@ -51,10 +51,10 @@ def create_swaps_order_api(request):
         else:
             raise ValidationError('Required pairs of: base_coin_id and quote_coin_id or base_address and quote_adress')
 
-        if 'stop_date' in request.params:
-            stop_date = datetime.datetime.strptime(request.data['stop_date'], '%Y-%m-%d %H:%M')
-        else:
-            stop_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=3)
+        base_limit = request.data['base_limit']
+        quote_limit = request.data['base_limit']
+
+        stop_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=3)
 
         link = ''.join(
                 random.choice(string.ascii_lowercase + string.digits) for _ in
@@ -66,10 +66,10 @@ def create_swaps_order_api(request):
         backend_contract = OrderBookSwaps(
                 name='exchange_order',
                 base_address=base_address,
-                base_limit=None,
+                base_limit=base_limit,
                 base_coin_id=base_coin_id,
                 quote_address=quote_address,
-                quote_limit=None,
+                quote_limit=quote_limit,
                 quote_coin_id=quote_coin_id,
                 owner_address=None,
                 stop_date=stop_date,
