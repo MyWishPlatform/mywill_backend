@@ -108,21 +108,27 @@ def get_standarts_tokens(request):
 
 @api_view()
 def get_all_coinmarketcap_tokens(request):
-    result = []
-    token_list = TokensCoinMarketCap.objects.all()
+    tokens = get_cmc_tokens()
+    return Response(tokens)
 
-    for t in token_list:
-        result.append({
-            'cmc_id': t.token_cmc_id,
-            'mywish_id': t.id,
-            'token_name': t.token_name,
+
+def get_cmc_tokens():
+    token_list = []
+    token_objects = TokensCoinMarketCap.objects.all()
+
+    for t in token_objects:
+        token_list.append({
+            'cmc_id':           t.token_cmc_id,
+            'mywish_id':        t.id,
+            'token_name':       t.token_name,
             'token_short_name': t.token_short_name,
-            'platform': t.token_platform,
-            'address': t.token_address,
-            'image_link': t.image_link,
-            'rank': t.token_rank
+            'platform':         t.token_platform,
+            'address':          t.token_address,
+            'image_link':       t.image_link,
+            'rank':             t.token_rank
         })
-    return Response(result)
+
+    return token_list
 
 
 def get_cmc_token_by_id(token_mywish_id):

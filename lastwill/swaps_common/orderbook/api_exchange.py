@@ -14,10 +14,12 @@ from lastwill.contracts.submodels.common import send_in_queue
 from lastwill.contracts.api_eos import get_user_for_token
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.orderbook.api import get_swap_from_orderbook
+from lastwill.swaps_common.tokentable.api import get_cmc_tokens
 from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, SECRET_KEY
 from lastwill.profile.models import *
 
 
+@xframe_options_exempt
 @api_view(http_method_names=['POST', 'OPTIONS'])
 def create_swaps_order_api(request):
     session_token_headers = set_cors_headers('SESSION_TOKEN')
@@ -108,7 +110,6 @@ def create_swaps_order_api(request):
 @xframe_options_exempt
 @api_view(http_method_names=['POST', 'OPTIONS'])
 def create_token_for_session(request):
-    additional_header = 'TOKEN'
     token_headers = set_cors_headers('TOKEN')
     if request.method == 'OPTIONS':
         return Response(status=200, headers=token_headers)
@@ -129,6 +130,16 @@ def create_token_for_session(request):
                 status=200,
                 headers=token_headers
         )
+
+
+@api_view(http_method_names=['GET', 'OPTIONS'])
+def get_cmc_tokens_for_api(request):
+    list_headers = set_cors_headers('')
+    if request.method == 'OPTIONS':
+        return Response(status=200, headers=list_headers)
+    else:
+        tokens = get_cmc_tokens()
+        return Response(data=tokens, status=200, headers=list_headers)
 
 
 def encode_session_token(domain, profile, user_id, api_key):
