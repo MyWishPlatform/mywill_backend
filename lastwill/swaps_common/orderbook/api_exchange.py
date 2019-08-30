@@ -127,7 +127,7 @@ def create_token_for_session(request):
         user = get_user_for_token(api_key)
 
         exchange_user_id = request.data['user_id']
-        exchange_domain = request.META['Origin']
+        exchange_domain = request.META['HTTP_ORIGIN']
 
         session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_key)
         data = {'session_token': session_token}
