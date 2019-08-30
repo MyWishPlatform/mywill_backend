@@ -34,9 +34,9 @@ def create_swaps_order_api(request):
             payload = jwt.decode(session_token, SECRET_KEY)
             data = payload['data']
         except jwt.ExpiredSignatureError:
-            return Response(data={'error': 'Expired signature'}, code=403, headers=session_token_headers)
+            return Response(data={'error': 'Expired signature'}, status=403, headers=session_token_headers)
         except jwt.InvalidTokenError:
-            return Response(data={'error': 'Invalid token'}, code=403, headers=session_token_headers)
+            return Response(data={'error': 'Invalid token'}, status=403, headers=session_token_headers)
 
         exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
