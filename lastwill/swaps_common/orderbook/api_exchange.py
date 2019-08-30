@@ -27,9 +27,11 @@ def create_swaps_order_api(request):
     if request.method == 'OPTIONS':
         return Response(status=200, headers=session_token_headers)
     else:
-        session_token = request.META['HTTP_SESSION_TOKEN']
-        if not session_token:
-            raise ValidationError({'result': 'Session token not found'}, code=404)
+        try:
+            session_token = request.META['HTTP_SESSION_TOKEN']
+        except KeyError:
+            return Response(data={'error': 'Session token not found'}, status=400,
+                            headers=session_token_headers)
 
         try:
             payload = jwt.decode(session_token, SECRET_KEY)
@@ -42,7 +44,7 @@ def create_swaps_order_api(request):
         exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
         if exchange_account.username != exchange_domain_name:
-            raise ValidationError('Domain name not matching username')
+            return Response(data={'error': 'Domain name not matching username'}, status=400, headers=session_token_headers)
 
         user_from_exchange = data['user']
 
@@ -56,8 +58,13 @@ def create_swaps_order_api(request):
             base_address = request.data['base_address']
             quote_address = request.data['quote_address']
         else:
-            raise ValidationError('Required pairs of: base_coin_id and quote_coin_id or base_address and quote_adress')
+            return Response(
+                    data={'error': 'Required pairs of: base_coin_id and quote_coin_id or base_address and quote_adress'},
+                    status=400,
+                    headers=session_token_headers
+            )
 
+        order_name = request.data['name']
         base_limit = request.data['base_limit']
         quote_limit = request.data['quote_limit']
 
@@ -71,7 +78,7 @@ def create_swaps_order_api(request):
         memo = '0x' + ''.join(random.choice('abcdef' + string.digits) for _ in range(64))
 
         backend_contract = OrderBookSwaps(
-                name='exchange_order',
+                name=order_name,
                 base_address=base_address,
                 base_limit=base_limit,
                 base_coin_id=base_coin_id,
@@ -122,9 +129,11 @@ def create_token_for_session(request):
     if request.method == 'OPTIONS':
         return Response(status=200, headers=token_headers)
     else:
-        api_key = request.META['HTTP_TOKEN']
-        if not api_key:
-            raise ValidationError({'result': 'API key not found'}, code=404)
+        try:
+            api_key = request.META['HTTP_SESSION_TOKEN']
+        except KeyError:
+            return Response(data={'error': 'HTTP token not found'}, status=400,
+                            headers=token_headers)
 
         user = get_user_for_token(api_key)
 
@@ -147,9 +156,11 @@ def get_cmc_tokens_for_api(request):
     if request.method == 'OPTIONS':
         return Response(status=200, headers=list_headers)
     else:
-        session_token = request.META['HTTP_SESSION_TOKEN']
-        if not session_token:
-            raise ValidationError({'result': 'Session token not found'}, code=404)
+        try:
+            session_token = request.META['HTTP_SESSION_TOKEN']
+        except KeyError:
+            return Response(data={'error': 'Session token not found'}, status=400,
+                            headers=list_headers)
 
         tokens = get_cmc_tokens()
         return Response(data=tokens, status=200, headers=list_headers)
