@@ -30,8 +30,13 @@ def create_swaps_order_api(request):
         if not session_token:
             raise ValidationError({'result': 'Session token not found'}, code=404)
 
-        data = decode_session_token(session_token)
-
+        try:
+            payload = jwt.decode(session_token, SECRET_KEY)
+            data = payload['data']
+        except jwt.ExpiredSignatureError:
+            return Response(data={'error': 'Expired signature'}, code=403, headers=session_token_headers)
+        except jwt.InvalidTokenError:
+            return Response(data={'error': 'Invalid token'}, code=403, headers=session_token_headers)
 
         exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
@@ -164,17 +169,6 @@ def encode_session_token(domain, profile, user_id, api_key):
             payload,
             SECRET_KEY,
             algorithm='HS256'
-    )
-
-
-def decode_session_token(token):
-    try:
-        payload = jwt.decode(token, SECRET_KEY)
-        return payload['data']
-    except jwt.ExpiredSignatureError:
-        raise PermissionDenied('Expired signature')
-    except jwt.InvalidTokenError:
-        raise PermissionDenied('Invalid token')
 
 
 def set_cors_headers(additional_header):
