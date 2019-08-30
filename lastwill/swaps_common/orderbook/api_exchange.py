@@ -138,7 +138,7 @@ def get_cmc_tokens_for_api(request):
     if not session_token:
         raise ValidationError({'result': 'Session token not found'}, code=404)
 
-    list_headers = set_cors_headers('')
+    list_headers = set_cors_headers('SESSION_TOKEN')
     if request.method == 'OPTIONS':
         return Response(status=200, headers=list_headers)
     else:
