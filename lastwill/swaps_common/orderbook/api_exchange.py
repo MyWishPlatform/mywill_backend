@@ -2,6 +2,7 @@ import datetime
 import random
 import string
 import jwt
+from urllib.parse import urlparse
 
 from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -155,8 +156,9 @@ def get_cmc_tokens_for_api(request):
 
 def encode_session_token(domain, profile, user_id, api_key):
     now = datetime.datetime.utcnow()
+    domain_name = urlparse(domain).netloc
     data = {
-        'exchange_domain':  domain,
+        'exchange_domain':  domain_name,
         'exchange_profile': profile,
         'user':             user_id,
     }
