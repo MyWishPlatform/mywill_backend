@@ -44,7 +44,7 @@ def create_swaps_order_api(request):
         if exchange_account.username != exchange_domain_name:
             raise ValidationError('Domain name not matching username')
 
-        user_from_exchange = data['exchange_user']
+        user_from_exchange = data['user']
 
         base_coin_id = quote_coin_id = 0
         base_address = quote_address = None
