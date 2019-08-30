@@ -59,7 +59,7 @@ def create_swaps_order_api(request):
             raise ValidationError('Required pairs of: base_coin_id and quote_coin_id or base_address and quote_adress')
 
         base_limit = request.data['base_limit']
-        quote_limit = request.data['base_limit']
+        quote_limit = request.data['quote_limit']
 
         stop_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=3)
 
