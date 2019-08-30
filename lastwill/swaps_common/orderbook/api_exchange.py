@@ -85,16 +85,17 @@ def create_swaps_order_api(request):
                 user=exchange_account,
                 broker_fee=False,
                 memo_contract=memo,
-                comment=None,
+                comment='',
                 min_base_wei=None,
                 min_quote_wei=None,
                 whitelist=False,
+                whitelist_address=None,
                 base_amount_contributed=0,
                 base_amount_total=0,
                 quote_amount_contributed=0,
                 quote_amount_total=0,
                 is_exchange=True,
-                exchange_user=user_from_exchange
+                exchange_user=user_from_exchange,
         )
 
         backend_contract.save()

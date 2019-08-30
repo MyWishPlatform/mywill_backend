@@ -43,7 +43,7 @@ class OrderBookSwaps(models.Model):
     contract_state = models.CharField(max_length=63, default='CREATED')
     created_date = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
-    whitelist_address = models.CharField(max_length=50)
+    whitelist_address = models.CharField(max_length=50, null=True)
     swap_ether_contract = models.ForeignKey(Contract, null=True)
 
     base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
