@@ -149,14 +149,14 @@ def get_cmc_tokens_for_api(request):
 
 
 def encode_session_token(domain, profile, user_id, api_key):
-    now = datetime.datetime.now(timezone.utc)
+    now = datetime.datetime.utcnow()
     data = {
         'exchange_domain':  domain,
         'exchange_profile': profile,
         'user':             user_id,
     }
     payload = {
-        'exp': now + datetime.timedelta(seconds=10),
+        'exp': now + datetime.timedelta(days=0, seconds=10),
         'iat': now,
         'data': data
     }
@@ -172,9 +172,9 @@ def decode_session_token(token):
         payload = jwt.decode(token, SECRET_KEY)
         return payload['data']
     except jwt.ExpiredSignatureError:
-        raise Response('Expired signature')
+        raise PermissionDenied('Expired signature')
     except jwt.InvalidTokenError:
-        raise Response('Invalid token')
+        raise PermissionDenied('Invalid token')
 
 
 def set_cors_headers(additional_header):
