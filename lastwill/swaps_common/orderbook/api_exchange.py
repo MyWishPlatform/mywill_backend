@@ -32,6 +32,7 @@ def create_swaps_order_api(request):
 
         data = decode_session_token(session_token)
 
+
         exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
         if exchange_account.username != exchange_domain_name:
@@ -171,9 +172,9 @@ def decode_session_token(token):
         payload = jwt.decode(token, SECRET_KEY)
         return payload['data']
     except jwt.ExpiredSignatureError:
-        return Response('Expired signature')
+        raise Response('Expired signature')
     except jwt.InvalidTokenError:
-        return Response('Invalid token')
+        raise Response('Invalid token')
 
 
 def set_cors_headers(additional_header):
