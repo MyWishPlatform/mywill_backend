@@ -121,7 +121,7 @@ def create_token_for_session(request):
         return Response(status=200, headers=token_headers)
     else:
         try:
-            api_key = request.META['HTTP_SESSION_TOKEN']
+            api_key = request.META['HTTP_TOKEN']
         except KeyError:
             return Response(data={'error': 'HTTP token not found'}, status=400,
                             headers=token_headers)
