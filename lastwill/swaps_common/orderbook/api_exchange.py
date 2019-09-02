@@ -201,9 +201,9 @@ def get_user_orders_for_api(request):
 
 def encode_session_token(domain, profile, user_id, api_token):
     now = datetime.datetime.utcnow()
-    domain_name = urlparse(domain).netloc
+    
     data = {
-        'exchange_domain':  domain_name,
+        'exchange_domain':  domain,
         'exchange_profile': profile,
         'user':             user_id,
         'api_token':        api_token
