@@ -222,7 +222,7 @@ def decode_payload(payload_token, error_headers):
 
     return data
 
-def get_exchange_for_token(token, error_headers)
+def get_exchange_for_token(token, error_headers):
     api_token = APIToken.objects.filter(token=token)
     if not api_token:
         return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
