@@ -171,7 +171,7 @@ def get_user_orders_for_api(request):
                             headers=orderlist_headers)
 
         data = decode_payload(session_token, orderlist_headers)
-        exchange_domain_name = data['exchange_domain']
+        #exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
         user_from_exchange = data['user']
 
@@ -181,9 +181,9 @@ def get_user_orders_for_api(request):
         for order in orders:
             details = get_swap_from_orderbook(swap_id=order.id)
             if details['state'] != 'HIDDEN':
-                orders_list.append(details)
+                orderlist.append(details)
 
-        return Response(data=tokens, status=200, headers=orderlist_headers)
+        return Response(data=orderlist, status=200, headers=orderlist_headers)
 
 
 def encode_session_token(domain, profile, user_id):
