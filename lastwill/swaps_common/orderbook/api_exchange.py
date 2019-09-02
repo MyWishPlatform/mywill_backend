@@ -33,11 +33,11 @@ def create_swaps_order_api(request):
             return Response(data={'error': 'Session token not found'}, status=400,
                             headers=session_token_headers)
 
-        data = decode_payload(session_token, session_token_headers)
+        host = get_domain(request)
+        data = decode_payload(host, session_token, session_token_headers)
         if isinstance(data, Response):
             return data
 
-        exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
         user_from_exchange = data['user']
 
@@ -129,15 +129,18 @@ def create_token_for_session(request):
             return Response(data={'error': 'HTTP token not found'}, status=400,
                             headers=token_headers)
 
+        exchange_domain = get_domain(request)
 
-        user = get_exchange_for_token(api_key, token_headers)
-        if isinstance(user, Response):
-            return user
+        exchange_data = get_exchange_for_token(api_key, exchange_domain, token_headers)
+        if isinstance(exchange_data, Response):
+            return exchange_data
 
         exchange_user_id = request.data['user_id']
-        exchange_domain = request.META['HTTP_ORIGIN']
+        user = exchange_data['user']
+        api_token = exchange_data['api_token']
 
-        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id)
+
+        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_token)
         data = {'session_token': session_token}
         return Response(
                 data=data,
@@ -176,8 +179,10 @@ def get_user_orders_for_api(request):
             return Response(data={'error': 'Session token not found'}, status=400,
                             headers=orderlist_headers)
 
-        data = decode_payload(session_token, orderlist_headers)
+        host = get_domain(request)
+        data = decode_payload(host, session_token, orderlist_headers)
         #exchange_domain_name = data['exchange_domain']
+
         exchange_account = User.objects.get(username=data['exchange_profile'])
         user_from_exchange = data['user']
 
@@ -192,13 +197,14 @@ def get_user_orders_for_api(request):
         return Response(data=orderlist, status=200, headers=orderlist_headers)
 
 
-def encode_session_token(domain, profile, user_id):
+def encode_session_token(domain, profile, user_id, api_token):
     now = datetime.datetime.utcnow()
     domain_name = urlparse(domain).netloc
     data = {
         'exchange_domain':  domain_name,
         'exchange_profile': profile,
         'user':             user_id,
+        'api_token':        api_token
     }
     payload = {
         'exp': now + datetime.timedelta(days=0, seconds=10),
@@ -211,7 +217,7 @@ def encode_session_token(domain, profile, user_id):
             algorithm='HS256'
     )
 
-def decode_payload(payload_token, error_headers):
+def decode_payload(domain_name, payload_token, error_headers):
     try:
         payload = jwt.decode(payload_token, SECRET_KEY)
         data = payload['data']
@@ -220,21 +226,27 @@ def decode_payload(payload_token, error_headers):
     except jwt.InvalidTokenError:
         return Response(data={'error': 'Invalid token'}, status=403, headers=error_headers)
 
-    exchange_domain_name = data['exchange_domain']
-    exchange_account = User.objects.get(username=data['exchange_profile'])
-    if exchange_account.username != exchange_domain_name:
-        return Response(data={'error': 'Domain name not matching username'}, status=400, headers=error_headers)
+    original_domain_name = data['exchange_domain']
+    #exchange_account = User.objects.get(username=data['exchange_profile'])
+    current_domain_name = domain_name
+
+    if original_domain_name != current_domain_name:
+        return Response(data={'error': 'Domain name not matching original'}, status=400, headers=error_headers)
 
     return data
 
-def get_exchange_for_token(token, error_headers):
-    api_token = APIToken.objects.filter(token=token)
+def get_exchange_for_token(token, domain, error_headers):
+    api_token = APIToken.objects.filter(token=token, swaps_exchange_domain=domain)
     if not api_token:
         return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
     api_token = api_token.first()
     if not api_token.active:
-        raise Response(data={'error': 'Your token is not active'}, status=404, headers=error_headers)
-    return api_token.user
+        return Response(data={'error': 'Your token is not active'}, status=404, headers=error_headers)
+
+    return {
+        'user': api_token.user,
+        'api_token': api_token
+    }
 
 
 def set_cors_headers(additional_header):
@@ -245,3 +257,6 @@ def set_cors_headers(additional_header):
                 'vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
 
             }
+
+def get_domain(request):
+    return urlparse(request.META['ORIGIN']).netloc
