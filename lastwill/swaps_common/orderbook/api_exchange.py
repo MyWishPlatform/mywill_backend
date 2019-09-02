@@ -140,7 +140,7 @@ def create_token_for_session(request):
         api_token = exchange_data['api_token']
 
 
-        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_token)
+        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_token.token)
         data = {'session_token': session_token}
         return Response(
                 data=data,
