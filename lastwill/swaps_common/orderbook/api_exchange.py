@@ -128,6 +128,8 @@ def create_token_for_session(request):
 
 
         user = get_exchange_for_token(api_key, token_headers)
+        if isinstance(user, Response):
+            return user
 
         exchange_user_id = request.data['user_id']
         exchange_domain = request.META['HTTP_ORIGIN']
@@ -228,7 +230,7 @@ def get_exchange_for_token(token, error_headers):
         return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
     api_token = api_token.first()
     if not api_token.active:
-        raise Response({'error': 'Your token is not active'}, status=404)
+        raise Response(data={'error': 'Your token is not active'}, status=404, headers=error_headers)
     return api_token.user
 
 
