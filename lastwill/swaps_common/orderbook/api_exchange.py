@@ -259,4 +259,4 @@ def set_cors_headers(additional_header):
             }
 
 def get_domain(request):
-    return urlparse(request.META['ORIGIN']).netloc
+    return urlparse(request.META['HTTP_ORIGIN']).netloc
