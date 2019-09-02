@@ -12,7 +12,7 @@ from rest_framework.exceptions import PermissionDenied, ParseError, NotFound, Va
 from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import send_in_queue
-from lastwill.contracts.api_eos import get_user_for_token
+#from lastwill.contracts.api_eos import get_user_for_token
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.orderbook.api import get_swap_from_orderbook
 from lastwill.swaps_common.tokentable.api import get_cmc_tokens
@@ -126,7 +126,8 @@ def create_token_for_session(request):
             return Response(data={'error': 'HTTP token not found'}, status=400,
                             headers=token_headers)
 
-        user = get_user_for_token(api_key)
+
+        user = get_exchange_for_token(api_key, token_headers)
 
         exchange_user_id = request.data['user_id']
         exchange_domain = request.META['HTTP_ORIGIN']
@@ -220,6 +221,15 @@ def decode_payload(payload_token, error_headers):
         return Response(data={'error': 'Domain name not matching username'}, status=400, headers=error_headers)
 
     return data
+
+def get_exchange_for_token(token, error_headers)
+    api_token = APIToken.objects.filter(token=token)
+    if not api_token:
+        return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
+    api_token = api_token.first()
+    if not api_token.active:
+        raise Response({'error': 'Your token is not active'}, status=404)
+    return api_token.user
 
 
 def set_cors_headers(additional_header):
