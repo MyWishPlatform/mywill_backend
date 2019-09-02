@@ -181,6 +181,8 @@ def get_user_orders_for_api(request):
 
         host = get_domain(request)
         data = decode_payload(host, session_token, orderlist_headers)
+        if isinstance(data, Response):
+            return data
         #exchange_domain_name = data['exchange_domain']
 
         exchange_account = User.objects.get(username=data['exchange_profile'])
