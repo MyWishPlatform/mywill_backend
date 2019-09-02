@@ -33,20 +33,11 @@ def create_swaps_order_api(request):
             return Response(data={'error': 'Session token not found'}, status=400,
                             headers=session_token_headers)
 
-        try:
-            payload = jwt.decode(session_token, SECRET_KEY)
-            data = payload['data']
-        except jwt.ExpiredSignatureError:
-            return Response(data={'error': 'Expired signature'}, status=403, headers=session_token_headers)
-        except jwt.InvalidTokenError:
-            return Response(data={'error': 'Invalid token'}, status=403, headers=session_token_headers)
-
+        data = decode_payload(session_token, session_token_headers)
         exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
-        if exchange_account.username != exchange_domain_name:
-            return Response(data={'error': 'Domain name not matching username'}, status=400, headers=session_token_headers)
-
         user_from_exchange = data['user']
+
 
         base_coin_id = quote_coin_id = 0
         base_address = quote_address = None
@@ -140,7 +131,7 @@ def create_token_for_session(request):
         exchange_user_id = request.data['user_id']
         exchange_domain = request.META['HTTP_ORIGIN']
 
-        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id, api_key)
+        session_token = encode_session_token(exchange_domain, user.username, exchange_user_id)
         data = {'session_token': session_token}
         return Response(
                 data=data,
@@ -166,7 +157,36 @@ def get_cmc_tokens_for_api(request):
         return Response(data=tokens, status=200, headers=list_headers)
 
 
-def encode_session_token(domain, profile, user_id, api_key):
+@api_view(http_method_names=['GET', 'OPTIONS'])
+def get_user_orders_for_api(request):
+    orderlist_headers = set_cors_headers('SESSION-TOKEN')
+
+    if request.method == 'OPTIONS':
+        return Response(status=200, headers=orderlist_headers)
+    else:
+        try:
+            session_token = request.META['HTTP_SESSION_TOKEN']
+        except KeyError:
+            return Response(data={'error': 'Session token not found'}, status=400,
+                            headers=orderlist_headers)
+
+        data = decode_payload(session_token, orderlist_headers)
+        exchange_domain_name = data['exchange_domain']
+        exchange_account = User.objects.get(username=data['exchange_profile'])
+        user_from_exchange = data['user']
+
+
+        orderlist = []
+        orders = OrderBookSwaps.objects.filter(user=exchange_account, exchange_user=user_from_exchange)
+        for order in orders:
+            details = get_swap_from_orderbook(swap_id=order.id)
+            if details['state'] != 'HIDDEN':
+                orders_list.append(details)
+
+        return Response(data=tokens, status=200, headers=orderlist_headers)
+
+
+def encode_session_token(domain, profile, user_id):
     now = datetime.datetime.utcnow()
     domain_name = urlparse(domain).netloc
     data = {
@@ -184,6 +204,22 @@ def encode_session_token(domain, profile, user_id, api_key):
             SECRET_KEY,
             algorithm='HS256'
     )
+
+def decode_payload(payload_token, error_headers):
+    try:
+        payload = jwt.decode(payload_token, SECRET_KEY)
+        data = payload['data']
+    except jwt.ExpiredSignatureError:
+        return Response(data={'error': 'Expired signature'}, status=403, headers=error_headers)
+    except jwt.InvalidTokenError:
+        return Response(data={'error': 'Invalid token'}, status=403, headers=error_headers)
+
+    exchange_domain_name = data['exchange_domain']
+    exchange_account = User.objects.get(username=data['exchange_profile'])
+    if exchange_account.username != exchange_domain_name:
+        return Response(data={'error': 'Domain name not matching username'}, status=400, headers=error_headers)
+
+    return data
 
 
 def set_cors_headers(additional_header):
