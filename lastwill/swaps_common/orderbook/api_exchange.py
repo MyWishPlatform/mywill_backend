@@ -34,6 +34,9 @@ def create_swaps_order_api(request):
                             headers=session_token_headers)
 
         data = decode_payload(session_token, session_token_headers)
+        if isinstance(data, Response):
+            return data
+
         exchange_domain_name = data['exchange_domain']
         exchange_account = User.objects.get(username=data['exchange_profile'])
         user_from_exchange = data['user']
