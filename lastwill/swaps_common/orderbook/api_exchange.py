@@ -166,7 +166,7 @@ def create_swaps_order_api(request):
         backend_contract.save()
 
         backend_contract.state = 'ACTIVE'
-        backend_contract.contract_state = 'ACTIVE'
+        backend_contract.contract_state = 'CREATED'
 
         backend_contract.save()
         details = get_swap_from_orderbook(swap_id=backend_contract.id)
