@@ -43,7 +43,7 @@ from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, s
     edit_contract_swaps_backend, get_swap_v3_for_unique_link, show_user_contract_swaps_backend, \
     get_swap_v3_public, set_swaps_expired, delete_swaps_v3, cancel_swaps_v3, admin_delete_swaps_v3
 from lastwill.swaps_common.orderbook.api_exchange import create_swaps_order_api, create_token_for_session, \
-    get_cmc_tokens_for_api, get_user_orders_for_api
+    get_cmc_tokens_for_api, get_user_orders_for_api, delete_order_for_user
 from lastwill.contracts.api_eos import (create_eos_account, deploy_eos_account,
                                         show_eos_account, edit_eos_account,
                                         calculate_cost_eos_account, calculate_cost_eos_account_contract,
@@ -171,7 +171,8 @@ urlpatterns = [
     url(r'^api/create_swap_order/$', create_swaps_order_api),
     url(r'^api/get_swap_order_token/$', create_token_for_session),
     url(r'^api/get_swap_tokens_api/$', get_cmc_tokens_for_api),
-    url(r'^api/get_swap3_orders/$', get_user_orders_for_api)
+    url(r'^api/get_swap3_orders/$', get_user_orders_for_api),
+    url(r'^api/delete_order_for_user/$', delete_order_for_user)
 
 
 ]

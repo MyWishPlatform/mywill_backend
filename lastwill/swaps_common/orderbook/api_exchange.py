@@ -20,6 +20,74 @@ from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, SECRET_KEY
 from lastwill.profile.models import *
 
 
+def encode_session_token(domain, profile, user_id, api_token):
+    now = datetime.datetime.utcnow()
+
+    data = {
+        'exchange_domain':  domain,
+        'exchange_profile': profile,
+        'user':             user_id,
+        'api_token':        api_token
+    }
+    payload = {
+        'exp': now + datetime.timedelta(days=0, seconds=10),
+        'iat': now,
+        'data': data
+    }
+    return jwt.encode(
+            payload,
+            SECRET_KEY,
+            algorithm='HS256'
+    )
+
+
+def decode_payload(domain_name, payload_token, error_headers):
+    try:
+        payload = jwt.decode(payload_token, SECRET_KEY)
+        data = payload['data']
+    except jwt.ExpiredSignatureError:
+        return Response(data={'error': 'Expired signature'}, status=403, headers=error_headers)
+    except jwt.InvalidTokenError:
+        return Response(data={'error': 'Invalid token'}, status=403, headers=error_headers)
+
+    original_domain_name = data['exchange_domain']
+    #exchange_account = User.objects.get(username=data['exchange_profile'])
+    current_domain_name = domain_name
+
+    if original_domain_name != current_domain_name:
+        return Response(data={'error': 'Domain name not matching original'}, status=400, headers=error_headers)
+
+    return data
+
+
+def get_exchange_for_token(token, domain, error_headers):
+    api_token = APIToken.objects.filter(token=token, swaps_exchange_domain=domain)
+    if not api_token:
+        return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
+    api_token = api_token.first()
+    if not api_token.active:
+        return Response(data={'error': 'Your token is not active'}, status=404, headers=error_headers)
+
+    return {
+        'user': api_token.user,
+        'api_token': api_token
+    }
+
+
+def set_cors_headers(additional_header):
+    return {
+                'access-control-allow-methods': 'POST',
+                'access-control-allow-headers': 'Content-Type, {header}'.format(header=additional_header),
+                'access-control-allow-origin': '*',
+                'vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+
+            }
+
+
+def get_domain(request):
+    return urlparse(request.META['HTTP_ORIGIN']).netloc
+
+
 @xframe_options_exempt
 @api_view(http_method_names=['POST', 'OPTIONS'])
 def create_swaps_order_api(request):
@@ -49,7 +117,7 @@ def create_swaps_order_api(request):
             quote_coin_id = request.data['quote_coin_id']
         else:
             return Response(
-                    data={'error': 'Required pairs of: base_coin_id and quote_coin_id'},
+                    data={'error': 'Required pair of base_coin_id and quote_coin_id'},
                     status=400,
                     headers=session_token_headers
             )
@@ -175,11 +243,9 @@ def get_user_orders_for_api(request):
         data = decode_payload(host, session_token, orderlist_headers)
         if isinstance(data, Response):
             return data
-        #exchange_domain_name = data['exchange_domain']
 
         exchange_account = User.objects.get(username=data['exchange_profile'])
         user_from_exchange = data['user']
-
 
         orderlist = []
         orders = OrderBookSwaps.objects.filter(user=exchange_account, exchange_user=user_from_exchange)
@@ -191,66 +257,45 @@ def get_user_orders_for_api(request):
         return Response(data=orderlist, status=200, headers=orderlist_headers)
 
 
-def encode_session_token(domain, profile, user_id, api_token):
-    now = datetime.datetime.utcnow()
+@api_view(http_method_names=['POST', 'OPTIONS'])
+def delete_order_for_user(request):
+    cors_headers = set_cors_headers('SESSION-TOKEN')
 
-    data = {
-        'exchange_domain':  domain,
-        'exchange_profile': profile,
-        'user':             user_id,
-        'api_token':        api_token
-    }
-    payload = {
-        'exp': now + datetime.timedelta(days=0, seconds=10),
-        'iat': now,
-        'data': data
-    }
-    return jwt.encode(
-            payload,
-            SECRET_KEY,
-            algorithm='HS256'
-    )
+    if request.method == 'OPTIONS':
+        return Response(status=200, headers=cors_headers)
+    else:
+        try:
+            session_token = request.META['HTTP_SESSION_TOKEN']
+        except KeyError:
+            return Response(data={'error': 'Session token not found'}, status=400, headers=cors_headers)
 
-def decode_payload(domain_name, payload_token, error_headers):
-    try:
-        payload = jwt.decode(payload_token, SECRET_KEY)
-        data = payload['data']
-    except jwt.ExpiredSignatureError:
-        return Response(data={'error': 'Expired signature'}, status=403, headers=error_headers)
-    except jwt.InvalidTokenError:
-        return Response(data={'error': 'Invalid token'}, status=403, headers=error_headers)
+        host = get_domain(request)
+        data = decode_payload(host, session_token, cors_headers)
+        if isinstance(data, Response):
+            return data
 
-    original_domain_name = data['exchange_domain']
-    #exchange_account = User.objects.get(username=data['exchange_profile'])
-    current_domain_name = domain_name
+        user_from_exchange = data['user']
 
-    if original_domain_name != current_domain_name:
-        return Response(data={'error': 'Domain name not matching original'}, status=400, headers=error_headers)
+        if 'order_id' in request.data:
+            order_id = request.data['order_id']
+        else:
+            return Response(data={'error': 'order_id is required'}, status=400, headers=cors_headers)
 
-    return data
+        swaps_order = OrderBookSwaps.objects.filter(id=order_id)
 
-def get_exchange_for_token(token, domain, error_headers):
-    api_token = APIToken.objects.filter(token=token, swaps_exchange_domain=domain)
-    if not api_token:
-        return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
-    api_token = api_token.first()
-    if not api_token.active:
-        return Response(data={'error': 'Your token is not active'}, status=404, headers=error_headers)
+        if not swaps_order:
+            return Response(data={'error': 'order with this id does not exist'}, status=404, headers=cors_headers)
 
-    return {
-        'user': api_token.user,
-        'api_token': api_token
-    }
+        if not swaps_order.exchange_user == user_from_exchange:
+            return Response(data={'error': 'user in request and user saves in order does not match'},
+                            status=403,
+                            headers=cors_headers)
 
+        swaps_order.exchange_user = None
+        swaps_order.save()
 
-def set_cors_headers(additional_header):
-    return {
-                'access-control-allow-methods': 'POST',
-                'access-control-allow-headers': 'Content-Type, {header}'.format(header=additional_header),
-                'access-control-allow-origin': '*',
-                'vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
-
-            }
-
-def get_domain(request):
-    return urlparse(request.META['HTTP_ORIGIN']).netloc
+        return Response(
+                data={'status': 'deleted ok'},
+                status=200,
+                headers=cors_headers
+        )
