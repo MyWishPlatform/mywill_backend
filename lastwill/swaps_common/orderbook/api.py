@@ -133,11 +133,7 @@ def create_contract_swaps_backend(request):
 
     #backend_contract.memo_contract = fake_swap.memo_contract
     backend_contract.state = 'ACTIVE'
-
-    if not(base_address and quote_address):
-        backend_contract.contract_state = 'ACTIVE'
-    else:
-        backend_contract.contract_state = 'CREATED'
+    backend_contract.contract_state = 'CREATED'
 
     backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)

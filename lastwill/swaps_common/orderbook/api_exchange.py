@@ -41,19 +41,15 @@ def create_swaps_order_api(request):
         exchange_account = User.objects.get(username=data['exchange_profile'])
         user_from_exchange = data['user']
 
-
         base_coin_id = quote_coin_id = 0
         base_address = quote_address = None
 
         if 'base_coin_id' and 'quote_coin_id' in request.data:
             base_coin_id = request.data['base_coin_id']
             quote_coin_id = request.data['quote_coin_id']
-        elif 'base_address' and 'quote_address' in request.data:
-            base_address = request.data['base_address']
-            quote_address = request.data['quote_address']
         else:
             return Response(
-                    data={'error': 'Required pairs of: base_coin_id and quote_coin_id or base_address and quote_adress'},
+                    data={'error': 'Required pairs of: base_coin_id and quote_coin_id'},
                     status=400,
                     headers=session_token_headers
             )
@@ -73,10 +69,10 @@ def create_swaps_order_api(request):
 
         backend_contract = OrderBookSwaps(
                 name=order_name,
-                base_address=base_address,
+                base_address="",
                 base_limit=base_limit,
                 base_coin_id=base_coin_id,
-                quote_address=quote_address,
+                quote_address="",
                 quote_limit=quote_limit,
                 quote_coin_id=quote_coin_id,
                 owner_address=None,
@@ -102,11 +98,7 @@ def create_swaps_order_api(request):
         backend_contract.save()
 
         backend_contract.state = 'ACTIVE'
-
-        if not(base_address and quote_address):
-            backend_contract.contract_state = 'ACTIVE'
-        else:
-            backend_contract.contract_state = 'CREATED'
+        backend_contract.contract_state = 'ACTIVE'
 
         backend_contract.save()
         details = get_swap_from_orderbook(swap_id=backend_contract.id)
@@ -201,7 +193,7 @@ def get_user_orders_for_api(request):
 
 def encode_session_token(domain, profile, user_id, api_token):
     now = datetime.datetime.utcnow()
-    
+
     data = {
         'exchange_domain':  domain,
         'exchange_profile': profile,
