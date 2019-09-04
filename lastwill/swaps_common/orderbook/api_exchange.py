@@ -286,6 +286,8 @@ def delete_order_for_user(request):
         if not swaps_order:
             return Response(data={'error': 'order with this id does not exist'}, status=404, headers=cors_headers)
 
+        swaps_order = swaps_order.first()
+
         if not swaps_order.exchange_user == user_from_exchange:
             return Response(data={'error': 'user in request and user saves in order does not match'},
                             status=403,
