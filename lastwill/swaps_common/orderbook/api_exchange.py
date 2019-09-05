@@ -308,7 +308,7 @@ def create_token_for_session_mywish(request):
     if request.user.is_anonymous:
         raise PermissionDenied
 
-    api_token = APIToken.objects.filter(token=SWAPS_WIDGET_TOKEN, swaps_exchange_domain=SWAPS_WIDGET_HOST)
+    api_token = APIToken.objects.filter(token=SWAPS_WIDGET_TOKEN, swaps_exchange_domain=SWAPS_WIDGET_HOST).first()
 
     mywish_username = api_token.user.username
 
