@@ -291,7 +291,7 @@ def delete_order_for_user(request):
 
         if not swaps_order.exchange_user == user_from_exchange:
             return Response(
-                    data={'error': {'code': 9, 'message': 'user in request and user saves in order does not match'}},
+                    data={'error': {'code': 10, 'message': 'user in request and user saves in order does not match'}},
                     status=403,
                     headers=cors_headers
             )
@@ -311,7 +311,11 @@ def create_token_for_session_mywish(request):
     if request.user.is_anonymous:
         raise PermissionDenied
 
-    api_token = APIToken.objects.filter(token=SWAPS_WIDGET_TOKEN, swaps_exchange_domain=SWAPS_WIDGET_HOST).first()
+    api_token = APIToken.objects.filter(
+            token=SWAPS_WIDGET_TOKEN,
+    #        swaps_exchange_domain=SWAPS_WIDGET_HOST
+            swaps_exchange_domain=get_domain(request.data['origin'])
+    ).first()
 
     mywish_username = api_token.user.username
 
