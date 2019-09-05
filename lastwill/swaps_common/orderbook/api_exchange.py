@@ -16,7 +16,7 @@ from lastwill.contracts.submodels.common import send_in_queue
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.orderbook.api import get_swap_from_orderbook
 from lastwill.swaps_common.tokentable.api import get_cmc_tokens
-from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, SECRET_KEY
+from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, SECRET_KEY, SWAPS_WIDGET_HOST, SWAPS_WIDGET_TOKEN
 from lastwill.profile.models import *
 
 
@@ -301,3 +301,18 @@ def delete_order_for_user(request):
                 status=200,
                 headers=cors_headers
         )
+
+
+@api_view(http_method_names=['POST', 'OPTIONS'])
+def create_token_for_session_mywish(request):
+    if request.user.is_anonymous:
+        raise PermissionDenied
+
+    api_token = APIToken.objects.filter(token=SWAPS_WIDGET_TOKEN, swaps_exchange_domain=SWAPS_WIDGET_HOST)
+
+    mywish_username = api_token.user.username
+
+    session_token = encode_session_token(SWAPS_WIDGET_HOST, mywish_username, request.user.id, SWAPS_WIDGET_TOKEN)
+    data = {'session_token': session_token}
+
+    return Response(data=data)
