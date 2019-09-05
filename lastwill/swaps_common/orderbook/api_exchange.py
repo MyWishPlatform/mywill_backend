@@ -314,7 +314,7 @@ def create_token_for_session_mywish(request):
     api_token = APIToken.objects.filter(
             token=SWAPS_WIDGET_TOKEN,
     #        swaps_exchange_domain=SWAPS_WIDGET_HOST
-            swaps_exchange_domain=get_domain(request.data['origin'])
+            swaps_exchange_domain=urlparse(request.data['origin']).netloc
     ).first()
 
     mywish_username = api_token.user.username
