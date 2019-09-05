@@ -46,16 +46,17 @@ def decode_payload(domain_name, payload_token, error_headers):
         payload = jwt.decode(payload_token, SECRET_KEY)
         data = payload['data']
     except jwt.ExpiredSignatureError:
-        return Response(data={'error': 'Expired signature'}, status=403, headers=error_headers)
+        return Response(data={'error': {'code': 2, 'message': 'Expired signature'}}, status=403, headers=error_headers)
     except jwt.InvalidTokenError:
-        return Response(data={'error': 'Invalid token'}, status=403, headers=error_headers)
+        return Response(data={'error': {'code': 3, 'message': 'Invalid token'}}, status=403, headers=error_headers)
 
     original_domain_name = data['exchange_domain']
     #exchange_account = User.objects.get(username=data['exchange_profile'])
     current_domain_name = domain_name
 
     if original_domain_name != current_domain_name:
-        return Response(data={'error': 'Domain name not matching original'}, status=400, headers=error_headers)
+        return Response(data={'error': {'code': 4, 'message': 'Domain name not matching original'}},
+                        status=400, headers=error_headers)
 
     return data
 
@@ -63,10 +64,10 @@ def decode_payload(domain_name, payload_token, error_headers):
 def get_exchange_for_token(token, domain, error_headers):
     api_token = APIToken.objects.filter(token=token, swaps_exchange_domain=domain)
     if not api_token:
-        return Response(data={'error': 'Token does not exist'}, status=404, headers=error_headers)
+        return Response(data={'error': {'code': 5, 'message': 'Token does not exist'} }, status=404, headers=error_headers)
     api_token = api_token.first()
     if not api_token.active:
-        return Response(data={'error': 'Your token is not active'}, status=404, headers=error_headers)
+        return Response(data={'error': {'code': 6, 'message': 'Your token is not active'} }, status=404, headers=error_headers)
 
     return {
         'user': api_token.user,
@@ -98,7 +99,7 @@ def create_swaps_order_api(request):
         try:
             session_token = request.META['HTTP_SESSION_TOKEN']
         except KeyError:
-            return Response(data={'error': 'Session token not found'}, status=400,
+            return Response(data={'error': {'code': 7, 'message': 'Session token not found'}}, status=400,
                             headers=session_token_headers)
 
         host = get_domain(request)
@@ -117,7 +118,7 @@ def create_swaps_order_api(request):
             quote_coin_id = request.data['quote_coin_id']
         else:
             return Response(
-                    data={'error': 'Required pair of base_coin_id and quote_coin_id'},
+                    data={'error': {'code': 8, 'message': 'Required pair of base_coin_id and quote_coin_id'}},
                     status=400,
                     headers=session_token_headers
             )
@@ -186,7 +187,7 @@ def create_token_for_session(request):
         try:
             api_key = request.META['HTTP_TOKEN']
         except KeyError:
-            return Response(data={'error': 'HTTP token not found'}, status=400,
+            return Response(data={'error': {'code': 1, 'message': 'HTTP token not found'}}, status=400,
                             headers=token_headers)
 
         exchange_domain = get_domain(request)
@@ -219,7 +220,7 @@ def get_cmc_tokens_for_api(request):
         try:
             session_token = request.META['HTTP_SESSION_TOKEN']
         except KeyError:
-            return Response(data={'error': 'Session token not found'}, status=400,
+            return Response(data={'error': {'code': 7, 'message': 'Session token not found'}}, status=400,
                             headers=list_headers)
 
         tokens = get_cmc_tokens()
@@ -236,7 +237,7 @@ def get_user_orders_for_api(request):
         try:
             session_token = request.META['HTTP_SESSION_TOKEN']
         except KeyError:
-            return Response(data={'error': 'Session token not found'}, status=400,
+            return Response(data={'error': {'error': {'code': 7, 'message': 'Session token not found'}}}, status=400,
                             headers=orderlist_headers)
 
         host = get_domain(request)
@@ -267,7 +268,7 @@ def delete_order_for_user(request):
         try:
             session_token = request.META['HTTP_SESSION_TOKEN']
         except KeyError:
-            return Response(data={'error': 'Session token not found'}, status=400, headers=cors_headers)
+            return Response(data={'error': {'code': 7, 'message': 'Session token not found'}}, status=400, headers=cors_headers)
 
         host = get_domain(request)
         data = decode_payload(host, session_token, cors_headers)
@@ -279,19 +280,21 @@ def delete_order_for_user(request):
         if 'order_id' in request.data:
             order_id = request.data['order_id']
         else:
-            return Response(data={'error': 'order_id is required'}, status=400, headers=cors_headers)
+            return Response(data={'error': {'code': 7, 'message': 'Session token not found'}}, status=400, headers=cors_headers)
 
         swaps_order = OrderBookSwaps.objects.filter(id=order_id)
 
         if not swaps_order:
-            return Response(data={'error': 'order with this id does not exist'}, status=404, headers=cors_headers)
+            return Response(data={'error': {'code': 9, 'message': 'order with this id does not exist'}}, status=404, headers=cors_headers)
 
         swaps_order = swaps_order.first()
 
         if not swaps_order.exchange_user == user_from_exchange:
-            return Response(data={'error': 'user in request and user saves in order does not match'},
-                            status=403,
-                            headers=cors_headers)
+            return Response(
+                    data={'error': {'code': 9, 'message': 'user in request and user saves in order does not match'}},
+                    status=403,
+                    headers=cors_headers
+            )
 
         swaps_order.exchange_user = None
         swaps_order.save()
