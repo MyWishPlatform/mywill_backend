@@ -289,7 +289,7 @@ def delete_order_for_user(request):
 
         swaps_order = swaps_order.first()
 
-        if not swaps_order.exchange_user == user_from_exchange:
+        if not str(swaps_order.exchange_user) == str(user_from_exchange):
             return Response(
                     data={'error': {'code': 10, 'message': 'user in request and user saves in order does not match'}},
                     status=403,
