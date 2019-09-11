@@ -341,7 +341,7 @@ class ContractDetailsEOSICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 149 * NET_DECIMALS['USDT']
+        cost = 195 * NET_DECIMALS['USDT']
         return cost
 
     @staticmethod
