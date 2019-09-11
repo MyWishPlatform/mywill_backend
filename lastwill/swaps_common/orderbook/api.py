@@ -57,7 +57,9 @@ def get_swap_from_orderbook(swap_id):
         'contract_state': backend_contract.contract_state,
         'created_date': backend_contract.created_date,
         'whitelist': backend_contract.whitelist,
-        'whitelist_address': backend_contract.whitelist_address
+        'whitelist_address': backend_contract.whitelist_address,
+        'base_amount_contributed':  backend_contract.base_amount_contributed,
+        'quote_amount_contributed': backend_contract.quote_amount_contributed
     }
     return saved_details
 
