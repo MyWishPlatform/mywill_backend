@@ -54,6 +54,10 @@ class OrderBookSwaps(models.Model):
     is_exchange = models.BooleanField(default=False, null=True)
     exchange_user = models.CharField(max_length=512, null=True, default=None)
 
+    notification_email = models.CharField(max_length=50, null=True, default=None)
+    notification_telegram_name = models.CharField(max_length=50, null=True, default=None)
+    notification_type = models.IntegerField(default=0)
+
     @check_transaction
     def msg_deployed(self, message):
 
