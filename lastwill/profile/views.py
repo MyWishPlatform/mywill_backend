@@ -177,7 +177,7 @@ def profile_view(request):
         swaps_notification_type = swaps_notification_set.notification_type
 
     swaps_notifications = {
-            'email': swaps_notification_email
+            'email': swaps_notification_email,
             'telegram_name': swaps_notification_telegram_name,
             'notification_type': swaps_notification_type
         }
