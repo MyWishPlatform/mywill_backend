@@ -165,13 +165,21 @@ def profile_view(request):
         user_name = request.user.username
 
     swaps_notifications = None
+    swaps_notification_email = None
+    swaps_notification_telegram_name = None
+    swaps_notification_type = None
+
     swaps_notification_set = request.user.swapsnotificationdefaults_set.all()
     if swaps_notification_set:
         swaps_notification_set = swaps_notification_set.first()
-        swaps_notifications = {
-            'email': swaps_notification_set.email,
-            'telegram_name': swaps_notification_set.telegram_name,
-            'notification_type': swaps_notification_set.notification_type
+        swaps_notification_email = swaps_notification_set.email
+        swaps_notification_telegram_name = swaps_notification_set.telegram_name
+        swaps_notification_type = swaps_notification_set.notification_type
+
+    swaps_notifications = {
+            'email': swaps_notification_email
+            'telegram_name': swaps_notification_telegram_name,
+            'notification_type': swaps_notification_type
         }
 
     answer = {
