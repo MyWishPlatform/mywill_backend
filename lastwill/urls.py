@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 # from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
-from lastwill.main.views import index, balance, login, eth2rub, exc_rate
+from lastwill.main.views import index, balance, login, eth2rub, exc_rate, redirect_contribute
 from lastwill.profile.views import confirm_email as allauthemailconfirmation
 from lastwill.profile.views import profile_view, generate_key, enable_2fa, disable_2fa, resend_email, set_lang
 from lastwill.profile.views import create_api_token, get_api_tokens, delete_api_token, delete_api_tokens
@@ -158,7 +158,7 @@ urlpatterns = [
     url(r'^api/change_contract_state/$', change_contract_state),
     url(r'^api/send_message_author_swap/$', send_message_author_swap),
     url(r'^api/save_swaps_mail/$', save_swaps_mail),
-    url(r'^api/create_swap3/$', create_contract_swaps_backend),
+    url(r'^api/create_swap3/$', create_contract_swapus_backend),
     url(r'^api/get_swap3/$', show_contract_swaps_backend),
     url(r'^api/get_swap3_for_unique_link/$', get_swap_v3_for_unique_link),
     url(r'^api/edit_swap3/(?P<swap_id>\d+)/$', edit_contract_swaps_backend),
@@ -173,7 +173,8 @@ urlpatterns = [
     url(r'^api/get_swap_tokens_api/$', get_cmc_tokens_for_api),
     url(r'^api/get_swap3_orders/$', get_user_orders_for_api),
     url(r'^api/delete_order_for_user/$', delete_order_for_user),
-    url(r'^api/generate_mywish_swap_token/$', create_token_for_session_mywish)
+    url(r'^api/generate_mywish_swap_token/$', create_token_for_session_mywish),
+    url(r'^contribute', redirect_contribute),
 
 
 ]
