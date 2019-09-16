@@ -12,4 +12,4 @@ class SwapsNotificationDefaults(models.Model):
     user = models.ForeignKey(User)
     email = models.CharField(max_length=50, null=True, default=None)
     telegram_name = models.CharField(max_length=50, null=True, default=None)
-    notification_type = models.BooleanField(default=False)
+    notification = models.BooleanField(default=False)
