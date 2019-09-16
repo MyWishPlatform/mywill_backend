@@ -99,7 +99,7 @@ def create_contract_swaps_backend(request):
 
     notification_email = None
     notification_tg = None
-    if notification_type or notification_type != 0:
+    if notification_type:
         if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
             raise ParseError('notificaion_email or notification_tg must be passed')
 
@@ -249,7 +249,7 @@ def edit_contract_swaps_backend(request, swap_id):
     if 'notification_type' in params:
         swap_order.notification_type = params['notification_type']
 
-    if swap_order.notification_type or swap_order.notification_type != 0:
+    if swap_order.notification_type:
         if not ('notification_email' in params or 'notification_tg' in params):
             raise ParseError('notificaion_email or notification_tg must be passed')
 
