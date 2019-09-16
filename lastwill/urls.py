@@ -158,7 +158,7 @@ urlpatterns = [
     url(r'^api/change_contract_state/$', change_contract_state),
     url(r'^api/send_message_author_swap/$', send_message_author_swap),
     url(r'^api/save_swaps_mail/$', save_swaps_mail),
-    url(r'^api/create_swap3/$', create_contract_swapus_backend),
+    url(r'^api/create_swap3/$', create_contract_swaps_backend),
     url(r'^api/get_swap3/$', show_contract_swaps_backend),
     url(r'^api/get_swap3_for_unique_link/$', get_swap_v3_for_unique_link),
     url(r'^api/edit_swap3/(?P<swap_id>\d+)/$', edit_contract_swaps_backend),
