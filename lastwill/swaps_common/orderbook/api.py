@@ -11,6 +11,7 @@ from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
+from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
 
 excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
@@ -59,7 +60,10 @@ def get_swap_from_orderbook(swap_id):
         'whitelist': backend_contract.whitelist,
         'whitelist_address': backend_contract.whitelist_address,
         'base_amount_contributed':  str(backend_contract.base_amount_contributed),
-        'quote_amount_contributed': str(backend_contract.quote_amount_contributed)
+        'quote_amount_contributed': str(backend_contract.quote_amount_contributed),
+        'notification_email': backend_contract.notification_email,
+        'notification_tg': backend_contract.notification_telegram_name,
+        'notification': backend_contract.notification
     }
     return saved_details
 
@@ -92,6 +96,30 @@ def create_contract_swaps_backend(request):
     min_base_wei = contract_details['min_base_wei'] if 'min_base_wei' in contract_details else ""
     min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
     whitelist = contract_details['whitelist'] if 'whitelist' in contract_details else False
+    notification = contract_details['notification'] if 'notification' in contract_details else None
+
+    notification_email = None
+    notification_tg = None
+    if notification:
+        if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
+            raise ParseError('notificaion_email or notification_tg must be passed')
+
+        notification_defaults = request.user.swapsnotificationdefaults_set.all()
+        if not notification_defaults:
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
+        else:
+            notification_defaults = notification_defaults.first()
+
+        notification_defaults.notification = notification
+
+        if 'notification_email' in contract_details:
+            notification_email = contract_details['notification_email']
+            notification_defaults.email = notification_email
+        if 'notification_tg' in contract_details:
+            notification_tg = contract_details['notification_tg']
+            notification_defaults.telegram_name = notification_tg
+
+        notification_defaults.save()
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
@@ -115,7 +143,10 @@ def create_contract_swaps_backend(request):
             base_amount_contributed=0,
             base_amount_total=0,
             quote_amount_contributed=0,
-            quote_amount_total=0
+            quote_amount_total=0,
+            notification_email=notification_email,
+            notification_telegram_name=notification_tg,
+            notification=notification
     )
 
     if broker_fee:
@@ -130,16 +161,11 @@ def create_contract_swaps_backend(request):
     if whitelist:
         backend_contract.whitelist_address = contract_details['whitelist_address']
 
-    backend_contract.save()
-
-
-    #backend_contract.memo_contract = fake_swap.memo_contract
     backend_contract.state = 'ACTIVE'
     backend_contract.contract_state = 'CREATED'
-
     backend_contract.save()
-    details = get_swap_from_orderbook(swap_id=backend_contract.id)
 
+    details = get_swap_from_orderbook(swap_id=backend_contract.id)
     print('sending swap order in queue ', backend_contract.id, flush=True)
     send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
     return Response(details)
@@ -233,6 +259,29 @@ def edit_contract_swaps_backend(request, swap_id):
     if 'whitelist' in params:
         swap_order.whitelist = params['whitelist']
         swap_order.whitelist_address = params['whitelist']
+    if 'notification' in params:
+        swap_order.notification = params['notification']
+
+    if swap_order.notification:
+        if not ('notification_email' in params or 'notification_tg' in params):
+            raise ParseError('notificaion_email or notification_tg must be passed')
+
+        notification_defaults = request.user.swapsnotificationdefaults_set.all()
+        if not notification_defaults:
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
+        else:
+            notification_defaults = notification_defaults.first()
+
+        notification_defaults.notification = swap_order.notification
+
+        if 'notification_email' in params:
+            notification_email = params['notification_email']
+            notification_defaults.notification_email = notification_email
+        if 'notification_tg' in params:
+            notification_tg = params['notification_tg']
+            notification_defaults.telegram_name = notification_tg
+
+        notification_defaults.save()
 
     swap_order.save()
     details = get_swap_from_orderbook(swap_id=swap_order.id)

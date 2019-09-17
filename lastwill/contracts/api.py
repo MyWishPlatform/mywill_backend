@@ -1146,7 +1146,7 @@ def send_message_author_swap(request):
             id=contract_id,
             email=email,
             link=link,
-            msg=message
+            msg=message.encode('utf-8')
         ),
         [SWAPS_SUPPORT_MAIL]
     )
