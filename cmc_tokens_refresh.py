@@ -95,8 +95,8 @@ def find_by_parameters():
         logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
 
         print('saving token to db',
-              value['id'], value['name'], value['symbol'], logo_mywish_url,
-              rank[count], token_platform, token_address,
+              value['id'], value['name'].encode('uft-8'), value['symbol'].encode('utf-8'), logo_mywish_url,
+              rank[count], token_platform, token_address.encode('utf-8'),
               flush=True)
         print('original logo url is:', logo_url)
 
