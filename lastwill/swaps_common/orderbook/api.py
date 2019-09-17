@@ -100,7 +100,7 @@ def create_contract_swaps_backend(request):
 
     notification_email = None
     notification_tg = None
-    if notification is not None:
+    if notification:
         if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
             raise ParseError('notificaion_email or notification_tg must be passed')
 
@@ -266,10 +266,22 @@ def edit_contract_swaps_backend(request, swap_id):
         if not ('notification_email' in params or 'notification_tg' in params):
             raise ParseError('notificaion_email or notification_tg must be passed')
 
+        notification_defaults = request.user.swapsnotificationdefaults_set.all()
+        if not notification_defaults:
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
+        else:
+            notification_defaults = notification_defaults.first()
+
+        notification_defaults.notification = swap_order.notification
+
         if 'notification_email' in params:
-            swap_order.notification_email = params['notification_email']
+            notification_email = params['notification_email']
+            notification_defaults.notification_email = notification_email
         if 'notification_tg' in params:
-            swap_order.notification_telegram_name = params['notification_tg']
+            notification_tg = params['notification_tg']
+            notification_defaults.telegram_name = notification_tg
+
+        notification_defaults.save()
 
     swap_order.save()
     details = get_swap_from_orderbook(swap_id=swap_order.id)
