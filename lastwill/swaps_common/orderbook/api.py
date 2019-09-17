@@ -11,6 +11,7 @@ from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
+from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
 
 excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
@@ -99,14 +100,26 @@ def create_contract_swaps_backend(request):
 
     notification_email = None
     notification_tg = None
-    if notification:
+    if notification is not None:
         if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
             raise ParseError('notificaion_email or notification_tg must be passed')
 
+        notification_defaults = request.user.swapsnotificationdefaults_set.all()
+        if not notification_defaults:
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
+        else:
+            notification_defaults = notification_defaults.first()
+
+        notification_defaults.notification = notification
+
         if 'notification_email' in contract_details:
             notification_email = contract_details['notification_email']
+            notification_defaults.notification_email = notification_email
         if 'notification_tg' in contract_details:
             notification_tg = contract_details['notification_tg']
+            notification_defaults.telegram_name = notification_tg
+
+        notification_defaults.save()
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
