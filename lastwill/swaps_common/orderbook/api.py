@@ -114,7 +114,7 @@ def create_contract_swaps_backend(request):
 
         if 'notification_email' in contract_details:
             notification_email = contract_details['notification_email']
-            notification_defaults.notification_email = notification_email
+            notification_defaults.email = notification_email
         if 'notification_tg' in contract_details:
             notification_tg = contract_details['notification_tg']
             notification_defaults.telegram_name = notification_tg
