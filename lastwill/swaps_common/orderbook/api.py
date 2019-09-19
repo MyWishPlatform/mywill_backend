@@ -426,10 +426,11 @@ def get_non_active_orders(request):
         p = 1
 
     order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).order_by('created_date')
+
     if filter_base_coin:
-        order_list.filter(base_coin_id=int(filter_base_coin))
+        order_list = order_list.filter(base_coin_id=int(filter_base_coin))
     if filter_quote_coin:
-        order_list.filter(quote_coin_id=int(filter_quote_coin))
+        order_list = order_list.filter(quote_coin_id=int(filter_quote_coin))
 
     paginator = Paginator(order_list, 10)
     orders = paginator.page(p)
