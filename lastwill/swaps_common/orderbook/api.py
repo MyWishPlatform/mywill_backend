@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied, ParseError, NotFound
 from rest_framework.response import Response
 
 from django.utils import timezone
+from django.core.paginator import Paginator
 from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
@@ -411,3 +412,19 @@ def admin_delete_swaps_v3(request):
         order.delete()
 
     return Response({"result": order_id})
+
+
+@api_view(http_method_names=['GET'])
+def get_non_active_orders(request):
+    p = request.query_params.get('p', 0)
+    if p and not isinstance(p, int):
+        raise ParseError('page number must be int')
+
+    order_list = OrderBookSwaps.objects.filter(state__not_in=['ACTIVE', 'HIDDEN'])
+    paginator = Paginator(order_list, 100)
+    orders = paginator.page(p)
+    res = []
+    for row in orders:
+        res.append(get_swap_from_orderbook(row.id))
+
+    return res
