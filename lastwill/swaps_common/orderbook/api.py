@@ -420,7 +420,7 @@ def get_non_active_orders(request):
     if p and not isinstance(p, int):
         raise ParseError('page number must be int')
 
-    order_list = OrderBookSwaps.objects.filter(state__not_in=['ACTIVE', 'HIDDEN'])
+    order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN'])
     paginator = Paginator(order_list, 100)
     orders = paginator.page(p)
     res = []
