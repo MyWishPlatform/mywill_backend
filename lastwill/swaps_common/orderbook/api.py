@@ -416,7 +416,7 @@ def admin_delete_swaps_v3(request):
 
 @api_view(http_method_names=['GET'])
 def get_non_active_orders(request):
-    p = request.query_params.get('p', 0)
+    p = request.query_params.get('p', 1)
     if p and not isinstance(p, int):
         raise ParseError('page number must be int')
 
