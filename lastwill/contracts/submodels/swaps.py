@@ -7,6 +7,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.swaps_common.models import UnifiedSwapsTable
 from email_messages import *
 
 
@@ -26,12 +27,19 @@ def sendEMail(sub, text, mail):
     server.quit()
 
 
+def save_to_common_list(contract_id):
+    row = UnifiedSwapsTable(swap_id=contract_id, swap_type=2)
+    row.save()
+    return row
+
+
 class InvestAddresses(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+
 
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS(CommonDetails):
@@ -254,6 +262,7 @@ class ContractDetailsSWAPS2(CommonDetails):
                 swaps_deploed_message.format(swaps_link=swaps_link),
                 [self.contract.user.email]
             )
+        save_to_common_list(self)
         return
 
     def finalized(self, message):

@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
+from lastwill.swaps_common.models import UnifiedSwapsTable
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
@@ -67,6 +68,12 @@ def get_swap_from_orderbook(swap_id):
         'notification': backend_contract.notification
     }
     return saved_details
+
+
+def save_to_common_list(order):
+    row = UnifiedSwapsTable(swap_id=order.id, swap_type=1, order_object=order)
+    row.save()
+    return row
 
 
 @api_view(http_method_names=['POST'])
@@ -169,6 +176,7 @@ def create_contract_swaps_backend(request):
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
     print('sending swap order in queue ', backend_contract.id, flush=True)
     send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
+    save_to_common_list(backend_contract)
     return Response(details)
 
 
