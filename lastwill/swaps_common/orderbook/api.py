@@ -427,4 +427,4 @@ def get_non_active_orders(request):
     for row in orders:
         res.append(get_swap_from_orderbook(row.id))
 
-    return res
+    return Response(res)
