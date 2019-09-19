@@ -417,8 +417,11 @@ def admin_delete_swaps_v3(request):
 @api_view(http_method_names=['GET'])
 def get_non_active_orders(request):
     p = request.query_params.get('p', 1)
-    if p and not isinstance(p, int):
+    try:
+        p = int(p)
+    except ValueError:
         raise ParseError('page number must be int')
+
 
     order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN'])
     paginator = Paginator(order_list, 100)
