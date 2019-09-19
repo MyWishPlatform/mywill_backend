@@ -51,7 +51,7 @@ class OrderBookSwaps(models.Model):
     quote_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
     quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
-    is_exchange = models.BooleanField(default=False, null=True)
+    is_exchange = models.BooleanField(default=False)
     exchange_user = models.CharField(max_length=512, null=True, default=None)
 
     notification_email = models.CharField(max_length=50, null=True, default=None)
