@@ -419,11 +419,14 @@ def get_non_active_orders(request):
     p = request.query_params.get('p', 1)
     filter_base_coin = request.query_params.get('base_coin_id', None)
     filter_quote_coin = request.query_params.get('quote_coin_id', None)
+    list_size = request.query_params.get('size', None)
 
     try:
         p = int(p)
+        list_size = int(list_size)
     except ValueError:
         p = 1
+        list_size = 5
 
     order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).order_by('created_date')
 
@@ -432,7 +435,7 @@ def get_non_active_orders(request):
     if filter_quote_coin:
         order_list = order_list.filter(quote_coin_id=int(filter_quote_coin))
 
-    paginator = Paginator(order_list, 10)
+    paginator = Paginator(order_list, list_size)
     orders = paginator.page(p)
     res = []
     for row in orders:
