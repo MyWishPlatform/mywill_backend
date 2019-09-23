@@ -424,7 +424,7 @@ def get_non_active_orders(request):
     try:
         p = int(p)
         list_size = int(list_size)
-    except ValueError:
+    except (ValueError, TypeError):
         p = 1
         list_size = 5
 
