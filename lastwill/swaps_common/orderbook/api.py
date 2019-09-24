@@ -309,7 +309,7 @@ def get_swap_v3_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_swap_v3_public(request):
-    backend_contracts = OrderBookSwaps.objects.filter(public=True)
+    backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('-created_date')
 
     res = []
     for order in backend_contracts:
