@@ -124,13 +124,13 @@ def create_contract_swaps_backend(request):
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
-            base_address=base_address,
+            base_address=base_address.lower(),
             base_limit=contract_details['base_limit'],
             base_coin_id=base_coin_id_param,
-            quote_address=quote_address,
+            quote_address=quote_address.lower(),
             quote_limit=contract_details['quote_limit'],
             quote_coin_id=quote_coin_id_param,
-            owner_address=owner_address,
+            owner_address=owner_address.lower(),
             stop_date=stop_date_conv,
             public=contract_details['public'],
             unique_link=link,
@@ -153,7 +153,7 @@ def create_contract_swaps_backend(request):
     if broker_fee:
         backend_contract.broker_fee = contract_details['broker_fee']
         if 'broker_fee_address' in contract_details:
-            backend_contract.broker_fee_address = contract_details['broker_fee_address']
+            backend_contract.broker_fee_address = contract_details['broker_fee_address'].lower()
         if 'broker_fee_base' in contract_details:
             backend_contract.broker_fee_base = contract_details['broker_fee_base']
         if 'broker_fee_quote' in contract_details:
@@ -228,27 +228,27 @@ def edit_contract_swaps_backend(request, swap_id):
         stop_date = datetime.datetime.strptime(params['stop_date'], '%Y-%m-%d %H:%M')
         swap_order.stop_date = stop_date
     if 'base_address' in params:
-        swap_order.base_address = params['base_address']
+        swap_order.base_address = params['base_address'].lower()
     if 'base_limit' in params:
         swap_order.base_limit = params['base_limit']
     if 'base_coin_id' in params:
         swap_order.base_coin_id = params['base_coin_id']
     if 'quote_address' in params:
-        swap_order.quote_address = params['quote_address']
+        swap_order.quote_address = params['quote_address'].lower()
     if 'quote_limit' in params:
         swap_order.quote_limit = params['quote_limit']
     if 'quote_coin_id' in params:
         swap_order.quote_coin_id = params['quote_coin_id']
     if 'owner_address' in params:
-        swap_order.owner_address = params['owner_address']
-    if 'owner_address' in params:
+        swap_order.owner_address = params['owner_address'].lower()
+    if 'public' in params:
         swap_order.public = params['public']
     if 'broker_fee' in params:
         swap_order.broker_fee = params['broker_fee']
     if params['broker_fee']:
         swap_order.broker_fee = params['broker_fee']
         if 'broker_fee_address' in params:
-            swap_order.broker_fee_address = params['broker_fee_address']
+            swap_order.broker_fee_address = params['broker_fee_address'].lower()
         if 'broker_fee_base' in params:
             swap_order.broker_fee_base = params['broker_fee_base']
         if 'broker_fee_quote' in params:
@@ -259,7 +259,7 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.min_quote_wei = params['min_quote_wei']
     if 'whitelist' in params:
         swap_order.whitelist = params['whitelist']
-        swap_order.whitelist_address = params['whitelist']
+        swap_order.whitelist_address = params['whitelist'].lower()
     if 'notification' in params:
         swap_order.notification = params['notification']
 
