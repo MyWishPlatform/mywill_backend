@@ -472,7 +472,8 @@ def get_ieo_statistics():
 
 
 def get_usd_rub_rates():
-    page = requests.get("https://www.fxempire.com/markets/usd-rub/overview")
+    browser_headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
+    page = requests.get("https://www.fxempire.com/markets/usd-rub/overview", headers=browser_headers)
     soup = BeautifulSoup(page.content,'html.parser')
     actual = (soup.find_all("div", class_='DirectionBackgroundColor__BackgroundColor-sc-1qjm64q-0 fgRxHG'))
     course_change = (soup.find_all("span", class_="Span-sc-1abytr7-0 hAkeNO"))
