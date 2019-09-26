@@ -908,7 +908,6 @@ def check_eos_accounts_exists(request):
 def send_authio_info(contract, details, authio_email):
     mint_info = ''
     token_holders = contract.tokenholder_set.all()
-    if token_holders
     for th in token_holders:
         mint_info = mint_info + '\n' + th.address + '\n'
         mint_info = mint_info + str(th.amount) + '\n'
