@@ -23,7 +23,8 @@ class memoize_timeout:
 @memoize_timeout(10*60)
 def convert(fsym, tsyms):
     eosish_factor = 1.0
-    revesre_convert = False
+    revesre_convert_eos = False
+    revesre_convert_swap = False
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES', 'SWAP'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
