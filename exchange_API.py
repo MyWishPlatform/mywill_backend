@@ -63,7 +63,7 @@ def convert(fsym, tsyms):
         return answer
     if fsym == 'SWAP' or tsyms == 'SWAP':
         swap_factor = float(requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swaps-network&vs_currencies=eth')
-                            .json()['swap']['eth']
+                            .json()['swaps-network']['eth']
         )
         print('swap factor', swap_factor, flush=True)
         if fsym == 'SWAP':
@@ -103,5 +103,5 @@ def to_wish(curr, amount=1):
     return amount * (convert(curr, 'WISH')['WISH'])
 
 
-def swap_to_wish(amount):
+def swap_to_wish(amount=1):
     return amount * to_wish('SWAP', amount)
