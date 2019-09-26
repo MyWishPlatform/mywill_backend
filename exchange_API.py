@@ -62,7 +62,7 @@ def convert(fsym, tsyms):
         answer[tsyms] = answer[tsyms] * 0.02
         return answer
     if fsym == 'SWAP' or tsyms == 'SWAP':
-        swap_factor = float(requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swap&vs_currencies=eth')
+        swap_factor = float(requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swaps-network&vs_currencies=eth')
                             .json()['swap']['eth']
         )
         print('swap factor', swap_factor, flush=True)
