@@ -908,10 +908,12 @@ def check_eos_accounts_exists(request):
 def send_authio_info(contract, details, authio_email):
     mint_info = ''
     token_holders = contract.tokenholder_set.all()
+    if token_holders
     for th in token_holders:
         mint_info = mint_info + '\n' + th.address + '\n'
         mint_info = mint_info + str(th.amount) + '\n'
-        mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+        if th.freeze_date:
+            mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
     EmailMessage(
         subject=authio_subject,
         body=authio_message.format(
