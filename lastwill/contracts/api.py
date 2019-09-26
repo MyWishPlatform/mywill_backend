@@ -951,7 +951,8 @@ def buy_brand_report(request):
     cost = 450 * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
-    create_payment(request.user.id, '', currency, -cost, site_id)
+    net = contract.network.name
+    create_payment(request.user.id, '', currency, -cost, site_id, net)
     details.authio_date_payment = datetime.datetime.now().date()
     details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
             days=3)
