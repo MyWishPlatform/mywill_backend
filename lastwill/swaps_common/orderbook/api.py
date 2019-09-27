@@ -58,6 +58,7 @@ def get_swap_from_orderbook(swap_id):
         'min_quote_wei': backend_contract.min_quote_wei,
         'contract_state': backend_contract.contract_state,
         'created_date': backend_contract.created_date,
+        'state_changed_at': backend_contract.state_changed_at,
         'whitelist': backend_contract.whitelist,
         'whitelist_address': backend_contract.whitelist_address,
         'base_amount_contributed':  str(backend_contract.base_amount_contributed),
