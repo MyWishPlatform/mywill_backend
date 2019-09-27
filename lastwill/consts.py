@@ -94,7 +94,8 @@ NET_DECIMALS = {
     'TRON': 10 ** 6,
     'TRONISH': 10 ** 6,
     'TRX': 10 ** 6,
-    'USDT': 10 ** 6
+    'USDT': 10 ** 6,
+    'SWAP': 10 ** 18
 }
 
 TRON_REPLENISH_THRESHOLD = {
