@@ -1,6 +1,4 @@
-import random
-import string
-import smtplib
+import datetime
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -22,6 +20,7 @@ class OrderBookSwaps(models.Model):
     quote_limit = models.CharField(max_length=512, null=True, default=None)
     quote_coin_id = models.IntegerField(default=0)
     stop_date = models.DateTimeField()
+    state_changed_at = models.DateTimeField(auto_now_add=True)
     public = models.BooleanField(default=True)
     owner_address = models.CharField(max_length=50, null=True, default=None)
     name = models.CharField(max_length=512, null=True)
@@ -79,11 +78,13 @@ class OrderBookSwaps(models.Model):
     def finalized(self, message):
         self.state = 'DONE'
         self.contract_state = 'DONE'
+        self.state_changed_at = datetime.datetime.utcnow()
         self.save()
 
     def cancelled(self, message):
         self.state = 'CANCELLED'
         self.contract_state = 'CANCELLED'
+        self.state_changed_at = datetime.datetime.utcnow()
         self.save()
 
     def deposit_order(self, message):

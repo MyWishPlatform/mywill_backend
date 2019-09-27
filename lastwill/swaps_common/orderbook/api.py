@@ -309,7 +309,7 @@ def get_swap_v3_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_swap_v3_public(request):
-    backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('-created_date')
+    backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('state_changed_at')
 
     res = []
     for order in backend_contracts:
@@ -341,6 +341,7 @@ def set_swaps_expired(request):
                     order.contract_state = order.swap_ether_contract.state
                 else:
                     order.contract_state = 'EXPIRED'
+                order.state_changed_at = datetime.datetime.utcnow()
                 order.save()
 
     for id in swaps_ids:
@@ -385,6 +386,7 @@ def cancel_swaps_v3(request):
         order.contract_state = 'CANCELLED'
         if order.swap_ether_contract:
             order.swap_ether_contract.state = 'CANCELLED'
+        order.state_changed_at = datetime.datetime.utcnow()
         order.save()
         return Response({"result": order.id})
 
