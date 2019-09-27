@@ -23,7 +23,9 @@ class memoize_timeout:
 @memoize_timeout(10*60)
 def convert(fsym, tsyms):
     eosish_factor = 1.0
-    revesre_convert = False
+    swap_factor = 1.0
+    revesre_convert_eos = False
+    revesre_convert_swap = False
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES', 'SWAP'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
@@ -60,8 +62,8 @@ def convert(fsym, tsyms):
         answer[tsyms] = answer[tsyms] * 0.02
         return answer
     if fsym == 'SWAP' or tsyms == 'SWAP':
-        swap_factor = float(requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swap&vs_currencies=eth')
-                            .json()['swap']['eth']
+        swap_factor = float(requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swaps-network&vs_currencies=eth')
+                            .json()['swaps-network']['eth']
         )
         print('swap factor', swap_factor, flush=True)
         if fsym == 'SWAP':
@@ -101,5 +103,5 @@ def to_wish(curr, amount=1):
     return amount * (convert(curr, 'WISH')['WISH'])
 
 
-def swap_to_wish(amount):
+def swap_to_wish(amount=1):
     return amount * to_wish('SWAP', amount)
