@@ -55,7 +55,7 @@ class InfuraInt:
 def deploy_with_infura(contract_id, network):
     c = Contract.objects.get(id=contract_id)
     det = c.get_details()
-    if c.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
+    if det.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
         print('launch message ignored because already deployed', flush=True)
         take_off_blocking(c.network.name)
         return
