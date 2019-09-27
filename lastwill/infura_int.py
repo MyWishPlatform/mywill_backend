@@ -1,5 +1,24 @@
 import requests
 import json
+import binascii
+from ethereum import abi
+
+from lastwill.contracts.submodels.common import Contract, sign_transaction
+from lastwill.contracts.decorators import take_off_blocking
+from lastwill.settings import NETWORKS
+
+
+class InfuraConnectExc(Exception):
+    def __init__(self, *args):
+        self.value = 'can not connect to infura'
+
+    def __str__(self):
+        return self.value
+
+
+class InfuraErrorExc(Exception):
+    pass
+
 
 class InfuraInt:
     def __init__(self, network=None):
@@ -8,7 +27,6 @@ class InfuraInt:
         if network == 'MAINNET':
             self.url = 'https://ropsten.infura.io/v3/c139df87547b41c9b3b3a1c148913286'
         print('parity interface', self.url, flush=True)
-
 
     def __getattr__(self, method):
         def f(*args):
@@ -25,11 +43,11 @@ class InfuraInt:
                         headers={'Content-Type': 'application/json'}
                 )
             except requests.exceptions.ConnectionError as e:
-                raise ParConnectExc()
+                raise InfuraConnectExc()
             print('raw response', temp.content, flush=True)
             result = json.loads(temp.content.decode())
             if result.get('error'):
-                raise ParErrorExc(result['error']['message'])
+                raise InfuraErrorExc(result['error']['message'])
             return result['result']
         return f
 
@@ -41,36 +59,36 @@ def deploy_with_infura(contract_id, network):
         print('launch message ignored because already deployed', flush=True)
         take_off_blocking(c.network.name)
         return
-        det.compile()
-        eth_contract = det.eth_contract
-        tr = abi.ContractTranslator(eth_contract.abi)
-        arguments = det.get_arguments()
-        print('arguments', arguments, flush=True)
-        eth_contract.constructor_arguments = binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else ''
-        infura_int = InfuraInt(network=network)
-        address = NETWORKS[det.contract.network.name]['address']
-        nonce = int(infura_int.eth_getTransactionCount(address, "pending"), 16)
-        print('nonce', nonce, flush=True)
-        data = eth_contract.bytecode + (binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else '')
-        gas_price = 41 * 10 ** 9
-        signed_data = sign_transaction(
-            address, nonce, det.get_gaslimit(),
-            det.contract.network.name, value=det.get_value(),
-            contract_data=data, gas_price=gas_price
-        )
-        print('fields of transaction', flush=True)
-        print('source', address, flush=True)
-        print('gas limit', infura_int.get_gaslimit(), flush=True)
-        print('value', infura_int.get_value(), flush=True)
-        print('network', infura_int.contract.network.name, flush=True)
-        eth_contract.tx_hash = par_int.eth_sendRawTransaction(
-            '0x' + signed_data
-        )
-        eth_contract.save()
-        print('transaction sent', flush=True)
-        det.contract.state = 'WAITING_FOR_DEPLOYMENT'
-        det.contract.save()
+    det.compile()
+    eth_contract = det.eth_contract
+    tr = abi.ContractTranslator(eth_contract.abi)
+    arguments = det.get_arguments()
+    print('arguments', arguments, flush=True)
+    eth_contract.constructor_arguments = binascii.hexlify(
+        tr.encode_constructor_arguments(arguments)
+    ).decode() if arguments else ''
+    infura_int = InfuraInt(network=network)
+    address = NETWORKS[det.contract.network.name]['address']
+    nonce = int(infura_int.eth_getTransactionCount(address, "pending"), 16)
+    print('nonce', nonce, flush=True)
+    data = eth_contract.bytecode + (binascii.hexlify(
+        tr.encode_constructor_arguments(arguments)
+    ).decode() if arguments else '')
+    gas_price = 41 * 10 ** 9
+    signed_data = sign_transaction(
+        address, nonce, det.get_gaslimit(),
+        det.contract.network.name, value=det.get_value(),
+        contract_data=data, gas_price=gas_price
+    )
+    print('fields of transaction', flush=True)
+    print('source', address, flush=True)
+    print('gas limit', infura_int.get_gaslimit(), flush=True)
+    print('value', infura_int.get_value(), flush=True)
+    print('network', infura_int.contract.network.name, flush=True)
+    eth_contract.tx_hash = infura_int.eth_sendRawTransaction(
+        '0x' + signed_data
+    )
+    eth_contract.save()
+    print('transaction sent', flush=True)
+    det.contract.state = 'WAITING_FOR_DEPLOYMENT'
+    det.contract.save()
