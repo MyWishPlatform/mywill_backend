@@ -438,7 +438,7 @@ def get_non_active_orders(request):
     if filter_quote_coin:
         order_list = order_list.filter(quote_coin_id=int(filter_quote_coin))
 
-    order_list = order_list.order_by('created_date')
+    order_list = order_list.order_by('state_changed_at')
     paginator = Paginator(order_list, list_size)
     orders = paginator.page(p)
     res = []
