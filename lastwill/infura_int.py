@@ -82,9 +82,9 @@ def deploy_with_infura(contract_id, network):
     )
     print('fields of transaction', flush=True)
     print('source', address, flush=True)
-    print('gas limit', infura_int.get_gaslimit(), flush=True)
-    print('value', infura_int.get_value(), flush=True)
-    print('network', infura_int.contract.network.name, flush=True)
+    print('gas limit', det.get_gaslimit(), flush=True)
+    print('value', det.get_value(), flush=True)
+    print('network', det.contract.network.name, flush=True)
     eth_contract.tx_hash = infura_int.eth_sendRawTransaction(
         '0x' + signed_data
     )
