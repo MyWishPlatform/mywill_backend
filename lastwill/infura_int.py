@@ -25,7 +25,7 @@ class InfuraInt:
         if network == 'TESTNET':
             self.url = 'https://ropsten.infura.io/v3/c139df87547b41c9b3b3a1c148913286'
         if network == 'MAINNET':
-            self.url = 'https://ropsten.infura.io/v3/c139df87547b41c9b3b3a1c148913286'
+            self.url = 'https://mainnet.infura.io/v3/1bb65ebf85d84cf6bd46808752e444a0'
         print('parity interface', self.url, flush=True)
 
     def __getattr__(self, method):
