@@ -23,6 +23,7 @@ from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddress
 from lastwill.consts import *
 import requests
 
+BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     wish_cost = to_wish('ETH', int(cost))
@@ -315,14 +316,14 @@ def get_balances_statistics():
             gas_balance = curr['amount']
         if curr['asset'] == 'NEO':
             neo_balance = curr['amount']
-    eth_account_balance = float(json.loads(requests.get(
+    eth_account_balance = float(json.loads(requests.get(url=
         URL_STATS_BALANCE['ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
-            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY)
-        ).content.decode())['result']) / NET_DECIMALS['ETH']
-    eth_test_account_balance = float(json.loads(requests.get(
+            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / NET_DECIMALS['ETH']
+    eth_test_account_balance = float(json.loads(requests.get(url=
         URL_STATS_BALANCE['ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
-            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY)
-    ).content.decode())['result']) / NET_DECIMALS['ETH']
+            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / NET_DECIMALS['ETH']
 
     # eth_account_balance = float(json.loads(requests.get(
     #     'https://api.etherscan.io/api?module=account&action=balance'
@@ -472,8 +473,7 @@ def get_ieo_statistics():
 
 
 def get_usd_rub_rates():
-    browser_headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
-    page = requests.get("https://www.fxempire.com/markets/usd-rub/overview", headers=browser_headers)
+    page = requests.get("https://www.fxempire.com/markets/usd-rub/overview", headers=BROWSER_HEADERS)
     soup = BeautifulSoup(page.content,'html.parser')
     actual = (soup.find_all("div", class_='DirectionBackgroundColor__BackgroundColor-sc-1qjm64q-0 fgRxHG'))
     course_change = (soup.find_all("span", class_="Span-sc-1abytr7-0 hAkeNO"))
