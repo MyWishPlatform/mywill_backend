@@ -52,7 +52,7 @@ class InfuraInt:
         return f
 
 
-def deploy_with_infura(contract_id, network):
+def deploy_with_infura(contract_id, eth_contract_attr_name, network):
     c = Contract.objects.get(id=contract_id)
     det = c.get_details()
     if det.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
@@ -60,7 +60,7 @@ def deploy_with_infura(contract_id, network):
         take_off_blocking(c.network.name)
         return
     det.compile()
-    eth_contract = det.eth_contract
+    eth_contract = getattr(det, eth_contract_attr_name)
     tr = abi.ContractTranslator(eth_contract.abi)
     arguments = det.get_arguments()
     print('arguments', arguments, flush=True)
