@@ -62,7 +62,7 @@ def deploy_with_infura(contract_id, eth_contract_attr_name, network):
     det.compile()
     eth_contract = getattr(det, eth_contract_attr_name)
     tr = abi.ContractTranslator(eth_contract.abi)
-    arguments = det.get_arguments()
+    arguments = det.get_arguments(eth_contract_attr_name)
     print('arguments', arguments, flush=True)
     eth_contract.constructor_arguments = binascii.hexlify(
         tr.encode_constructor_arguments(arguments)
