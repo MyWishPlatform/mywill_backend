@@ -15,7 +15,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.parint import ParInt
+from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
         Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
         NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
@@ -45,10 +45,11 @@ from neocore.UInt160 import UInt160
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
-    par_int = ParInt()
+    eth_int = EthereumProvider().get_provider(contract.network.name)
+
     method_sign = '0x' + binascii.hexlify(
         int_to_big_endian(m_id('totalSupply', []))).decode()
-    sold_tokens = par_int.eth_call({'to': address,
+    sold_tokens = eth_int.eth_call({'to': address,
                                     'data': method_sign,
     })
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
