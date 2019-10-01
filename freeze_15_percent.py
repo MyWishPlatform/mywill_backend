@@ -40,8 +40,8 @@ def convert_address_to_hex(address):
 def freeze_wish(amount):
     abi_dict = get_freeze_wish_abi()
     tr = abi.ContractTranslator(abi_dict)
-    par_int = ParInt(NETWORK_SIGN_TRANSACTION_WISH)
-    nonce = int(par_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
+    eth_int = EthereumProvider().get_provider(network=NETWORK_SIGN_TRANSACTION_WISH)
+    nonce = int(eth_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
     signed_data = sign_transaction(
       UPDATE_WISH_ADDRESS, nonce,
       100000,
@@ -51,7 +51,7 @@ def freeze_wish(amount):
         tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, int(amount)])
       ).decode()
     )
-    tx_hash = par_int.eth_sendRawTransaction(
+    tx_hash = eth_int.eth_sendRawTransaction(
       '0x' + signed_data
     )
     print('tx_hash=', tx_hash, flush=True)
