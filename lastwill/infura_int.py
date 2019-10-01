@@ -59,7 +59,7 @@ def deploy_with_infura(contract_id, eth_contract_attr_name, network):
         print('launch message ignored because already deployed', flush=True)
         take_off_blocking(c.network.name)
         return
-    det.compile()
+    det.compile(eth_contract_attr_name)
     eth_contract = getattr(det, eth_contract_attr_name)
     tr = abi.ContractTranslator(eth_contract.abi)
     arguments = det.get_arguments(eth_contract_attr_name)
