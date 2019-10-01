@@ -174,8 +174,8 @@ class ContractDetailsICO(CommonDetails):
             self.eth_contract_crowdsale.address = message['address']
             self.eth_contract_crowdsale.save()
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
-            par_int = ParInt(self.contract.network.name)
-            nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+            nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
             print('nonce', nonce)
             print('transferOwnership message signed')
             signed_data = sign_transaction(
@@ -185,7 +185,7 @@ class ContractDetailsICO(CommonDetails):
                     'transferOwnership', [self.eth_contract_crowdsale.address]
                 )).decode(),
             )
-            self.eth_contract_token.tx_hash = par_int.eth_sendRawTransaction(
+            self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(
                 '0x' + signed_data
             )
             self.eth_contract_token.save()
@@ -226,8 +226,8 @@ class ContractDetailsICO(CommonDetails):
             self.contract.save()
             # continue deploy: call init
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
-        par_int = ParInt(self.contract.network.name)
-        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = 100000 + 80000 * self.contract.tokenholder_set.all().count()
         print('nonce', nonce)
         print('init message signed')
@@ -240,7 +240,7 @@ class ContractDetailsICO(CommonDetails):
                 tr.encode_function_call('init', [])
             ).decode()
         )
-        self.eth_contract_crowdsale.tx_hash = par_int.eth_sendRawTransaction(
+        self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
         self.eth_contract_crowdsale.save()
