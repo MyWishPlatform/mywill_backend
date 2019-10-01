@@ -87,7 +87,7 @@ class InfuraInt:
         self.infura_subdomain = NETWORKS[network]['infura_subdomain']
         self.infura_project_id = NETWORKS[network]['infura_project_id']
 
-        self.url = 'https://{subdomain}.infura,io/v3/{proj_id}'\
+        self.url = 'https://{subdomain}.infura.io/v3/{proj_id}'\
             .format(
                 subdomain=self.infura_subdomain,
                 proj_id=self.infura_project_id
