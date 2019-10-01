@@ -120,16 +120,14 @@ class InfuraInt:
 
 
 class EthereumProvider:
-    def __init__(self):
-        self.provider = 'infura'
 
-    def get_provider(self, network, provider=None):
-        if provider:
-            self.provider = provider
+    @staticmethod
+    def get_provider(network):
+        provider = NETWORKS[network]['provider']
 
-        if self.provider == 'infura':
+        if provider == 'infura':
             return InfuraInt(network)
-        elif self.provider == 'parity':
+        elif provider == 'parity':
             return ParInt(network)
         else:
             raise ValueError('only infura and parity supported')
