@@ -137,11 +137,8 @@ def get_cmc_token_by_id(token_mywish_id):
 
 @api_view(http_method_names=['GET'])
 def get_coins_rate(request):
-    try:
-        id1 = TokensCoinMarketCap.objects.get(id=request.GET.get('id1')).token_cmc_id
-        id2 = TokensCoinMarketCap.objects.get(od=request.GET.get('id2')).token_cmc_id
-    except:
-        raise ParseError
+    id1 = request.GET.get('id1')
+    id2 = request.GET.get('id2')
 
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
     headers = {
