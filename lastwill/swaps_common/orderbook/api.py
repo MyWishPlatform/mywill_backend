@@ -431,7 +431,7 @@ def get_non_active_orders(request):
         p = 1
         list_size = 5
 
-    order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN'], public=False)
+    order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).exclude(public=False)
 
     if filter_base_coin:
         order_list = order_list.filter(base_coin_id=int(filter_base_coin))
