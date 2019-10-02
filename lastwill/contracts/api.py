@@ -6,6 +6,7 @@ from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.permissions import IsAuthenticated
+from bs4 import BeautifulSoup
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL
@@ -22,6 +23,7 @@ from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddress
 from lastwill.consts import *
 import requests
 
+BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     wish_cost = to_wish('ETH', int(cost))
@@ -263,6 +265,7 @@ def get_currency_statistics():
     eosish_info = float(
         requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos']
         )
+    usd_info = get_usd_rub_rates()
     answer = {
         'wish_price_usd': round(
         float(mywish_info['price_usd']), 10),
@@ -294,7 +297,9 @@ def get_currency_statistics():
     'bitcoin_rank': btc_info['rank'],
     'eth_rank': eth_info['rank'],
     'eosish_price_eos': eosish_info,
-    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10)
+    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
+    'usd_price_rub': round(float(usd_info['price']), 10),
+    'usd_percent_change_24h': round(float(usd_info['change_24h']), 10)
     }
     return answer
 
@@ -311,14 +316,14 @@ def get_balances_statistics():
             gas_balance = curr['amount']
         if curr['asset'] == 'NEO':
             neo_balance = curr['amount']
-    eth_account_balance = float(json.loads(requests.get(
+    eth_account_balance = float(json.loads(requests.get(url=
         URL_STATS_BALANCE['ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
-            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY)
-        ).content.decode())['result']) / NET_DECIMALS['ETH']
-    eth_test_account_balance = float(json.loads(requests.get(
+            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / NET_DECIMALS['ETH']
+    eth_test_account_balance = float(json.loads(requests.get(url=
         URL_STATS_BALANCE['ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
-            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY)
-    ).content.decode())['result']) / NET_DECIMALS['ETH']
+            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / NET_DECIMALS['ETH']
 
     # eth_account_balance = float(json.loads(requests.get(
     #     'https://api.etherscan.io/api?module=account&action=balance'
@@ -465,6 +470,17 @@ def get_balances_statistics():
 def get_ieo_statistics():
     res = requests.get('https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
     return res.json()
+
+
+def get_usd_rub_rates():
+    page = requests.get("https://www.fxempire.com/markets/usd-rub/overview", headers=BROWSER_HEADERS)
+    soup = BeautifulSoup(page.content,'html.parser')
+    actual = (soup.find_all("div", class_='DirectionBackgroundColor__BackgroundColor-sc-1qjm64q-0 fgRxHG'))
+    course_change = (soup.find_all("span", class_="Span-sc-1abytr7-0 hAkeNO"))
+    actual_course = actual[0].get_text()
+    course_change = course_change[0].get_text()[1:-2]
+    rub_rate = {'base': 'USD', 'target': 'RUB', 'price': actual_course, 'change_24h': course_change}
+    return rub_rate
 
 
 def get_contracts_for_network(net, all_contracts, now, day):
@@ -895,7 +911,8 @@ def send_authio_info(contract, details, authio_email):
     for th in token_holders:
         mint_info = mint_info + '\n' + th.address + '\n'
         mint_info = mint_info + str(th.amount) + '\n'
-        mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+        if th.freeze_date:
+            mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
     EmailMessage(
         subject=authio_subject,
         body=authio_message.format(
@@ -935,7 +952,8 @@ def buy_brand_report(request):
     cost = 450 * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
-    create_payment(request.user.id, '', currency, -cost, site_id)
+    net = contract.network.name
+    create_payment(request.user.id, '', currency, -cost, site_id, net)
     details.authio_date_payment = datetime.datetime.now().date()
     details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
             days=3)
@@ -1131,7 +1149,7 @@ def send_message_author_swap(request):
             id=contract_id,
             email=email,
             link=link,
-            msg=message
+            msg=message.encode('utf-8')
         ),
         [SWAPS_SUPPORT_MAIL]
     )

@@ -7,6 +7,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+#from lastwill.swaps_common.models import UnifiedSwapsTable
 from email_messages import *
 
 
@@ -26,12 +27,19 @@ def sendEMail(sub, text, mail):
     server.quit()
 
 
+# def save_to_common_list(contract_id):
+#     row = UnifiedSwapsTable(swap_id=contract_id, swap_type=2)
+#     row.save()
+#     return row
+
+
 class InvestAddresses(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+
 
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS(CommonDetails):
@@ -52,6 +60,11 @@ class ContractDetailsSWAPS(CommonDetails):
         on_delete=models.SET_NULL
     )
     temp_directory = models.CharField(max_length=36)
+
+    base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+    base_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+    quote_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
+    quote_amount_total = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
 
     def predeploy_validate(self):
         pass
@@ -160,6 +173,33 @@ class ContractDetailsSWAPS(CommonDetails):
         self.contract.save()
 
 
+    def deposit_swaps(self, message):
+        msg_amount = message['amount']
+        base_address = self.base_address.lower()
+        quote_address = self.quote_address.lower()
+        if message['token'] == base_address or message['token'] == quote_address:
+            if message['token'] == self.base_address:
+                self.base_amount_contributed += msg_amount
+                self.base_amount_total += msg_amount
+            else:
+                self.quote_amount_contributed += msg_amount
+                self.quote_amount_total += msg_amount
+
+            self.save()
+
+    def refund_swaps(self, message):
+        msg_amount = message['amount']
+        base_address = self.base_address.lower()
+        quote_address = self.quote_address.lower()
+        if message['token'] == base_address or message['token'] == quote_address:
+            if message['token'] == self.base_address:
+                self.base_amount_contributed -= msg_amount
+            else:
+                self.quote_amount_contributed -= msg_amount
+
+            self.save()
+
+
 @contract_details('SWAPS contract')
 class ContractDetailsSWAPS2(CommonDetails):
     base_address = models.CharField(max_length=50)
@@ -222,6 +262,7 @@ class ContractDetailsSWAPS2(CommonDetails):
                 swaps_deploed_message.format(swaps_link=swaps_link),
                 [self.contract.user.email]
             )
+        save_to_common_list(self)
         return
 
     def finalized(self, message):

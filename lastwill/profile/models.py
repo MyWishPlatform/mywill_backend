@@ -41,6 +41,7 @@ class APIToken(models.Model):
     comment = models.CharField(max_length=50, null=True, default=None)
     active = models.BooleanField(default=True)
     last_accessed = models.DateTimeField(null=True, default=None)
+    swaps_exchange_domain = models.CharField(max_length=50, null=True, default=None)
 
     class Meta:
         unique_together = ("user", "token")

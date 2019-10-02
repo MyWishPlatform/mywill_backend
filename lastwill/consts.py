@@ -94,7 +94,8 @@ NET_DECIMALS = {
     'TRON': 10 ** 6,
     'TRONISH': 10 ** 6,
     'TRX': 10 ** 6,
-    'USDT': 10 ** 6
+    'USDT': 10 ** 6,
+    'SWAP': 10 ** 18
 }
 
 TRON_REPLENISH_THRESHOLD = {
@@ -111,6 +112,7 @@ URL_STATS_CURRENCY = {
     'EOS': URL_STATS_CURRENCY_BODY + "eos/",
     'ETH': URL_STATS_CURRENCY_BODY + "ethereum/",
     'EOSISH': "https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos",
+    'RUB': "https://api.cryptonator.com/api/ticker/usd-rub",
 }
 
 URL_STATS_ETH_QUERY = 'api?module=account&action=balance&address='

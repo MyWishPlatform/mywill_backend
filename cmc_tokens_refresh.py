@@ -10,7 +10,7 @@ django.setup()
 
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
 from django.core.mail import send_mail, EmailMessage
-from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL
+from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
 
 
 def first_request():
@@ -22,27 +22,33 @@ def first_request():
     return id_rank
 
 
+def get_cmc_response(api_key, parameters):
+    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/info'
+    headers = {
+        'Accepts':           'application/json',
+        'X-CMC_PRO_API_KEY': api_key,
+    }
+    session = Session()
+    session.headers.update(headers)
+    response = session.get(url, params=parameters)
+    return json.loads(response.text)
+
+
 def second_request(token_list):
     key = [key[0] for key in token_list.items()]
     tokens_ids = ','.join(str(k) for k in key)
     # print(tokens_ids)
-    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/info'
     parameters = {
         'id': tokens_ids
     }
-    headers = {
-        'Accepts': 'application/json',
-        'X-CMC_PRO_API_KEY': 'f66f6d8d-742d-4ba7-af33-e61a55c7c135',
-    }
     # rebuild to list values
-    session = Session()
-    session.headers.update(headers)
     try:
-        response = session.get(url, params=parameters)
         # print(response.text)
-        data = json.loads(response.text)
-    except (ConnectionError, Timeout, TooManyRedirects) as e:
-        print(e)
+        data = get_cmc_response(COINMARKETCAP_API_KEYS[0], parameters)
+    except KeyError as e:
+        print('API key reached limit. Using other API key.', e, flush=True)
+        data = get_cmc_response(COINMARKETCAP_API_KEYS[1], parameters)
+
     return data
 
 
@@ -89,8 +95,8 @@ def find_by_parameters():
         logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
 
         print('saving token to db',
-              value['id'], value['name'], value['symbol'], logo_mywish_url,
-              rank[count], token_platform, token_address,
+              value['id'], value['name'].encode('utf-8'), value['symbol'].encode('utf-8'), logo_mywish_url,
+              rank[count], token_platform, token_address.encode('utf-8'),
               flush=True)
         print('original logo url is:', logo_url)
 

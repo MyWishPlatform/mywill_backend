@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
 
+    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'allauth',
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # 'lastwill.profile.middleware.session_middleware.SessionHostDomainMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'lastwill.profile.middleware.session_middleware.CrossDomainSessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -177,6 +179,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 SIGNER='127.0.0.1:5000'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
@@ -198,6 +202,7 @@ REST_AUTH_SERIALIZERS = {
         'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
         'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
         'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
+        'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
 }
 
 OLD_PASSWORD_FIELD_ENABLED = True

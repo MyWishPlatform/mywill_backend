@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.middleware import csrf
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,8 +24,8 @@ def balance(request):
                 'detail': str(e),
                 'status': 1
         })
-        
-        
+
+
 def login(request):
     csrf_token = csrf.get_token(request)
     return render_to_response('login.html', {'csrf_token': csrf_token, 'request': request})
@@ -38,4 +38,8 @@ def eth2rub(request):
 @api_view()
 def exc_rate(request):
     return Response(convert(request.query_params.get('fsym'), request.query_params.get('tsyms')))
+
+
+def redirect_contribute(request):
+    return redirect('https://forms.gle/od7CYHHUcjHAQXEF7')
 

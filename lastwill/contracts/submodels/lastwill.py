@@ -56,9 +56,9 @@ class ContractDetailsLastwill(CommonDetails):
     @blocking
     def make_payment(self, message):
         contract = self.contract
-        par_int = ParInt(contract.network.name)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         wl_address = NETWORKS[self.contract.network.name]['address']
-        balance = int(par_int.eth_getBalance(wl_address), 16)
+        balance = int(eth_int.eth_getBalance(wl_address), 16)
         gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_PAYMENT']
         gas_price = NET_DECIMALS['ETH_GAS_PRICE']
         if balance < contract.get_details().btc_duty + gas_limit * gas_price:
@@ -69,14 +69,14 @@ class ContractDetailsLastwill(CommonDetails):
                 [EMAIL_FOR_POSTPONED_MESSAGE]
             )
             return
-        nonce = int(par_int.eth_getTransactionCount(wl_address, "pending"), 16)
+        nonce = int(eth_int.eth_getTransactionCount(wl_address, "pending"), 16)
         signed_data = sign_transaction(
             wl_address, nonce, gas_limit, self.contract.network.name,
             value=int(contract.get_details().btc_duty),
             dest=contract.get_details().eth_contract.address,
             gas_price=gas_price
         )
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+        self.eth_contract.tx_hansh = eth_int.eth_sendRawTransaction(
             '0x' + signed_data)
         self.eth_contract.save()
 
@@ -210,9 +210,9 @@ class ContractDetailsLastwill(CommonDetails):
                     self.contract.network.name, address=self.contract.address
                 )
         tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt(self.contract.network.name)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
             address, nonce, gas_limit, self.contract.network.name,
@@ -221,7 +221,7 @@ class ContractDetailsLastwill(CommonDetails):
                     tr.encode_function_call('imAvailable', [])
                 ).decode(),
         )
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
         self.eth_contract.save()
@@ -230,9 +230,9 @@ class ContractDetailsLastwill(CommonDetails):
     @blocking
     def cancel(self, message):
         tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt(self.contract.network.name)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
             address, nonce,  gas_limit, self.contract.network.name,
@@ -241,7 +241,7 @@ class ContractDetailsLastwill(CommonDetails):
                     tr.encode_function_call('kill', [])
                 ).decode(),
         )
-        self.eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
         self.eth_contract.save()

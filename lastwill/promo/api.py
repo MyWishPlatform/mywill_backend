@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
-from lastwill.settings import  MY_WISH_URL, EOSISH_URL, TRON_URL
+from lastwill.settings import  MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL
 from lastwill.consts import NET_DECIMALS
 from exchange_API import *
 from .models import *
@@ -75,6 +75,19 @@ def get_discount(request):
             answer['discount_price'] = {
                 'TRX': int(cost),
                 'TRONISH': int(cost)
+            }
+        elif host == WAVES_URL:
+            kwargs = ContractSerializer().get_details_serializer(
+                    contract.contract_type
+            )().to_representation(contract_details)
+            cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
+            answer['discount_price'] = {
+                'USDT':    str(cost),
+                'ETH':     str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
+                'WISH':    str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
+                'BTC':     str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
+                'TRX':     str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
+                'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(

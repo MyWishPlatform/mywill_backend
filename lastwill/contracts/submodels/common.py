@@ -439,14 +439,14 @@ class CommonDetails(models.Model):
         eth_contract.constructor_arguments = binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
-        par_int = ParInt(self.contract.network.name)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = NETWORKS[self.contract.network.name]['address']
-        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce, flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')
-        gas_price = 5 * 10 ** 9
+        gas_price = 41 * 10 ** 9
         signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
             self.contract.network.name, value=self.get_value(),
@@ -457,7 +457,7 @@ class CommonDetails(models.Model):
         print('gas limit', self.get_gaslimit(), flush=True)
         print('value', self.get_value(), flush=True)
         print('network', self.contract.network.name, flush=True)
-        eth_contract.tx_hash = par_int.eth_sendRawTransaction(
+        eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
         )
         eth_contract.save()
@@ -535,9 +535,9 @@ class CommonDetails(models.Model):
     def check_contract(self):
         print('checking', self.contract.name)
         tr = abi.ContractTranslator(self.eth_contract.abi)
-        par_int = ParInt(self.contract.network.name)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
-        nonce = int(par_int.eth_getTransactionCount(address, "pending"), 16)
+        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
@@ -547,7 +547,7 @@ class CommonDetails(models.Model):
             ).decode(),
         )
         print('signed_data', signed_data)
-        par_int.eth_sendRawTransaction('0x' + signed_data)
+        eth_int.eth_sendRawTransaction('0x' + signed_data)
         print('check ok!')
 
 

@@ -341,6 +341,23 @@ class Receiver(threading.Thread):
         details = contract.get_details()
         details.setcode(message)
 
+    def refundOrder(self, message):
+        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
+        order.refund_order(message)
+
+    def depositOrder(self, message):
+        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
+        order.deposit_order(message)
+
+    def refundSwaps(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.refund_swaps(message)
+
+    def depositSwaps(self, message):
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.deposit_swaps(message)
 
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]

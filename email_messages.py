@@ -11,6 +11,21 @@ To confirm the registration, click on the link below:
 Best regards!
 {subsite_name} Team."""
 
+
+password_reset_subject = """Password reset on {subsite_name} """
+password_reset_text = """
+You're receiving this email because you requested a password reset for your user account at {subsite_name}.
+
+Please go to the following page and choose a new password:
+
+{password_reset_url}
+
+Your username, in case you've forgotten: {user_display}
+
+Thanks for using our site!
+
+{subsite_name} Team."""
+
 common_subject = """Your contract is ready"""
 common_text = """Hello,
 
@@ -148,7 +163,7 @@ MyWish Team.
 authio_subject = """MyWish - Request for brand report"""
 authio_message = """Hello!
 
-We want to inform you that the user {email} has created a request to check 
+We want to inform you that the user {email} has created a request to check
 the smart contract created on the MyWish platform and get a branded report.
 
 Contract parameters (Source code):
@@ -171,7 +186,7 @@ authio_google_message = """Hello!
 
 Thank you for using our service.
 
-Your contract is ready for the report preparation. 
+Your contract is ready for the report preparation.
 
 If you have any questions - please mail to support@mywish.io. We will contact you as soon as possible.
 
@@ -253,3 +268,4 @@ Please contact support@mywish.io if you have any questions.
 
 Best wishes,
 MyWish Team."""
+

@@ -3,19 +3,22 @@ import random
 import string
 
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import PermissionDenied, ParseError
+from rest_framework.exceptions import PermissionDenied, ParseError, NotFound
 from rest_framework.response import Response
 
 from django.utils import timezone
+from django.core.paginator import Paginator
 from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
-from lastwill.contracts.submodels.common import Contract
+from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
+from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
+from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
 
 excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
 
 
-def get_swap_from_orderbook(swap_id, force=False):
+def get_swap_from_orderbook(swap_id):
     backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
     now = datetime.datetime.now(timezone.utc)
 
@@ -55,8 +58,14 @@ def get_swap_from_orderbook(swap_id, force=False):
         'min_quote_wei': backend_contract.min_quote_wei,
         'contract_state': backend_contract.contract_state,
         'created_date': backend_contract.created_date,
+        'state_changed_at': backend_contract.state_changed_at,
         'whitelist': backend_contract.whitelist,
-        'whitelist_address': backend_contract.whitelist_address
+        'whitelist_address': backend_contract.whitelist_address,
+        'base_amount_contributed':  str(backend_contract.base_amount_contributed),
+        'quote_amount_contributed': str(backend_contract.quote_amount_contributed),
+        'notification_email': backend_contract.notification_email,
+        'notification_tg': backend_contract.notification_telegram_name,
+        'notification': backend_contract.notification
     }
     return saved_details
 
@@ -89,16 +98,40 @@ def create_contract_swaps_backend(request):
     min_base_wei = contract_details['min_base_wei'] if 'min_base_wei' in contract_details else ""
     min_quote_wei = contract_details['min_quote_wei'] if 'min_quote_wei' in contract_details else ""
     whitelist = contract_details['whitelist'] if 'whitelist' in contract_details else False
+    notification = contract_details['notification'] if 'notification' in contract_details else None
+
+    notification_email = None
+    notification_tg = None
+    if notification:
+        if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
+            raise ParseError('notificaion_email or notification_tg must be passed')
+
+        notification_defaults = request.user.swapsnotificationdefaults_set.all()
+        if not notification_defaults:
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
+        else:
+            notification_defaults = notification_defaults.first()
+
+        notification_defaults.notification = notification
+
+        if 'notification_email' in contract_details:
+            notification_email = contract_details['notification_email']
+            notification_defaults.email = notification_email
+        if 'notification_tg' in contract_details:
+            notification_tg = contract_details['notification_tg']
+            notification_defaults.telegram_name = notification_tg
+
+        notification_defaults.save()
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
-            base_address=base_address,
+            base_address=base_address.lower(),
             base_limit=contract_details['base_limit'],
             base_coin_id=base_coin_id_param,
-            quote_address=quote_address,
+            quote_address=quote_address.lower(),
             quote_limit=contract_details['quote_limit'],
             quote_coin_id=quote_coin_id_param,
-            owner_address=owner_address,
+            owner_address=owner_address.lower(),
             stop_date=stop_date_conv,
             public=contract_details['public'],
             unique_link=link,
@@ -108,13 +141,20 @@ def create_contract_swaps_backend(request):
             comment=comment,
             min_base_wei=min_base_wei,
             min_quote_wei=min_quote_wei,
-            whitelist=whitelist
+            whitelist=whitelist,
+            base_amount_contributed=0,
+            base_amount_total=0,
+            quote_amount_contributed=0,
+            quote_amount_total=0,
+            notification_email=notification_email,
+            notification_telegram_name=notification_tg,
+            notification=notification
     )
 
     if broker_fee:
         backend_contract.broker_fee = contract_details['broker_fee']
         if 'broker_fee_address' in contract_details:
-            backend_contract.broker_fee_address = contract_details['broker_fee_address']
+            backend_contract.broker_fee_address = contract_details['broker_fee_address'].lower()
         if 'broker_fee_base' in contract_details:
             backend_contract.broker_fee_base = contract_details['broker_fee_base']
         if 'broker_fee_quote' in contract_details:
@@ -123,60 +163,14 @@ def create_contract_swaps_backend(request):
     if whitelist:
         backend_contract.whitelist_address = contract_details['whitelist_address']
 
+    backend_contract.state = 'ACTIVE'
+    backend_contract.contract_state = 'CREATED'
     backend_contract.save()
 
-
-    #backend_contract.memo_contract = fake_swap.memo_contract
-
-    if not(base_address and quote_address):
-        backend_contract.state = 'ACTIVE'
-        backend_contract.contract_state = 'ACTIVE'
-    else:
-        ethereum_swap = create_swap2_for_ether(backend_contract)
-        backend_contract.state = 'ACTIVE'
-        backend_contract.contract_state = ethereum_swap.state
-        backend_contract.swap_ether_contract = ethereum_swap
-        # print(ethereum_swap, flush=True)
-
-    backend_contract.save()
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
-
+    print('sending swap order in queue ', backend_contract.id, flush=True)
+    send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
     return Response(details)
-
-
-def create_swap2_for_ether(order):
-
-    order_details = get_swap_from_orderbook(order.id)
-
-    swap2_contract = Contract(
-            contract_type=21,
-            cost=0,
-            user=order.user,
-            name=order_details['name'],
-            state='CREATED'
-    )
-    excluded_fields = ['name', 'id', 'state', 'base_coin_id', 'quote_coin_id', 'comment', 'user']
-    included_fields = [
-        'base_address', 'base_limit', 'quote_address', 'quote_limit', 'stop_date', 'public', 'owner_address',
-        'whitelist', 'whitelist_address', 'unique_link', 'broker_fee', 'broker_fee_address', 'broker_fee_base',
-        'broker_fee_quote', 'min_base_wei', 'min_quote_wei'
-    ]
-
-    swap2_params = {k: v for k, v in order_details.items() if k in included_fields}
-    swap2_params['order_id'] = order_details['id']
-    swap2_contract.save()
-    swap2_details = ContractDetailsSWAPS2Serializer().create(swap2_contract, swap2_params)
-    swap2_details.save()
-    swap2_contract.state = 'CREATED'
-    swap2_contract.save()
-    order.save()
-
-    return swap2_contract
-
-
-#def add_swap2_state(order_id):
-#    swap_contract = ContractDetailsSWAPS2.objects.filter(order_id=order_id).first()
-#    return swap_contract.contract.state
 
 
 @api_view(http_method_names=['GET'])
@@ -187,11 +181,10 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        # if details['base_address'] and details['quote_address']:
-        #     details['contract_state'] = add_swap2_state(swap_id)
-        # else:
-        #     details['contract_state'] = "ACTIVE"
-        return Response(details)
+        if details['state'] != 'HIDDEN':
+            return Response(details)
+        else:
+            raise NotFound
     else:
         raise ParseError
 
@@ -221,6 +214,9 @@ def edit_contract_swaps_backend(request, swap_id):
 
     swap_order = OrderBookSwaps.objects.filter(id=swap_id).first()
 
+    if swap_order.state == 'HIDDEN':
+        raise NotFound
+
     if request.user != swap_order.user:
         if not request.user.profile.is_swaps_admin:
             raise PermissionDenied
@@ -233,27 +229,27 @@ def edit_contract_swaps_backend(request, swap_id):
         stop_date = datetime.datetime.strptime(params['stop_date'], '%Y-%m-%d %H:%M')
         swap_order.stop_date = stop_date
     if 'base_address' in params:
-        swap_order.base_address = params['base_address']
+        swap_order.base_address = params['base_address'].lower()
     if 'base_limit' in params:
         swap_order.base_limit = params['base_limit']
     if 'base_coin_id' in params:
         swap_order.base_coin_id = params['base_coin_id']
     if 'quote_address' in params:
-        swap_order.quote_address = params['quote_address']
+        swap_order.quote_address = params['quote_address'].lower()
     if 'quote_limit' in params:
         swap_order.quote_limit = params['quote_limit']
     if 'quote_coin_id' in params:
         swap_order.quote_coin_id = params['quote_coin_id']
     if 'owner_address' in params:
-        swap_order.owner_address = params['owner_address']
-    if 'owner_address' in params:
+        swap_order.owner_address = params['owner_address'].lower()
+    if 'public' in params:
         swap_order.public = params['public']
     if 'broker_fee' in params:
         swap_order.broker_fee = params['broker_fee']
     if params['broker_fee']:
         swap_order.broker_fee = params['broker_fee']
         if 'broker_fee_address' in params:
-            swap_order.broker_fee_address = params['broker_fee_address']
+            swap_order.broker_fee_address = params['broker_fee_address'].lower()
         if 'broker_fee_base' in params:
             swap_order.broker_fee_base = params['broker_fee_base']
         if 'broker_fee_quote' in params:
@@ -264,7 +260,30 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.min_quote_wei = params['min_quote_wei']
     if 'whitelist' in params:
         swap_order.whitelist = params['whitelist']
-        swap_order.whitelist_address = params['whitelist']
+        swap_order.whitelist_address = params['whitelist'].lower()
+    if 'notification' in params:
+        swap_order.notification = params['notification']
+
+    if swap_order.notification:
+        if not ('notification_email' in params or 'notification_tg' in params):
+            raise ParseError('notificaion_email or notification_tg must be passed')
+
+        notification_defaults = request.user.swapsnotificationdefaults_set.all()
+        if not notification_defaults:
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
+        else:
+            notification_defaults = notification_defaults.first()
+
+        notification_defaults.notification = swap_order.notification
+
+        if 'notification_email' in params:
+            notification_email = params['notification_email']
+            notification_defaults.notification_email = notification_email
+        if 'notification_tg' in params:
+            notification_tg = params['notification_tg']
+            notification_defaults.telegram_name = notification_tg
+
+        notification_defaults.save()
 
     swap_order.save()
     details = get_swap_from_orderbook(swap_id=swap_order.id)
@@ -282,16 +301,16 @@ def get_swap_v3_for_unique_link(request):
         raise PermissionDenied
 
     details = get_swap_from_orderbook(swaps_order.id)
-    #if details['base_address'] or details['quote_address']:
-    #    details['contract_state'] = add_swap2_daфвaфвфывps_order.id)
-    #else:
-    #    details['contract_state'] = ""
+
+    if details['state'] == 'HIDDEN':
+        raise NotFound
+
     return Response(details)
 
 
 @api_view(http_method_names=['GET'])
 def get_swap_v3_public(request):
-    backend_contracts = OrderBookSwaps.objects.filter(public=True)
+    backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('state_changed_at')
 
     res = []
     for order in backend_contracts:
@@ -306,8 +325,6 @@ def set_swaps_expired(request):
     expired = request.data
     orders_ids = expired['trades']
     swaps_ids = expired['contracts']
-
-    excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
 
     now = datetime.datetime.now(timezone.utc)
 
@@ -325,6 +342,7 @@ def set_swaps_expired(request):
                     order.contract_state = order.swap_ether_contract.state
                 else:
                     order.contract_state = 'EXPIRED'
+                order.state_changed_at = datetime.datetime.utcnow()
                 order.save()
 
     for id in swaps_ids:
@@ -369,6 +387,7 @@ def cancel_swaps_v3(request):
         order.contract_state = 'CANCELLED'
         if order.swap_ether_contract:
             order.swap_ether_contract.state = 'CANCELLED'
+        order.state_changed_at = datetime.datetime.utcnow()
         order.save()
         return Response({"result": order.id})
 
@@ -396,3 +415,38 @@ def admin_delete_swaps_v3(request):
         order.delete()
 
     return Response({"result": order_id})
+
+
+@api_view(http_method_names=['GET'])
+def get_non_active_orders(request):
+    p = request.query_params.get('p', 1)
+    filter_base_coin = request.query_params.get('base_coin_id', None)
+    filter_quote_coin = request.query_params.get('quote_coin_id', None)
+    list_size = request.query_params.get('size', 5)
+
+    try:
+        p = int(p)
+        list_size = int(list_size)
+    except (ValueError, TypeError):
+        p = 1
+        list_size = 5
+
+    order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).exclude(public=False)
+
+    if filter_base_coin:
+        order_list = order_list.filter(base_coin_id=int(filter_base_coin))
+    if filter_quote_coin:
+        order_list = order_list.filter(quote_coin_id=int(filter_quote_coin))
+
+    order_list = order_list.order_by('-state_changed_at')
+    paginator = Paginator(order_list, list_size)
+    orders = paginator.page(p)
+    res = []
+    for row in orders:
+        res.append(get_swap_from_orderbook(row.id))
+
+    return Response({
+        'total': paginator.count,
+        'pages': paginator.num_pages,
+        'list': res
+    })

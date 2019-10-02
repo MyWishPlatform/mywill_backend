@@ -100,7 +100,7 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(195 * NET_DECIMALS['USDT'])
+        return int(99 * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
@@ -341,7 +341,7 @@ class ContractDetailsEOSICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 395 * NET_DECIMALS['USDT']
+        cost = 195 * NET_DECIMALS['USDT']
         return cost
 
     @staticmethod
