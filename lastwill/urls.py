@@ -176,7 +176,7 @@ urlpatterns = [
     url(r'^api/delete_order_for_user/$', delete_order_for_user),
     url(r'^api/generate_mywish_swap_token/$', create_token_for_session_mywish),
     url(r'^contribute', redirect_contribute),
-    url(r'^api/get_non_active_swap3', get_non_active_orders)
+    url(r'^api/get_non_active_swap3', get_non_active_orders),
 
 
     url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
