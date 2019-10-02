@@ -135,11 +135,11 @@ def get_cmc_token_by_id(token_mywish_id):
     return TokensCoinMarketCap.objects.filter(id=token_mywish_id).first()
 
 
-@api_view(http_method_names=['POST'])
+@api_view(http_method_names=['GET'])
 def get_coins_rate(request):
     try:
-        id1 = TokensCoinMarketCap.objects.get(id=request.POST['id1']).token_cmc_id
-        id2 = TokensCoinMarketCap.objects.get(od=request.POST['id2']).token_cmc_id
+        id1 = TokensCoinMarketCap.objects.get(id=request.GET.get('id1')).token_cmc_id
+        id2 = TokensCoinMarketCap.objects.get(od=request.GET.get('id2')).token_cmc_id
     except:
         raise ParseError
 
