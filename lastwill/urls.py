@@ -56,7 +56,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens
+from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
 from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
@@ -165,8 +165,8 @@ urlpatterns = [
     url(r'^api/set_swap3_expired/$', set_swaps_expired),
     url(r'^api/delete_swap3/$', delete_swaps_v3),
     url(r'^api/cancel_swap3/$', cancel_swaps_v3),
-    url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3)
-
+    url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
+    url(r'^api/get_cmc_token_rate', get_coins_rate)
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

@@ -1,10 +1,13 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from requests import Session
+import json
+from rest_framework.exceptions import ParseError
 
 
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK
+from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS
 
 
 
@@ -127,3 +130,28 @@ def get_all_coinmarketcap_tokens(request):
 
 def get_cmc_token_by_id(token_mywish_id):
     return TokensCoinMarketCap.objects.filter(id=token_mywish_id).first()
+
+
+@api_view(http_method_names=['GET'])
+def get_coins_rate(request):
+    id1 = request.GET.get('id1')
+    id2 = request.GET.get('id2')
+    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[0],
+    }
+    session = Session()
+    try:
+        session.headers.update(headers)
+        response = session.get(url, params={'id': str(id1) + ',' + str(id2)})
+    except KeyError as e:
+        print('API key reached limit. Using other API key.', e, flush=True)
+        session.headers.update(headers.update({'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[1]}))
+        response = session.get(url, params={'id': str(id1) + ',' + str(id2)})
+
+    data = json.loads(response.text)
+
+    return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'],
+                     'coin2': data['data'][str(id2)]['quote']['USD']['price']})
+
