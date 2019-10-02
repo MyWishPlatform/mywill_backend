@@ -159,4 +159,4 @@ def get_coins_rate(request):
 
     data = json.loads(response.text)
 
-    return Response({'coin1': data['data'][0][id1]['quote']['USD']['price'], 'coin2': data['data'][1][id2]['quote']['USD']['price']})
+    return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'], 'coin2': data['data'][str(id2)]['quote']['USD']['price']})
