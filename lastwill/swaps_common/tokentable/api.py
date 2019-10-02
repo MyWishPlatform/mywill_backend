@@ -139,7 +139,6 @@ def get_cmc_token_by_id(token_mywish_id):
 def get_coins_rate(request):
     id1 = request.GET.get('id1')
     id2 = request.GET.get('id2')
-
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
     headers = {
         'Accepts': 'application/json',
