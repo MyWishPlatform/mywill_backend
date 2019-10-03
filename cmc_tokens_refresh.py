@@ -4,6 +4,7 @@ import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
 import time
+from django.core.files.base import ContentFile
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
@@ -18,14 +19,14 @@ def first_request():
     l = res.json()
     id_rank = {}
     for i in range(len(l)):
-        id_rank[(l[i]['id'])] =l[i]['rank']
+        id_rank[(l[i]['id'])] = l[i]['rank']
     return id_rank
 
 
 def get_cmc_response(api_key, parameters):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/info'
     headers = {
-        'Accepts':           'application/json',
+        'Accepts': 'application/json',
         'X-CMC_PRO_API_KEY': api_key,
     }
     session = Session()
@@ -59,12 +60,12 @@ def find_by_parameters():
     id_from_market = [i for i in ids.keys()]
     id_from_db = [id for id in db]
     if len(list(id_from_market)) != len(id_from_db):
-        result = list(set(id_from_market)-set(id_from_db))
+        result = list(set(id_from_market) - set(id_from_db))
         id_rank = {}
-        for key,value in ids.items():
+        for key, value in ids.items():
             if key in result:
                 id_rank[key] = value
-#    print(id_rank)
+    #    print(id_rank)
     if len(id_rank) == 0:
         print('No new tokens', flush=True)
         return
@@ -75,7 +76,7 @@ def find_by_parameters():
 
     original_urls = []
     for key, value in info_for_save['data'].items():
-        count =+ 1
+        count = + 1
 
         token_platform = 'False'
         token_address = '0x0000000000000000000000000000000000000000'
@@ -101,15 +102,16 @@ def find_by_parameters():
         print('original logo url is:', logo_url)
 
         token_from_cmc = TokensCoinMarketCap(
-                token_cmc_id=value['id'],
-                token_name=value['name'],
-                token_short_name=value['symbol'],
-                image_link=logo_mywish_url,
-                token_rank=rank[count],
-                token_platform=token_platform,
-                token_address=token_address
+            token_cmc_id=value['id'],
+            token_name=value['name'],
+            token_short_name=value['symbol'],
+            image_link=logo_mywish_url,
+            token_rank=rank[count],
+            token_platform=token_platform,
+            token_address=token_address
         )
 
+        token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
         token_from_cmc.save()
 
     url_list = " ".join(url for url in original_urls)
@@ -133,4 +135,3 @@ if __name__ == '__main__':
         print('token parsing start', flush=True)
         find_by_parameters()
         time.sleep(3600 * 24)
-
