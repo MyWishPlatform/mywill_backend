@@ -4,7 +4,7 @@ import hmac
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount import app_settings, providers
 from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
@@ -21,6 +21,7 @@ from lastwill.profile.models import *
 from lastwill.profile.helpers import valid_totp, valid_metamask_message
 from django.contrib.auth import login as django_login
 from lastwill.settings import FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID
+from rest_framework.decorators import api_view
 
 
 
@@ -77,6 +78,7 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
         return fb_complete_login(request, app, access_token)
 
 
+@api_view(http_method_names=['POST'])
 def FacebookAuth(request):
     access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
         'client_id': FACEBOOK_CLIENT_ID,
@@ -86,7 +88,7 @@ def FacebookAuth(request):
 
     response = requests.get('https://graph.facebook.com/debug_token', params={
         'access_token': access_token,
-        'input_token': request.GET.get('input_token')
+        'input_token': request.data['input_token']
     })
 
     user_id = json.loads(response.text)['data']['user_id']
@@ -95,11 +97,13 @@ def FacebookAuth(request):
 
     if user is None:
         res = requests.get('https://graph.facebook.com/v4.0/{}'.format(user_id), params={
-            'access_token': request.GET.get('input_token')
+            'access_token': request.data['input_token']
         })
         user_data = json.loads(res.content.decode('utf-8'))
         first_name, last_name = user_data['name'].split(' ')
         user = User.objects.create_user(username=user_id, first_name=first_name, last_name=last_name)
+
+    login(request, user)
 
 
 
