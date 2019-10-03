@@ -7,7 +7,7 @@ from rest_framework.exceptions import ParseError
 
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS
+from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL
 
 
 
@@ -111,11 +111,11 @@ def get_standarts_tokens(request):
 
 @api_view()
 def get_all_coinmarketcap_tokens(request):
-    tokens = get_cmc_tokens()
+    tokens = get_cmc_tokens(request)
     return Response(tokens)
 
 
-def get_cmc_tokens():
+def get_cmc_tokens(request):
     token_list = []
     token_objects = TokensCoinMarketCap.objects.all()
 
@@ -127,7 +127,7 @@ def get_cmc_tokens():
             'token_short_name': t.token_short_name,
             'platform':         t.token_platform,
             'address':          t.token_address,
-            'image_link':       t.image_link,
+            'image_link':       '{}://{}/{}'.format(request.scheme, MY_WISH_URL, t.image.url),
             'rank':             t.token_rank
         })
 
