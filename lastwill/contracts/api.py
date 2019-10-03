@@ -1154,4 +1154,3 @@ def send_message_author_swap(request):
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
-

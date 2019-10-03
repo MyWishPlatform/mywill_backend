@@ -1,11 +1,12 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
+from requests import Session
+import json
+from rest_framework.exceptions import ParseError
 
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK
-
+from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS
 
 
 def add_eth_for_test(result):
@@ -63,7 +64,7 @@ def get_all_tokens(request):
     token_list = Tokens.objects.all()
     if token_short_name:
         token_list = token_list.filter(
-            Q(token_short_name__icontains=token_short_name.upper())| Q(token_name__icontains=token_short_name.lower())
+            Q(token_short_name__icontains=token_short_name.upper()) | Q(token_name__icontains=token_short_name.lower())
         )
 
     if address:
@@ -88,7 +89,6 @@ def get_all_tokens(request):
 
 @api_view()
 def get_standarts_tokens(request):
-
     tokens_all = Tokens.objects.all()
     token_list = tokens_all.filter(token_short_name__in=[
         'BNB', 'MKR', 'CRO', 'BAT', 'USDC', 'OMG', 'TUSD', 'LINK', 'ZIL', 'HOT'
@@ -118,14 +118,14 @@ def get_cmc_tokens():
 
     for t in token_objects:
         token_list.append({
-            'cmc_id':           t.token_cmc_id,
-            'mywish_id':        t.id,
-            'token_name':       t.token_name,
+            'cmc_id': t.token_cmc_id,
+            'mywish_id': t.id,
+            'token_name': t.token_name,
             'token_short_name': t.token_short_name,
-            'platform':         t.token_platform,
-            'address':          t.token_address,
-            'image_link':       t.image_link,
-            'rank':             t.token_rank
+            'platform': t.token_platform,
+            'address': t.token_address,
+            'image_link': t.image_link,
+            'rank': t.token_rank
         })
 
     return token_list
@@ -133,3 +133,30 @@ def get_cmc_tokens():
 
 def get_cmc_token_by_id(token_mywish_id):
     return TokensCoinMarketCap.objects.filter(id=token_mywish_id).first()
+
+
+@api_view(http_method_names=['GET'])
+def get_coins_rate(request):
+    try:
+        id1 = TokensCoinMarketCap.objects.get(id=request.GET.get('id1')).token_cmc_id
+        id2 = TokensCoinMarketCap.objects.get(id=request.GET.get('id2')).token_cmc_id
+    except:
+        raise ParseError
+
+    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[0],
+    }
+    session = Session()
+    try:
+        session.headers.update(headers)
+        response = session.get(url, params={'id': str(id1) + ',' + str(id2)})
+    except KeyError as e:
+        print('API key reached limit. Using other API key.', e, flush=True)
+        session.headers.update(headers.update({'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[1]}))
+        response = session.get(url, params={'id': str(id1) + ',' + str(id2)})
+
+    data = json.loads(response.text)
+
+    return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'], 'coin2': data['data'][str(id2)]['quote']['USD']['price']})

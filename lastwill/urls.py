@@ -52,7 +52,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens
+from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
 from lastwill.swaps_common.mailing.api import save_swaps_mail
 from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, show_contract_swaps_backend, \
     edit_contract_swaps_backend, get_swap_v3_for_unique_link, show_user_contract_swaps_backend, \
@@ -175,7 +175,8 @@ urlpatterns = [
     url(r'^api/delete_order_for_user/$', delete_order_for_user),
     url(r'^api/generate_mywish_swap_token/$', create_token_for_session_mywish),
     url(r'^contribute', redirect_contribute),
-    url(r'^api/get_non_active_swap3', get_non_active_orders)
+    url(r'^api/get_non_active_swap3', get_non_active_orders),
+    url(r'^api/get_cmc_token_rate', get_coins_rate)
 
 
 ]
