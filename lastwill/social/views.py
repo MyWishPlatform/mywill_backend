@@ -1,6 +1,7 @@
 import requests
 import hashlib
 import hmac
+import json
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import logout
@@ -19,6 +20,7 @@ from lastwill.profile.serializers import init_profile
 from lastwill.profile.models import *
 from lastwill.profile.helpers import valid_totp, valid_metamask_message
 from django.contrib.auth import login as django_login
+from lastwill.settings import FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID
 
 
 
@@ -73,6 +75,33 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
     def complete_login(self, request, app, access_token, **kwargs):
         print('complete login', request, app, access_token, flush=True)
         return fb_complete_login(request, app, access_token)
+
+
+def FacebookAuth(request):
+    access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
+        'client_id': FACEBOOK_CLIENT_ID,
+        'client_secret': FACEBOOK_CLIENT_SECRET,
+        'grant_type': 'client_credentials'
+    })
+
+    response = requests.get('https://graph.facebook.com/debug_token', params={
+        'access_token': access_token,
+        'input_token': request.GET.get('input_token')
+    })
+
+    user_id = json.loads(response.text)['data']['user_id']
+
+    user = User.objects.filter(username=user_id)
+
+    if user is None:
+        res = requests.get('https://graph.facebook.com/v4.0/{}'.format(user_id), params={
+            'access_token': request.GET.get('input_token')
+        })
+        user_data = json.loads(res.content.decode('utf-8'))
+        first_name, last_name = user_data['name'].split(' ')
+        user = User.objects.create_user(username=user_id, first_name=first_name, last_name=last_name)
+
+
 
 
 class SocialLoginSerializer2FA(SocialLoginSerializer):
