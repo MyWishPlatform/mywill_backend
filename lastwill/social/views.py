@@ -80,7 +80,7 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
 
 @api_view(http_method_names=['POST'])
 def FacebookAuth(request):
-    print('i am here')
+    print('new auth func', flush=True)
     access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
         'client_id': FACEBOOK_CLIENT_ID[request.get_host()],
         'client_secret': FACEBOOK_CLIENT_SECRET[request.get_host()],
