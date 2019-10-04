@@ -15,6 +15,7 @@ from rest_auth.serializers import LoginSerializer
 from rest_auth.registration.views import SocialLoginView
 from rest_auth.registration.serializers import SocialLoginSerializer
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from rest_framework import serializers
 from lastwill.profile.serializers import init_profile
 from lastwill.profile.models import *
@@ -109,13 +110,13 @@ def FacebookAuth(request):
         user_data = json.loads(res.content.decode('utf-8'))
         first_name, last_name = user_data['name'].split(' ')
         user = User.objects.create_user(username=user_id, first_name=first_name, last_name=last_name)
-        user.save()
         init_profile(user, is_social=True,
                      lang=request.COOKIES.get('lang', 'en'))
+        user.save()
 
     login(request, user)
 
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    return Response({'status': 'ok'})
 
 
 class SocialLoginSerializer2FA(SocialLoginSerializer):
