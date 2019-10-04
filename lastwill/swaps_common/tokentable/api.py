@@ -4,7 +4,7 @@ from requests import Session
 import json
 from rest_framework.exceptions import ParseError
 
-
+from django.core.files.base import ContentFile
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL
@@ -132,6 +132,14 @@ def get_cmc_tokens(request):
         })
 
     return token_list
+
+
+def put_image_names():
+    for i in TokensCoinMarketCap.objects.all():
+        image_name = i.image_link.split('/')[-1]
+        i.image.save(name=image_name, content=ContentFile(requests.get(i.image_link).content))
+        i.save()
+        print(i.image, flush=True)
 
 
 def get_cmc_token_by_id(token_mywish_id):
