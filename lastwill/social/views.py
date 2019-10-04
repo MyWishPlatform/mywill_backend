@@ -22,7 +22,7 @@ from lastwill.profile.helpers import valid_totp, valid_metamask_message
 from django.contrib.auth import login as django_login
 from lastwill.settings import FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID
 from rest_framework.decorators import api_view
-
+from django.shortcuts import redirect
 
 
 def compute_appsecret_proof(app, token):
@@ -80,9 +80,10 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
 
 @api_view(http_method_names=['POST'])
 def FacebookAuth(request):
+    print('i am here')
     access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
-        'client_id': FACEBOOK_CLIENT_ID,
-        'client_secret': FACEBOOK_CLIENT_SECRET,
+        'client_id': FACEBOOK_CLIENT_ID[request.get_host()],
+        'client_secret': FACEBOOK_CLIENT_SECRET[request.get_host()],
         'grant_type': 'client_credentials'
     })
 
@@ -105,7 +106,7 @@ def FacebookAuth(request):
 
     login(request, user)
 
-
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 class SocialLoginSerializer2FA(SocialLoginSerializer):
@@ -187,11 +188,9 @@ class MetamaskLogin(SocialLoginView):
         if self.user.profile.use_totp:
             totp = self.serializer.validated_data.get('totp', None)
             if not totp:
-                #logout(self.request)
+                # logout(self.request)
                 raise PermissionDenied(1032)
             if not valid_totp(self.user, totp):
-                #logout(self.request)
+                # logout(self.request)
                 raise PermissionDenied(1033)
         return super().login()
-
-
