@@ -127,7 +127,7 @@ def get_cmc_tokens(request):
             'token_short_name': t.token_short_name,
             'platform':         t.token_platform,
             'address':          t.token_address,
-            'image_link':       '{}://{}/{}'.format(request.scheme, MY_WISH_URL, t.image.url),
+            'image_link':       '{}://{}{}'.format(request.scheme, MY_WISH_URL, t.image.url),
             'rank':             t.token_rank
         })
 
