@@ -100,7 +100,7 @@ def FacebookAuth(request):
 
     user_id = json.loads(response.content)['data']['user_id']
 
-    user = User.objects.filter(username=user_id)
+    user = User.objects.filter(username=user_id).first()
 
     if user is None:
         res = requests.get('https://graph.facebook.com/v4.0/{}'.format(user_id), params={
