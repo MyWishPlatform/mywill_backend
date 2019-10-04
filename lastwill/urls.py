@@ -49,7 +49,7 @@ from lastwill.contracts.api_eth import (create_eth_token, show_eth_token,
                                         get_source_code_eth_token)
 from lastwill.contracts.api_common import get_contract_price, get_contracts, get_available_contracts
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
-from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin
+from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin, FacebookAuth
 from lastwill.promo.api import get_discount
 from lastwill.snapshot.api import snapshot_get_value
 from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
@@ -95,7 +95,7 @@ urlpatterns = [
     url(r'^api/enable_2fa/', enable_2fa),
     url(r'^api/disable_2fa/', disable_2fa),
     url(r'^api/get_metamask_message/', generate_metamask_message),
-    url(r'^api/rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
+    url(r'^api/rest-auth/facebook/$', FacebookAuth, name='fb_login'),
     url(r'^api/rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
     url(r'^api/rest-auth/metamask/$', MetamaskLogin.as_view(), name='metamask_login'),
     url(r'^api/resend_email/', resend_email),

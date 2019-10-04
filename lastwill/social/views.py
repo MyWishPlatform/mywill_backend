@@ -1,9 +1,10 @@
 import requests
 import hashlib
 import hmac
+import json
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount import app_settings, providers
 from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
@@ -19,7 +20,9 @@ from lastwill.profile.serializers import init_profile
 from lastwill.profile.models import *
 from lastwill.profile.helpers import valid_totp, valid_metamask_message
 from django.contrib.auth import login as django_login
-
+from lastwill.settings import FACEBOOK_CLIENT_SECRETS, FACEBOOK_CLIENT_IDS
+from rest_framework.decorators import api_view
+from django.shortcuts import redirect
 
 
 def compute_appsecret_proof(app, token):
@@ -73,6 +76,43 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
     def complete_login(self, request, app, access_token, **kwargs):
         print('complete login', request, app, access_token, flush=True)
         return fb_complete_login(request, app, access_token)
+
+
+@api_view(http_method_names=['POST'])
+def FacebookAuth(request):
+    print('new auth func', flush=True)
+    input_token = request.data['access_token']
+    host = request.get_host()
+    print('input token:', input_token, flush=True)
+
+    access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
+        'client_id': FACEBOOK_CLIENT_IDS[host],
+        'client_secret': FACEBOOK_CLIENT_SECRETS[host],
+        'grant_type': 'client_credentials'
+    })
+
+    print('access token', access_token, flush=True)
+
+    response = requests.get('https://graph.facebook.com/debug_token', params={
+        'access_token': json.loads(access_token.content)['access_token'],
+        'input_token': input_token
+    })
+
+    user_id = json.loads(response.content)['data']['user_id']
+
+    user = User.objects.filter(username=user_id).first()
+
+    if user is None:
+        res = requests.get('https://graph.facebook.com/v4.0/{}'.format(user_id), params={
+            'access_token': input_token
+        })
+        user_data = json.loads(res.content.decode('utf-8'))
+        first_name, last_name = user_data['name'].split(' ')
+        user = User.objects.create_user(username=user_id, first_name=first_name, last_name=last_name)
+
+    login(request, user)
+
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 class SocialLoginSerializer2FA(SocialLoginSerializer):
@@ -154,11 +194,9 @@ class MetamaskLogin(SocialLoginView):
         if self.user.profile.use_totp:
             totp = self.serializer.validated_data.get('totp', None)
             if not totp:
-                #logout(self.request)
+                # logout(self.request)
                 raise PermissionDenied(1032)
             if not valid_totp(self.user, totp):
-                #logout(self.request)
+                # logout(self.request)
                 raise PermissionDenied(1033)
         return super().login()
-
-
