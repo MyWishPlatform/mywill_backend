@@ -78,7 +78,7 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
         return fb_complete_login(request, app, access_token)
 
 
-@api_view(http_method_names=['POST'])
+@api_view()
 def FacebookAuth(request):
     print('new auth func', flush=True)
     access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
