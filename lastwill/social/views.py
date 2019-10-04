@@ -20,7 +20,7 @@ from lastwill.profile.serializers import init_profile
 from lastwill.profile.models import *
 from lastwill.profile.helpers import valid_totp, valid_metamask_message
 from django.contrib.auth import login as django_login
-from lastwill.settings import FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID
+from lastwill.settings import FACEBOOK_CLIENT_SECRETS, FACEBOOK_CLIENT_IDS
 from rest_framework.decorators import api_view
 from django.shortcuts import redirect
 
@@ -82,8 +82,8 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
 def FacebookAuth(request):
     print('new auth func', flush=True)
     access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
-        'client_id': FACEBOOK_CLIENT_ID[request.get_host()],
-        'client_secret': FACEBOOK_CLIENT_SECRET[request.get_host()],
+        'client_id': FACEBOOK_CLIENT_IDS[request.get_host()],
+        'client_secret': FACEBOOK_CLIENT_SECRETS[request.get_host()],
         'grant_type': 'client_credentials'
     })
 
