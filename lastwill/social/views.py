@@ -81,15 +81,21 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
 @api_view(http_method_names=['POST'])
 def FacebookAuth(request):
     print('new auth func', flush=True)
+    input_token = request.data['input_token']
+    host = request.get_host()
+    print('input token:', input_token, flush=True)
+
     access_token = requests.get('https://graph.facebook.com/oauth/access_token', params={
-        'client_id': FACEBOOK_CLIENT_IDS[request.get_host()],
-        'client_secret': FACEBOOK_CLIENT_SECRETS[request.get_host()],
+        'client_id': FACEBOOK_CLIENT_IDS[host],
+        'client_secret': FACEBOOK_CLIENT_SECRETS[host],
         'grant_type': 'client_credentials'
     })
 
+    print('access token', access_token, flush=True)
+
     response = requests.get('https://graph.facebook.com/debug_token', params={
         'access_token': access_token,
-        'input_token': request.data['input_token']
+        'input_token': input_token
     })
 
     user_id = json.loads(response.content)['data']['user_id']
@@ -98,7 +104,7 @@ def FacebookAuth(request):
 
     if user is None:
         res = requests.get('https://graph.facebook.com/v4.0/{}'.format(user_id), params={
-            'access_token': request.data['input_token']
+            'access_token': input_token
         })
         user_data = json.loads(res.content.decode('utf-8'))
         first_name, last_name = user_data['name'].split(' ')
