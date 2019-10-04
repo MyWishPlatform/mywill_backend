@@ -23,7 +23,6 @@ from django.contrib.auth import login as django_login
 from lastwill.settings import FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID
 from rest_framework.decorators import api_view
 from django.shortcuts import redirect
-from django.views.decorators.csrf import csrf_exempt
 
 
 def compute_appsecret_proof(app, token):
@@ -79,7 +78,6 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
         return fb_complete_login(request, app, access_token)
 
 
-@csrf_exempt
 @api_view(http_method_names=['POST'])
 def FacebookAuth(request):
     print('new auth func', flush=True)
