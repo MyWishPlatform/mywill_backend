@@ -92,7 +92,7 @@ def FacebookAuth(request):
         'input_token': request.data['input_token']
     })
 
-    user_id = json.loads(response.text)['data']['user_id']
+    user_id = json.loads(response.content)['data']['user_id']
 
     user = User.objects.filter(username=user_id)
 
