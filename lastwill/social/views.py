@@ -109,6 +109,9 @@ def FacebookAuth(request):
         user_data = json.loads(res.content.decode('utf-8'))
         first_name, last_name = user_data['name'].split(' ')
         user = User.objects.create_user(username=user_id, first_name=first_name, last_name=last_name)
+        user.save()
+        init_profile(user, is_social=True,
+                     lang=request.COOKIES.get('lang', 'en'))
 
     login(request, user)
 
