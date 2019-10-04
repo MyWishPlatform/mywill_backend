@@ -81,7 +81,7 @@ class FacebookOAuth2Adapter(OAuth2Adapter):
 @api_view(http_method_names=['POST'])
 def FacebookAuth(request):
     print('new auth func', flush=True)
-    input_token = request.data['input_token']
+    input_token = request.data['access_token']
     host = request.get_host()
     print('input token:', input_token, flush=True)
 
