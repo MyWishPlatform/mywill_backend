@@ -94,7 +94,7 @@ def FacebookAuth(request):
     print('access token', access_token, flush=True)
 
     response = requests.get('https://graph.facebook.com/debug_token', params={
-        'access_token': access_token,
+        'access_token': json.loads(access_token.content)['access_token'],
         'input_token': input_token
     })
 
