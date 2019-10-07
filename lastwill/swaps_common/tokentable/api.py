@@ -131,11 +131,13 @@ def get_cmc_tokens(request):
 
 
 def put_image_names():
+    c = 0
     for i in TokensCoinMarketCap.objects.all():
         image_name = i.image_link.split('/')[-1]
         i.image.save(name=image_name, content=ContentFile(requests.get(i.image_link).content))
         i.save()
-        print(i.image, flush=True)
+        c += 1
+        print(c, i.image, flush=True)
 
 
 def get_cmc_token_by_id(token_mywish_id):
