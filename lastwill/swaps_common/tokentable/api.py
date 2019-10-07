@@ -4,9 +4,10 @@ from requests import Session
 import json
 from rest_framework.exceptions import ParseError
 
+from django.core.files.base import ContentFile
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS
+from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL
 
 
 def add_eth_for_test(result):
@@ -108,11 +109,11 @@ def get_standarts_tokens(request):
 
 @api_view()
 def get_all_coinmarketcap_tokens(request):
-    tokens = get_cmc_tokens()
+    tokens = get_cmc_tokens(request)
     return Response(tokens)
 
 
-def get_cmc_tokens():
+def get_cmc_tokens(request):
     token_list = []
     token_objects = TokensCoinMarketCap.objects.all()
 
@@ -122,13 +123,19 @@ def get_cmc_tokens():
             'mywish_id': t.id,
             'token_name': t.token_name,
             'token_short_name': t.token_short_name,
-            'platform': t.token_platform,
-            'address': t.token_address,
-            'image_link': t.image_link,
-            'rank': t.token_rank
+            'image_link':       '{}://{}{}'.format(request.scheme, MY_WISH_URL, t.image.url),
+            'rank':             t.token_rank
         })
 
     return token_list
+
+
+def put_image_names():
+    for i in TokensCoinMarketCap.objects.all():
+        image_name = i.image_link.split('/')[-1]
+        i.image.save(name=image_name, content=ContentFile(requests.get(i.image_link).content))
+        i.save()
+        print(i.image, flush=True)
 
 
 def get_cmc_token_by_id(token_mywish_id):
@@ -155,4 +162,6 @@ def get_coins_rate(request):
 
     data = json.loads(response.text)
 
-    return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'], 'coin2': data['data'][str(id2)]['quote']['USD']['price']})
+    return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'],
+                     'coin2': data['data'][str(id2)]['quote']['USD']['price']})
+
