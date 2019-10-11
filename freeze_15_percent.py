@@ -178,17 +178,17 @@ def freeze_bnb_wish(amount):
 def check_payments():
     global attempt
     freeze_balance = FreezeBalance.objects.all().first()
-    if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
-        try:
-            #freeze_wish(freeze_balance.wish)
-            freeze_bnb_wish(freeze_balance.wish)
-            freeze_balance.wish = 0
-            freeze_balance.save()
-        except Exception as e:
-            attempt += 1
-            print(e)
-            print('Freezing WISH failed')
-            send_mail_attempt("WISH", freeze_balance.wish, e)
+    # if freeze_balance.wish > FREEZE_THRESHOLD_WISH:
+    #     try:
+    #         #freeze_wish(freeze_balance.wish)
+    #         freeze_bnb_wish(freeze_balance.wish)
+    #         freeze_balance.wish = 0
+    #         freeze_balance.save()
+    #     except Exception as e:
+    #         attempt += 1
+    #         print(e)
+    #         print('Freezing WISH failed')
+    #         send_mail_attempt("WISH", freeze_balance.wish, e)
     if freeze_balance.eosish > FREEZE_THRESHOLD_EOSISH:
         try:
             freeze_eosish(freeze_balance.eosish)

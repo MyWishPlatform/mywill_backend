@@ -21,6 +21,8 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):
         if currency in ['BWISH', 'BBNB']:
             amount = amount * 10 ** 10
+            if currency in ['BWISH']:
+                amount *= 1.1
             if currency == 'BBNB':
                 currency = 'BNB'
         value = amount if (currency in ['WISH', 'BWISH']) else to_wish(
@@ -113,19 +115,19 @@ def freeze_payments(amount, network):
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             tronish=F('tronish') + int(value)
         )
-        wish_value = amount * 0.10
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + wish_value
-        )
+        # wish_value = amount * 0.10
+        # FreezeBalance.objects.select_for_update().filter(id=1).update(
+        #     wish=F('wish') + wish_value
+        # )
         print('FREEZE', int(value), 'TRONISH', flush=True)
-        print('FREEZE', wish_value, 'WISH', flush=True)
+        #print('FREEZE', wish_value, 'WISH', flush=True)
     #elif currency in ('BNB', 'BWISH'):
-    else:
-        value = amount * 0.10
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + value
-        )
-        print('FREEZE', value, 'BWISH', flush=True)
+    # else:
+    #     value = amount * 0.10
+    #     FreezeBalance.objects.select_for_update().filter(id=1).update(
+    #         wish=F('wish') + value
+    #     )
+    #     print('FREEZE', value, 'BWISH', flush=True)
     # if network == 'ETHEREUM_MAINNET':
     #    value = amount * 0.10
     #    FreezeBalance.objects.select_for_update().filter(id=1).update(
