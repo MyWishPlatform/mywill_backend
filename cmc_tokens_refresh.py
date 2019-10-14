@@ -126,7 +126,7 @@ def find_by_parameters():
         print('original logo url is:', logo_url)
 
         try:
-            price = str(info_for_save['price'][value['id']]['quote']['USD']['price'])
+            price = str(info_for_save['price'][str(value['id'])]['quote']['USD']['price'])
         except KeyError:
             price = None
 
