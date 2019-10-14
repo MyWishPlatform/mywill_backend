@@ -5,6 +5,7 @@ from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
 import time
 from django.core.files.base import ContentFile
+import math
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
@@ -34,44 +35,79 @@ def get_cmc_response(api_key, parameters):
     response = session.get(url, params=parameters)
     return json.loads(response.text)
 
+def get_coin_price(api_key, parameters):
+    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': api_key,
+    }
+    session = Session()
+    session.headers.update(headers)
+    response = session.get(url, params=parameters)
+    return json.loads(response.text)
+
 
 def second_request(token_list):
     key = [key[0] for key in token_list.items()]
-    tokens_ids = ','.join(str(k) for k in key)
+    count = math.ceil(len(key) / 500)
+    tokens_ids = []
+    for i in range(1, count + 1):
+        tokens_ids.append(','.join(str(k) for k in key[(i - 1) * 500:i * 500]))
+
+    #tokens_ids = ','.join(str(k) for k in key)
     # print(tokens_ids)
-    parameters = {
-        'id': tokens_ids
-    }
+    # parameters = {
+    #     'id': tokens_ids
+    # }
     # rebuild to list values
-    try:
-        # print(response.text)
-        data = get_cmc_response(COINMARKETCAP_API_KEYS[0], parameters)
-    except KeyError as e:
-        print('API key reached limit. Using other API key.', e, flush=True)
-        data = get_cmc_response(COINMARKETCAP_API_KEYS[1], parameters)
+    data = {}
+    for token in tokens_ids:
+        try:
+            # print(response.text)
+            if 'data' not in data.keys():
+                data = get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})
+            else:
+                data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
+
+            if 'price' not in data.keys():
+                data = get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token})
+            else:
+                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
+
+        except KeyError as e:
+            print('API key reached limit. Using other API key.', e, flush=True)
+            if 'data' not in data.keys():
+                data = get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})
+            else:
+                data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
+
+            if 'price' not in data.keys():
+                data = get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token})
+            else:
+                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
 
     return data
 
 
 def find_by_parameters():
-    db = TokensCoinMarketCap.objects.all().values_list('token_cmc_id', flat=True)
+    # db = TokensCoinMarketCap.objects.all().values_list('token_cmc_id', flat=True)
     # convert to list
     ids = first_request()
     id_from_market = [i for i in ids.keys()]
-    id_from_db = [id for id in db]
-    if len(list(id_from_market)) != len(id_from_db):
-        result = list(set(id_from_market) - set(id_from_db))
-        id_rank = {}
-        for key, value in ids.items():
-            if key in result:
-                id_rank[key] = value
+    # id_from_db = [id for id in db]
+    # if len(list(id_from_market)) != len(id_from_db):
+    result = id_from_market
+    id_rank = {}
+    for key, value in ids.items():
+        if key in result:
+            id_rank[key] = value
     #    print(id_rank)
     if len(id_rank) == 0:
         print('No new tokens', flush=True)
         return
 
     info_for_save = second_request(id_rank)
-    rank = [value for i in id_rank.values()]
+    rank = [i for i in id_rank.values()]
     count = 0
 
     original_urls = []
@@ -108,7 +144,8 @@ def find_by_parameters():
             image_link=logo_mywish_url,
             token_rank=rank[count],
             token_platform=token_platform,
-            token_address=token_address
+            token_address=token_address,
+            token_price=info_for_save['price'][value['id']]['quote']['USD']['price']
         )
 
         token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
