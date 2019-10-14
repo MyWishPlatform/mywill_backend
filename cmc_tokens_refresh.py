@@ -138,19 +138,24 @@ def find_by_parameters():
               flush=True)
         print('original logo url is:', logo_url)
 
-        token_from_cmc = TokensCoinMarketCap(
-            token_cmc_id=value['id'],
-            token_name=value['name'],
-            token_short_name=value['symbol'],
-            image_link=logo_mywish_url,
-            token_rank=rank[count],
-            token_platform=token_platform,
-            token_address=token_address,
-            token_price=str(info_for_save['price'][value['id']]['quote']['USD']['price'])
-        )
+        token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
+        if token_from_cmc:
+            token_from_cmc.token_price = str(info_for_save['price'][value['id']]['quote']['USD']['price'])
+            token_from_cmc.save()
+        else:
+            token_from_cmc = TokensCoinMarketCap(
+                token_cmc_id=value['id'],
+                token_name=value['name'],
+                token_short_name=value['symbol'],
+                image_link=logo_mywish_url,
+                token_rank=rank[count],
+                token_platform=token_platform,
+                token_address=token_address,
+                token_price=str(info_for_save['price'][value['id']]['quote']['USD']['price'])
+            )
 
-        token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
-        token_from_cmc.save()
+            token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
+            token_from_cmc.save()
 
     url_list = " ".join(url for url in original_urls)
 
