@@ -409,7 +409,8 @@ def admin_delete_swaps_v3(request):
         if not order.contract_state == 'CREATED':
             raise ParseError  # only for created
         else:
-            order.swap_ether_contract.delete()
+            if order.swap_ether_contract:
+                order.swap_ether_contract.delete()
             order.delete()
     else:
         order.delete()
