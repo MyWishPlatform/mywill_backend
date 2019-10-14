@@ -145,7 +145,7 @@ def find_by_parameters():
             token_rank=rank[count],
             token_platform=token_platform,
             token_address=token_address,
-            token_price=info_for_save['price'][value['id']]['quote']['USD']['price']
+            token_price=str(info_for_save['price'][value['id']]['quote']['USD']['price'])
         )
 
         token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
