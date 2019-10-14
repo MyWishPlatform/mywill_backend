@@ -44,7 +44,8 @@ def get_coin_price(api_key, parameters):
     session = Session()
     session.headers.update(headers)
     response = session.get(url, params=parameters)
-    return json.loads(response.text)
+    data = {'price': json.loads(response.text)['data']}
+    return data
 
 
 def second_request(token_list):
