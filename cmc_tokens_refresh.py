@@ -35,6 +35,7 @@ def get_cmc_response(api_key, parameters):
     response = session.get(url, params=parameters)
     return json.loads(response.text)
 
+
 def get_coin_price(api_key, parameters):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
     headers = {
@@ -55,37 +56,23 @@ def second_request(token_list):
     for i in range(1, count + 1):
         tokens_ids.append(','.join(str(k) for k in key[(i - 1) * 500:i * 500]))
 
-    #tokens_ids = ','.join(str(k) for k in key)
+    # tokens_ids = ','.join(str(k) for k in key)
     # print(tokens_ids)
     # parameters = {
     #     'id': tokens_ids
     # }
     # rebuild to list values
-    data = {}
+    data = {'data': {}, 'price': {}}
     for token in tokens_ids:
         try:
             # print(response.text)
-            if 'data' not in data.keys():
-                data = get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})
-            else:
-                data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
-
-            if 'price' not in data.keys():
-                data = get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})
-            else:
-                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})['data'])
+            data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
+            data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})['price'])
 
         except KeyError as e:
             print('API key reached limit. Using other API key.', e, flush=True)
-            if 'data' not in data.keys():
-                data = get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})
-            else:
-                data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
-
-            if 'price' not in data.keys():
-                data = get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})
-            else:
-                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})['data'])
+            data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
+            data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})['price'])
 
     return data
 
