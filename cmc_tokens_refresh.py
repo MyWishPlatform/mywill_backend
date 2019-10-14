@@ -71,9 +71,9 @@ def second_request(token_list):
                 data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
 
             if 'price' not in data.keys():
-                data = get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token})
+                data = get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})
             else:
-                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
+                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})['data'])
 
         except KeyError as e:
             print('API key reached limit. Using other API key.', e, flush=True)
@@ -83,9 +83,9 @@ def second_request(token_list):
                 data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
 
             if 'price' not in data.keys():
-                data = get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token})
+                data = get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})
             else:
-                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
+                data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})['data'])
 
     return data
 
@@ -138,9 +138,14 @@ def find_by_parameters():
               flush=True)
         print('original logo url is:', logo_url)
 
+        try:
+            price = str(info_for_save['price'][value['id']]['quote']['USD']['price'])
+        except KeyError:
+            price = None
+
         token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
         if token_from_cmc:
-            token_from_cmc.token_price = str(info_for_save['price'][value['id']]['quote']['USD']['price'])
+            token_from_cmc.token_price = price
             token_from_cmc.save()
         else:
             token_from_cmc = TokensCoinMarketCap(
@@ -151,7 +156,7 @@ def find_by_parameters():
                 token_rank=rank[count],
                 token_platform=token_platform,
                 token_address=token_address,
-                token_price=str(info_for_save['price'][value['id']]['quote']['USD']['price'])
+                token_price=price
             )
 
             token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
