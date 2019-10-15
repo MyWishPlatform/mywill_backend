@@ -19,3 +19,4 @@ class TokensCoinMarketCap(models.Model):
     token_rank = models.IntegerField(null=True, default=None)
     image = models.ImageField(upload_to='token_images/', default='token_images/')
     token_price = models.CharField(max_length=100, null=True, default=None)
+    updated_at = models.DateTimeField(auto_now_add=True)

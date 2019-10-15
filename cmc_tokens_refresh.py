@@ -125,8 +125,12 @@ def find_by_parameters():
 
         token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
         if token_from_cmc:
-            token_from_cmc.token_price = price
-            token_from_cmc.token_rank = rank[count]
+            if price is not None and token_from_cmc.token_price != price:
+                token_from_cmc.token_price = price
+
+            if token_from_cmc.token_rank != rank[count]:
+                token_from_cmc.token_rank = rank[count]
+
             token_from_cmc.save()
 
             print('token updated',
@@ -162,6 +166,8 @@ def find_by_parameters():
                   token_from_cmc.token_price,
                   flush=True
                   )
+
+        print('update done', flush=True)
 
     # url_list = " ".join(url for url in original_urls)
 
