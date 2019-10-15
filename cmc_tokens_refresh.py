@@ -91,7 +91,7 @@ def find_by_parameters(current_time, checker_object):
     for key, value in info_for_save['data'].items():
         count = + 1
 
-        token_platform = 'False'
+        token_platform = None
         token_address = '0x0000000000000000000000000000000000000000'
 
         if value['platform'] is not None:
