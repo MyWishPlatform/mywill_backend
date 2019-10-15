@@ -162,6 +162,6 @@ if __name__ == '__main__':
             print('token parsing start', flush=True)
             find_by_parameters(now, previous_check)
         else:
-            print('last check was %s, skipping' % previous_check, flush=True)
+            print('last check was %s, skipping' % previous_check.last_time_updated, flush=True)
 
         time.sleep(3600 * 24)
