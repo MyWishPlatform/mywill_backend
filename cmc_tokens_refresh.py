@@ -1,17 +1,18 @@
 import os
+import datetime
 import django
 import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
 import time
 from django.core.files.base import ContentFile
+from django.utils import timezone
 import math
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
 
-from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
-from django.core.mail import send_mail, EmailMessage
+from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap, TokensUpdateTime
 from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
 
 
@@ -56,16 +57,9 @@ def second_request(token_list):
     for i in range(1, count + 1):
         tokens_ids.append(','.join(str(k) for k in key[(i - 1) * 500:i * 500]))
 
-    # tokens_ids = ','.join(str(k) for k in key)
-    # print(tokens_ids)
-    # parameters = {
-    #     'id': tokens_ids
-    # }
-    # rebuild to list values
     data = {'data': {}, 'price': {}}
     for token in tokens_ids:
         try:
-            # print(response.text)
             data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
             data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})['price'])
 
@@ -77,7 +71,7 @@ def second_request(token_list):
     return data
 
 
-def find_by_parameters():
+def find_by_parameters(current_time, checker_object):
     ids = first_request()
     id_from_market = [i for i in ids.keys()]
 
@@ -86,7 +80,6 @@ def find_by_parameters():
     for key, value in ids.items():
         if key in result:
             id_rank[key] = value
-    #    print(id_rank)
     if len(id_rank) == 0:
         print('No new tokens', flush=True)
         return
@@ -95,7 +88,6 @@ def find_by_parameters():
     rank = [i for i in id_rank.values()]
     count = 0
 
-    # original_urls = []
     for key, value in info_for_save['data'].items():
         count = + 1
 
@@ -106,17 +98,8 @@ def find_by_parameters():
             token_platform = value['platform']['slug']
             token_address = value['platform']['token_address']
 
-        # logo_url_mywish_base = 'https://github.com/MyWishPlatform/coinmarketcap_coin_images/raw/master'
-
         img_url = value['logo']
-        # original_urls.append(logo_url)
-
-        # split_url = logo_url.split('/')
-        # img_name = split_url[7]
         img_name = img_url.split('/')[7]
-
-        #print('original logo url is:', logo_url)
-        # logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
 
         try:
             price = str(info_for_save['price'][str(value['id'])]['quote']['USD']['price'])
@@ -145,7 +128,6 @@ def find_by_parameters():
                 token_cmc_id=value['id'],
                 token_name=value['name'],
                 token_short_name=value['symbol'],
-                # image_link=logo_mywish_url,
                 token_rank=rank[count],
                 token_platform=token_platform,
                 token_address=token_address,
@@ -166,23 +148,20 @@ def find_by_parameters():
                   token_from_cmc.token_price,
                   flush=True
                   )
-
-    print('update done', flush=True)
-
-    # url_list = " ".join(url for url in original_urls)
-
-    # subj = """ CoimMarketCap tokens update: found new {c} tokens """.format(c=len(original_urls)),
-    # mail = EmailMessage(
-    #    subject=subj,
-    #    body='',
-    #    from_email=DEFAULT_FROM_EMAIL,
-    #    to=[CMC_TOKEN_UPDATE_MAIL]
-    # )
-    # mail.send()
+    checker_object.last_updated_time = current_time
+    checker_object.save()
+    print('update done, time is %s ' % current_time, flush=True)
 
 
 if __name__ == '__main__':
     while 1:
-        print('token parsing start', flush=True)
-        find_by_parameters()
+        print('preparing to update token list', flush=True)
+        now = datetime.datetime.now(timezone.utc)
+        previous_check = TokensUpdateTime.objects.all().first()
+        if now < previous_check.last_updated_time + datetime.timedelta(hours=23):
+            print('token parsing start', flush=True)
+            find_by_parameters(now, previous_check)
+        else:
+            print('last check was %s, skipping' % previous_check)
+
         time.sleep(3600 * 24)
