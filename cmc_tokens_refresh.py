@@ -72,17 +72,17 @@ def second_request(token_list):
 
 
 def find_by_parameters(current_time, checker_object):
-    ids = first_request()
-    id_from_market = [i for i in ids.keys()]
+    id_rank = first_request()
+#    id_from_market = [i for i in ids.keys()]
 
-    result = id_from_market
-    id_rank = {}
-    for key, value in ids.items():
-        if key in result:
-            id_rank[key] = value
-    if len(id_rank) == 0:
-        print('No new tokens', flush=True)
-        return
+#    result = id_from_market
+#    id_rank = {}
+#    for key, value in ids.items():
+#        if key in result:
+#            id_rank[key] = value
+#    if len(id_rank) == 0:
+#        print('No new tokens', flush=True)
+#        return
 
     info_for_save = second_request(id_rank)
     rank = [i for i in id_rank.values()]
@@ -111,8 +111,9 @@ def find_by_parameters(current_time, checker_object):
             if price is not None and token_from_cmc.token_price != price:
                 token_from_cmc.token_price = price
 
-            if token_from_cmc.token_rank != rank[count]:
-                token_from_cmc.token_rank = rank[count]
+            new_rank = id_rank[int(value['id'])]
+            if token_from_cmc.token_rank != new_rank:
+                token_from_cmc.token_rank = new_rank
 
             token_from_cmc.save()
 
