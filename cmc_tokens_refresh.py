@@ -89,7 +89,7 @@ def find_by_parameters(current_time, checker_object):
     count = 0
 
     for key, value in info_for_save['data'].items():
-        count = + 1
+        count += 1
 
         token_platform = None
         token_address = '0x0000000000000000000000000000000000000000'
