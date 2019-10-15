@@ -167,7 +167,7 @@ def find_by_parameters():
                   flush=True
                   )
 
-        print('update done', flush=True)
+    print('update done', flush=True)
 
     # url_list = " ".join(url for url in original_urls)
 
