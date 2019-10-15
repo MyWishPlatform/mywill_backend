@@ -78,12 +78,9 @@ def second_request(token_list):
 
 
 def find_by_parameters():
-    # db = TokensCoinMarketCap.objects.all().values_list('token_cmc_id', flat=True)
-    # convert to list
     ids = first_request()
     id_from_market = [i for i in ids.keys()]
-    # id_from_db = [id for id in db]
-    # if len(list(id_from_market)) != len(id_from_db):
+
     result = id_from_market
     id_rank = {}
     for key, value in ids.items():
@@ -98,7 +95,7 @@ def find_by_parameters():
     rank = [i for i in id_rank.values()]
     count = 0
 
-    original_urls = []
+    # original_urls = []
     for key, value in info_for_save['data'].items():
         count = + 1
 
@@ -109,21 +106,17 @@ def find_by_parameters():
             token_platform = value['platform']['slug']
             token_address = value['platform']['token_address']
 
-        logo_url_mywish_base = 'https://github.com/MyWishPlatform/coinmarketcap_coin_images/raw/master'
+        # logo_url_mywish_base = 'https://github.com/MyWishPlatform/coinmarketcap_coin_images/raw/master'
 
-        logo_url = value['logo']
-        original_urls.append(logo_url)
+        img_url = value['logo']
+        # original_urls.append(logo_url)
 
-        split_url = logo_url.split('/')
-        img_name = split_url[7]
+        # split_url = logo_url.split('/')
+        # img_name = split_url[7]
+        img_name = img_url.split('/')[7]
 
-        logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
-
-        print('saving token to db',
-              value['id'], value['name'].encode('utf-8'), value['symbol'].encode('utf-8'), logo_mywish_url,
-              rank[count], token_platform, token_address.encode('utf-8'),
-              flush=True)
-        print('original logo url is:', logo_url)
+        #print('original logo url is:', logo_url)
+        # logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
 
         try:
             price = str(info_for_save['price'][str(value['id'])]['quote']['USD']['price'])
@@ -133,36 +126,53 @@ def find_by_parameters():
         token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
         if token_from_cmc:
             token_from_cmc.token_price = price
+            token_from_cmc.token_rank = rank[count]
             token_from_cmc.save()
+
+            print('token updated',
+                  token_from_cmc.token_cmc_id,
+                  token_from_cmc.token_short_name,
+                  token_from_cmc.token_rank,
+                  token_from_cmc.token_price,
+                  flush=True
+                  )
         else:
             token_from_cmc = TokensCoinMarketCap(
                 token_cmc_id=value['id'],
                 token_name=value['name'],
                 token_short_name=value['symbol'],
-                image_link=logo_mywish_url,
+                # image_link=logo_mywish_url,
                 token_rank=rank[count],
                 token_platform=token_platform,
                 token_address=token_address,
                 token_price=price
             )
 
-            token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
+            token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(img_url).content))
             token_from_cmc.save()
 
-    url_list = " ".join(url for url in original_urls)
+            print('saved token',
+                  token_from_cmc.token_cmc_id,
+                  token_from_cmc.token_name.encode('utf-8'),
+                  token_from_cmc.token_short_name.encode('utf-8'),
+                  token_from_cmc.image.name,
+                  token_from_cmc.token_rank,
+                  token_from_cmc.token_platform,
+                  token_from_cmc.token_address.encode('utf-8'),
+                  token_from_cmc.token_price,
+                  flush=True
+                  )
 
-    subj = """ CoimMarketCap tokens update: found new {c} tokens """.format(c=len(original_urls)),
-    mail = EmailMessage(
-        subject=subj,
-        body="""
-        
-        {urls}
-        
-        """.format(urls=url_list),
-        from_email=DEFAULT_FROM_EMAIL,
-        to=[CMC_TOKEN_UPDATE_MAIL]
-    )
-    mail.send()
+    # url_list = " ".join(url for url in original_urls)
+
+    # subj = """ CoimMarketCap tokens update: found new {c} tokens """.format(c=len(original_urls)),
+    # mail = EmailMessage(
+    #    subject=subj,
+    #    body='',
+    #    from_email=DEFAULT_FROM_EMAIL,
+    #    to=[CMC_TOKEN_UPDATE_MAIL]
+    # )
+    # mail.send()
 
 
 if __name__ == '__main__':
