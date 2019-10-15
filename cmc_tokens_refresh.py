@@ -158,7 +158,7 @@ if __name__ == '__main__':
         print('preparing to update token list', flush=True)
         now = datetime.datetime.now(timezone.utc)
         previous_check = TokensUpdateTime.objects.all().first()
-        if now < previous_check.last_time_updated + datetime.timedelta(hours=23):
+        if now > previous_check.last_time_updated + datetime.timedelta(hours=23):
             print('token parsing start', flush=True)
             find_by_parameters(now, previous_check)
         else:
