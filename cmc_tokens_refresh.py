@@ -148,7 +148,7 @@ def find_by_parameters(current_time, checker_object):
                   token_from_cmc.token_price,
                   flush=True
                   )
-    checker_object.last_updated_time = current_time
+    checker_object.last_time_updated = current_time
     checker_object.save()
     print('update done, time is %s ' % current_time, flush=True)
 
@@ -158,7 +158,7 @@ if __name__ == '__main__':
         print('preparing to update token list', flush=True)
         now = datetime.datetime.now(timezone.utc)
         previous_check = TokensUpdateTime.objects.all().first()
-        if now < previous_check.last_updated_time + datetime.timedelta(hours=23):
+        if now < previous_check.last_time_updated + datetime.timedelta(hours=23):
             print('token parsing start', flush=True)
             find_by_parameters(now, previous_check)
         else:
