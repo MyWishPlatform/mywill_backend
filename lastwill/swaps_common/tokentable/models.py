@@ -20,3 +20,7 @@ class TokensCoinMarketCap(models.Model):
     image = models.ImageField(upload_to='token_images/', default='token_images/')
     token_price = models.CharField(max_length=100, null=True, default=None)
     updated_at = models.DateTimeField(auto_now_add=True)
+
+
+class TokensUpdateTime(models.Model):
+    last_time_updated = models.DateTimeField(auto_now_add=True)
