@@ -138,7 +138,6 @@ def get_all_promos():
     for promo in Promo.objects.all():
         print(
             'promo: ' + str(promo.promo_str),
-            'id: ' + str(promo.id),
             'start_date: ' + str(promo.start),
             'stop_date: ' + str(promo.stop),
             'used_times: ' + str(promo.use_count),
