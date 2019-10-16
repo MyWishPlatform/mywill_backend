@@ -7,6 +7,7 @@ import base58
 from ethereum import abi
 from threading import Timer
 from subprocess import Popen, PIPE
+from tronapi import Tron
 
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, FREEZE_THRESHOLD_BWISH, MYWISH_ADDRESS, \
@@ -119,39 +120,54 @@ def freeze_tronish():
         'call_value': 0,
         'owner_address': convert_address_to_hex(UPDATE_TRON_ADDRESS)
     }
-    deploy_params = json.dumps(deploy_params)
-    print('params', deploy_params, flush=True)
-    tron_url = 'http://%s:%s' % (
-    str(NETWORKS['TRON_MAINNET']['host']),
-    str(NETWORKS['TRON_MAINNET']['port']))
-    result = requests.post(tron_url + '/wallet/triggersmartcontract',
-                            data=deploy_params)
-    print('transaction created', flush=True)
-    print(result.content.decode(), flush=True)
-    trx_info1 = json.loads(result.content.decode())
-    trx_info1 = {'transaction': trx_info1['transaction']}
-    print('trx info', trx_info1, flush=True)
-    trx_info1['privateKey'] = TRON_COLD_PASSWORD
-    trx = json.dumps(trx_info1)
-    print('before', trx, flush=True)
-    result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
-    print('transaction sign', flush=True)
-    trx_info2 = json.loads(result.content.decode())
-    trx = json.dumps(trx_info2)
-    print('after', trx, flush=True)
-    # print(trx)
-    for i in range(5):
-        print('attempt=', i, flush=True)
-        result = requests.post(tron_url + '/wallet/broadcasttransaction',
-                               data=trx)
-        print(result.content)
-        answer = json.loads(result.content.decode())
-        print('answer=', answer, flush=True)
-        if answer['result']:
-                return
-        time.sleep(5)
-    else:
-        raise Exception('cannot make tx with 5 attempts')
+
+    # --------------------------
+
+    tron = Tron()
+    res = tron.transaction_builder.trigger_smart_contract(deploy_params)
+    print(res, flush=True)
+
+    sign = tron.trx.sign(res)
+    res = tron.trx.broadcast(sign)
+    print(res, flush=True)
+
+    # --------------------------
+
+
+
+    # deploy_params = json.dumps(deploy_params)
+    # print('params', deploy_params, flush=True)
+    # tron_url = 'http://%s:%s' % (
+    # str(NETWORKS['TRON_MAINNET']['host']),
+    # str(NETWORKS['TRON_MAINNET']['port']))
+    # result = requests.post(tron_url + '/wallet/triggersmartcontract',
+    #                         data=deploy_params)
+    # print('transaction created', flush=True)
+    # print(result.content.decode(), flush=True)
+    # trx_info1 = json.loads(result.content.decode())
+    # trx_info1 = {'transaction': trx_info1['transaction']}
+    # print('trx info', trx_info1, flush=True)
+    # trx_info1['privateKey'] = TRON_COLD_PASSWORD
+    # trx = json.dumps(trx_info1)
+    # print('before', trx, flush=True)
+    # result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
+    # print('transaction sign', flush=True)
+    # trx_info2 = json.loads(result.content.decode())
+    # trx = json.dumps(trx_info2)
+    # print('after', trx, flush=True)
+    # # print(trx)
+    # for i in range(5):
+    #     print('attempt=', i, flush=True)
+    #     result = requests.post(tron_url + '/wallet/broadcasttransaction',
+    #                            data=trx)
+    #     print(result.content)
+    #     answer = json.loads(result.content.decode())
+    #     print('answer=', answer, flush=True)
+    #     if answer['result']:
+    #             return
+    #     time.sleep(5)
+    # else:
+    #     raise Exception('cannot make tx with 5 attempts')
 
 
 def freeze_bnb_wish(amount):
