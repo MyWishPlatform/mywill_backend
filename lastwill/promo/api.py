@@ -148,3 +148,21 @@ def get_all_promos():
         print()
         count += 1
     print('Promos total', count)
+
+
+def get_all_promos_api():
+    count = 0
+
+    promo_dict = {}
+    for promo in Promo.objects.all():
+        promo_dict[promo.promo_str] = {
+            'promo': str(promo.promo_str),
+            'start_date': str(promo.start),
+            'stop_date': str(promo.stop),
+            'used_times': str(promo.use_count),
+            'is_limited': str(promo.use_count_max)
+        }
+        count += 1
+    promo_dict['total'] = count
+
+    return Response(promo_dict)

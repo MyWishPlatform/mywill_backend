@@ -50,7 +50,7 @@ from lastwill.contracts.api_eth import (create_eth_token, show_eth_token,
 from lastwill.contracts.api_common import get_contract_price, get_contracts, get_available_contracts
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin, FacebookAuth
-from lastwill.promo.api import get_discount
+from lastwill.promo.api import get_discount, get_all_promos_api
 from lastwill.snapshot.api import snapshot_get_value
 from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
 from lastwill.swaps_common.mailing.api import save_swaps_mail
@@ -178,7 +178,8 @@ urlpatterns = [
     url(r'^contribute', redirect_contribute),
     url(r'^api/get_non_active_swap3', get_non_active_orders),
     url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
-    url(r'^api/get_cmc_token_rate', get_coins_rate)
+    url(r'^api/get_cmc_token_rate/$', get_coins_rate),
+    url(r'^api/get_all_promos/$', get_all_promos_api)
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
