@@ -150,7 +150,8 @@ def get_all_promos():
     print('Promos total', count)
 
 
-def get_all_promos_api():
+@api_view(http_method_names=['GET'])
+def get_all_promos_api(request):
     count = 0
 
     promo_dict = {}
