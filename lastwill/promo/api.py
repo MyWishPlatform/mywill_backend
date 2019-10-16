@@ -137,15 +137,15 @@ def get_all_promos():
     count = 0
     for promo in Promo.objects.all():
         print(
-            'promo_str: ' + str(promo.promo_str),
+            'promo: ' + str(promo.promo_str),
             'id: ' + str(promo.id),
-            'start: ' + str(promo.start),
-            'stop: ' + str(promo.stop),
-            'use_count: ' + str(promo.use_count),
-            'use_count_max: ' + str(promo.use_count_max),
+            'start_date: ' + str(promo.start),
+            'stop_date: ' + str(promo.stop),
+            'used_times: ' + str(promo.use_count),
+            'is_limited: ' + str(promo.use_count_max),
             '---------------',
             sep='\n'
         )
         print()
         count += 1
-    print('Promos count', count)
+    print('Promos total', count)
