@@ -143,6 +143,7 @@ def get_all_promos():
             'stop: ' + str(promo.stop),
             'use_count: ' + str(promo.use_count),
             'use_count_max: ' + str(promo.use_count_max),
+            '---------------',
             sep='\n'
         )
         print()
