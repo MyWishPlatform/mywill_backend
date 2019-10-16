@@ -178,7 +178,7 @@ urlpatterns = [
     url(r'^contribute', redirect_contribute),
     url(r'^api/get_non_active_swap3', get_non_active_orders),
     url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
-    url(r'^api/get_cmc_token_rate/$', get_coins_rate),
+    url(r'^api/get_cmc_token_rate', get_coins_rate),
     url(r'^api/get_all_promos/$', get_all_promos_api)
 ]
 
