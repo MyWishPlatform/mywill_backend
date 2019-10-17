@@ -207,11 +207,15 @@ class ContractDetailsTRONToken(CommonDetails):
             owner_address=deploy_params['owner_address'],
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
-        print(res, flush=True)
+        #print('first_res', res, flush=True)
 
         sign = tron.trx.sign(res)
+
+        #print('sign', flush=True)
+
         res = tron.trx.broadcast(sign)
-        print(res, flush=True)
+
+        print('second_res', res, flush=True)
 
         # tron.transaction_builder.create_smart_contract()
         # tron.transaction_builder.freeze_balance()
