@@ -219,7 +219,7 @@ class ContractDetailsTRONToken(CommonDetails):
 
         sign = tron.trx.sign(res, True, True)
         #
-        # #print('sign', flush=True)
+        print('sign', flush=True)
         #
         res = tron.trx.broadcast(sign)
 
