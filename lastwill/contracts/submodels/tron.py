@@ -174,16 +174,9 @@ class ContractDetailsTRONToken(CommonDetails):
 
         print('start', flush=True)
 
-        full_node = HttpProvider('https://trontestnet.mywish.io/')
-        solidity_node = HttpProvider('https://trontestnet.mywish.io/')
-        event_server = HttpProvider('https://trontestnet.mywish.io/')
-        #
-        # # option 1
-        # tron = Tron(full_node=full_node,
-        #             solidity_node=solidity_node,
-        #             event_server=event_server)
-
-
+        full_node = HttpProvider('http://trontestnet.mywish.io/')
+        solidity_node = HttpProvider('http://trontestnet.mywish.io/')
+        event_server = HttpProvider('http://trontestnet.mywish.io/')
 
         tron = Tron(
             full_node=full_node,
@@ -192,7 +185,6 @@ class ContractDetailsTRONToken(CommonDetails):
             private_key=NETWORKS[self.contract.network.name]['private_key']
         )
 
-        # tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'])
         tron.private_key = NETWORKS[self.contract.network.name]['private_key']
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
