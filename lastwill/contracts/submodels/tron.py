@@ -174,9 +174,9 @@ class ContractDetailsTRONToken(CommonDetails):
 
         print('start', flush=True)
 
-        full_node = HttpProvider('http://trontestnet.mywish.io/')
-        solidity_node = HttpProvider('http://trontestnet.mywish.io/')
-        event_server = HttpProvider('http://trontestnet.mywish.io/')
+        full_node = HttpProvider('https://trontestnet.mywish.io/')
+        solidity_node = HttpProvider('https://trontestnet.mywish.io/')
+        event_server = HttpProvider('https://trontestnet.mywish.io/')
         #
         # # option 1
         # tron = Tron(full_node=full_node,
