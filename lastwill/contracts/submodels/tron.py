@@ -209,13 +209,15 @@ class ContractDetailsTRONToken(CommonDetails):
             owner_address=deploy_params['owner_address'],
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
-        print('first_res', res, flush=True)
+        #print('first_res', res, flush=True)
 
-        sign = tron.trx.sign(res)
+        res = tron.trx.sign_and_broadcast(res)
 
-        #print('sign', flush=True)
-
-        res = tron.trx.broadcast(sign)
+        # sign = tron.trx.sign(res)
+        #
+        # #print('sign', flush=True)
+        #
+        # res = tron.trx.broadcast(sign)
 
         print('second_res', res, flush=True)
 
