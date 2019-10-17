@@ -215,13 +215,13 @@ class ContractDetailsTRONToken(CommonDetails):
 
         # print('first_res', res, flush=True)
 
-        res = tron.trx.sign_and_broadcast(res)
+        # res = tron.trx.sign_and_broadcast(res)
 
-        # sign = tron.trx.sign(res)
+        sign = tron.trx.sign(res, True, True)
         #
         # #print('sign', flush=True)
         #
-        # res = tron.trx.broadcast(sign)
+        res = tron.trx.broadcast(sign)
 
         print('second_res', res, flush=True)
 
