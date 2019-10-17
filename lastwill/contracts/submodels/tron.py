@@ -186,8 +186,8 @@ class ContractDetailsTRONToken(CommonDetails):
 
 
         tron = Tron(
-            private_key='3f24325651429d146e5ec371c44968fa3d0657a748aadac2064634bd4d2f50eb',
-            default_address='TD98AmVb55umS9tCU7bynmKD6xPHvGqzzW'
+            private_key=NETWORKS[self.contract.network.name]['private_key'],
+            default_address='TD98AmVb55umS9tCU7bynmKD6xPHvGqzzW',
         )
 
 
