@@ -224,6 +224,14 @@ class ContractDetailsTRONToken(CommonDetails):
 
         print('second_res', res, flush=True)
 
+
+        if res['code'] == 'CONTRACT_VALIDATE_ERROR':
+            raise ValidationError({'result': 1}, code=400)
+
+        return
+
+
+
         # tron.transaction_builder.create_smart_contract()
         # tron.transaction_builder.freeze_balance()
         # tron.
