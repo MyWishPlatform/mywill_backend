@@ -226,7 +226,7 @@ class ContractDetailsTRONToken(CommonDetails):
             print('attempt=', i, flush=True)
             res = tron.trx.broadcast(sign)
             if res['code'] != 'CONTRACT_VALIDATE_ERROR':
-                print('answer ', res['code'])
+                print('answer ', res)
                 raise ValidationError({'result': 1}, code=400)
             time.sleep(5)
         else:
