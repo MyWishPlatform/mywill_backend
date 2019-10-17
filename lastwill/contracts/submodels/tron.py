@@ -213,7 +213,7 @@ class ContractDetailsTRONToken(CommonDetails):
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
 
-        print('first_res', res, flush=True)
+        # print('first_res', res, flush=True)
 
         res = tron.trx.sign_and_broadcast(res)
 
