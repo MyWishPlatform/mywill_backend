@@ -16,6 +16,7 @@ from lastwill.settings import COLD_TRON_ADDRESS, UPDATE_TRON_ADDRESS, TRON_COLD_
 from lastwill.settings import BINANCE_PAYMENT_PASSWORD, COLD_BNB_ADDRESS
 from lastwill.contracts.models import unlock_eos_account
 from lastwill.contracts.submodels.common import *
+from lastwill.contracts.submodels.tron import instantiate_tronapi
 from lastwill.json_templates import get_freeze_wish_abi
 from lastwill.consts import NET_DECIMALS
 
@@ -100,58 +101,50 @@ def freeze_eosish(amount):
 
 def freeze_tronish():
     print('freeze tronish', flush=True)
-    print('before encode', flush=True)
-    params = abi.encode_abi(
-            ['address', 'uint256'],
-            ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:],
-            450 * NET_DECIMALS['TRONISH']]
+    # print('before encode', flush=True)
+    # params = abi.encode_abi(
+    #         ['address', 'uint256'],
+    #         ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:],
+    #         450 * NET_DECIMALS['TRONISH']]
+    # )
+    # print('after encode', flush=True)
+    # # print('params', params, flush=True)
+    # freeze_encoded_parameter = binascii.hexlify(params)
+    # print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
+    tron = instantiate_tronapi(pk=TRON_COLD_PASSWORD, net='TRON_MAINNET')
+    tron.default_address = tron.address.from_private_key(tron.private_key).base58
+
+    params = [
+        {'type': 'address', 'value': tron.address.to_hex(COLD_TRON_ADDRESS)},
+        {'type': 'int256', 'value': 450 * NET_DECIMALS['TRONISH']}
+    ]
+
+    tx_builder = tron.transaction_builder.trigger_smart_contract(
+            contract_address=tron.address.to_hex(TRON_ADDRESS),
+            function_selector='transfer(address,uint256)',
+            fee_limit=1000000000,
+            call_value=0,
+            parameters=params,
     )
-    print('after encode', flush=True)
-    # print('params', params, flush=True)
-    freeze_encoded_parameter = binascii.hexlify(params)
-    print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
-    deploy_params = {
-        'contract_address': convert_address_to_hex(TRON_ADDRESS),
-        'function_selector': 'transfer(address,uint256)',
-        'parameter': freeze_encoded_parameter.decode(),
-        # 'parameter': '0000000000000000000000005762bf8b4c6826f082cc75b5d8e4f9263260c90e000000000000000000000000000000000000000000000000000000001ad27480',
-        'fee_limit': 1000000000,
-        'call_value': 0,
-        'owner_address': convert_address_to_hex(UPDATE_TRON_ADDRESS)
-    }
-    deploy_params = json.dumps(deploy_params)
-    print('params', deploy_params, flush=True)
-    tron_url = 'http://%s:%s' % (
-    str(NETWORKS['TRON_MAINNET']['host']),
-    str(NETWORKS['TRON_MAINNET']['port']))
-    result = requests.post(tron_url + '/wallet/triggersmartcontract',
-                            data=deploy_params)
-    print('transaction created', flush=True)
-    print(result.content.decode(), flush=True)
-    trx_info1 = json.loads(result.content.decode())
-    trx_info1 = {'transaction': trx_info1['transaction']}
-    print('trx info', trx_info1, flush=True)
-    trx_info1['privateKey'] = TRON_COLD_PASSWORD
-    trx = json.dumps(trx_info1)
-    print('before', trx, flush=True)
-    result = requests.post(tron_url + '/wallet/gettransactionsign', data=trx)
-    print('transaction sign', flush=True)
-    trx_info2 = json.loads(result.content.decode())
-    trx = json.dumps(trx_info2)
-    print('after', trx, flush=True)
-    # print(trx)
-    for i in range(5):
-        print('attempt=', i, flush=True)
-        result = requests.post(tron_url + '/wallet/broadcasttransaction',
-                               data=trx)
-        print(result.content)
-        answer = json.loads(result.content.decode())
-        print('answer=', answer, flush=True)
-        if answer['result']:
-                return
-        time.sleep(5)
+    print('building tx: ', tx_builder, flush=True)
+    tx = None
+    if tx_builder['result']['result'] is True:
+        tx = tx_builder['transaction']
     else:
-        raise Exception('cannot make tx with 5 attempts')
+        raise Exception('tx building error in tronish freeze')
+
+    signed_tx = tron.trx.sign(tx)
+    print('signed tx: ', signed_tx, flush=True)
+    result = tron.trx.broadcast(signed_tx)
+    print('result: ', result, flush=True)
+    if result['result'] is True:
+        print('freeze tronish ok', flush=True)
+        print('tx: ', result['transaction'], flush=True)
+        return
+    else:
+        print('freeze failed', flush=True)
+        print('res: ', result, flush=True)
+        raise Exception('error in broadcasting')
 
 
 def freeze_bnb_wish(amount):
@@ -199,18 +192,18 @@ def check_payments():
             print(e)
             print('Freezing EOSISH failed')
             send_mail_attempt("EOSISH", freeze_balance.eosish, e)
-    # if freeze_balance.tronish >= FREEZE_THRESHOLD_TRONISH:  # 450000000
-    #     print('tronish > 0', flush=True)
-    #     try:
-    #         print('try send tronish', flush=True)
-    #         freeze_tronish()
-    #         freeze_balance.tronish = freeze_balance.tronish - FREEZE_THRESHOLD_TRONISH
-    #         freeze_balance.save()
-    #     except Exception as e:
-    #         attempt += 1
-    #         print(e, flush=True)
-    #         print('Freezing TRONISH failed')
-    #         send_mail_attempt("TRONISH", freeze_balance.tronish, e)
+    if freeze_balance.tronish >= FREEZE_THRESHOLD_TRONISH:  # 450000000
+        print('tronish > 0', flush=True)
+        try:
+            print('try send tronish', flush=True)
+            freeze_tronish()
+            freeze_balance.tronish = freeze_balance.tronish - FREEZE_THRESHOLD_TRONISH
+            freeze_balance.save()
+        except Exception as e:
+            attempt += 1
+            print(e, flush=True)
+            print('Freezing TRONISH failed')
+            send_mail_attempt("TRONISH", freeze_balance.tronish, e)
     # if freeze_balance.bwish > FREEZE_THRESHOLD_BWISH:
     #     try:
     #         print('try send bnb wish',flush=True)
