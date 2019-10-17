@@ -185,15 +185,14 @@ class ContractDetailsTRONToken(CommonDetails):
 
 
 
-        # tron = Tron(
-        #     full_node=full_node,
-        #     solidity_node=solidity_node,
-        #     event_server=event_server,
-        #     private_key=NETWORKS[self.contract.network.name]['private_key'],
-        #     default_address=NETWORKS[self.contract.network.name]['address']
-        # )
+        tron = Tron(
+            full_node=full_node,
+            solidity_node=solidity_node,
+            event_server=event_server,
+            private_key=NETWORKS[self.contract.network.name]['private_key']
+        )
 
-        tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'])
+        # tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'])
         tron.private_key = NETWORKS[self.contract.network.name]['private_key']
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
