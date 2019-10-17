@@ -172,6 +172,8 @@ class ContractDetailsTRONToken(CommonDetails):
 
         # -----------------------------
 
+        print('start', flush=True)
+
         full_node = HttpProvider('https://trontestnet.mywish.io/')
         solidity_node = HttpProvider('https://trontestnet.mywish.io/')
         event_server = HttpProvider('https://trontestnet.mywish.io/')
@@ -181,11 +183,16 @@ class ContractDetailsTRONToken(CommonDetails):
                     solidity_node=solidity_node,
                     event_server=event_server)
 
+        print('created objects', flush=True)
+
         # tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'])
         contract = tron.trx.contract(
             abi=deploy_params['abi'],
             bytecode=deploy_params['bytecode'],
         )
+
+        print('made contract', flush=True)
+
         res = contract.deploy(
             consume_user_resource_percent=deploy_params['consume_user_resource_percent'],
             fee_limit=deploy_params['fee_limit'],
