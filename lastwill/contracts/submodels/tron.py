@@ -11,7 +11,7 @@ from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS
 from lastwill.settings import TRON_NODE
 
-from tronapi import Tron
+from tronapi import Tron, HttpProvider
 
 
 def convert_address_to_hex(address):
@@ -39,8 +39,13 @@ def generate_tron_url(network):
     return tron_url
 
 
-def instantiate_tronapi(pk):
-    tron = Tron(private_key=pk)
+def instantiate_tronapi(pk, net):
+    node_url = generate_tron_url(network=net)
+    tron = Tron(full_node=node_url,
+                solidity_node=node_url,
+                event_server=node_url,
+                private_key=pk
+                )
     tron.private_key = pk
     return tron
 
