@@ -200,22 +200,20 @@ class ContractDetailsTRONToken(CommonDetails):
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
 
-        # self.tron_contract_token.address = trx_info1['transaction']['contract_address']
-        # self.tron_contract_token.save()
-        print(res, flush=True)
-        print('--------', flush=True)
+        self.tron_contract_token.address = res['contract_address']
+        self.tron_contract_token.save()
+
 
         sign = tron.trx.sign(res)
 
         res = tron.trx.broadcast(sign)
         print(res)
-        # if res['result']:
-        #     self.tron_contract_token.tx_hash = trx_info2['txID']
-        #     print('tx_hash=', trx_info2['txID'], flush=True)
-        #     self.tron_contract_token.save()
-        #     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-        #     self.contract.save()
-        #     return
+        if res['result']:
+            self.tron_contract_token.tx_hash = res['transaction']['txID']
+            self.tron_contract_token.save()
+            self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+            self.contract.save()
+            return
 
         raise ValidationError({'result': 1}, code=400)
 
