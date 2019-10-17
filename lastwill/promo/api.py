@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
-from lastwill.settings import  MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL
 from lastwill.consts import NET_DECIMALS
 from exchange_API import *
 from .models import *
@@ -57,14 +57,15 @@ def get_discount(request):
                 print('token token', flush=True)
                 if contract_details.authio:
                     print('token with authio', flush=True)
-                    cost = (contract.cost - 450 * NET_DECIMALS['USDT']) * (100 - discount) / 100 + 450 * NET_DECIMALS['USDT']
+                    cost = (contract.cost - 450 * NET_DECIMALS['USDT']) * (100 - discount) / 100 + 450 * NET_DECIMALS[
+                        'USDT']
             answer['discount_price'] = {
-            'USDT': str(cost),
-            'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
-            'WISH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
-            'BTC': str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
-            'TRX': str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
-            'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
+                'USDT': str(cost),
+                'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
+                'WISH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
+                'BTC': str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
+                'TRX': str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
+                'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
             }
         elif host == TRON_URL:
             kwargs = ContractSerializer().get_details_serializer(
@@ -78,15 +79,15 @@ def get_discount(request):
             }
         elif host == WAVES_URL:
             kwargs = ContractSerializer().get_details_serializer(
-                    contract.contract_type
+                contract.contract_type
             )().to_representation(contract_details)
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
-                'USDT':    str(cost),
-                'ETH':     str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
-                'WISH':    str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
-                'BTC':     str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
-                'TRX':     str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
+                'USDT': str(cost),
+                'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
+                'WISH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
+                'BTC': str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
+                'TRX': str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
                 'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
             }
         else:
@@ -118,10 +119,10 @@ def create_promocode(
     else:
         if start is None and stop is None:
             start = datetime.datetime.now().date()
-            stop = datetime.datetime(start.year+1, start.month, start.day).date()
+            stop = datetime.datetime(start.year + 1, start.month, start.day).date()
         promo = Promo(
             promo_str=promo_str, start=start, stop=stop,
-            use_count=use_count, use_count_max = use_count_max
+            use_count=use_count, use_count_max=use_count_max
         )
         promo.save()
         for ct in contract_types:
@@ -130,3 +131,39 @@ def create_promocode(
             )
             p2c.save()
         return promo
+
+
+def get_all_promos():
+    count = 0
+    for promo in Promo.objects.all():
+        print(
+            'promo: ' + str(promo.promo_str),
+            'start_date: ' + str(promo.start),
+            'stop_date: ' + str(promo.stop),
+            'used_times: ' + str(promo.use_count),
+            'is_limited: ' + str(promo.use_count_max),
+            '---------------',
+            sep='\n'
+        )
+        print()
+        count += 1
+    print('Promos total', count)
+
+
+@api_view(http_method_names=['GET'])
+def get_all_promos_api(request):
+    count = 0
+
+    promo_dict = {}
+    for promo in Promo.objects.all():
+        promo_dict[promo.promo_str] = {
+            'promo': str(promo.promo_str),
+            'start_date': str(promo.start),
+            'stop_date': str(promo.stop),
+            'used_times': str(promo.use_count),
+            'is_limited': str(promo.use_count_max)
+        }
+        count += 1
+    promo_dict['total'] = count
+
+    return Response(promo_dict)
