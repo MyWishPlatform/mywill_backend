@@ -222,16 +222,24 @@ class ContractDetailsTRONToken(CommonDetails):
         #print('sign', sign, flush=True)
         #
 
-        sign['visible'] = True
-        res = tron.trx.broadcast(sign)
-
-        print('second_res', res, flush=True)
-
-
-        if res['code'] == 'CONTRACT_VALIDATE_ERROR':
+        for i in range(5):
+            print('attempt=', i, flush=True)
+            res = tron.trx.broadcast(sign)
+            if res['code'] != 'CONTRACT_VALIDATE_ERROR':
+                return
+            time.sleep(5)
+        else:
             raise ValidationError({'result': 1}, code=400)
 
-        return
+        # res = tron.trx.broadcast(sign)
+
+        # print('second_res', res, flush=True)
+
+
+        # if res['code'] == 'CONTRACT_VALIDATE_ERROR':
+        #     raise ValidationError({'result': 1}, code=400)
+        #
+        # return
 
 
 
