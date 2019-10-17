@@ -178,18 +178,7 @@ class ContractDetailsTRONToken(CommonDetails):
 
         print('start', flush=True)
 
-        full_node = HttpProvider('http://trontestnet.mywish.io/')
-        solidity_node = HttpProvider('http://trontestnet.mywish.io/')
-        event_server = HttpProvider('http://trontestnet.mywish.io/')
-
-        tron = Tron(
-            full_node=full_node,
-            solidity_node=solidity_node,
-            event_server=event_server,
-            private_key=NETWORKS[self.contract.network.name]['private_key']
-        )
-
-        tron.private_key = NETWORKS[self.contract.network.name]['private_key']
+        tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
 
@@ -218,18 +207,23 @@ class ContractDetailsTRONToken(CommonDetails):
         sign = tron.trx.sign(res)
         #
         #print('sign', sign, flush=True)
+
+        res = tron.trx.broadcast(sign)
+        print(res)
+        raise ValidationError({'result': 1}, code=400)
+
         #
 
-        for i in range(10):
-            print('attempt=', i, flush=True)
-            res = tron.trx.broadcast(sign)
-            print(res)
-            # if res['result']:
-            #     print('answer ', res)
-            #     raise ValidationError({'result': 1}, code=400)
-            time.sleep(5)
-        else:
-            raise ValidationError({'result': 1}, code=400)
+        # for i in range(10):
+        #     print('attempt=', i, flush=True)
+        #     res = tron.trx.broadcast(sign)
+        #     print(res)
+        #     # if res['result']:
+        #     #     print('answer ', res)
+        #     #     raise ValidationError({'result': 1}, code=400)
+        #     time.sleep(5)
+        # else:
+        #     raise ValidationError({'result': 1}, code=400)
 
         # res = tron.trx.broadcast(sign)
 
