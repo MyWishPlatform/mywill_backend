@@ -225,6 +225,7 @@ class ContractDetailsTRONToken(CommonDetails):
         for i in range(10):
             print('attempt=', i, flush=True)
             res = tron.trx.broadcast(sign)
+            print(res)
             if res['result']:
                 print('answer ', res)
                 raise ValidationError({'result': 1}, code=400)
