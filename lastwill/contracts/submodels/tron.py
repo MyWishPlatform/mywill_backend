@@ -12,7 +12,7 @@ from lastwill.consts import NET_DECIMALS
 from lastwill.settings import TRON_NODE
 
 from tronapi import Tron
-import tronapi
+from tronapi import HttpProvider
 
 
 def convert_address_to_hex(address):
@@ -172,7 +172,16 @@ class ContractDetailsTRONToken(CommonDetails):
 
         # -----------------------------
 
-        tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'])
+        full_node = HttpProvider('https://trontestnet.mywish.io/')
+        solidity_node = HttpProvider('https://trontestnet.mywish.io/')
+        event_server = HttpProvider('https://trontestnet.mywish.io/')
+
+        # option 1
+        tron = Tron(full_node=full_node,
+                    solidity_node=solidity_node,
+                    event_server=event_server)
+
+        # tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'])
         contract = tron.trx.contract(
             abi=deploy_params['abi'],
             bytecode=deploy_params['bytecode'],
