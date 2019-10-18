@@ -174,20 +174,15 @@ class ContractDetailsTRONToken(CommonDetails):
             'origin_energy_limit': 100000000
         }
 
-        # print('start', flush=True)
-
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
-
-
-        # print('created objects', flush=True)
 
         contract = tron.trx.contract(
             abi=deploy_params['abi'],
             bytecode=deploy_params['bytecode'],
         )
 
-        # print('made contract', flush=True)
+        print('contract: ', contract, flush=True)
 
         res = contract.deploy(
             consume_user_resource_percent=deploy_params['consume_user_resource_percent'],
@@ -198,14 +193,18 @@ class ContractDetailsTRONToken(CommonDetails):
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
 
+        print('deployed contract: ', res, flush=True)
+
         self.tron_contract_token.address = res['contract_address']
         self.tron_contract_token.save()
 
 
         sign = tron.trx.sign(res)
+        print('signed contract: ', sign, flush=True)
 
         res = tron.trx.broadcast(sign)
-        # print(res)
+        print('broadcast: ', res, flush=True)
+
         if res['result']:
             self.tron_contract_token.tx_hash = res['transaction']['txID']
             self.tron_contract_token.save()
