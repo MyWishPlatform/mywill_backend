@@ -378,12 +378,12 @@ class ContractDetailsGameAssets(CommonDetails):
 
         res = tron.trx.broadcast(sign)
         print(res)
-        # if res['result']:
-        #     self.tron_contract_token.tx_hash = res['transaction']['txID']
-        #     self.tron_contract_token.save()
-        #     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-        #     self.contract.save()
-        #     return
+        if res['result']:
+            self.tron_contract_token.tx_hash = res['transaction']['txID']
+            self.tron_contract_token.save()
+            self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+            self.contract.save()
+            return
 
         raise ValidationError({'result': 1}, code=400)
 
@@ -579,12 +579,12 @@ class ContractDetailsTRONAirdrop(CommonDetails):
 
         res = tron.trx.broadcast(sign)
         print(res)
-        # if res['result']:
-        #     self.tron_contract.tx_hash = res['transaction']['txID']
-        #     self.tron_contract.save()
-        #     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-        #     self.contract.save()
-        #     return
+        if res['result']:
+            self.tron_contract.tx_hash = res['transaction']['txID']
+            self.tron_contract.save()
+            self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+            self.contract.save()
+            return
 
         raise ValidationError({'result': 1}, code=400)
 
@@ -943,12 +943,12 @@ class ContractDetailsTRONLostkey(CommonDetails):
 
         res = tron.trx.broadcast(sign)
         print(res)
-        # if res['result']:
-        #     self.tron_contract.tx_hash = res['transaction']['txID']
-        #     self.tron_contract.save()
-        #     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
-        #     self.contract.save()
-        #     return
+        if res['result']:
+            self.tron_contract.tx_hash = res['transaction']['txID']
+            self.tron_contract.save()
+            self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+            self.contract.save()
+            return
 
         raise ValidationError({'result': 1}, code=400)
         # deploy_params = json.dumps(deploy_params)
