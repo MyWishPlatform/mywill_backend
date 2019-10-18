@@ -1,16 +1,18 @@
 import os
+import datetime
 import django
 import requests
 from requests import Session, ConnectionError, Timeout, TooManyRedirects
 import json
 import time
 from django.core.files.base import ContentFile
+from django.utils import timezone
+import math
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
 
-from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
-from django.core.mail import send_mail, EmailMessage
+from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap, TokensUpdateTime
 from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
 
 
@@ -35,103 +37,122 @@ def get_cmc_response(api_key, parameters):
     return json.loads(response.text)
 
 
+def get_coin_price(api_key, parameters):
+    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': api_key,
+    }
+    session = Session()
+    session.headers.update(headers)
+    response = session.get(url, params=parameters)
+    data = {'price': json.loads(response.text)['data']}
+    return data
+
+
 def second_request(token_list):
     key = [key[0] for key in token_list.items()]
-    tokens_ids = ','.join(str(k) for k in key)
-    # print(tokens_ids)
-    parameters = {
-        'id': tokens_ids
-    }
-    # rebuild to list values
-    try:
-        # print(response.text)
-        data = get_cmc_response(COINMARKETCAP_API_KEYS[0], parameters)
-    except KeyError as e:
-        print('API key reached limit. Using other API key.', e, flush=True)
-        data = get_cmc_response(COINMARKETCAP_API_KEYS[1], parameters)
+    count = math.ceil(len(key) / 500)
+    tokens_ids = []
+    for i in range(1, count + 1):
+        tokens_ids.append(','.join(str(k) for k in key[(i - 1) * 500:i * 500]))
+
+    data = {'data': {}, 'price': {}}
+    for token in tokens_ids:
+        try:
+            data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
+            data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})['price'])
+
+        except KeyError as e:
+            print('API key reached limit. Using other API key.', e, flush=True)
+            data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
+            data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})['price'])
 
     return data
 
 
-def find_by_parameters():
-    db = TokensCoinMarketCap.objects.all().values_list('token_cmc_id', flat=True)
-    # convert to list
-    ids = first_request()
-    id_from_market = [i for i in ids.keys()]
-    id_from_db = [id for id in db]
-    if len(list(id_from_market)) != len(id_from_db):
-        result = list(set(id_from_market) - set(id_from_db))
-        id_rank = {}
-        for key, value in ids.items():
-            if key in result:
-                id_rank[key] = value
-    #    print(id_rank)
-    if len(id_rank) == 0:
-        print('No new tokens', flush=True)
-        return
+def find_by_parameters(current_time, checker_object):
+    id_rank = first_request()
 
     info_for_save = second_request(id_rank)
-    rank = [value for i in id_rank.values()]
+    rank = [i for i in id_rank.values()]
     count = 0
 
-    original_urls = []
     for key, value in info_for_save['data'].items():
-        count = + 1
+        count += 1
 
-        token_platform = 'False'
+        token_platform = None
         token_address = '0x0000000000000000000000000000000000000000'
 
         if value['platform'] is not None:
             token_platform = value['platform']['slug']
             token_address = value['platform']['token_address']
 
-        logo_url_mywish_base = 'https://github.com/MyWishPlatform/coinmarketcap_coin_images/raw/master'
+        img_url = value['logo']
+        img_name = img_url.split('/')[7]
 
-        logo_url = value['logo']
-        original_urls.append(logo_url)
+        try:
+            price = str(info_for_save['price'][str(value['id'])]['quote']['USD']['price'])
+        except KeyError:
+            price = None
 
-        split_url = logo_url.split('/')
-        img_name = split_url[7]
+        token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
+        if token_from_cmc:
+            if price is not None and token_from_cmc.token_price != price:
+                token_from_cmc.token_price = price
 
-        logo_mywish_url = os.path.join(logo_url_mywish_base, img_name)
+            new_rank = id_rank[int(value['id'])]
+            if token_from_cmc.token_rank != new_rank:
+                token_from_cmc.token_rank = new_rank
 
-        print('saving token to db',
-              value['id'], value['name'].encode('utf-8'), value['symbol'].encode('utf-8'), logo_mywish_url,
-              rank[count], token_platform, token_address.encode('utf-8'),
-              flush=True)
-        print('original logo url is:', logo_url)
+            token_from_cmc.save()
 
-        token_from_cmc = TokensCoinMarketCap(
-            token_cmc_id=value['id'],
-            token_name=value['name'],
-            token_short_name=value['symbol'],
-            image_link=logo_mywish_url,
-            token_rank=rank[count],
-            token_platform=token_platform,
-            token_address=token_address
-        )
+            print('token updated',
+                  token_from_cmc.token_cmc_id,
+                  token_from_cmc.token_short_name,
+                  token_from_cmc.token_rank,
+                  token_from_cmc.token_price,
+                  flush=True
+                  )
+        else:
+            token_from_cmc = TokensCoinMarketCap(
+                token_cmc_id=value['id'],
+                token_name=value['name'],
+                token_short_name=value['symbol'],
+                token_rank=rank[count],
+                token_platform=token_platform,
+                token_address=token_address,
+                token_price=price
+            )
 
-        token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(logo_url).content))
-        token_from_cmc.save()
+            token_from_cmc.image.save(name=img_name, content=ContentFile(requests.get(img_url).content))
+            token_from_cmc.save()
 
-    url_list = " ".join(url for url in original_urls)
-
-    subj = """ CoimMarketCap tokens update: found new {c} tokens """.format(c=len(original_urls)),
-    mail = EmailMessage(
-        subject=subj,
-        body="""
-        
-        {urls}
-        
-        """.format(urls=url_list),
-        from_email=DEFAULT_FROM_EMAIL,
-        to=[CMC_TOKEN_UPDATE_MAIL]
-    )
-    mail.send()
+            print('saved token',
+                  token_from_cmc.token_cmc_id,
+                  token_from_cmc.token_name.encode('utf-8'),
+                  token_from_cmc.token_short_name.encode('utf-8'),
+                  token_from_cmc.image.name,
+                  token_from_cmc.token_rank,
+                  token_from_cmc.token_platform,
+                  token_from_cmc.token_address.encode('utf-8'),
+                  token_from_cmc.token_price,
+                  flush=True
+                  )
+    checker_object.last_time_updated = current_time
+    checker_object.save()
+    print('update done, time is %s ' % current_time, flush=True)
 
 
 if __name__ == '__main__':
     while 1:
-        print('token parsing start', flush=True)
-        find_by_parameters()
+        print('preparing to update token list', flush=True)
+        now = datetime.datetime.now(timezone.utc)
+        previous_check = TokensUpdateTime.objects.all().first()
+        if now > previous_check.last_time_updated + datetime.timedelta(hours=23):
+            print('token parsing start', flush=True)
+            find_by_parameters(now, previous_check)
+        else:
+            print('last check was %s, skipping' % previous_check.last_time_updated, flush=True)
+
         time.sleep(3600 * 24)
