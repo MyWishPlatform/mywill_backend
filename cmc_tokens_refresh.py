@@ -80,6 +80,8 @@ def find_by_parameters(current_time, checker_object):
 
     for key, value in info_for_save['data'].items():
         count += 1
+        if count > len(rank):
+            break
 
         token_platform = None
         token_address = '0x0000000000000000000000000000000000000000'
