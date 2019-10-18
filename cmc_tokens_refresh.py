@@ -109,7 +109,7 @@ def find_by_parameters(current_time, checker_object):
 
             print('token updated',
                   token_from_cmc.token_cmc_id,
-                  token_from_cmc.token_short_name,
+                  token_from_cmc.token_short_name.encode('utf-8'),
                   token_from_cmc.token_rank,
                   token_from_cmc.token_price,
                   flush=True
