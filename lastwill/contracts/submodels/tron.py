@@ -163,34 +163,34 @@ class ContractDetailsTRONToken(CommonDetails):
         self.compile()
         print('deploy tron token')
         abi = json.dumps(self.tron_contract_token.abi)
-        deploy_params = {
-            'abi': str(abi),
-            'bytecode': self.tron_contract_token.bytecode,
-            'consume_user_resource_percent': 0,
-            'fee_limit': 1000000000,
-            'call_value': 0,
-            'bandwidth_limit': 1000000,
-            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            'origin_energy_limit': 100000000
-        }
+        # deploy_params = {
+        #     'abi': str(abi),
+        #     'bytecode': self.tron_contract_token.bytecode,
+        #     'consume_user_resource_percent': 0,
+        #     'fee_limit': 1000000000,
+        #     'call_value': 0,
+        #     'bandwidth_limit': 1000000,
+        #     'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+        #     'origin_energy_limit': 100000000
+        # }
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
-            abi=deploy_params['abi'],
-            bytecode=deploy_params['bytecode'],
+            abi=str(abi),
+            bytecode=self.tron_contract_token.bytecode,
         )
 
         print('contract: ', contract, flush=True)
 
         res = contract.deploy(
-            consume_user_resource_percent=deploy_params['consume_user_resource_percent'],
-            fee_limit=deploy_params['fee_limit'],
-            call_value=deploy_params['call_value'],
-            bandwidth_limit=deploy_params['bandwidth_limit'],
-            owner_address=deploy_params['owner_address'],
-            origin_energy_limit=deploy_params['origin_energy_limit']
+            consume_user_resource_percent=0,
+            fee_limit=1000000000,
+            call_value=0,
+            bandwidth_limit=1000000,
+            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            origin_energy_limit=100000000
         )
 
         print('deployed contract: ', res, flush=True)
@@ -336,34 +336,34 @@ class ContractDetailsGameAssets(CommonDetails):
         self.compile()
         print('deploy tron token')
         abi = json.dumps(self.tron_contract_token.abi)
-        deploy_params = {
-            'abi': str(abi),
-            'bytecode': self.tron_contract_token.bytecode,
-            'consume_user_resource_percent': 0,
-            'fee_limit': 1000000000,
-            'call_value': 0,
-            'bandwidth_limit': 1000000,
-            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            'origin_energy_limit': 100000000
-        }
+        # deploy_params = {
+        #     'abi': str(abi),
+        #     'bytecode': self.tron_contract_token.bytecode,
+        #     'consume_user_resource_percent': 0,
+        #     'fee_limit': 1000000000,
+        #     'call_value': 0,
+        #     'bandwidth_limit': 1000000,
+        #     'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+        #     'origin_energy_limit': 100000000
+        # }
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
-            abi=deploy_params['abi'],
-            bytecode=deploy_params['bytecode'],
+            abi=str(abi),
+            bytecode=self.tron_contract_token.bytecode,
         )
 
         print('contract: ', contract, flush=True)
 
         res = contract.deploy(
-            consume_user_resource_percent=deploy_params['consume_user_resource_percent'],
-            fee_limit=deploy_params['fee_limit'],
-            call_value=deploy_params['call_value'],
-            bandwidth_limit=deploy_params['bandwidth_limit'],
-            owner_address=deploy_params['owner_address'],
-            origin_energy_limit=deploy_params['origin_energy_limit']
+            consume_user_resource_percent=0,
+            fee_limit=1000000000,
+            call_value=0,
+            bandwidth_limit=1000000,
+            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            origin_energy_limit=100000000
         )
 
         print('deployed contract: ', res, flush=True)
@@ -505,34 +505,34 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.compile()
         print('deploy tron token')
         abi = json.dumps(self.tron_contract.abi)
-        deploy_params = {
-            'abi': str(abi),
-            'bytecode': self.tron_contract.bytecode,
-            'consume_user_resource_percent': 0,
-            'fee_limit': 1000000000,
-            'call_value': 0,
-            'bandwidth_limit': 1000000,
-            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            'origin_energy_limit': 100000000
-        }
+        # deploy_params = {
+        #     'abi': str(abi),
+        #     'bytecode': self.tron_contract.bytecode,
+        #     'consume_user_resource_percent': 0,
+        #     'fee_limit': 1000000000,
+        #     'call_value': 0,
+        #     'bandwidth_limit': 1000000,
+        #     'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+        #     'origin_energy_limit': 100000000
+        # }
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
-            abi=deploy_params['abi'],
-            bytecode=deploy_params['bytecode'],
+            abi=str(abi),
+            bytecode=self.tron_contract.bytecode,
         )
 
         print('contract: ', contract, flush=True)
 
         res = contract.deploy(
-            consume_user_resource_percent=deploy_params['consume_user_resource_percent'],
-            fee_limit=deploy_params['fee_limit'],
-            call_value=deploy_params['call_value'],
-            bandwidth_limit=deploy_params['bandwidth_limit'],
-            owner_address=deploy_params['owner_address'],
-            origin_energy_limit=deploy_params['origin_energy_limit']
+            consume_user_resource_percent=0,
+            fee_limit=1000000000,
+            call_value=0,
+            bandwidth_limit=1000000,
+            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            origin_energy_limit=100000000
         )
 
         print('deployed contract: ', res, flush=True)
@@ -839,34 +839,34 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.compile()
         print('deploy tron lostkey token')
         abi = json.dumps(self.tron_contract.abi)
-        deploy_params = {
-            'abi': str(abi),
-            'bytecode': self.tron_contract.bytecode,
-            'consume_user_resource_percent': 0,
-            'fee_limit': 1000000000,
-            'call_value': 0,
-            'bandwidth_limit': 1000000,
-            'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            'origin_energy_limit': 100000000
-        }
+        # deploy_params = {
+        #     'abi': str(abi),
+        #     'bytecode': self.tron_contract.bytecode,
+        #     'consume_user_resource_percent': 0,
+        #     'fee_limit': 1000000000,
+        #     'call_value': 0,
+        #     'bandwidth_limit': 1000000,
+        #     'owner_address': '41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+        #     'origin_energy_limit': 100000000
+        # }
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
-            abi=deploy_params['abi'],
-            bytecode=deploy_params['bytecode'],
+            abi=str(abi),
+            bytecode=self.tron_contract.bytecode,
         )
 
         print('contract: ', contract, flush=True)
 
         res = contract.deploy(
-            consume_user_resource_percent=deploy_params['consume_user_resource_percent'],
-            fee_limit=deploy_params['fee_limit'],
-            call_value=deploy_params['call_value'],
-            bandwidth_limit=deploy_params['bandwidth_limit'],
-            owner_address=deploy_params['owner_address'],
-            origin_energy_limit=deploy_params['origin_energy_limit']
+            consume_user_resource_percent=0,
+            fee_limit=1000000000,
+            call_value=0,
+            bandwidth_limit=1000000,
+            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+            origin_energy_limit=100000000
         )
 
         print('deployed contract: ', res, flush=True)
@@ -892,17 +892,6 @@ class ContractDetailsTRONLostkey(CommonDetails):
 
     @blocking
     def check_contract(self):
-        # deploy_params = {
-        #     'contract_address': self.tron_contract.address,
-        #     'owner_address': '41' + convert_address_to_hex(
-        #         NETWORKS[self.contract.network.name]['check_address'])[2:],
-        #     'function_selector': 'check()',
-        #     'fee_limit': 1000000000
-        # }
-        # deploy_params = json.dumps(deploy_params)
-
-        # ---------------
-
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
         tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
@@ -933,33 +922,3 @@ class ContractDetailsTRONLostkey(CommonDetails):
             print('check_contract failed', flush=True)
             print('res: ', result, flush=True)
             raise ValidationError({'result': 1}, code=400)
-
-        # ---------------
-        # tron_url = 'http://%s:%s' % (
-        #     str(NETWORKS[self.contract.network.name]['host']),
-        #     str(NETWORKS[self.contract.network.name]['port']))
-        # result = requests.post(tron_url + '/wallet/triggersmartcontract',
-        #                        data=deploy_params)
-        # print('transaction created')
-        # print(result.content.decode(), flush=True)
-        # trx_info1 = json.loads(result.content.decode())
-        # trx_info1 = {'transaction': trx_info1['transaction']}
-        # trx_info1['privateKey'] = NETWORKS[self.contract.network.name][
-        #     'check_private_key']
-        # tronapi = instantiate_tronapi(trx_info1['privateKey'])
-        # trx_info2 = tronapi.trx.sign(trx_info1['transaction'])
-        # print('transaction sign')
-        # print(trx_info2, flush=True)
-        # trx = json.dumps(trx_info2)
-        # for i in range(5):
-        #     print('attempt=', i)
-        #     result = requests.post(tron_url + '/wallet/broadcasttransaction',
-        #                            data=trx)
-        #     print(result.content, flush=True)
-        #     answer = json.loads(result.content.decode())
-        #     print('answer=', answer, flush=True)
-        #     if answer['result']:
-        #         return
-        #     time.sleep(5)
-        # else:
-        #     raise ValidationError({'result': 1}, code=400)
