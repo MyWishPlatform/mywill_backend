@@ -572,16 +572,16 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
 
-        self.tron_contract_token.address = res['contract_address']
-        self.tron_contract_token.save()
+        self.tron_contract.address = res['contract_address']
+        self.tron_contract.save()
 
         sign = tron.trx.sign(res)
 
         res = tron.trx.broadcast(sign)
         print(res)
         # if res['result']:
-        #     self.tron_contract_token.tx_hash = res['transaction']['txID']
-        #     self.tron_contract_token.save()
+        #     self.tron_contract.tx_hash = res['transaction']['txID']
+        #     self.tron_contract.save()
         #     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         #     self.contract.save()
         #     return
@@ -936,16 +936,16 @@ class ContractDetailsTRONLostkey(CommonDetails):
             origin_energy_limit=deploy_params['origin_energy_limit']
         )
 
-        self.tron_contract_token.address = res['contract_address']
-        self.tron_contract_token.save()
+        self.tron_contract.address = res['contract_address']
+        self.tron_contract.save()
 
         sign = tron.trx.sign(res)
 
         res = tron.trx.broadcast(sign)
         print(res)
         # if res['result']:
-        #     self.tron_contract_token.tx_hash = res['transaction']['txID']
-        #     self.tron_contract_token.save()
+        #     self.tron_contract.tx_hash = res['transaction']['txID']
+        #     self.tron_contract.save()
         #     self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         #     self.contract.save()
         #     return
