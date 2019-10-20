@@ -157,7 +157,7 @@ def get_payment_statistics(start, stop=None):
     payments = InternalPayment.objects.filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     )
-    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0, 'TRX': 0.0, 'TRONISH': 0.0}
+    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0, 'TRX': 0.0, 'TRONISH': 0.0, 'BWISH': 0.0}
     for pay in payments:
         print(
             pay.datetime.date(),
