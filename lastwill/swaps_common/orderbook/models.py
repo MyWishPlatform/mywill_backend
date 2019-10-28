@@ -64,7 +64,7 @@ class OrderBookSwaps(models.Model):
         self.contract_state = 'ACTIVE'
         self.save()
         if self.user.email:
-            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
+            swaps_link = '{protocol}://{url}/public-v3/{unique_link}'.format(
                     protocol=SITE_PROTOCOL,
                     unique_link=self.unique_link, url=SWAPS_URL
             )
