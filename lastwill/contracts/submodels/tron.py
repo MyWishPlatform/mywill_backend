@@ -29,7 +29,7 @@ def replace_0x(message):
 
 
 def generate_tron_url(network):
-    tron_url = 'http://%s' % (str(NETWORKS[network]['host']))
+    tron_url = str(NETWORKS[network]['host'])
     return tron_url
 
 
