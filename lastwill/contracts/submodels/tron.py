@@ -41,6 +41,7 @@ def instantiate_tronapi(pk, net):
                 private_key=pk
                 )
     tron.private_key = pk
+    tron.default_address = tron.address.from_private_key(tron.private_key).base58
     return tron
 
 
@@ -159,7 +160,7 @@ class ContractDetailsTRONToken(CommonDetails):
         abi = json.dumps(self.tron_contract_token.abi)
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
-        tron.default_address = tron.address.from_private_key(tron.private_key).base58
+
 
         contract = tron.trx.contract(
             abi=str(abi),
@@ -322,7 +323,6 @@ class ContractDetailsGameAssets(CommonDetails):
         abi = json.dumps(self.tron_contract_token.abi)
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
-        tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
             abi=str(abi),
@@ -481,7 +481,6 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         abi = json.dumps(self.tron_contract.abi)
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
-        tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
             abi=str(abi),
@@ -805,7 +804,6 @@ class ContractDetailsTRONLostkey(CommonDetails):
         abi = json.dumps(self.tron_contract.abi)
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
-        tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         contract = tron.trx.contract(
             abi=str(abi),
@@ -847,7 +845,6 @@ class ContractDetailsTRONLostkey(CommonDetails):
     @blocking
     def check_contract(self):
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
-        tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
         tx_builder = tron.transaction_builder.trigger_smart_contract(
             contract_address=self.tron_contract.address,

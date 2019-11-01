@@ -103,7 +103,6 @@ def freeze_eosish(amount):
 def freeze_tronish():
     print('freeze tronish', flush=True)
     tron = instantiate_tronapi(pk=TRON_COLD_PASSWORD, net='TRON_MAINNET')
-    tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
     params = [
         {'type': 'address', 'value': tron.address.to_hex(COLD_TRON_ADDRESS)},
