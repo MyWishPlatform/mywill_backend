@@ -15,6 +15,8 @@ django.setup()
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap, TokensUpdateTime
 from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
 
+class CMCException(Exception):
+    pass
 
 def first_request():
     res = requests.get('https://s2.coinmarketcap.com/generated/search/quick_search.json')
@@ -45,7 +47,7 @@ def cmc_request(url, parameters):
         print('error code: ', error_code, flush=True)
         print('error message: ', error_message, flush=True)
         print('notice: ', status['notice'], flush=True)
-        raise Exception('failed to send request to CoinMarketCap, error is: ' + error_message)
+        raise CMCException('failed to send request to CoinMarketCap, error is: ' + error_message)
 
 
 def get_coin_info(token):
@@ -163,7 +165,11 @@ if __name__ == '__main__':
         previous_check = TokensUpdateTime.objects.all().first()
         if now > previous_check.last_time_updated + datetime.timedelta(hours=23):
             print('token parsing start', flush=True)
-            find_by_parameters(now, previous_check)
+            try:
+                find_by_parameters(now, previous_check)
+            except CMCException:
+                pass
+
         else:
             print('last check was %s, skipping' % previous_check.last_time_updated, flush=True)
 
