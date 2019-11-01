@@ -47,7 +47,7 @@ def cmc_request(url, parameters):
         print('error code: ', error_code, flush=True)
         print('error message: ', error_message, flush=True)
         print('notice: ', status['notice'], flush=True)
-        raise CMCException('failed to send request to CoinMarketCap, error is: ' + str(error_message)
+        raise CMCException('failed to send request to CoinMarketCap, error is: ' + str(error_message))
 
 
 def get_coin_info(token):
