@@ -25,28 +25,42 @@ def first_request():
     return id_rank
 
 
-def get_cmc_response(api_key, parameters):
+def cmc_request(url, parameters):
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[0],
+    }
+    session = Session()
+    session.headers.update(headers)
+    response = session.get(url, params=parameters)
+    answer = json.loads(response.text)
+    status = answer['status']
+
+    error_code = status['error_code']
+    error_message = status['error_message']
+
+    if error_code != 0 and error_message is None:
+        return answer['data']
+    else:
+        print('error code: ', error_code, flush=True)
+        print('error message: ', error_message, flush=True)
+        print('notice: ', status['notice'], flush=True)
+        raise Exception('failed to send request to CoinMarketCap, error is: ' + error_message)
+
+
+def get_coin_info(token):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/info'
-    headers = {
-        'Accepts': 'application/json',
-        'X-CMC_PRO_API_KEY': api_key,
-    }
-    session = Session()
-    session.headers.update(headers)
-    response = session.get(url, params=parameters)
-    return json.loads(response.text)
+    params = {'id': token}
+    request = cmc_request(url, params)
+    data = request['data']
+    return data
 
 
-def get_coin_price(api_key, parameters):
+def get_coin_price(token):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
-    headers = {
-        'Accepts': 'application/json',
-        'X-CMC_PRO_API_KEY': api_key,
-    }
-    session = Session()
-    session.headers.update(headers)
-    response = session.get(url, params=parameters)
-    data = {'price': json.loads(response.text)['data']}
+    params = {'id': token, 'skip_invalid': True}
+    request = cmc_request(url, params)
+    data = request['data']
     return data
 
 
@@ -59,14 +73,10 @@ def second_request(token_list):
 
     data = {'data': {}, 'price': {}}
     for token in tokens_ids:
-        try:
-            data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[0], {'id': token})['data'])
-            data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[0], {'id': token, 'skip_invalid': True})['price'])
-
-        except KeyError as e:
-            print('API key reached limit. Using other API key.', e, flush=True)
-            data['data'].update(get_cmc_response(COINMARKETCAP_API_KEYS[1], {'id': token})['data'])
-            data['price'].update(get_coin_price(COINMARKETCAP_API_KEYS[1], {'id': token, 'skip_invalid': True})['price'])
+        token_info = get_coin_info(token)
+        token_price = get_coin_price(token)
+        data['data'].update(token_info)
+        data['price'].update(token_price)
 
     return data
 
