@@ -7,6 +7,7 @@ import base58
 from ethereum import abi
 from threading import Timer
 from subprocess import Popen, PIPE
+from tronapi import Tron
 
 from lastwill.payments.models import *
 from lastwill.settings import FREEZE_THRESHOLD_EOSISH, FREEZE_THRESHOLD_WISH, FREEZE_THRESHOLD_BWISH, MYWISH_ADDRESS, \
@@ -101,16 +102,6 @@ def freeze_eosish(amount):
 
 def freeze_tronish():
     print('freeze tronish', flush=True)
-    # print('before encode', flush=True)
-    # params = abi.encode_abi(
-    #         ['address', 'uint256'],
-    #         ['0x'+convert_address_to_hex(COLD_TRON_ADDRESS)[2:],
-    #         450 * NET_DECIMALS['TRONISH']]
-    # )
-    # print('after encode', flush=True)
-    # # print('params', params, flush=True)
-    # freeze_encoded_parameter = binascii.hexlify(params)
-    # print('freeze_encoded_parameter', freeze_encoded_parameter, flush=True)
     tron = instantiate_tronapi(pk=TRON_COLD_PASSWORD, net='TRON_MAINNET')
     tron.default_address = tron.address.from_private_key(tron.private_key).base58
 
@@ -126,6 +117,7 @@ def freeze_tronish():
             call_value=0,
             parameters=params,
     )
+
     print('building tx: ', tx_builder, flush=True)
     tx = None
     if tx_builder['result']['result'] is True:
