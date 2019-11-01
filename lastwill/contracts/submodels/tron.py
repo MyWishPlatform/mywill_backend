@@ -29,13 +29,7 @@ def replace_0x(message):
 
 
 def generate_tron_url(network):
-    if network == 'TRON_TESTNET':
-        tron_url = 'http://%s:%s' % (
-            str(NETWORKS[network]['host']),
-            str(NETWORKS[network]['port'])
-        )
-    else:
-        tron_url = TRON_NODE
+    tron_url = 'http://%s' % (str(NETWORKS[network]['host']))
     return tron_url
 
 
