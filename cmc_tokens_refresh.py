@@ -41,13 +41,13 @@ def cmc_request(url, parameters):
     error_code = status['error_code']
     error_message = status['error_message']
 
-    if error_code != 0 and error_message is None:
+    if 'data' in answer and error_code != 0 and error_message is None:
         return answer['data']
     else:
         print('error code: ', error_code, flush=True)
         print('error message: ', error_message, flush=True)
         print('notice: ', status['notice'], flush=True)
-        raise CMCException('failed to send request to CoinMarketCap, error is: ' + error_message)
+        raise CMCException('failed to send request to CoinMarketCap, error is: ' + str(error_message)
 
 
 def get_coin_info(token):
