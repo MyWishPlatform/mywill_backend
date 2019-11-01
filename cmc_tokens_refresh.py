@@ -173,4 +173,5 @@ if __name__ == '__main__':
         else:
             print('last check was %s, skipping' % previous_check.last_time_updated, flush=True)
 
+        print('sleeping', flush=True)
         time.sleep(3600 * 24)
