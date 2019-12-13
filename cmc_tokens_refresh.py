@@ -37,11 +37,12 @@ def cmc_request(url, parameters):
     response = session.get(url, params=parameters)
     answer = json.loads(response.text)
     status = answer['status']
+    print(answer['data'])
 
     error_code = status['error_code']
     error_message = status['error_message']
 
-    if 'data' in answer and error_code != 0 and error_message is None:
+    if 'data' in answer and error_code == 0 and error_message is None:
         return answer['data']
     else:
         print('error code: ', error_code, flush=True)
@@ -54,7 +55,7 @@ def get_coin_info(token):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/info'
     params = {'id': token}
     request = cmc_request(url, params)
-    data = request['data']
+    data = request
     return data
 
 
@@ -62,7 +63,7 @@ def get_coin_price(token):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
     params = {'id': token, 'skip_invalid': True}
     request = cmc_request(url, params)
-    data = request['data']
+    data = request
     return data
 
 
