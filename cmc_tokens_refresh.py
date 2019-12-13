@@ -37,7 +37,7 @@ def cmc_request(url, parameters):
     response = session.get(url, params=parameters)
     answer = json.loads(response.text)
     status = answer['status']
-    print(answer['data'])
+    #print(answer['data'])
 
     error_code = status['error_code']
     error_message = status['error_message']
