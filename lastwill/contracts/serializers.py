@@ -42,6 +42,7 @@ import email_messages
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
+from lastwill.contracts.token_protector_serializer import TokenProtectorSerializer
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
@@ -279,7 +280,8 @@ class ContractSerializer(serializers.ModelSerializer):
             19: ContractDetailsLostKeyTokensSerializer,
             20: ContractDetailsSWAPSSerializer,
             22: ContractDetailsSTOSerializer,
-            21: ContractDetailsSWAPS2Serializer
+            21: ContractDetailsSWAPS2Serializer,
+            23: TokenProtectorSerializer
         }[contract_type]
 
 

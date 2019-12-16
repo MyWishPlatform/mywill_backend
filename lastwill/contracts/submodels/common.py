@@ -340,6 +340,7 @@ class Contract(models.Model):
         swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
         waves = apps.get_model('contracts', 'ContractDetailsWavesSTO')
         swap2 = apps.get_model('contracts', 'ContractDetailsSWAPS2')
+        token_protector = apps.get_model('contracts', 'ContractDetailsTokenProtector')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -365,6 +366,8 @@ class Contract(models.Model):
         contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
         contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
         contract_details_types[21] = {'name': 'SWAPS Contract', 'model': swap2}
+        contract_details_types[23] = {'name': 'Token protector contract', 'model': token_protector}
+
         return contract_details_types
 
     @classmethod

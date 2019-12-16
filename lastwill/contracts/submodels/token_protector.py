@@ -5,36 +5,40 @@ import datetime
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 
 
-@contract_details('Token protrctor contract')
+@contract_details('Token protector contract')
 class ContractDetailsTokenProtector(CommonDetails):
     # test fields
     sol_path = 'lastwill/token-protector/'
     source_filename = 'contracts/TokenProtector.sol'
     result_filename = 'build/contracts/TokenProtector.json'
-    user_address = models.CharField(max_length=50, null=True, default=None)
 
-    check_interval = models.IntegerField()
-    active_to = models.DateTimeField()
+    user_address = models.CharField(max_length=50)
+    reverse_address = models.CharField(max_length=50)
 
-    last_check = models.DateTimeField(null=True, default=None)
-    next_check = models.DateTimeField(null=True, default=None)
+    # check_interval = models.IntegerField()
+    end_date = models.IntegerField()
+
+    # last_check = models.DateTimeField(null=True, default=None)
+    # next_check = models.DateTimeField(null=True, default=None)
 
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
-    transfer_threshold_wei = models.IntegerField(default=0)
-    transfer_delay_seconds = models.IntegerField(default=0)
+    # approved_tokens =
+
+    # transfer_threshold_wei = models.IntegerField(default=0)
+    # transfer_delay_seconds = models.IntegerField(default=0)
 
     def predeploy_validate(self):
-        now = timezone.now()
-        if self.active_to < now:
+        now = timezone.now().timestamp()
+        if self.end_date < now:
             raise ValidationError({'result': 1}, code=400)
 
     @postponable
     @check_transaction
     def msg_deployed(self, message):
         super().msg_deployed(message)
-        self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
-        self.save()
+        # self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
+        # self.save()
 
     @classmethod
     def min_cost(cls):
@@ -57,53 +61,55 @@ class ContractDetailsTokenProtector(CommonDetails):
     def deploy(self):
         super().deploy()
 
-
-    def compile(self, eth_contract_attr_name='eth_contract_token'):
+    def approve(self):
         pass
 
-    @check_transaction
-    def checked(self, message):
-        now = timezone.now()
-        self.last_check = now
-        next_check = now + datetime.timedelta(seconds=self.check_interval)
-        if next_check < self.active_to:
-            self.next_check = next_check
-        else:
-            self.contract.state = 'EXPIRED'
-            self.contract.save()
-            self.next_check = None
-        self.save()
-        take_off_blocking(self.contract.network.name, self.contract.id)
+    def compile(self, eth_contract_attr_name='eth_contract_token'):
+        super().compile()
 
-    @check_transaction
-    def triggered(self, message):
-        link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
-        if self.recepient_email:
-            send_mail(
-                heir_subject,
-                heir_message.format(
-                    user_address=self.recepient_address,
-                    link_tx=link.format(tx=message['transactionHash'])
-                ),
-                DEFAULT_FROM_EMAIL,
-                [self.recepient_email]
-            )
-        self.contract.state = 'TRIGGERED'
-        self.contract.save()
-        if self.contract.user.email:
-            send_mail(
-                carry_out_subject,
-                carry_out_message,
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+    # @check_transaction
+    # def checked(self, message):
+    #     now = timezone.now()
+    #     self.last_check = now
+    #     next_check = now + datetime.timedelta(seconds=self.check_interval)
+    #     if next_check < self.active_to:
+    #         self.next_check = next_check
+    #     else:
+    #         self.contract.state = 'EXPIRED'
+    #         self.contract.save()
+    #         self.next_check = None
+    #     self.save()
+    #     take_off_blocking(self.contract.network.name, self.contract.id)
+    #
+    # @check_transaction
+    # def triggered(self, message):
+    #     link = NETWORKS[self.eth_contract.contract.network.name]['link_tx']
+    #     if self.recepient_email:
+    #         send_mail(
+    #             heir_subject,
+    #             heir_message.format(
+    #                 user_address=self.recepient_address,
+    #                 link_tx=link.format(tx=message['transactionHash'])
+    #             ),
+    #             DEFAULT_FROM_EMAIL,
+    #             [self.recepient_email]
+    #         )
+    #     self.contract.state = 'TRIGGERED'
+    #     self.contract.save()
+    #     if self.contract.user.email:
+    #         send_mail(
+    #             carry_out_subject,
+    #             carry_out_message,
+    #             DEFAULT_FROM_EMAIL,
+    #             [self.contract.user.email]
+    #         )
 
     def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
-            # self.recepient_address,
+            self.reverse_address,
             2 ** 256 - 1,
-            int(self.date.timestamp()),
+            int(self.end_date),
         ]
 
     # def contractPayment(self, message):
