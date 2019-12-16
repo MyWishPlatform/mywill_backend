@@ -9,7 +9,7 @@ import datetime
 class TokenProtectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTokenProtector
-        fields = ['owner_address', 'reserve_address', 'end_timestamp']
+        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email']
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
