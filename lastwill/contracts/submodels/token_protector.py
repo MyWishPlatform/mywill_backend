@@ -3,21 +3,19 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 import datetime
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+from django.db import models
 
 
 
 @contract_details('Token protector contract')
 class ContractDetailsTokenProtector(CommonDetails):
-
     owner_address = models.CharField(max_length=50)
     reserve_address = models.CharField(max_length=50)
 
     end_timestamp = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
 
-
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-
 
     def predeploy_validate(self):
         now = timezone.now().timestamp()
@@ -42,7 +40,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         return int(25 * NET_DECIMALS['USDT'])
-
 
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN_PROTECTOR']
@@ -82,7 +79,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         if os.system('cd {dest} && yarn compile-protector'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
-
         with open(path.join(dest, 'build/contracts/TokenProtector.json'), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/TokenProtector.sol'), 'rb') as f:
@@ -109,7 +105,6 @@ class ContractDetailsTokenProtector(CommonDetails):
                 dest=dest)):
             raise Exception('testing error')
 
-
     def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
@@ -117,4 +112,17 @@ class ContractDetailsTokenProtector(CommonDetails):
             2 ** 256 - 1,
             int(self.end_date),
         ]
+
+    @check_transaction
+    def triggered(self, message):
+        for token_address in message['tokens']:
+            approved_token = ApprovedToken(contract=self, address=token_address)
+            approved_token.save()
+
+
+
+class ApprovedToken(models.Model):
+    contract = models.ForeignKey(ContractDetailsTokenProtector, related_name='tokens',on_delete=models.CASCADE)
+    address = models.CharField(max_length=50)
+
 

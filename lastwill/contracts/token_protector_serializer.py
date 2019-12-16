@@ -1,4 +1,4 @@
-from lastwill.contracts.models import ContractDetailsTokenProtector
+from lastwill.contracts.models import ContractDetailsTokenProtector, ApprovedToken
 from rest_framework import serializers
 from lastwill.contracts.serializers import EthContractSerializer
 from rest_framework.exceptions import ValidationError
@@ -16,6 +16,11 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
+
+        res['approved_tokens'] = []
+        for token in ApprovedToken.objects.filter(contract=contract_details):
+            res['approved_tokens'].append(token.address)
+
         return res
 
     def create(self, contract, contract_details):
