@@ -9,7 +9,7 @@ import datetime
 class TokenProtectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTokenProtector
-        fields = ['user_address', 'reverse_address', 'end_date']
+        fields = ['owner_address', 'reserve_address', 'end_timestamp']
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
@@ -29,11 +29,11 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, contract_details):
-        if 'user_address' not in contract_details or 'reverse_address' not in contract_details or 'end_date' not in contract_details:
+        if 'owner_address' not in contract_details or 'reserve_address' not in contract_details or 'end_timestamp' not in contract_details:
             raise ValidationError
-        check.is_address(contract_details['user_address'])
-        check.is_address(contract_details['reverse_address'])
-        if contract_details['end_date'] < datetime.datetime.now().timestamp() + 5 * 60:
+        check.is_address(contract_details['owner_address'])
+        check.is_address(contract_details['reserve_address'])
+        if contract_details['end_timestamp'] < datetime.datetime.now().timestamp() + 5 * 60:
             raise ValidationError
 
         return contract_details
