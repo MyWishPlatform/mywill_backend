@@ -1071,6 +1071,20 @@ def autodeploing(user_id):
         bb.refresh_from_db()
     return True
 
+def protector_autodeploing(user_id):
+    bb = UserSiteBalance.objects.get(user__id=user_id)
+    contracts = Contract.objects.filter(user__id=user_id, contract_type=23, state='WAITING_FOR_PAYMENT').order_by('-created_date')
+    for contract in contracts:
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost(kwargs, contract.network)
+        if bb.balance >= cost or bb.balance >= cost * 0.95:
+            deploy_swaps(contract.id)
+        bb.refresh_from_db()
+    return True
 
 @api_view(http_method_names=['POST'])
 def confirm_swaps_info(request):
