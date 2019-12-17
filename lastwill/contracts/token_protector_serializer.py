@@ -1,7 +1,7 @@
 from lastwill.contracts.models import ContractDetailsTokenProtector, ApprovedToken
 from rest_framework import serializers
 try:
-    from .serializers import EthContractSerializer
+    from lastwill.contracts.serializers import EthContractSerializer
 except:
     pass
 from rest_framework.exceptions import ValidationError
