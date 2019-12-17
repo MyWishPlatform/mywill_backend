@@ -28,7 +28,8 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
+        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2,
+        ContractDetailsTokenProtector, ApprovedToken
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -42,7 +43,6 @@ import email_messages
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-from lastwill.contracts.token_protector_serializer import TokenProtectorSerializer
 
 def count_sold_tokens(address):
     contract = EthContract.objects.get(address=address).contract
@@ -283,6 +283,46 @@ class ContractSerializer(serializers.ModelSerializer):
             21: ContractDetailsSWAPS2Serializer,
             23: TokenProtectorSerializer
         }[contract_type]
+
+
+class TokenProtectorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTokenProtector
+        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email']
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+
+        res['approved_tokens'] = []
+        for token in ApprovedToken.objects.filter(contract=contract_details):
+            res['approved_tokens'].append(token.address)
+
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, contract_details):
+        if 'owner_address' not in contract_details or 'reserve_address' not in contract_details or 'end_timestamp' not in contract_details:
+            raise ValidationError
+        check.is_address(contract_details['owner_address'])
+        check.is_address(contract_details['reserve_address'])
+        if contract_details['end_timestamp'] < datetime.datetime.now().timestamp() + 5 * 60:
+            raise ValidationError
+
+        return contract_details
+
+
 
 
 class EthContractSerializer(serializers.ModelSerializer):
