@@ -1093,6 +1093,27 @@ def confirm_swaps_info(request):
     autodeploing(contract.user.id)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
+@api_view(http_method_names=['POST'])
+def confirm_protector_info(request):
+    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
+    # host = request.META['HTTP_HOST']
+    if contract.user != request.user or contract.state != 'CREATED':
+        raise PermissionDenied
+    if contract.contract_type != 23:
+        raise PermissionDenied
+    # if contract.network.name != 'ETHEREUM_MAINNET':
+    #     raise PermissionDenied
+    # if host != SWAPS_URL:
+    #     raise PermissionDenied
+    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
+    for c in confirm_contracts:
+        c.state = 'WAITING_FOR_PAYMENT'
+        c.save()
+    contract.state = 'WAITING_FOR_PAYMENT'
+    contract.save()
+    # autodeploing(contract.user.id)
+    return JsonResponse(ContractSerializer().to_representation(contract))
+
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_unique_link(request):
