@@ -1,6 +1,9 @@
 from lastwill.contracts.models import ContractDetailsTokenProtector, ApprovedToken
 from rest_framework import serializers
-# from .serializers import EthContractSerializer
+try:
+    from .serializers import EthContractSerializer
+except:
+    pass
 from rest_framework.exceptions import ValidationError
 import lastwill.check as check
 import datetime
