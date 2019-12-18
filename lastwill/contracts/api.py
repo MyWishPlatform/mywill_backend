@@ -19,7 +19,7 @@ from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps, deploy_protector
 from lastwill.consts import *
 import requests
 
@@ -1073,8 +1073,8 @@ def autodeploing(user_id):
     return True
 
 def protector_autodeploing(user_id):
-    bb = UserSiteBalance.objects.get(user__id=user_id)
-    contracts = Contract.objects.filter(user__id=user_id, contract_type=23, state='WAITING_FOR_PAYMENT').order_by('-created_date')
+    bb = UserSiteBalance.objects.get(subsite__id=4, user__id=user_id)
+    contracts = Contract.objects.filter(user__id=user_id, contract_type=23, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
     for contract in contracts:
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
@@ -1083,7 +1083,7 @@ def protector_autodeploing(user_id):
         )().to_representation(contract_details)
         cost = contract_details.calc_cost(kwargs, contract.network)
         if bb.balance >= cost or bb.balance >= cost * 0.95:
-            deploy_swaps(contract.id)
+            deploy_protector(contract.id)
         bb.refresh_from_db()
     return True
 
@@ -1111,22 +1111,22 @@ def confirm_swaps_info(request):
 @api_view(http_method_names=['POST'])
 def confirm_protector_info(request):
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
-    # host = request.META['HTTP_HOST']
+    host = request.META['HTTP_HOST']
     if contract.user != request.user or contract.state != 'CREATED':
         raise PermissionDenied
     if contract.contract_type != 23:
         raise PermissionDenied
     # if contract.network.name != 'ETHEREUM_MAINNET':
     #     raise PermissionDenied
-    # if host != SWAPS_URL:
-    #     raise PermissionDenied
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
+    if host != SWAPS_URL:
+        raise PermissionDenied
+    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=23)
     for c in confirm_contracts:
         c.state = 'WAITING_FOR_PAYMENT'
         c.save()
     contract.state = 'WAITING_FOR_PAYMENT'
     contract.save()
-    # autodeploing(contract.user.id)
+    protector_autodeploing(contract.user.id)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 
