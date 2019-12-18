@@ -1073,7 +1073,10 @@ def autodeploing(user_id, subsite_id):
         )().to_representation(contract_details)
         cost = contract_details.calc_cost_usdt(kwargs, contract.network)
         if bb.balance >= cost or bb.balance >= cost * 0.95:
-            deploy_swaps(contract.id)
+            if subsite_id == 4:
+                deploy_swaps(contract.id)
+            if subsite_id == 5:
+                deploy_protector(contract.id)
         bb.refresh_from_db()
     return True
 
