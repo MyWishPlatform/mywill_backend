@@ -1117,14 +1117,19 @@ def confirm_swaps_info(request):
 def confirm_protector_info(request):
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     host = request.META['HTTP_HOST']
+    print('host', host, flush=True)
     if contract.user != request.user or contract.state != 'CREATED':
+        print(1, flush=True)
         raise PermissionDenied
     if contract.contract_type != 23:
+        print(2, flush=True)
         raise PermissionDenied
     # if contract.network.name != 'ETHEREUM_MAINNET':
     #     raise PermissionDenied
     if host != SWAPS_URL:
+        print(3, flush=True)
         raise PermissionDenied
+    print(4, flush=True)
     confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=23)
     for c in confirm_contracts:
         c.state = 'WAITING_FOR_PAYMENT'
