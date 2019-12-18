@@ -36,6 +36,12 @@ class ContractDetailsTokenProtector(CommonDetails):
         return cost
 
     @staticmethod
+    def calc_cost_usdt(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        return int(25 * NET_DECIMALS['USDT'])
+
+    @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
