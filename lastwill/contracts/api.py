@@ -1057,9 +1057,14 @@ def get_tronish_balance(request):
     return Response({'balance': 0})
 
 
-def autodeploing(user_id):
-    bb = UserSiteBalance.objects.get(subsite__id=4, user__id=user_id)
-    contracts = Contract.objects.filter(user__id=user_id, contract_type=20, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
+def autodeploing(user_id, subsite_id):
+    bb = UserSiteBalance.objects.get(subsite__id=subsite_id, user__id=user_id)
+    if subsite_id == 4:
+        contract_type = 20
+    else:
+        # subsite_id == 5:
+        contract_type = 23
+    contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
     for contract in contracts:
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
