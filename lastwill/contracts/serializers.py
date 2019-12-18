@@ -240,7 +240,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.network.name == 'TRON_TESTNET':
             res['cost']['TRX'] = 0
             res['cost']['TRONISH'] = 0
-        if contract.contract_type == 20:
+        if contract.contract_type == 20 or contract.contract_type == 23:
             cost = Contract.get_details_model(
                 contract.contract_type
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
@@ -252,6 +252,7 @@ class ContractSerializer(serializers.ModelSerializer):
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
+
         return res
 
     def update(self, contract, validated_data):
