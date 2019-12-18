@@ -19,7 +19,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def predeploy_validate(self):
         now = timezone.now().timestamp()
-        if self.end_date < now:
+        if self.end_timestamp < now:
             raise ValidationError({'result': 1}, code=400)
 
     @postponable
