@@ -1059,6 +1059,7 @@ def get_tronish_balance(request):
     return Response({'balance': 0})
 
 
+
 def autodeploing(user_id, subsite_id):
     bb = UserSiteBalance.objects.get(subsite__id=subsite_id, user__id=user_id)
     if subsite_id == 4:
