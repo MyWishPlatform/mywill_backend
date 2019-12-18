@@ -47,6 +47,7 @@ class ContractDetailsTokenProtector(CommonDetails):
             return 0
         return int(25 * NET_DECIMALS['USDT'])
 
+
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN_PROTECTOR']
 
