@@ -240,10 +240,22 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.network.name == 'TRON_TESTNET':
             res['cost']['TRX'] = 0
             res['cost']['TRONISH'] = 0
-        if contract.contract_type == 20 or contract.contract_type == 23:
+        if contract.contract_type == 20:
             cost = Contract.get_details_model(
                 contract.contract_type
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
+            res['cost'] = {
+                'USDT': str(int(cost * NET_DECIMALS['USDT'])),
+                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
+                'WISH': str(int(cost) * convert('USDT', 'WISH')['WISH'] * NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
+                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
+            }
+        if contract.contract_type == 23:
+            cost = Contract.get_details_model(
+                contract.contract_type
+            ).calc_cost(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
                 'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
