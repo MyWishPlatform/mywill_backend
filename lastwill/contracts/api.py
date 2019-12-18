@@ -1110,7 +1110,7 @@ def confirm_swaps_info(request):
         c.save()
     contract.state = 'WAITING_FOR_PAYMENT'
     contract.save()
-    autodeploing(contract.user.id)
+    autodeploing(contract.user.id, 4)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 @api_view(http_method_names=['POST'])
@@ -1131,7 +1131,7 @@ def confirm_protector_info(request):
         c.save()
     contract.state = 'WAITING_FOR_PAYMENT'
     contract.save()
-    protector_autodeploing(contract.user.id)
+    autodeploing(contract.user.id, 5)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 
