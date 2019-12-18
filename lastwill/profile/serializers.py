@@ -109,7 +109,7 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=
     # btc_address2 = eosish_key.ChildKey(user.id).Address()
     # btc_address3 = tron_key.ChildKey(user.id).Address()
     btc_address4 = swaps_key.ChildKey(user.id).Address()
-    btc_address5 = swaps_key.ChildKey(user.id).Address()
+    btc_address5 = protector_key.ChildKey(user.id).Address()
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
@@ -126,6 +126,7 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=
     # registration_btc_address(btc_address2)
     # registration_btc_address(btc_address3)
     registration_btc_address(btc_address4)
+    registration_btc_address(btc_address5)
 
 
 class UserRegisterSerializer(RegisterSerializer):
