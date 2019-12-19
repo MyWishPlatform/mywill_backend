@@ -50,7 +50,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         amount = add_decimals(currency, amount)
     user = User.objects.get(id=uid)
     if amount < 0.0:
-        if site_id == 4:
+        if site_id == 4 or site_id == 5:
             try:
                 negative_payment(user, -value, site_id, network)
             except:
