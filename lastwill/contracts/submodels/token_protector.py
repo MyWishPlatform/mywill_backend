@@ -61,9 +61,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('token protector compiling', flush=True)
-        # if self.temp_directory:
-        #     print('already compiled', flush=True)
-        #     return
+
         dest, preproc_config = create_directory(
             self, sour_path='lastwill/token_saver/*',
             config_name='c-preprocessor-config.json'
