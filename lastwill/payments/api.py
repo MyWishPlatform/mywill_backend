@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, NETWORKS
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS
 from lastwill.consts import NET_DECIMALS
 from exchange_API import to_wish, convert
 
@@ -41,6 +41,11 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     #         currency, 'TRX'
     #     )['TRX']) / NET_DECIMALS[currency] * NET_DECIMALS['TRON']
     elif SubSite.objects.get(id=site_id).site_name == SWAPS_URL:
+        value = amount if currency == 'USDT' else amount * float(convert(
+            currency, 'USDT'
+        )['USDT']) / NET_DECIMALS[currency] * NET_DECIMALS['USDT']
+
+    elif SubSite.objects.get(id=site_id).site_name == TOKEN_PROTECTOR_URL:
         value = amount if currency == 'USDT' else amount * float(convert(
             currency, 'USDT'
         )['USDT']) / NET_DECIMALS[currency] * NET_DECIMALS['USDT']
