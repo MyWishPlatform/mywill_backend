@@ -65,13 +65,14 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     print('already compiled', flush=True)
         #     return
         dest, preproc_config = create_directory(
-            self, sour_path='lastwill/token-protector/*',
+            self, sour_path='lastwill/token_saver/*',
             config_name='c-preprocessor-config.json'
         )
 
         preproc_params = {'constants': {
             "D_OWNER_ADDRESS": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "D_RESERVE_ADDRESS": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+            "D_BACKEND_ADDRESS": NETWORKS[network.name]['address'],
             "D_END_TIMESTAMP": self.end_timestamp
         }}
 
@@ -83,12 +84,12 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && yarn compile-protector'.format(dest=dest)):
+        if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
             raise Exception('compiler error while deploying')
 
-        with open(path.join(dest, 'build/contracts/TokenProtector.json'), 'rb') as f:
+        with open(path.join(dest, 'build/contracts/TokenSaver.json'), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(dest, 'build/TokenProtector.sol'), 'rb') as f:
+        with open(path.join(dest, 'contracts/TokenSaver.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
 
         eth_contract = EthContract()
@@ -105,19 +106,15 @@ class ContractDetailsTokenProtector(CommonDetails):
     def test_protector_params(self, config, params, dest):
         with open(config, 'w') as f:
             f.write(json.dumps(params))
-        if os.system("/bin/bash -c 'cd {dest} && yarn compile-protector'".format(
+        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(
                 dest=dest)):
             raise Exception('compiler error while testing')
-        if os.system("/bin/bash -c 'cd {dest} &&  yarn test-protector'".format(
+        if os.system("/bin/bash -c 'cd {dest} && ./test-compiled.sh'".format(
                 dest=dest)):
             raise Exception('testing error')
 
     def get_arguments(self, *args, **kwargs):
         return [
-            self.user_address,
-            self.reverse_address,
-            2 ** 256 - 1,
-            int(self.end_date),
         ]
 
     @check_transaction
