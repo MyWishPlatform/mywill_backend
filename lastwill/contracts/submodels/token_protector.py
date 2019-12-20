@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 import datetime
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from django.db import models
+from lastwill.settings import D_BACKEND_ADDRESS
 
 
 
@@ -71,10 +72,13 @@ class ContractDetailsTokenProtector(CommonDetails):
             config_name='c-preprocessor-config.json'
         )
 
+        backend_address = NETWORKS[self.contract.network.name]['address']
+        backend_address[-1] = backend_address[-1].upper()
+
         preproc_params = {'constants': {
             "D_OWNER_ADDRESS": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "D_RESERVE_ADDRESS": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-            "D_BACKEND_ADDRESS": NETWORKS[self.contract.network.name]['address'],
+            "D_BACKEND_ADDRESS": D_BACKEND_ADDRESS,
             "D_END_TIMESTAMP": self.end_timestamp
         }}
 
