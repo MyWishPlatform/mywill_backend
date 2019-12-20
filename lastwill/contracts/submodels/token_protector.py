@@ -127,6 +127,14 @@ class ContractDetailsTokenProtector(CommonDetails):
             approved_token = ApprovedToken(contract=self, address=token_address)
             approved_token.save()
 
+    def finalized(self, message):
+        self.contract.state = 'DONE'
+        self.contract.save()
+
+    def cancelled(self, message):
+        self.contract.state = 'CANCELLED'
+        self.contract.save()
+
 
 
 class ApprovedToken(models.Model):
