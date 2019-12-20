@@ -72,9 +72,6 @@ class ContractDetailsTokenProtector(CommonDetails):
             config_name='c-preprocessor-config.json'
         )
 
-        backend_address = NETWORKS[self.contract.network.name]['address']
-        backend_address[-1] = backend_address[-1].upper()
-
         preproc_params = {'constants': {
             "D_OWNER_ADDRESS": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             "D_RESERVE_ADDRESS": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
