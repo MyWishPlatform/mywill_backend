@@ -446,6 +446,8 @@ class CommonDetails(models.Model):
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce, flush=True)
+        print('BYTECODE', eth_contract.bytecode, flush=True)
+        print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')
