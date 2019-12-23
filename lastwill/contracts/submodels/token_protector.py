@@ -86,6 +86,8 @@ class ContractDetailsTokenProtector(CommonDetails):
         preproc_params["constants"]["D_OWNER_ADDRESS"] = checksum_encode(self.owner_address)
         preproc_params["constants"]["D_RESERVE_ADDRESS"] = checksum_encode(self.reserve_address)
 
+        print('params', preproc_params, flush=True)
+
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
