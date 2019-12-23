@@ -130,6 +130,12 @@ class Receiver(threading.Thread):
         contract.get_details().triggered(message)
         print('triggered ok', flush=True)
 
+    def approved(self, message):
+        print('approved message', flush=True)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().approved(message)
+        print('approved ok', flush=True)
+
     def launch(self, message):
         print('launch message', flush=True)
         try:

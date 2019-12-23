@@ -122,10 +122,12 @@ class ContractDetailsTokenProtector(CommonDetails):
         ]
 
     @check_transaction
-    def triggered(self, message):
-        for token_address in message['tokens']:
-            approved_token = ApprovedToken(contract=self, address=token_address)
-            approved_token.save()
+    def approved(self, message):
+        approved_token = ApprovedToken(contract=self, address=message['address'])
+        approved_token.save()
+        # for token_address in message['tokens']:
+        #     approved_token = ApprovedToken(contract=self, address=token_address)
+        #     approved_token.save()
 
     def finalized(self, message):
         self.contract.state = 'DONE'
