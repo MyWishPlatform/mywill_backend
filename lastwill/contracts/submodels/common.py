@@ -448,15 +448,16 @@ class CommonDetails(models.Model):
         print('nonce', nonce, flush=True)
         # print('BYTECODE', eth_contract.bytecode, flush=True)
         # print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
-        # data = eth_contract.bytecode + (binascii.hexlify(
-        #     tr.encode_constructor_arguments(arguments)
-        # ).decode() if arguments else '')
-        if arguments:
-            data = eth_contract.bytecode + (binascii.hexlify(
-                tr.encode_constructor_arguments(arguments)
-            ).decode())
-        else:
-            data = eth_contract.bytecode
+        data = eth_contract.bytecode + (binascii.hexlify(
+            tr.encode_constructor_arguments(arguments)
+        ).decode() if arguments else '')
+        print('data =', data)
+        # if arguments:
+        #     data = eth_contract.bytecode + (binascii.hexlify(
+        #         tr.encode_constructor_arguments(arguments)
+        #     ).decode())
+        # else:
+        #     data = eth_contract.bytecode
 
         print('DATA', data, flush=True)
 
