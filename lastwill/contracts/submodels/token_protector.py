@@ -131,6 +131,14 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     approved_token = ApprovedToken(contract=self, address=token_address)
         #     approved_token.save()
 
+
+    def confirm_tokens(self):
+        approved_tokens = ApprovedToken.objects.filter(contract=self)
+        for token in approved_tokens:
+            pass
+
+
+
     def finalized(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
