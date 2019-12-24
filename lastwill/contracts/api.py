@@ -1164,7 +1164,7 @@ def get_contract_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_public_contracts(request):
-    contracts = Contract.objects.filter(contract_type__in=[20, 21, 23], network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
     result = []
     for contract in contracts:
         d = contract.get_details()

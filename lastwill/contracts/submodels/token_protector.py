@@ -6,6 +6,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from django.db import models
 from lastwill.settings import D_BACKEND_ADDRESS
 from ethereum.utils import checksum_encode
+from web3 import Web3, HTTPProvider, IPCProvider
 
 
 
@@ -124,18 +125,29 @@ class ContractDetailsTokenProtector(CommonDetails):
         ]
 
     @check_transaction
-    def approved(self, message):
+    def TokenProtectorApprove(self, message):
         approved_token = ApprovedToken(contract=self, address=message['address'])
         approved_token.save()
-        # for token_address in message['tokens']:
-        #     approved_token = ApprovedToken(contract=self, address=token_address)
-        #     approved_token.save()
 
 
     def confirm_tokens(self):
-        approved_tokens = ApprovedToken.objects.filter(contract=self)
-        for token in approved_tokens:
-            pass
+        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+
+        # tokens_to_confirm = list(ApprovedToken.objects.filter(contract=self).values_list('address', flat=True))
+        txn = contract.functions.addTokenType(
+            checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
+            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas':self.get_gaslimit()})
+
+        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000, self.contract.network.name, value=0,
+                                       dest=self.eth_contract.address, contract_data=txn['data'][2:],
+                                       gas_price=2000000000)
+
+        hash = w3.eth.sendRawTransaction(signed)
+
 
 
 
