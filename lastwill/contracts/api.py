@@ -22,6 +22,7 @@ from email_messages import authio_message, authio_subject, authio_google_subject
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps, deploy_protector
 from lastwill.consts import *
 import requests
+from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
@@ -1146,6 +1147,18 @@ def confirm_protector_info(request):
     contract.save()
     autodeploing(contract.user.id, 5)
     return JsonResponse(ContractSerializer().to_representation(contract))
+
+
+@api_view(http_method_names=['POST'])
+def confirm_protector_tokens(request):
+    contract = Contract.objects.filter(id=request.data.get('contract_id'), user=request.user, contract_type=23).first()
+    if contract:
+        protector_contract = ContractDetailsTokenProtector(contract=contract)
+        protector_contract.confirm_tokens()
+
+        return JsonResponse(ContractSerializer().to_representation(contract))
+
+    raise PermissionDenied
 
 
 @api_view(http_method_names=['GET'])
