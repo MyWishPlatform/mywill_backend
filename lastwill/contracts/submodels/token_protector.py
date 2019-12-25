@@ -152,11 +152,10 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         print('signed', signed, flush=True)
 
-        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
-        self.eth_contract.save()
+        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
 
         # hash = w3.eth.sendRawTransaction('0x' + signed)
-        print('hash', self.eth_contract.tx_hash, flush=True)
+        print('hash', tx_hash, flush=True)
 
         # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
         #     approved_token.is_confirmed = True
