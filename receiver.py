@@ -133,7 +133,7 @@ class Receiver(threading.Thread):
     def TokenProtectorApprove(self, message):
         print('approved message', flush=True)
         contract = EthContract.objects.get(id=message['contractId']).contract
-        contract.get_details().approved(message)
+        contract.get_details().TokenProtectorApprove(message)
         print('approved ok', flush=True)
 
     def launch(self, message):
