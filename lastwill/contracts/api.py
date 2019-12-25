@@ -476,9 +476,9 @@ def get_usd_rub_rates():
     page = requests.get("https://www.fxempire.com/markets/usd-rub/overview", headers=BROWSER_HEADERS)
     soup = BeautifulSoup(page.content,'html.parser')
     actual = (soup.find_all("div", class_='DirectionBackgroundColor__BackgroundColor-sc-1qjm64q-0 fgRxHG'))
-    course_change = (soup.find_all("span", class_="Span-sc-1abytr7-0 hAkeNO"))
+    course_change = (soup.find_all("span", class_="Span-sc-1abytr7-0 VIFXK"))
     actual_course = actual[0].get_text()
-    course_change = course_change[0].get_text()[1:-2]
+    course_change = round(float(course_change[0].get_text()[8:-2]), 2)
     rub_rate = {'base': 'USD', 'target': 'RUB', 'price': actual_course, 'change_24h': course_change}
     return rub_rate
 
