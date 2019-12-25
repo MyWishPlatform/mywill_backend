@@ -7,6 +7,7 @@ from django.db import models
 from lastwill.settings import D_BACKEND_ADDRESS
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
+import binascii
 
 
 
@@ -146,6 +147,8 @@ class ContractDetailsTokenProtector(CommonDetails):
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000, self.contract.network.name, value=0,
                                        dest=self.eth_contract.address, contract_data=txn['data'][2:],
                                        gas_price=2000000000)
+
+        print('signed', signed, flush=True)
 
         self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
         self.eth_contract.save()
