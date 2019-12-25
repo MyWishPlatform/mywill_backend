@@ -7,6 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.permissions import IsAuthenticated
 from bs4 import BeautifulSoup
+from rest_framework.response import Response
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL
@@ -1164,7 +1165,7 @@ def confirm_protector_tokens(request):
 @api_view(http_method_names=['GET'])
 def get_test_tokens(request):
     tokens_serializer = ContractDetailsTokenSerializer(ContractDetailsToken.objects.filter(), many=True)
-    return JsonResponse(tokens_serializer.data)
+    return Response(tokens_serializer.data)
 
 
 @api_view(http_method_names=['GET'])
