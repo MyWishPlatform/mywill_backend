@@ -147,8 +147,11 @@ class ContractDetailsTokenProtector(CommonDetails):
                                        dest=self.eth_contract.address, contract_data=txn['data'][2:],
                                        gas_price=2000000000)
 
-        hash = w3.eth.sendRawTransaction('0x' + signed)
-        print('hash', hash, flush=True)
+        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        self.eth_contract.save()
+
+        # hash = w3.eth.sendRawTransaction('0x' + signed)
+        print('hash', self.eth_contract.tx_hash, flush=True)
 
         # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
         #     approved_token.is_confirmed = True
