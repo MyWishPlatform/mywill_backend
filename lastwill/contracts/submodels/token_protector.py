@@ -135,7 +135,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                                                              port=NETWORKS[self.contract.network.name]['port'])))
         contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-        tokens_to_confirm = list(ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))
+        # tokens_to_confirm = list(ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))
         txn = contract.functions.addTokenType(
             checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
             {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas':self.get_gaslimit()})
@@ -147,7 +147,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                                        dest=self.eth_contract.address, contract_data=txn['data'][2:],
                                        gas_price=2000000000)
 
-        hash = w3.eth.sendRawTransaction(signed)
+        hash = w3.eth.sendRawTransaction('0x' + signed)
         print('hash', hash, flush=True)
 
         # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
