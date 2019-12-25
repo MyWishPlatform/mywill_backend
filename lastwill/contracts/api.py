@@ -19,7 +19,7 @@ from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps, deploy_protector
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
@@ -1159,6 +1159,12 @@ def confirm_protector_tokens(request):
         return JsonResponse(ContractSerializer().to_representation(contract))
 
     raise PermissionDenied
+
+
+@api_view(http_method_names=['GET'])
+def get_test_tokens(request):
+    tokens_serializer = ContractDetailsTokenSerializer(ContractDetailsToken.objects.filter(), many=True)
+    return JsonResponse(tokens_serializer.data)
 
 
 @api_view(http_method_names=['GET'])
