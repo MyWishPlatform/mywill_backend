@@ -148,6 +148,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                                        gas_price=2000000000)
 
         hash = w3.eth.sendRawTransaction(signed)
+        print('hash', hash, flush=True)
 
         # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
         #     approved_token.is_confirmed = True
