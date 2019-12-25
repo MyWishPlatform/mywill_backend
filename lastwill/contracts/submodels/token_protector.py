@@ -141,6 +141,8 @@ class ContractDetailsTokenProtector(CommonDetails):
             checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
             {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas':self.get_gaslimit()})
 
+        print('txn', txn, flush=True)
+
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
