@@ -10,7 +10,6 @@ from web3 import Web3, HTTPProvider, IPCProvider
 import binascii
 
 
-
 @contract_details('Token protector contract')
 class ContractDetailsTokenProtector(CommonDetails):
     owner_address = models.CharField(max_length=50)
@@ -52,7 +51,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         return int(25 * NET_DECIMALS['USDT'])
-
 
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN_PROTECTOR']
@@ -130,25 +128,33 @@ class ContractDetailsTokenProtector(CommonDetails):
         approved_token = ApprovedToken(contract=self, address=message['address'])
         approved_token.save()
 
-
     def confirm_tokens(self):
         w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
                                                              port=NETWORKS[self.contract.network.name]['port'])))
         contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-        # tokens_to_confirm = list(ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))
-        txn = contract.functions.addTokenType(
-            checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
-            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas':self.get_gaslimit()})
+        tokens_to_confirm = list(map(checksum_encode, list(
+            ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
+
+        tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
+                             checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+
+        # txn = contract.functions.addTokenType(
+        #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
+        #     {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+
+        txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
+            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
 
         print('txn', txn, flush=True)
 
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
-        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000, self.contract.network.name, value=0,
-                                       dest=self.eth_contract.address, contract_data=txn['data'][2:],
-                                       gas_price=2000000000)
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                  self.contract.network.name, value=0,
+                                  dest=self.eth_contract.address, contract_data=txn['data'][2:],
+                                  gas_price=2000000000)
 
         print('signed', signed, flush=True)
 
@@ -161,9 +167,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     approved_token.is_confirmed = True
         #     approved_token.save()
 
-
-
-
     def finalized(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
@@ -173,10 +176,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.save()
 
 
-
 class ApprovedToken(models.Model):
-    contract = models.ForeignKey(ContractDetailsTokenProtector, related_name='tokens',on_delete=models.CASCADE)
+    contract = models.ForeignKey(ContractDetailsTokenProtector, related_name='tokens', on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     is_confirmed = models.BooleanField(default=False)
-
-
