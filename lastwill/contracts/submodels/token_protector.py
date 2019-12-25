@@ -148,9 +148,9 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         hash = w3.eth.sendRawTransaction(signed)
 
-        for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
-            approved_token.is_confirmed = True
-            approved_token.save()
+        # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
+        #     approved_token.is_confirmed = True
+        #     approved_token.save()
 
 
 
