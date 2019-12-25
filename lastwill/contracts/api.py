@@ -24,6 +24,7 @@ from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddress
 from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
+from django.db.models import Q
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
@@ -1164,7 +1165,21 @@ def confirm_protector_tokens(request):
 
 @api_view(http_method_names=['GET'])
 def get_test_tokens(request):
-    tokens_serializer = ContractDetailsTokenSerializer(ContractDetailsToken.objects.filter(), many=True)
+    tokens_serializer = ContractDetailsTokenSerializer(ContractDetailsToken.objects.filter(~Q(eth_contract_token = None)), many=True)
+    for token in tokens_serializer.data:
+        token['platform'] = 'ethereum'
+        token.pop('admin_address')
+        token.pop('decimals')
+        token.pop('token_type')
+        token.pop('future_minting')
+        token.pop('authio')
+        token.pop('authio_email')
+        token.pop('authio_date_payment')
+        token.pop('authio_date_getting')
+        token.pop('token_holders')
+        token['address'] = token['eth_contract_token']['address']
+        token.pop('eth_contract_token')
+
     return Response(tokens_serializer.data)
 
 
