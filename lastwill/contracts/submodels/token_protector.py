@@ -135,7 +135,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                                                              port=NETWORKS[self.contract.network.name]['port'])))
         contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-        # tokens_to_confirm = list(ApprovedToken.objects.filter(contract=self).values_list('address', flat=True))
+        tokens_to_confirm = list(ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))
         txn = contract.functions.addTokenType(
             checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
             {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas':self.get_gaslimit()})
@@ -147,6 +147,10 @@ class ContractDetailsTokenProtector(CommonDetails):
                                        gas_price=2000000000)
 
         hash = w3.eth.sendRawTransaction(signed)
+
+        for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
+            approved_token.is_confirmed = True
+            approved_token.save()
 
 
 
@@ -164,5 +168,6 @@ class ContractDetailsTokenProtector(CommonDetails):
 class ApprovedToken(models.Model):
     contract = models.ForeignKey(ContractDetailsTokenProtector, related_name='tokens',on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
+    is_confirmed = models.BooleanField(default=False)
 
 
