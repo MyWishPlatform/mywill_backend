@@ -167,6 +167,16 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     approved_token.is_confirmed = True
         #     approved_token.save()
 
+    def add_confirm_status(self, message):
+        approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
+        if approved_token:
+            approved_token.is_confirmed = True
+
+        for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False, address__in=message['tokens']):
+            approved_token.is_confirmed = True
+            approved_token.save()
+
+
     def finalized(self, message):
         self.contract.state = 'DONE'
         self.contract.save()

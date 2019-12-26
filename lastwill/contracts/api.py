@@ -1124,6 +1124,7 @@ def confirm_swaps_info(request):
 
 @api_view(http_method_names=['POST'])
 def confirm_protector_info(request):
+    print('protector confirm', flush=True)
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     print(contract.__dict__, flush=True)
     host = request.META['HTTP_HOST']
@@ -1148,6 +1149,7 @@ def confirm_protector_info(request):
     contract.state = 'WAITING_FOR_PAYMENT'
     contract.save()
     autodeploing(contract.user.id, 5)
+    print('protector confirm ok', flush=True)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 

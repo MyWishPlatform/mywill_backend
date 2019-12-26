@@ -319,7 +319,10 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
 
         res['approved_tokens'] = []
         for token in ApprovedToken.objects.filter(contract=contract_details):
-            res['approved_tokens'].append(token.address)
+            res['approved_tokens'].append({
+                'address': token.address,
+                'is_confirmed': token.is_confirmed
+            })
 
         return res
 
