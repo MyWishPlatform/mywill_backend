@@ -111,7 +111,9 @@ def deploy_protector(contract_id):
             contract.state = 'WAITING_FOR_DEPLOYMENT'
             contract.save()
             queue = NETWORKS[contract.network.name]['queue']
+            print('check1', flush=True)
             send_in_queue(contract.id, 'launch', queue)
+        print('check2', flush=True)
     return True
 
 

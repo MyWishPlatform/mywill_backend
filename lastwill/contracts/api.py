@@ -1084,6 +1084,7 @@ def autodeploing(user_id, subsite_id):
             if subsite_id == 5:
                 deploy_protector(contract.id)
         bb.refresh_from_db()
+        print('check3', flush=True)
     return True
 
 def protector_autodeploing(user_id):
