@@ -55,7 +55,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN_PROTECTOR']
 
-    @blocking
+    # @blocking
     @postponable
     def deploy(self):
         super().deploy()
