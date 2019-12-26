@@ -1163,6 +1163,8 @@ def confirm_protector_tokens(request):
     contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user, contract_type=23).first()
     if contract:
         protector_contract = ContractDetailsTokenProtector(contract=contract)
+        print('protector', protector_contract.__dict__, flush=True)
+        print('protector', protector_contract.eth_contract.__dict__, flush=True)
         protector_contract.confirm_tokens()
 
         return JsonResponse(ContractSerializer().to_representation(contract))
