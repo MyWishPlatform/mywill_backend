@@ -135,7 +135,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         approved_token.save()
 
     def confirm_tokens(self):
-        try:
+        # try:
             w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
                                                                  port=NETWORKS[self.contract.network.name]['port'])))
             contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
@@ -175,9 +175,9 @@ class ContractDetailsTokenProtector(CommonDetails):
             #     approved_token.save()
             self.contract.state = 'WAITING_FOR_CONFIRM'
             self.contract.save()
-        except:
-            self.contract.state = 'FAIL_IN_CONFIRM'
-            self.contract.save()
+        # except:
+        #     self.contract.state = 'FAIL_IN_CONFIRM'
+        #     self.contract.save()
 
     def add_confirm_status(self, message):
         approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
