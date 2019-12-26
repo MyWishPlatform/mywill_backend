@@ -34,6 +34,12 @@ class ContractDetailsTokenProtector(CommonDetails):
         # self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         # self.save()
 
+        take_off_blocking(self.contract.network.name)
+        self.eth_contract.address = message['address']
+        self.eth_contract.save()
+        self.contract.state = 'WAITING_FOR_APPROVE'
+        self.contract.save()
+
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
@@ -129,43 +135,49 @@ class ContractDetailsTokenProtector(CommonDetails):
         approved_token.save()
 
     def confirm_tokens(self):
-        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                             port=NETWORKS[self.contract.network.name]['port'])))
-        contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+        try:
+            w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                                 port=NETWORKS[self.contract.network.name]['port'])))
+            contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-        tokens_to_confirm = list(map(checksum_encode, list(
-            ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
+            tokens_to_confirm = list(map(checksum_encode, list(
+                ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
 
-        tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-                             checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+            tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
+                                 checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
 
-        # txn = contract.functions.addTokenType(
-        #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
-        #     {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+            # txn = contract.functions.addTokenType(
+            #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
+            #     {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
 
-        txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
-            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+            txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
+                {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
 
-        print('txn', txn, flush=True)
+            print('txn', txn, flush=True)
 
-        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-        nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
+            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+            nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
-        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                  self.contract.network.name, value=0,
-                                  dest=self.eth_contract.address, contract_data=txn['data'][2:],
-                                  gas_price=2000000000)
+            signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                      self.contract.network.name, value=0,
+                                      dest=self.eth_contract.address, contract_data=txn['data'][2:],
+                                      gas_price=2000000000)
 
-        print('signed', signed, flush=True)
+            print('signed', signed, flush=True)
 
-        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+            tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
 
-        # hash = w3.eth.sendRawTransaction('0x' + signed)
-        print('hash', tx_hash, flush=True)
+            # hash = w3.eth.sendRawTransaction('0x' + signed)
+            print('hash', tx_hash, flush=True)
 
-        # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
-        #     approved_token.is_confirmed = True
-        #     approved_token.save()
+            # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
+            #     approved_token.is_confirmed = True
+            #     approved_token.save()
+            self.contract.state = 'WAITING_FOR_CONFIRM'
+            self.contract.save()
+        except:
+            self.contract.state = 'FAIL_IN_CONFIRM'
+            self.contract.save()
 
     def add_confirm_status(self, message):
         approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
@@ -175,6 +187,9 @@ class ContractDetailsTokenProtector(CommonDetails):
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False, address__in=message['tokens']):
             approved_token.is_confirmed = True
             approved_token.save()
+
+        self.contract.state = 'ACTIVE'
+        self.contract.save()
 
 
     def finalized(self, message):
