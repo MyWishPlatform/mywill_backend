@@ -1072,6 +1072,7 @@ def autodeploing(user_id, subsite_id):
         contract_type = 23
     contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
     for contract in contracts:
+        print('check5', flush=True)
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
         kwargs = ContractSerializer().get_details_serializer(
@@ -1085,6 +1086,7 @@ def autodeploing(user_id, subsite_id):
                 deploy_protector(contract.id)
         bb.refresh_from_db()
         print('check3', flush=True)
+    print('check4', flush=True)
     return True
 
 def protector_autodeploing(user_id):
