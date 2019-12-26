@@ -87,7 +87,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         }}
 
         print('params for testing', preproc_params, flush=True)
-        # self.test_protector_params(preproc_config, preproc_params, dest)
+        self.test_protector_params(preproc_config, preproc_params, dest)
 
         preproc_params["constants"]["D_OWNER_ADDRESS"] = checksum_encode(self.owner_address)
         preproc_params["constants"]["D_RESERVE_ADDRESS"] = checksum_encode(self.reserve_address)
