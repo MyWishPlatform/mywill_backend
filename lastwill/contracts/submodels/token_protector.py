@@ -143,8 +143,8 @@ class ContractDetailsTokenProtector(CommonDetails):
             tokens_to_confirm = list(map(checksum_encode, list(
                 ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
 
-            tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-                                 checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+            # tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
+            #                      checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
 
             # txn = contract.functions.addTokenType(
             #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
@@ -192,9 +192,28 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.save()
 
     def execute_contract(self):
-        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                             port=NETWORKS[self.contract.network.name]['port'])))
-        contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+        try:
+            w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                                 port=NETWORKS[self.contract.network.name]['port'])))
+            contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+
+            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+            nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
+
+            signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                      self.contract.network.name, value=0,
+                                      dest=self.eth_contract.address, contract_data=None,
+                                      gas_price=2000000000)
+
+            print('signed', signed, flush=True)
+
+            tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+            print('hash', tx_hash, flush=True)
+            self.contract.state = 'DONE'
+            self.contract.save()
+        except:
+            self.contract.state = 'FAILED'
+            self.contract.save()
 
 
     def finalized(self, message):
