@@ -131,7 +131,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     @check_transaction
     def TokenProtectorApprove(self, message):
-        approved_token = ApprovedToken(contract=self, address=message['address'])
+        approved_token = ApprovedToken(contract=self, address=message['tokenAddress'])
         approved_token.save()
 
     def confirm_tokens(self):
