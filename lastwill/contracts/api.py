@@ -1159,7 +1159,8 @@ def confirm_protector_info(request):
 @api_view(http_method_names=['POST'])
 def confirm_protector_tokens(request):
     print('data', request.data, flush=True)
-    contract = Contract.objects.filter(id=request.data['contract_id'], user=request.user, contract_type=23).first()
+    print('data type', type(request.data), flush=True)
+    contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user, contract_type=23).first()
     if contract:
         protector_contract = ContractDetailsTokenProtector(contract=contract)
         protector_contract.confirm_tokens()
