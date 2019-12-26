@@ -55,7 +55,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN_PROTECTOR']
 
-    # @blocking
+    @blocking
     @postponable
     def deploy(self):
         super().deploy()
@@ -74,8 +74,8 @@ class ContractDetailsTokenProtector(CommonDetails):
         )
 
         preproc_params = {'constants': {
-            "D_OWNER_ADDRESS": checksum_encode("0xf17f52151EbEF6C7334FAD080c5704D77216b732"),
-            "D_RESERVE_ADDRESS": checksum_encode("0xf17f52151EbEF6C7334FAD080c5704D77216b732"),
+            "D_OWNER_ADDRESS": checksum_encode(self.owner_address),
+            "D_RESERVE_ADDRESS": checksum_encode(self.reserve_address),
             "D_BACKEND_ADDRESS": checksum_encode(NETWORKS[self.contract.network.name]['address']),
             "D_END_TIMESTAMP": self.end_timestamp
         }}
