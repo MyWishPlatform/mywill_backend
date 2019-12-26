@@ -191,6 +191,11 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.save()
 
+    def execute_contract(self):
+        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+
 
     def finalized(self, message):
         self.contract.state = 'DONE'
