@@ -343,7 +343,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
             raise ValidationError
         check.is_address(contract_details['owner_address'])
         check.is_address(contract_details['reserve_address'])
-        if contract_details['end_timestamp'] < datetime.datetime.now().timestamp() + 5 * 60:
+        if contract_details['end_timestamp'] < timezone.now().timestamp() + 5 * 60:
             raise ValidationError
 
         return contract_details

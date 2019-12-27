@@ -30,7 +30,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        super().msg_deployed(message)
+        # super().msg_deployed(message)
         # self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         # self.save()
 
@@ -87,17 +87,17 @@ class ContractDetailsTokenProtector(CommonDetails):
         }}
 
         print('params for testing', preproc_params, flush=True)
-        self.test_protector_params(preproc_config, preproc_params, dest)
+        self.compile_and_test(preproc_config, preproc_params, dest)
 
-        preproc_params["constants"]["D_OWNER_ADDRESS"] = checksum_encode(self.owner_address)
-        preproc_params["constants"]["D_RESERVE_ADDRESS"] = checksum_encode(self.reserve_address)
+        # preproc_params["constants"]["D_OWNER_ADDRESS"] = checksum_encode(self.owner_address)
+        # preproc_params["constants"]["D_RESERVE_ADDRESS"] = checksum_encode(self.reserve_address)
+        #
+        # print('params', preproc_params, flush=True)
 
-        print('params', preproc_params, flush=True)
-
-        with open(preproc_config, 'w') as f:
-            f.write(json.dumps(preproc_params))
-        if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
-            raise Exception('compiler error while deploying')
+        # with open(preproc_config, 'w') as f:
+        #     f.write(json.dumps(preproc_params))
+        # if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
+        #     raise Exception('compiler error while deploying')
 
         with open(path.join(dest, 'build/contracts/TokenSaver.json'), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
@@ -115,7 +115,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.eth_contract = eth_contract
         self.save()
 
-    def test_protector_params(self, config, params, dest):
+    def compile_and_test(self, config, params, dest):
         with open(config, 'w') as f:
             f.write(json.dumps(params))
         if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(
@@ -138,7 +138,7 @@ class ContractDetailsTokenProtector(CommonDetails):
             print('already approved', flush=True)
 
     def confirm_tokens(self):
-        try:
+        # try:
             w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
                                                                  port=NETWORKS[self.contract.network.name]['port'])))
             contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
@@ -146,8 +146,10 @@ class ContractDetailsTokenProtector(CommonDetails):
             tokens_to_confirm = list(map(checksum_encode, list(
                 ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
 
-            tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-                                 checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+            print('tokens to confirm', tokens_to_confirm, flush=True)
+
+            # tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
+            #                      checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
 
             # txn = contract.functions.addTokenType(
             #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
@@ -176,12 +178,13 @@ class ContractDetailsTokenProtector(CommonDetails):
             # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
             #     approved_token.is_confirmed = True
             #     approved_token.save()
+
             # self.contract.state = 'WAITING_FOR_CONFIRM'
             self.contract.state = 'ACTIVE'
             self.contract.save()
-        except:
-            self.contract.state = 'FAIL_IN_CONFIRM'
-            self.contract.save()
+        # except:
+        #     self.contract.state = 'FAIL_IN_CONFIRM'
+        #     self.contract.save()
 
     def add_confirm_status(self, message):
         approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
