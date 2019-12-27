@@ -28,7 +28,8 @@ from lastwill.contracts.models import (
         ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
         ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
         ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2
+        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2,
+        ContractDetailsTokenProtector, ApprovedToken
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -91,6 +92,28 @@ def deploy_swaps(contract_id):
             contract.save()
             queue = NETWORKS[contract.network.name]['queue']
             send_in_queue(contract.id, 'launch', queue)
+    return True
+
+def deploy_protector(contract_id):
+    contract = Contract.objects.get(id=contract_id)
+    if contract.state == 'WAITING_FOR_PAYMENT':
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        kwargs = ContractSerializer().get_details_serializer(
+            contract.contract_type
+        )().to_representation(contract_details)
+        cost = contract_details.calc_cost(kwargs, contract.network)
+        site_id = 5
+        currency = 'USDT'
+        user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=5)
+        if user_info.balance >= cost or int(user_info.balance) * 0.95 >= cost:
+            create_payment(contract.user.id, '', currency, -cost, site_id, 'ETHEREUM_MAINNET')
+            contract.state = 'WAITING_FOR_DEPLOYMENT'
+            contract.save()
+            queue = NETWORKS[contract.network.name]['queue']
+            print('check1', flush=True)
+            send_in_queue(contract.id, 'launch', queue)
+        print('check2', flush=True)
     return True
 
 
@@ -219,7 +242,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if contract.network.name == 'TRON_TESTNET':
             res['cost']['TRX'] = 0
             res['cost']['TRONISH'] = 0
-        if contract.contract_type == 20:
+        if contract.contract_type == 20 or contract.contract_type == 23:
             cost = Contract.get_details_model(
                 contract.contract_type
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
@@ -231,6 +254,7 @@ class ContractSerializer(serializers.ModelSerializer):
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
+
         return res
 
     def update(self, contract, validated_data):
@@ -279,8 +303,52 @@ class ContractSerializer(serializers.ModelSerializer):
             19: ContractDetailsLostKeyTokensSerializer,
             20: ContractDetailsSWAPSSerializer,
             22: ContractDetailsSTOSerializer,
-            21: ContractDetailsSWAPS2Serializer
+            21: ContractDetailsSWAPS2Serializer,
+            23: TokenProtectorSerializer
         }[contract_type]
+
+
+class TokenProtectorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsTokenProtector
+        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email']
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+
+        res['approved_tokens'] = []
+        for token in ApprovedToken.objects.filter(contract=contract_details):
+            res['approved_tokens'].append({
+                'address': token.address,
+                'is_confirmed': token.is_confirmed
+            })
+
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+    def validate(self, contract_details):
+        if 'owner_address' not in contract_details or 'reserve_address' not in contract_details or 'end_timestamp' not in contract_details:
+            raise ValidationError
+        check.is_address(contract_details['owner_address'])
+        check.is_address(contract_details['reserve_address'])
+        if contract_details['end_timestamp'] < timezone.now().timestamp() + 5 * 60:
+            raise ValidationError
+
+        return contract_details
+
+
 
 
 class EthContractSerializer(serializers.ModelSerializer):

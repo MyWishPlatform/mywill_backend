@@ -17,7 +17,7 @@ import email_messages
 def check_all():
     print('check_all method', flush=True)
     for contract in Contract.objects.filter(
-            contract_type__in=(0, 1, 2, 18, 19), state='ACTIVE'
+            contract_type__in=(0, 1, 2, 18, 19, 23), state='ACTIVE'
     ):
         print('contract_id=', contract.id, flush=True)
         details = contract.get_details()
@@ -26,6 +26,9 @@ def check_all():
             # if details.date < timezone.now():
             #     send_in_pika(contract)
             pass
+        if contract.contract_type == 23:
+            if details.end_timestamp > timezone.now().timestamp():
+                details.execute_contract()
         else:
             if details.active_to < timezone.now():
                 contract.state='EXPIRED'

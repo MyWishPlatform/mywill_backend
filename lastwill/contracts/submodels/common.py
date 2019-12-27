@@ -340,6 +340,7 @@ class Contract(models.Model):
         swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
         waves = apps.get_model('contracts', 'ContractDetailsWavesSTO')
         swap2 = apps.get_model('contracts', 'ContractDetailsSWAPS2')
+        token_protector = apps.get_model('contracts', 'ContractDetailsTokenProtector')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -365,6 +366,8 @@ class Contract(models.Model):
         contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
         contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
         contract_details_types[21] = {'name': 'SWAPS Contract', 'model': swap2}
+        contract_details_types[23] = {'name': 'Token protector contract', 'model': token_protector}
+
         return contract_details_types
 
     @classmethod
@@ -443,9 +446,21 @@ class CommonDetails(models.Model):
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce, flush=True)
+        # print('BYTECODE', eth_contract.bytecode, flush=True)
+        # print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')
+        print('data =', data)
+        # if arguments:
+        #     data = eth_contract.bytecode + (binascii.hexlify(
+        #         tr.encode_constructor_arguments(arguments)
+        #     ).decode())
+        # else:
+        #     data = eth_contract.bytecode
+
+        print('DATA', data, flush=True)
+
         gas_price = 41 * 10 ** 9
         signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
@@ -457,6 +472,7 @@ class CommonDetails(models.Model):
         print('gas limit', self.get_gaslimit(), flush=True)
         print('value', self.get_value(), flush=True)
         print('network', self.contract.network.name, flush=True)
+        print('signed_data', signed_data, flush=True)
         eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
         )

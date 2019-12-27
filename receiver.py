@@ -66,8 +66,8 @@ class Receiver(threading.Thread):
         print('message["amount"]', message['amount'])
         print('payment ok', flush=True)
         create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'], message['siteId'])
-        if message['siteId'] == 4:
-            autodeploing(message['userId'])
+        if message['siteId'] in [4, 5]:
+            autodeploing(message['userId'], message['siteId'])
 
 
     def deployed(self, message):
@@ -129,6 +129,18 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         contract.get_details().triggered(message)
         print('triggered ok', flush=True)
+
+    def TokenProtectorApprove(self, message):
+        print('approved message', flush=True)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().TokenProtectorApprove(message)
+        print('approved ok', flush=True)
+
+    def TokenProtectorTokensToSave(self, message):
+        print('confirm message', flush=True)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().TokenProtectorTokensToSave(message)
+        print('confirmed ok', flush=True)
 
     def launch(self, message):
         print('launch message', flush=True)
