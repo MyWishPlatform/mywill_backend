@@ -5,7 +5,7 @@ import string
 import random
 import uuid
 from ethereum.abi import method_id as m_id
-from rlp.utils import int_to_big_endian
+from eth_utils import int_to_big_endian
 
 from django.db import transaction
 from django.core.mail import send_mail, get_connection, EmailMessage
