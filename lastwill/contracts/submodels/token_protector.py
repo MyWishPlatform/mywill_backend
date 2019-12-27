@@ -148,8 +148,8 @@ class ContractDetailsTokenProtector(CommonDetails):
 
             print('tokens to confirm', tokens_to_confirm, flush=True)
 
-            # tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-            #                      checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+            tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
+                                 checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
 
             # txn = contract.functions.addTokenType(
             #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
@@ -187,11 +187,15 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     self.contract.save()
 
     def add_confirm_status(self, message):
-        approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
-        if approved_token:
-            approved_token.is_confirmed = True
+        # approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
+        # if approved_token:
+        #     approved_token.is_confirmed = True
+        #
+        # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False, address__in=message['tokens']):
+        #     approved_token.is_confirmed = True
+        #     approved_token.save()
 
-        for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False, address__in=message['tokens']):
+        for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
             approved_token.is_confirmed = True
             approved_token.save()
 
