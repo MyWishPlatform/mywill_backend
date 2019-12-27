@@ -136,6 +136,12 @@ class Receiver(threading.Thread):
         contract.get_details().TokenProtectorApprove(message)
         print('approved ok', flush=True)
 
+    def TokenProtectorTokensToSave(self, message):
+        print('confirm message', flush=True)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().TokenProtectorTokensToSave(message)
+        print('confirmed ok', flush=True)
+
     def launch(self, message):
         print('launch message', flush=True)
         try:

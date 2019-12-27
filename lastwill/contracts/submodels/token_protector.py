@@ -179,14 +179,14 @@ class ContractDetailsTokenProtector(CommonDetails):
             #     approved_token.is_confirmed = True
             #     approved_token.save()
 
-            # self.contract.state = 'WAITING_FOR_CONFIRM'
-            self.contract.state = 'ACTIVE'
+            self.contract.state = 'WAITING_FOR_CONFIRM'
+            # self.contract.state = 'ACTIVE'
             self.contract.save()
         # except:
         #     self.contract.state = 'FAIL_IN_CONFIRM'
         #     self.contract.save()
 
-    def add_confirm_status(self, message):
+    def TokenProtectorTokensToSave(self, message):
         # approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
         # if approved_token:
         #     approved_token.is_confirmed = True
