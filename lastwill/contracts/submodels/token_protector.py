@@ -4,7 +4,6 @@ from rest_framework.exceptions import ValidationError
 import datetime
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from django.db import models
-from lastwill.settings import D_BACKEND_ADDRESS
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
 import binascii
