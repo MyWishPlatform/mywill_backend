@@ -148,8 +148,8 @@ class ContractDetailsTokenProtector(CommonDetails):
 
             print('tokens to confirm', tokens_to_confirm, flush=True)
 
-            tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-                                 checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+            # tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
+            #                      checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
 
             # txn = contract.functions.addTokenType(
             #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
