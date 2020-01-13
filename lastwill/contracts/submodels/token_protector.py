@@ -226,7 +226,7 @@ class ContractDetailsTokenProtector(CommonDetails):
             self.contract.state = 'FAILED'
             self.contract.save()
 
-    def TokenProtectorTransacionInfo(self):
+    def TokenProtectorTransactionInfo(self):
         self.contract.state = 'DONE'
         self.contract.save()
 
