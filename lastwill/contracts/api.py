@@ -1070,22 +1070,22 @@ def autodeploing(user_id, subsite_id):
     else:
         # subsite_id == 5:
         contract_type = 23
-    contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
-    for contract in contracts:
-        print('check5', flush=True)
-        contract_details = contract.get_details()
-        contract_details.predeploy_validate()
-        kwargs = ContractSerializer().get_details_serializer(
-            contract.contract_type
-        )().to_representation(contract_details)
-        cost = contract_details.calc_cost_usdt(kwargs, contract.network)
-        if bb.balance >= cost or bb.balance >= cost * 0.95:
-            if subsite_id == 4:
-                deploy_swaps(contract.id)
-            if subsite_id == 5:
-                deploy_protector(contract.id)
-        bb.refresh_from_db()
-        print('check3', flush=True)
+    contract = Contract.objects.filter(user__id=user_id, contract_type=contract_type, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date').first()
+    # for contract in contracts:
+    print('check5', flush=True)
+    contract_details = contract.get_details()
+    contract_details.predeploy_validate()
+    kwargs = ContractSerializer().get_details_serializer(
+        contract.contract_type
+    )().to_representation(contract_details)
+    cost = contract_details.calc_cost_usdt(kwargs, contract.network)
+    if bb.balance >= cost or bb.balance >= cost * 0.95:
+        if subsite_id == 4:
+            deploy_swaps(contract.id)
+        if subsite_id == 5:
+            deploy_protector(contract.id)
+    bb.refresh_from_db()
+    print('check3', flush=True)
     print('check4', flush=True)
     return True
 
