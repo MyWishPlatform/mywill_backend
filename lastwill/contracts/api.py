@@ -8,6 +8,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.permissions import IsAuthenticated
 from bs4 import BeautifulSoup
 from rest_framework.response import Response
+from collections import OrderedDict
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL
@@ -1192,24 +1193,24 @@ def get_test_tokens(request):
         token.pop('eth_contract_token')
 
     token_list = tokens_serializer.data
-    print('type', type(token_list), flush=True)
-    print(token_list, flush=True)
+    # print('type', type(token_list), flush=True)
+    # print(token_list, flush=True)
 
-    tokens_serializer.data.append({
+    token_list.append(OrderedDict({
         'token_name': 'OMST',
         'token_short_name': 'OMST',
         'platform': 'ethereum',
         'address': '0xa0379b1ac68027a76373adc7800d87eb5c3fac5e'
-    })
+    }))
 
-    tokens_serializer.data.append({
+    token_list.append(OrderedDict({
         'token_name': 'DAPS',
         'token_short_name': 'DAPS',
         'platform': 'ethereum',
         'address': '0x16e00ca19a4025405a4d9a1ceb92c945583d7c0d'
-    })
+    }))
 
-    return Response(tokens_serializer.data)
+    return Response(token_list)
 
 
 @api_view(http_method_names=['GET'])
