@@ -1191,6 +1191,10 @@ def get_test_tokens(request):
         token['address'] = token['eth_contract_token']['address']
         token.pop('eth_contract_token')
 
+    token_list = tokens_serializer.data
+    print('type', type(token_list), flush=True)
+    print(token_list, flush=True)
+
     tokens_serializer.data.append({
         'token_name': 'OMST',
         'token_short_name': 'OMST',
