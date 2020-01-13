@@ -220,20 +220,23 @@ class ContractDetailsTokenProtector(CommonDetails):
 
             tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
             print('hash', tx_hash, flush=True)
-            self.contract.state = 'DONE'
-            self.contract.save()
+            # self.contract.state = 'DONE'
+            # self.contract.save()
         except:
             self.contract.state = 'FAILED'
             self.contract.save()
 
-
-    def finalized(self, message):
+    def TokenProtectorTransacionInfo(self):
         self.contract.state = 'DONE'
         self.contract.save()
 
-    def cancelled(self, message):
-        self.contract.state = 'CANCELLED'
-        self.contract.save()
+    # def finalized(self, message):
+    #     self.contract.state = 'DONE'
+    #     self.contract.save()
+
+    # def cancelled(self, message):
+    #     self.contract.state = 'CANCELLED'
+    #     self.contract.save()
 
 
 class ApprovedToken(models.Model):

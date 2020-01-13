@@ -142,6 +142,12 @@ class Receiver(threading.Thread):
         contract.get_details().TokenProtectorTokensToSave(message)
         print('confirmed ok', flush=True)
 
+    def TokenProtectorTransacionInfo(self, message):
+        print('contract execution message', flush=True)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().TokenProtectorTransacionInfo(message)
+        print('executed ok', flush=True)
+
     def launch(self, message):
         print('launch message', flush=True)
         try:
