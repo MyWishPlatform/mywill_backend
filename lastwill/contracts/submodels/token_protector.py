@@ -30,10 +30,6 @@ class ContractDetailsTokenProtector(CommonDetails):
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        # super().msg_deployed(message)
-        # self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
-        # self.save()
-
         take_off_blocking(self.contract.network.name)
         self.eth_contract.address = message['address']
         self.eth_contract.save()
@@ -89,16 +85,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         print('params for testing', preproc_params, flush=True)
         self.compile_and_test(preproc_config, preproc_params, dest)
 
-        # preproc_params["constants"]["D_OWNER_ADDRESS"] = checksum_encode(self.owner_address)
-        # preproc_params["constants"]["D_RESERVE_ADDRESS"] = checksum_encode(self.reserve_address)
-        #
-        # print('params', preproc_params, flush=True)
-
-        # with open(preproc_config, 'w') as f:
-        #     f.write(json.dumps(preproc_params))
-        # if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
-        #     raise Exception('compiler error while deploying')
-
         with open(path.join(dest, 'build/contracts/TokenSaver.json'), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'contracts/TokenSaver.sol'), 'rb') as f:
@@ -153,13 +139,6 @@ class ContractDetailsTokenProtector(CommonDetails):
 
             print('tokens to confirm', tokens_to_confirm, flush=True)
 
-            # tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-            #                      checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
-
-            # txn = contract.functions.addTokenType(
-            #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
-            #     {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
-
             txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
                 {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
 
@@ -177,15 +156,9 @@ class ContractDetailsTokenProtector(CommonDetails):
 
             tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
 
-            # hash = w3.eth.sendRawTransaction('0x' + signed)
             print('hash', tx_hash, flush=True)
 
-            # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
-            #     approved_token.is_confirmed = True
-            #     approved_token.save()
-
             self.contract.state = 'WAITING_FOR_CONFIRM'
-            # self.contract.state = 'ACTIVE'
             self.contract.save()
         # except:
         #     self.contract.state = 'FAIL_IN_CONFIRM'
@@ -226,11 +199,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'DONE'
         self.contract.save()
 
-    # def finalized(self, message):
-    #     self.contract.state = 'DONE'
-    #     self.contract.save()
-
-    def cancelled(self, message):
+    def Selfdestruction(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
 

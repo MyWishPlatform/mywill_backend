@@ -148,6 +148,12 @@ class Receiver(threading.Thread):
         contract.get_details().TokenProtectorTransactionInfo(message)
         print('executed ok', flush=True)
 
+    def Selfdestruction(self, message):
+        print('contract destruct message', flush=True)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().Selfdestruction(message)
+        print('destructed ok', flush=True)
+
     def launch(self, message):
         print('launch message', flush=True)
         try:
