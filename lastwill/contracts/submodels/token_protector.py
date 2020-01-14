@@ -131,11 +131,16 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     @check_transaction
     def TokenProtectorApprove(self, message):
-        if not ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first():
-            approved_token = ApprovedToken(contract=self, address=message['tokenAddress'])
-            approved_token.save()
+        if int(message['tokens']) > 0:
+            if not ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first():
+                approved_token = ApprovedToken(contract=self, address=message['tokenAddress'])
+                approved_token.save()
+            else:
+                print('already approved', flush=True)
         else:
-            print('already approved', flush=True)
+            disapproved_token = ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first()
+            if disapproved_token:
+                disapproved_token.delete()
 
     def confirm_tokens(self):
         # try:
@@ -187,7 +192,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     self.contract.save()
 
     def TokenProtectorTokensToSave(self, message):
-
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
             approved_token.is_confirmed = True
             approved_token.save()
@@ -226,9 +230,9 @@ class ContractDetailsTokenProtector(CommonDetails):
     #     self.contract.state = 'DONE'
     #     self.contract.save()
 
-    # def cancelled(self, message):
-    #     self.contract.state = 'CANCELLED'
-    #     self.contract.save()
+    def cancelled(self, message):
+        self.contract.state = 'CANCELLED'
+        self.contract.save()
 
 
 class ApprovedToken(models.Model):
