@@ -31,12 +31,15 @@ def check_all():
             if details.end_timestamp > timezone.now().timestamp():
                 details.execute_contract()
         else:
-            if details.active_to < timezone.now():
-                contract.state='EXPIRED'
-                contract.save()
-            elif details.next_check and details.next_check <= timezone.now():
-                send_in_pika(contract)
-            send_reminders(contract)
+            try:
+                if details.active_to < timezone.now():
+                    contract.state='EXPIRED'
+                    contract.save()
+                elif details.next_check and details.next_check <= timezone.now():
+                    send_in_pika(contract)
+                send_reminders(contract)
+            except:
+                print('fail', flush=True)
     print('checked all', flush=True)
 
 

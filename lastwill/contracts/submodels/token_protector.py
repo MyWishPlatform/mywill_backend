@@ -187,13 +187,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         #     self.contract.save()
 
     def TokenProtectorTokensToSave(self, message):
-        # approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
-        # if approved_token:
-        #     approved_token.is_confirmed = True
-        #
-        # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False, address__in=message['tokens']):
-        #     approved_token.is_confirmed = True
-        #     approved_token.save()
 
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
             approved_token.is_confirmed = True
@@ -220,13 +213,12 @@ class ContractDetailsTokenProtector(CommonDetails):
 
             tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
             print('hash', tx_hash, flush=True)
-            # self.contract.state = 'DONE'
-            # self.contract.save()
+
         except:
             self.contract.state = 'FAILED'
             self.contract.save()
 
-    def TokenProtectorTransactionInfo(self):
+    def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
 
