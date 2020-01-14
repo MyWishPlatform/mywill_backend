@@ -199,7 +199,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'DONE'
         self.contract.save()
 
-    def Selfdestruction(self, message):
+    def SelfdestructionEvent(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
 
