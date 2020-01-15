@@ -29,7 +29,11 @@ def check_all():
             pass
         if contract.contract_type == 23:
             if details.end_timestamp < timezone.now().timestamp():
-                details.exeute_contract()
+                try:
+                    details.exeute_contract()
+                    print(contract.id, 'executed', flush=True)
+                except:
+                    print(contract.id, 'execution failed', flush=True)
         else:
             try:
                 if details.active_to < timezone.now():
