@@ -28,8 +28,8 @@ def check_all():
 
             pass
         if contract.contract_type == 23:
-            if details.end_timestamp > timezone.now().timestamp():
-                details.execute_contract()
+            if details.end_timestamp < timezone.now().timestamp():
+                details.exeute_contract()
         else:
             try:
                 if details.active_to < timezone.now():
