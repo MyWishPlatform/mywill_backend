@@ -318,6 +318,9 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
+        if contract_details.eth_contract:
+            if contract_details.eth_contract.compiler_version:
+                res['eth_contract']['compiler_version'] = '.'.join(res['eth_contract']['compiler_version'].split('.')[:4])
 
         res['approved_tokens'] = []
         for token in ApprovedToken.objects.filter(contract=contract_details):
