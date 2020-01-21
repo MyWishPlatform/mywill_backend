@@ -120,10 +120,10 @@ def freeze_payments(amount, network):
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             tronish=F('tronish') + int(value)
         )
-        # wish_value = amount * 0.10
-        # FreezeBalance.objects.select_for_update().filter(id=1).update(
-        #     wish=F('wish') + wish_value
-        # )
+        wish_value = amount * 0.10
+        FreezeBalance.objects.select_for_update().filter(id=1).update(
+            wish=F('wish') + wish_value
+        )
         print('FREEZE', int(value), 'TRONISH', flush=True)
         #print('FREEZE', wish_value, 'WISH', flush=True)
     #elif currency in ('BNB', 'BWISH'):
