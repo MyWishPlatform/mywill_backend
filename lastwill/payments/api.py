@@ -130,7 +130,7 @@ def freeze_payments(amount, network):
     else:
         value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + value
+            wish=F('bwish') + value
         )
         print('FREEZE', value, 'BWISH', flush=True)
     # if network == 'ETHEREUM_MAINNET':
