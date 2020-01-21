@@ -26,7 +26,7 @@ def check_all():
             # if details.date < timezone.now():
             #     send_in_pika(contract)
             pass
-        if contract.contract_type == 23:
+        elif contract.contract_type == 23:
             if details.end_timestamp > timezone.now().timestamp():
                 details.execute_contract()
         else:
