@@ -23,8 +23,8 @@ class ContractDetailsTokenProtector(CommonDetails):
     temp_directory = models.CharField(max_length=36)
 
     def predeploy_validate(self):
-        now = timezone.now().timestamp()
-        if self.end_timestamp < now:
+        # now = timezone.now().timestamp()
+        if self.end_timestamp < timezone.now().timestamp() + 30 * 60:
             raise ValidationError({'result': 1}, code=400)
 
     @postponable
@@ -173,10 +173,10 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.save()
 
     def execute_contract(self):
-        try:
+        # try:
             w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
                                                                  port=NETWORKS[self.contract.network.name]['port'])))
-            contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+            # contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
             eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
             nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
@@ -191,9 +191,9 @@ class ContractDetailsTokenProtector(CommonDetails):
             tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
             print('hash', tx_hash, flush=True)
 
-        except:
-            self.contract.state = 'FAILED'
-            self.contract.save()
+        # except:
+        #     self.contract.state = 'FAILED'
+        #     self.contract.save()
 
     def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
