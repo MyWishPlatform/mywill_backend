@@ -17,19 +17,19 @@ from rest_framework.exceptions import ValidationError
 import lastwill.check as check
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
-        Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
-        NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
-        ContractDetailsToken, ContractDetailsICO,
-        ContractDetailsAirdrop, AirdropAddress, TRONContract,
-        ContractDetailsLastwill, ContractDetailsLostKey,
-        ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-        InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
-        ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
-        ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
-        ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
-        ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-        ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2,
-        ContractDetailsTokenProtector, ApprovedToken
+    Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
+    NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    ContractDetailsToken, ContractDetailsICO,
+    ContractDetailsAirdrop, AirdropAddress, TRONContract,
+    ContractDetailsLastwill, ContractDetailsLostKey,
+    ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
+    InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
+    ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
+    ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
+    ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
+    ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
+    ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2,
+    ContractDetailsTokenProtector, ApprovedToken
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -52,14 +52,14 @@ def count_sold_tokens(address):
         int_to_big_endian(m_id('totalSupply', []))).decode()
     sold_tokens = eth_int.eth_call({'to': address,
                                     'data': method_sign,
-    })
+                                    })
     sold_tokens = '0x0' if sold_tokens == '0x' else sold_tokens
-    sold_tokens = int(sold_tokens, 16) / 10**contract.get_details().decimals
+    sold_tokens = int(sold_tokens, 16) / 10 ** contract.get_details().decimals
     return sold_tokens
 
 
 def sendEMail(sub, text, mail):
-    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server = smtplib.SMTP('smtp.yandex.ru', 587)
     server.starttls()
     server.ehlo()
     server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
@@ -93,6 +93,7 @@ def deploy_swaps(contract_id):
             queue = NETWORKS[contract.network.name]['queue']
             send_in_queue(contract.id, 'launch', queue)
     return True
+
 
 def deploy_protector(contract_id):
     contract = Contract.objects.get(id=contract_id)
@@ -178,12 +179,12 @@ class ContractSerializer(serializers.ModelSerializer):
             network_name = MAIL_NETWORK[network.name]
             if contract.contract_type not in (11, 20, 21):
                 send_mail(
-                        email_messages.create_subject,
-                        email_messages.create_message.format(
-                            network_name=network_name
-                        ),
-                        DEFAULT_FROM_EMAIL,
-                        [validated_data['user'].email]
+                    email_messages.create_subject,
+                    email_messages.create_message.format(
+                        network_name=network_name
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
                 )
             elif contract.contract_type in (20, 21):
                 sendEMail(
@@ -193,12 +194,12 @@ class ContractSerializer(serializers.ModelSerializer):
                 )
             else:
                 send_mail(
-                        email_messages.eos_create_subject,
-                        email_messages.eos_create_message.format(
-                            network_name=network_name
-                        ),
-                        DEFAULT_FROM_EMAIL,
-                        [validated_data['user'].email]
+                    email_messages.eos_create_subject,
+                    email_messages.eos_create_message.format(
+                        network_name=network_name
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
                 )
         return contract
 
@@ -254,6 +255,8 @@ class ContractSerializer(serializers.ModelSerializer):
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
+
+        # print('representation', res, flush=True)
 
         return res
 
@@ -314,10 +317,19 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email']
 
     def to_representation(self, contract_details):
+        if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state in [
+            'CREATED', 'WAITING_FOR_PAYMENT']:
+            print('TIME_IS_UP', flush=True)
+            contract_details.contract.state = 'TIME_IS_UP'
+            contract_details.contract.save()
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract']['source_code'] = ''
+        if contract_details.eth_contract:
+            if contract_details.eth_contract.compiler_version:
+                res['eth_contract']['compiler_version'] = '.'.join(
+                    res['eth_contract']['compiler_version'].split('.')[:4])
 
         res['approved_tokens'] = []
         for token in ApprovedToken.objects.filter(contract=contract_details):
@@ -325,6 +337,8 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
                 'address': token.address,
                 'is_confirmed': token.is_confirmed
             })
+
+        # print('protector representation', res, flush=True)
 
         return res
 
@@ -343,12 +357,10 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
             raise ValidationError
         check.is_address(contract_details['owner_address'])
         check.is_address(contract_details['reserve_address'])
-        if contract_details['end_timestamp'] < timezone.now().timestamp() + 5 * 60:
+        if contract_details['end_timestamp'] < timezone.now().timestamp() + 30 * 60:
             raise ValidationError
 
         return contract_details
-
-
 
 
 class EthContractSerializer(serializers.ModelSerializer):
@@ -394,7 +406,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
@@ -504,13 +516,13 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsICO
         fields = (
-                'soft_cap', 'hard_cap', 'token_name', 'token_short_name',
-                'is_transferable_at_once','start_date', 'stop_date',
-                'decimals', 'rate', 'admin_address', 'platform_as_admin',
-                'time_bonuses', 'amount_bonuses', 'continue_minting',
-                'cold_wallet_address', 'reused_token',
-                'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
-                'whitelist'
+            'soft_cap', 'hard_cap', 'token_name', 'token_short_name',
+            'is_transferable_at_once', 'start_date', 'stop_date',
+            'decimals', 'rate', 'admin_address', 'platform_as_admin',
+            'time_bonuses', 'amount_bonuses', 'continue_minting',
+            'cold_wallet_address', 'reused_token',
+            'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
+            'whitelist'
         )
 
     def create(self, contract, contract_details):
@@ -531,7 +543,8 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
 
     def validate(self, details):
         now = timezone.now().timestamp() + 600
-        if 'eth_contract_token' in details and 'id' in details['eth_contract_token'] and details['eth_contract_token']['id']:
+        if 'eth_contract_token' in details and 'id' in details['eth_contract_token'] and details['eth_contract_token'][
+            'id']:
             token_model = EthContract.objects.get(id=details['eth_contract_token']['id'])
             token_details = token_model.contract.get_details()
             details.pop('eth_contract_token')
@@ -555,9 +568,10 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             details[k] = int(details[k])
         for k in ('max_wei', 'min_wei'):
             details[k] = (int(details[k]) if details.get(k, None) else None)
-        if details['min_wei'] is not None and details['max_wei'] is not None and details['min_wei'] > details['max_wei']:
+        if details['min_wei'] is not None and details['max_wei'] is not None and details['min_wei'] > details[
+            'max_wei']:
             raise ValidationError
-        if details['max_wei'] is not None and details['max_wei'] < 10*10**18:
+        if details['max_wei'] is not None and details['max_wei'] < 10 * 10 ** 18:
             raise ValidationError
         if 'admin_address' not in details or 'token_holders' not in details:
             raise ValidationError
@@ -567,12 +581,12 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             th['amount'] = int(th['amount'])
         if not len(details['token_name']) or not len(details['token_short_name']):
             raise ValidationError
-        if details['rate'] < 1 or details['rate'] > 10**12:
+        if details['rate'] < 1 or details['rate'] > 10 ** 12:
             raise ValidationError
         check.is_address(details['admin_address'])
-        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5 * 60:
             raise ValidationError({'result': 1}, code=400)
-        if details['stop_date'] < details['start_date'] + 5*60:
+        if details['stop_date'] < details['start_date'] + 5 * 60:
             raise ValidationError
         if details['hard_cap'] < details['soft_cap']:
             raise ValidationError
@@ -607,7 +621,8 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             if bonus.get('min_time', None) is not None:
                 if bonus.get('max_time', None) is None:
                     raise ValidationError
-                if not (int(details['start_date']) <= int(bonus['min_time']) < int(bonus['max_time']) <= int(details['stop_date'])):
+                if not (int(details['start_date']) <= int(bonus['min_time']) < int(bonus['max_time']) <= int(
+                        details['stop_date'])):
                     raise ValidationError
             if bonus['bonus'] < 0.1:
                 raise ValidationError
@@ -615,9 +630,11 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(contract_details.eth_contract_crowdsale)
+        res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(
+            contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
@@ -647,10 +664,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsToken
         fields = (
-                'token_name', 'token_short_name', 'decimals',
-                'admin_address', 'token_type', 'future_minting',
-                'authio', 'authio_email', 'authio_date_payment',
-                'authio_date_getting'
+            'token_name', 'token_short_name', 'decimals',
+            'admin_address', 'token_type', 'future_minting',
+            'authio', 'authio_email', 'authio_date_payment',
+            'authio_date_getting'
         )
         extra_kwargs = {
             'authio_date_payment': {'read_only': True},
@@ -697,10 +714,13 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(contract__state='ACTIVE'):
-            res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(contract__state__in=('ACTIVE','ENDED')).order_by('id')[0].contract.id
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(
+                contract__state='ACTIVE'):
+            res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(
+                contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res
@@ -738,16 +758,17 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         if res['neo_contract_token']['address']:
             res['neo_contract_token']['script_hash'] = res['neo_contract_token']['address']
             print('neo contract id', contract_details.contract.id, flush=True)
-            res['neo_contract_token']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_token']['address']))
+            res['neo_contract_token']['address'] = Crypto.ToAddress(
+                UInt160.ParseString(res['neo_contract_token']['address']))
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
             token_holder_serializer.to_representation(th)
             for th in
             contract_details.contract.tokenholder_set.order_by(
-                        'id').all()
+                'id').all()
         ]
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         # res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
@@ -785,9 +806,9 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsNeoICO
         fields = (
-                'hard_cap', 'token_name', 'token_short_name',
-                'start_date', 'stop_date', 'decimals', 'rate',
-                'admin_address'
+            'hard_cap', 'token_name', 'token_short_name',
+            'start_date', 'stop_date', 'decimals', 'rate',
+            'admin_address'
         )
 
     def create(self, contract, contract_details):
@@ -817,11 +838,11 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
             raise ValidationError
         if len(details['token_name']) == '' or len(details['token_short_name']) == '':
             raise ValidationError
-        if not (1 <= details['rate'] <= 10**12):
+        if not (1 <= details['rate'] <= 10 ** 12):
             raise ValidationError
-        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5 * 60:
             raise ValidationError({'result': 1}, code=400)
-        if details['stop_date'] < details['start_date'] + 5*60:
+        if details['stop_date'] < details['start_date'] + 5 * 60:
             raise ValidationError
         details['hard_cap'] = int(details['hard_cap'])
         if details['hard_cap'] < 10:
@@ -831,12 +852,15 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
-            token_holder_serializer.to_representation(th) for th in contract_details.contract.tokenholder_set.order_by('id').all()
+            token_holder_serializer.to_representation(th) for th in
+            contract_details.contract.tokenholder_set.order_by('id').all()
         ]
-        res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(contract_details.neo_contract_crowdsale)
+        res['neo_contract_crowdsale'] = NeoContractSerializer().to_representation(
+            contract_details.neo_contract_crowdsale)
         if res['neo_contract_crowdsale']['address']:
             res['neo_contract_crowdsale']['script_hash'] = res['neo_contract_crowdsale']['address']
-            res['neo_contract_crowdsale']['address'] = Crypto.ToAddress(UInt160.ParseString(res['neo_contract_crowdsale']['address']))
+            res['neo_contract_crowdsale']['address'] = Crypto.ToAddress(
+                UInt160.ParseString(res['neo_contract_crowdsale']['address']))
 
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
@@ -870,7 +894,8 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
-        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing', active=True).count()
+        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing',
+                                                                                      active=True).count()
         res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent', active=True).count()
         return res
 
@@ -897,7 +922,7 @@ class InvestAddressSerializer(serializers.ModelSerializer):
         fields = ('address', 'amount')
 
 
-@memoize_timeout(10*60)
+@memoize_timeout(10 * 60)
 def count_last_balance(contract):
     now_date = datetime.datetime.now()
     now_date = now_date - datetime.timedelta(days=1)
@@ -929,12 +954,12 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsInvestmentPool
         fields = (
-                'soft_cap', 'hard_cap', 'start_date', 'stop_date',
-                'admin_address', 'admin_percent','token_address',
-                'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
-                'investment_address', 'send_tokens_hard_cap',
-                'send_tokens_soft_cap', 'link', 'investment_tx_hash', 'balance',
-                'platform_as_admin'
+            'soft_cap', 'hard_cap', 'start_date', 'stop_date',
+            'admin_address', 'admin_percent', 'token_address',
+            'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
+            'investment_address', 'send_tokens_hard_cap',
+            'send_tokens_soft_cap', 'link', 'investment_tx_hash', 'balance',
+            'platform_as_admin'
         )
         extra_kwargs = {
             'link': {'read_only': True},
@@ -954,9 +979,10 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
             details[k] = int(details[k])
         for k in ('max_wei', 'min_wei'):
             details[k] = (int(details[k]) if details.get(k, None) else None)
-        if details['min_wei'] is not None and details['max_wei'] is not None and details['min_wei'] > details['max_wei']:
+        if details['min_wei'] is not None and details['max_wei'] is not None and details['min_wei'] > details[
+            'max_wei']:
             raise ValidationError
-        if details['max_wei'] is not None and details['max_wei'] < 10*10**18:
+        if details['max_wei'] is not None and details['max_wei'] < 10 * 10 ** 18:
             raise ValidationError
         if 'admin_address' not in details or 'admin_percent' not in details:
             raise ValidationError
@@ -967,9 +993,9 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
             check.is_address(details['token_address'])
         if details.get('investment_address', None):
             check.is_address(details['investment_address'])
-        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5 * 60:
             raise ValidationError({'result': 1}, code=400)
-        if details['stop_date'] < details['start_date'] + 5*60:
+        if details['stop_date'] < details['start_date'] + 5 * 60:
             raise ValidationError
         if details['hard_cap'] < details['soft_cap']:
             raise ValidationError
@@ -1054,7 +1080,7 @@ class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAccount
         fields = (
-            'owner_public_key', 'active_public_key','account_name',
+            'owner_public_key', 'active_public_key', 'account_name',
             'stake_net_value', 'stake_cpu_value', 'buy_ram_kbytes'
         )
 
@@ -1084,7 +1110,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         model = ContractDetailsEOSICO
         fields = (
             'soft_cap', 'hard_cap', 'token_short_name', 'whitelist',
-            'is_transferable_at_once','start_date', 'stop_date',
+            'is_transferable_at_once', 'start_date', 'stop_date',
             'decimals', 'rate', 'crowdsale_address', 'min_wei', 'max_wei',
             'allow_change_dates', 'protected_mode', 'admin_address'
         )
@@ -1102,7 +1128,8 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
         return res
 
     def validate(self, details):
-        if 'eos_contract_token' in details and 'id' in details['eos_contract_token'] and details['eos_contract_token']['id']:
+        if 'eos_contract_token' in details and 'id' in details['eos_contract_token'] and details['eos_contract_token'][
+            'id']:
             token_model = EOSContract.objects.get(id=details['eos_contract_token']['id'])
             token_details = token_model.contract.get_details()
             details.pop('eos_contract_token')
@@ -1123,13 +1150,13 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             raise ValidationError
         for th in details['token_holders']:
             th['amount'] = int(th['amount'])
-        if not len(details['token_short_name']):\
+        if not len(details['token_short_name']): \
+                raise ValidationError
+        if details['rate'] < 1 or details['rate'] > 10 ** 12:
             raise ValidationError
-        if details['rate'] < 1 or details['rate'] > 10**12:
-            raise ValidationError
-        if details['start_date'] < datetime.datetime.now().timestamp() + 5*60:
+        if details['start_date'] < datetime.datetime.now().timestamp() + 5 * 60:
             raise ValidationError({'result': 1}, code=400)
-        if details['stop_date'] < details['start_date'] + 5*60:
+        if details['stop_date'] < details['start_date'] + 5 * 60:
             raise ValidationError
         if details['hard_cap'] < details['soft_cap']:
             raise ValidationError
@@ -1142,9 +1169,11 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = EOSTokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in contract_details.contract.eostokenholder_set.order_by('id').all()]
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.eostokenholder_set.order_by('id').all()]
         res['eos_contract_token'] = EOSContractSerializer().to_representation(contract_details.eos_contract_token)
-        res['eos_contract_crowdsale'] = EOSContractSerializer().to_representation(contract_details.eos_contract_crowdsale)
+        res['eos_contract_crowdsale'] = EOSContractSerializer().to_representation(
+            contract_details.eos_contract_crowdsale)
         res['rate'] = int(res['rate'])
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
             res['eos_contract_token']['source_code'] = ''
@@ -1181,7 +1210,8 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         res['eos_contract'] = EOSContractSerializer().to_representation(contract_details.eos_contract)
         res['added_count'] = contract_details.contract.eosairdropaddress_set.filter(state='added', active=True).count()
-        res['processing_count'] = contract_details.contract.eosairdropaddress_set.filter(state='processing', active=True).count()
+        res['processing_count'] = contract_details.contract.eosairdropaddress_set.filter(state='processing',
+                                                                                         active=True).count()
         res['sent_count'] = contract_details.contract.eosairdropaddress_set.filter(state='sent', active=True).count()
         res['failed'] = contract_details.contract.eosairdropaddress_set.filter(state='failed', active=True).count()
         return res
@@ -1358,7 +1388,8 @@ class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
         res['added_count'] = contract_details.contract.airdropaddress_set.filter(state='added', active=True).count()
-        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing', active=True).count()
+        res['processing_count'] = contract_details.contract.airdropaddress_set.filter(state='processing',
+                                                                                      active=True).count()
         res['sent_count'] = contract_details.contract.airdropaddress_set.filter(state='sent', active=True).count()
         return res
 
@@ -1392,7 +1423,7 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['tron_contract'] = TRONContractSerializer().to_representation(contract_details.tron_contract)
         return res
@@ -1461,7 +1492,7 @@ class ContractDetailsLostKeyTokensSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         heir_serializer = HeirSerializer()
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
@@ -1539,7 +1570,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         # investors_serializer = InvestAddressesSerializer()
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         # res['investors'] = [investors_serializer.to_representation(investor) for investor in contract_details.contract.investoraddresses_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
@@ -1595,7 +1626,7 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
             contract_details.contract.save()
         res = super().to_representation(contract_details)
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
@@ -1646,7 +1677,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         if not contract_details:
-           print('*'*50, contract_details.id, flush=True)
+            print('*' * 50, contract_details.id, flush=True)
         res['ride_contract'] = EthContractSerializer().to_representation(contract_details.ride_contract)
         return res
 
@@ -1661,7 +1692,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         return super().update(details, kwargs)
 
     def validate(self, details):
-        if details['rate'] < 1 or details['rate'] > 10**18:
+        if details['rate'] < 1 or details['rate'] > 10 ** 18:
             raise ValidationError
         if 'admin_address' not in details:
             raise ValidationError

@@ -8,6 +8,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.permissions import IsAuthenticated
 from bs4 import BeautifulSoup
 from rest_framework.response import Response
+from collections import OrderedDict
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL
@@ -1087,24 +1088,12 @@ def autodeploing(user_id, subsite_id):
             if subsite_id == 5:
                 deploy_protector(contract.id)
         bb.refresh_from_db()
+        if subsite_id == 5:
+            break
         print('check3', flush=True)
     print('check4', flush=True)
     return True
 
-def protector_autodeploing(user_id):
-    bb = UserSiteBalance.objects.get(subsite__id=5, user__id=user_id)
-    contracts = Contract.objects.filter(user__id=user_id, contract_type=23, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
-    for contract in contracts:
-        contract_details = contract.get_details()
-        contract_details.predeploy_validate()
-        kwargs = ContractSerializer().get_details_serializer(
-            contract.contract_type
-        )().to_representation(contract_details)
-        cost = contract_details.calc_cost(kwargs, contract.network)
-        if bb.balance >= cost or bb.balance >= cost * 0.95:
-            deploy_protector(contract.id)
-        bb.refresh_from_db()
-    return True
 
 @api_view(http_method_names=['POST'])
 def confirm_swaps_info(request):
@@ -1141,8 +1130,8 @@ def confirm_protector_info(request):
     if contract.contract_type != 23:
         print(2, flush=True)
         raise PermissionDenied
-    # if contract.network.name != 'ETHEREUM_MAINNET':
-    #     raise PermissionDenied
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
     if host != TOKEN_PROTECTOR_URL:
         print(3, flush=True)
         raise PermissionDenied
@@ -1191,7 +1180,25 @@ def get_test_tokens(request):
         token['address'] = token['eth_contract_token']['address']
         token.pop('eth_contract_token')
 
-    return Response(tokens_serializer.data)
+    token_list = tokens_serializer.data
+    # print('type', type(token_list), flush=True)
+    # print(token_list, flush=True)
+
+    token_list.append(OrderedDict({
+        'token_name': 'OMST',
+        'token_short_name': 'OMST',
+        'platform': 'ethereum',
+        'address': '0xa0379b1ac68027a76373adc7800d87eb5c3fac5e'
+    }))
+
+    token_list.append(OrderedDict({
+        'token_name': 'DAPS',
+        'token_short_name': 'DAPS',
+        'platform': 'ethereum',
+        'address': '0x16e00ca19a4025405a4d9a1ceb92c945583d7c0d'
+    }))
+
+    return Response(token_list)
 
 
 @api_view(http_method_names=['GET'])

@@ -22,17 +22,13 @@ class ContractDetailsTokenProtector(CommonDetails):
     temp_directory = models.CharField(max_length=36)
 
     def predeploy_validate(self):
-        now = timezone.now().timestamp()
-        if self.end_timestamp < now:
+        # now = timezone.now().timestamp()
+        if self.end_timestamp < timezone.now().timestamp() + 30 * 60:
             raise ValidationError({'result': 1}, code=400)
 
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        # super().msg_deployed(message)
-        # self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
-        # self.save()
-
         take_off_blocking(self.contract.network.name)
         self.eth_contract.address = message['address']
         self.eth_contract.save()
@@ -88,16 +84,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         print('params for testing', preproc_params, flush=True)
         self.compile_and_test(preproc_config, preproc_params, dest)
 
-        # preproc_params["constants"]["D_OWNER_ADDRESS"] = checksum_encode(self.owner_address)
-        # preproc_params["constants"]["D_RESERVE_ADDRESS"] = checksum_encode(self.reserve_address)
-        #
-        # print('params', preproc_params, flush=True)
-
-        # with open(preproc_config, 'w') as f:
-        #     f.write(json.dumps(preproc_params))
-        # if os.system('cd {dest} && ./compile.sh'.format(dest=dest)):
-        #     raise Exception('compiler error while deploying')
-
         with open(path.join(dest, 'build/contracts/TokenSaver.json'), 'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'contracts/TokenSaver.sol'), 'rb') as f:
@@ -130,70 +116,54 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     @check_transaction
     def TokenProtectorApprove(self, message):
-        if not ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first():
-            approved_token = ApprovedToken(contract=self, address=message['tokenAddress'])
-            approved_token.save()
+        if int(message['tokens']) > 0:
+            if not ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first():
+                approved_token = ApprovedToken(contract=self, address=message['tokenAddress'])
+                approved_token.save()
+            else:
+                print('already approved', flush=True)
         else:
-            print('already approved', flush=True)
+            disapproved_token = ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first()
+            if disapproved_token:
+                disapproved_token.delete()
 
     def confirm_tokens(self):
         # try:
-            w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                                 port=NETWORKS[self.contract.network.name]['port'])))
-            contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-            tokens_to_confirm = list(map(checksum_encode, list(
-                ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
+        tokens_to_confirm = list(map(checksum_encode, list(
+            ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
 
-            print('tokens to confirm', tokens_to_confirm, flush=True)
+        print('tokens to confirm', tokens_to_confirm, flush=True)
 
-            # tokens_to_confirm = [checksum_encode(NETWORKS[self.contract.network.name]['address']),
-            #                      checksum_encode('0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c')]
+        txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
+            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
 
-            # txn = contract.functions.addTokenType(
-            #     checksum_encode(NETWORKS[self.contract.network.name]['address'])).buildTransaction(
-            #     {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+        print('txn', txn, flush=True)
 
-            txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
-                {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
-            print('txn', txn, flush=True)
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                  self.contract.network.name, value=0,
+                                  dest=self.eth_contract.address, contract_data=txn['data'][2:],
+                                  gas_price=2000000000)
 
-            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-            nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
+        print('signed', signed, flush=True)
 
-            signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                      self.contract.network.name, value=0,
-                                      dest=self.eth_contract.address, contract_data=txn['data'][2:],
-                                      gas_price=2000000000)
+        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
 
-            print('signed', signed, flush=True)
+        print('hash', tx_hash, flush=True)
 
-            tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
-
-            # hash = w3.eth.sendRawTransaction('0x' + signed)
-            print('hash', tx_hash, flush=True)
-
-            # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
-            #     approved_token.is_confirmed = True
-            #     approved_token.save()
-
-            self.contract.state = 'WAITING_FOR_CONFIRM'
-            # self.contract.state = 'ACTIVE'
-            self.contract.save()
+        self.contract.state = 'WAITING_FOR_CONFIRM'
+        self.contract.save()
         # except:
         #     self.contract.state = 'FAIL_IN_CONFIRM'
         #     self.contract.save()
 
     def TokenProtectorTokensToSave(self, message):
-        # approved_token = ApprovedToken.objects.filter(contract=self, is_confirmed=False, address=message['address']).first()
-        # if approved_token:
-        #     approved_token.is_confirmed = True
-        #
-        # for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False, address__in=message['tokens']):
-        #     approved_token.is_confirmed = True
-        #     approved_token.save()
-
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
             approved_token.is_confirmed = True
             approved_token.save()
@@ -202,35 +172,33 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.save()
 
     def execute_contract(self):
-        try:
-            w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                                 port=NETWORKS[self.contract.network.name]['port'])))
-            contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+        # try:
+        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        # contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-            nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
-            signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                      self.contract.network.name, value=0,
-                                      dest=self.eth_contract.address, contract_data=None,
-                                      gas_price=2000000000)
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                  self.contract.network.name, value=0,
+                                  dest=self.eth_contract.address, contract_data=None,
+                                  gas_price=2000000000)
 
-            print('signed', signed, flush=True)
+        print('signed', signed, flush=True)
 
-            tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
-            print('hash', tx_hash, flush=True)
-            self.contract.state = 'DONE'
-            self.contract.save()
-        except:
-            self.contract.state = 'FAILED'
-            self.contract.save()
+        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        print('hash', tx_hash, flush=True)
 
+        # except:
+        self.contract.state = 'WAITING_FOR_EXECUTION'
+        self.contract.save()
 
-    def finalized(self, message):
+    def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
 
-    def cancelled(self, message):
+    def SelfdestructionEvent(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
 
