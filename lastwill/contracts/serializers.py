@@ -317,6 +317,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state not in [
             'ACTIVE', 'DONE', 'CANCELLED', 'TIME_IS_UP']:
+            print('TIME_IS_UP', flush=True)
             contract_details.contract.state = 'TIME_IS_UP'
             contract_details.save()
         res = super().to_representation(contract_details)
@@ -334,6 +335,8 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
                 'address': token.address,
                 'is_confirmed': token.is_confirmed
             })
+
+        print('protector representation', res, flush=True)
 
         return res
 
