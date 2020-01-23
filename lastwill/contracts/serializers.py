@@ -256,7 +256,7 @@ class ContractSerializer(serializers.ModelSerializer):
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
 
-        print('representation', res, flush=True)
+        # print('representation', res, flush=True)
 
         return res
 

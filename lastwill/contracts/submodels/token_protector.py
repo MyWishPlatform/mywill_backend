@@ -129,36 +129,36 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def confirm_tokens(self):
         # try:
-            w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                                 port=NETWORKS[self.contract.network.name]['port'])))
-            contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-            tokens_to_confirm = list(map(checksum_encode, list(
-                ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
+        tokens_to_confirm = list(map(checksum_encode, list(
+            ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
 
-            print('tokens to confirm', tokens_to_confirm, flush=True)
+        print('tokens to confirm', tokens_to_confirm, flush=True)
 
-            txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
-                {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+        txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
+            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
 
-            print('txn', txn, flush=True)
+        print('txn', txn, flush=True)
 
-            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-            nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
-            signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                      self.contract.network.name, value=0,
-                                      dest=self.eth_contract.address, contract_data=txn['data'][2:],
-                                      gas_price=2000000000)
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                  self.contract.network.name, value=0,
+                                  dest=self.eth_contract.address, contract_data=txn['data'][2:],
+                                  gas_price=2000000000)
 
-            print('signed', signed, flush=True)
+        print('signed', signed, flush=True)
 
-            tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
 
-            print('hash', tx_hash, flush=True)
+        print('hash', tx_hash, flush=True)
 
-            self.contract.state = 'WAITING_FOR_CONFIRM'
-            self.contract.save()
+        self.contract.state = 'WAITING_FOR_CONFIRM'
+        self.contract.save()
         # except:
         #     self.contract.state = 'FAIL_IN_CONFIRM'
         #     self.contract.save()
@@ -173,26 +173,26 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def execute_contract(self):
         # try:
-            w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                                 port=NETWORKS[self.contract.network.name]['port'])))
-            # contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
+        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        # contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-            eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-            nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
-            signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                      self.contract.network.name, value=0,
-                                      dest=self.eth_contract.address, contract_data=None,
-                                      gas_price=2000000000)
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+                                  self.contract.network.name, value=0,
+                                  dest=self.eth_contract.address, contract_data=None,
+                                  gas_price=2000000000)
 
-            print('signed', signed, flush=True)
+        print('signed', signed, flush=True)
 
-            tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
-            print('hash', tx_hash, flush=True)
+        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        print('hash', tx_hash, flush=True)
 
         # except:
-        #     self.contract.state = 'FAILED'
-        #     self.contract.save()
+        self.contract.state = 'WAITING_FOR_EXECUTION'
+        self.contract.save()
 
     def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
