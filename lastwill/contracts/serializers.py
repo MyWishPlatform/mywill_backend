@@ -256,6 +256,8 @@ class ContractSerializer(serializers.ModelSerializer):
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
 
+        print('representation', res, flush=True)
+
         return res
 
     def update(self, contract, validated_data):
@@ -319,7 +321,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
             'ACTIVE', 'DONE', 'CANCELLED', 'TIME_IS_UP']:
             print('TIME_IS_UP', flush=True)
             contract_details.contract.state = 'TIME_IS_UP'
-            contract_details.save()
+            contract_details.contract.save()
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
@@ -336,7 +338,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
                 'is_confirmed': token.is_confirmed
             })
 
-        print('protector representation', res, flush=True)
+        # print('protector representation', res, flush=True)
 
         return res
 
