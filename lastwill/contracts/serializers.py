@@ -317,8 +317,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email']
 
     def to_representation(self, contract_details):
-        if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state not in [
-            'ACTIVE', 'DONE', 'CANCELLED', 'TIME_IS_UP']:
+        if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state == 'WAITING_FOR_PAYMENT':
             print('TIME_IS_UP', flush=True)
             contract_details.contract.state = 'TIME_IS_UP'
             contract_details.contract.save()
