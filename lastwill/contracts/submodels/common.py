@@ -547,7 +547,7 @@ class CommonDetails(models.Model):
     def predeploy_validate(self):
         pass
 
-    @blocking
+    # @blocking
     def check_contract(self):
         print('checking', self.contract.name)
         tr = abi.ContractTranslator(self.eth_contract.abi)
