@@ -49,7 +49,7 @@ from lastwill.contracts.api_eth import (create_eth_token, show_eth_token,
                                         deploy_eth_token, calculate_cost_eth_token_contract,
                                         get_source_code_eth_token)
 from lastwill.contracts.api_common import get_contract_price, get_contracts, get_available_contracts
-from lastwill.other.api import SentenceViewSet, send_unblocking_info
+from lastwill.other.api import SentenceViewSet, send_unblocking_info, send_ducatus_form_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin, FacebookAuth
 from lastwill.promo.api import get_discount, get_all_promos_api
 from lastwill.snapshot.api import snapshot_get_value
@@ -127,6 +127,7 @@ urlpatterns = [
     url(r'^api/buy_brand_report/$', buy_brand_report),
     url(r'^api/get_authio_cost/$', get_authio_cost),
     url(r'^api/send_unblocking_feedback/$', send_unblocking_info),
+    url(r'^api/send_ducatus_feedback/$', send_ducatus_form_info),
     url(r'^api/calculate_cost_eos_account/$', calculate_cost_eos_account),
     url(r'^api/calculate_cost_eos_account_contract/$', calculate_cost_eos_account_contract),
     url(r'^api/delete_eos_account_contract/$', delete_eos_account_contract),
