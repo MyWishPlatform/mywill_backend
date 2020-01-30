@@ -45,15 +45,15 @@ def send_unblocking_info(request):
 def send_ducatus_form_info(request):
     name = request.data.get('name')
     email = request.data.get('email')
-    telegram = request.data.get('socialNetwork')
+    phone_number = request.data.get('socialNetwork')
     message = request.data.get('message')
     text = """
     Name: {name}
     E-mail: {email}
     Message: {message}
-    Telegram: {telegram}
+    Phone: {phone}
     """.format(
-        name=name, email=email, telegram=telegram, message=message
+        name=name, email=email, phone=phone_number, message=message
     )
     send_mail(
         'Request from rocknblock.io contact form',
