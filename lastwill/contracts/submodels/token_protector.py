@@ -129,8 +129,8 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def confirm_tokens(self):
         # try:
-        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        w3 = Web3(HTTPProvider(eth_int.url))
         contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
         tokens_to_confirm = list(map(checksum_encode, list(
@@ -143,7 +143,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         print('txn', txn, flush=True)
 
-        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        # eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
 
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
@@ -173,8 +173,8 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def execute_contract(self):
         # try:
-        w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
-                                                             port=NETWORKS[self.contract.network.name]['port'])))
+        # w3 = Web3(HTTPProvider('http://{host}:{port}'.format(host=NETWORKS[self.contract.network.name]['host'],
+        #                                                      port=NETWORKS[self.contract.network.name]['port'])))
         # contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
