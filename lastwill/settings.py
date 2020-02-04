@@ -258,8 +258,6 @@ SESSION_COOKIE_DOMAIN = '.mywish.io'
 
 UNBLOCKING_EMAIL = 'hello@rocknblock.io'
 
-SHELL_PLUS = 'ptpython'
-
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
