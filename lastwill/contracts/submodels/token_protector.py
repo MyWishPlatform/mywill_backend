@@ -114,6 +114,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         return [
         ]
 
+
     @check_transaction
     def TokenProtectorApprove(self, message):
         if int(message['tokens']) > 0:

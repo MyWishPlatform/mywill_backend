@@ -1153,6 +1153,7 @@ def confirm_protector_info(request):
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 
+
 @api_view(http_method_names=['POST'])
 def confirm_protector_tokens(request):
     print('data', request.data, flush=True)
