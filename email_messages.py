@@ -269,3 +269,25 @@ Please contact support@mywish.io if you have any questions.
 Best wishes,
 MyWish Team."""
 
+protector_deployed_subject = """Your Protector is on"""
+protector_deployed_text = """Congratulations!
+
+Your protector contract was deployed to Ethereum successfully. 
+Please make sure that you choosed tokens for the protection.
+
+You can manage the contract in your profile on protector.mywish.io
+Please contact support@mywish.io in case of any questions.
+
+Best wishes,
+MyWish Team"""
+
+protector_create_subject = """Your contract is ready for deployment"""
+protector_create_text = """Hello!
+
+Your contract is created and ready for deployment to Ethereum.
+
+If you have any questions please contact support@mywish.io.
+
+Best wishes,
+MyWish Team
+"""

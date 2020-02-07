@@ -192,6 +192,13 @@ class ContractSerializer(serializers.ModelSerializer):
                     email_messages.swaps_message,
                     validated_data['user'].email
                 )
+            elif contract.contract_type == 23:
+                send_mail(
+                    email_messages.protector_create_subject,
+                    email_messages.protector_create_text,
+                    DEFAULT_FROM_EMAIL,
+                    [validated_data['user'].email]
+                )
             else:
                 send_mail(
                     email_messages.eos_create_subject,

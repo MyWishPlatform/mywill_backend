@@ -34,6 +34,12 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.eth_contract.save()
         self.contract.state = 'WAITING_FOR_APPROVE'
         self.contract.save()
+        send_mail(
+            protector_deployed_subject,
+            protector_deployed_text,
+            DEFAULT_FROM_EMAIL,
+            [self.contract.user.email]
+        )
 
     @classmethod
     def min_cost(cls):
