@@ -291,3 +291,12 @@ If you have any questions please contact support@mywish.io.
 Best wishes,
 MyWish Team
 """
+
+protector_execution_subject = """Your contract will be executed soon"""
+protector_execution_text = """Hello,
+
+This is Mywish platform. Your token protector contract will be executed in {days} day(s).
+You can cancel it in your profile on protector.mywish.io
+
+Best Wishes,
+MyWish Team"""

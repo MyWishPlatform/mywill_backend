@@ -27,6 +27,12 @@ def check_all():
             #     send_in_pika(contract)
             pass
         elif contract.contract_type == 23:
+            if details.mail_time_check(7) and not details.week_mail_sent:
+                details.week_before_mail()
+
+            elif details.mail_time_check(1) and not details.day_mail_sent:
+                details.day_before_mail()
+
             if details.end_timestamp < timezone.now().timestamp():
                 try:
                     details.execute_contract()

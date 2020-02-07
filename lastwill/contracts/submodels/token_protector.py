@@ -22,6 +22,9 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     approving_time = models.IntegerField(null=True, default=None)
 
+    day_mail_sent = models.BooleanField(default=False)
+    week_mail_sent = models.BooleanField(default=False)
+
     def predeploy_validate(self):
         # now = timezone.now().timestamp()
         if self.end_timestamp < timezone.now().timestamp() + 30 * 60:
@@ -123,13 +126,14 @@ class ContractDetailsTokenProtector(CommonDetails):
         ]
 
     def try_confirm_execute(self):
-        all_tokens_count = len(ApprovedToken.objects.all())
+        front_tokens_count = len(ApprovedToken.objects.filter(contract=self, approve_from_front=True))
         approved_tokens_count = len(
             ApprovedToken.objects.filter(contract=self, approve_from_scanner=True, approve_from_front=True))
-        if approved_tokens_count == all_tokens_count:
+        if approved_tokens_count == front_tokens_count:
             self.approving_time = None
             self.save()
             self.confirm_tokens()
+
 
     @check_transaction
     def TokenProtectorApprove(self, message):
@@ -251,6 +255,35 @@ class ContractDetailsTokenProtector(CommonDetails):
     def SelfdestructionEvent(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
+
+
+    def day_before_mail(self):
+        email = self.email if self.email else self.contract.user.email
+        send_mail(
+            protector_execution_subject,
+            protector_execution_text.format(days=1),
+            DEFAULT_FROM_EMAIL,
+            [email]
+        )
+        self.day_mail_sent = True
+        self.save()
+
+    def week_before_mail(self):
+        email = self.email if self.email else self.contract.user.email
+        send_mail(
+            protector_execution_subject,
+            protector_execution_text.format(days=7),
+            DEFAULT_FROM_EMAIL,
+            [email]
+        )
+        self.week_mail_sent = True
+        self.save()
+
+    def mail_time_check(self, days):
+        if self.end_timestamp - days * 24 * 60 * 60 > timezone.now().timestamp() and \
+                self.end_timestamp - (days + 1) * 24 * 60 * 60 < timezone.now().timestamp():
+            return True
+
 
 
 class ApprovedToken(models.Model):
