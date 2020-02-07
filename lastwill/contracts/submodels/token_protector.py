@@ -20,6 +20,8 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     temp_directory = models.CharField(max_length=36)
 
+    approving_time = models.IntegerField(null=True, default=None)
+
     def predeploy_validate(self):
         # now = timezone.now().timestamp()
         if self.end_timestamp < timezone.now().timestamp() + 30 * 60:
@@ -123,15 +125,48 @@ class ContractDetailsTokenProtector(CommonDetails):
     @check_transaction
     def TokenProtectorApprove(self, message):
         if int(message['tokens']) > 0:
-            if not ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first():
-                approved_token = ApprovedToken(contract=self, address=message['tokenAddress'])
+            approved_token = ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first()
+            if not approved_token:
+                approved_token = ApprovedToken(contract=self, address=message['tokenAddress'],
+                                               approve_from_scanner=True)
                 approved_token.save()
+                print('approved from scanner', flush=True)
             else:
-                print('already approved', flush=True)
+                approved_token.approve_from_scanner = True
+                approved_token.save()
+                print('already approved, scanner', flush=True)
         else:
             disapproved_token = ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first()
             if disapproved_token:
                 disapproved_token.delete()
+
+        all_tokens_count = len(ApprovedToken.objects.all())
+        approved_tokens_count = len(
+            ApprovedToken.objects.filter(contract=self, approve_from_scanner=True, approve_from_front=True))
+        if approved_tokens_count == all_tokens_count:
+            self.approving_time = None
+            self.save()
+            self.confirm_tokens()
+
+
+    def approve_from_front(self, tokens):
+        for token in tokens:
+            approved_token = ApprovedToken.objects.filter(contract=self, address=token).first()
+            if not approved_token:
+                approved_token = ApprovedToken(contract=self, address=token,
+                                               approve_from_front=True)
+                approved_token.save()
+                print('approved from front')
+            else:
+                approved_token.approve_from_front = True
+                approved_token.save()
+                print('already approved, front', flush=True)
+
+        self.approving_time = datetime.datetime.now().timestamp()
+        self.save()
+        self.contract.state = 'WAITING_FOR_CONFIRM'
+        self.contract.save()
+
 
     def confirm_tokens(self):
         # try:
@@ -163,11 +198,12 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         print('hash', tx_hash, flush=True)
 
-        self.contract.state = 'WAITING_FOR_CONFIRM'
-        self.contract.save()
+        # self.contract.state = 'WAITING_FOR_CONFIRM'
+        # self.contract.save()
         # except:
         #     self.contract.state = 'FAIL_IN_CONFIRM'
         #     self.contract.save()
+
 
     def TokenProtectorTokensToSave(self, message):
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
@@ -176,6 +212,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         self.contract.state = 'ACTIVE'
         self.contract.save()
+
 
     def execute_contract(self):
         # try:
@@ -200,9 +237,11 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'WAITING_FOR_EXECUTION'
         self.contract.save()
 
+
     def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
+
 
     def SelfdestructionEvent(self, message):
         self.contract.state = 'CANCELLED'
@@ -213,3 +252,5 @@ class ApprovedToken(models.Model):
     contract = models.ForeignKey(ContractDetailsTokenProtector, related_name='tokens', on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     is_confirmed = models.BooleanField(default=False)
+    approve_from_scanner = models.BooleanField(default=False)
+    approve_from_front = models.BooleanField(default=False)

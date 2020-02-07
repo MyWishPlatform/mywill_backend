@@ -1159,10 +1159,23 @@ def confirm_protector_tokens(request):
     print('data type', type(request.data), flush=True)
     contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user, contract_type=23).first()
     if contract:
+        token_list = request.data.get('tokens')
         protector_contract = ContractDetailsTokenProtector.objects.get(contract=contract)
-        print('protector', protector_contract.__dict__, flush=True)
-        print('protector', protector_contract.eth_contract.__dict__, flush=True)
-        protector_contract.confirm_tokens()
+        protector_contract.approve_from_front(token_list)
+        # protector_contract.confirm_tokens()
+
+        return JsonResponse(ContractSerializer().to_representation(contract))
+
+    raise PermissionDenied
+
+
+@api_view(http_method_names=['POST'])
+def skip_protector_approve(request):
+    contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user,
+                                       contract_type=23, state='WAITING_FOR_APPROVE').first()
+    if contract:
+        contract.state = 'ACTIVE'
+        contract.save()
 
         return JsonResponse(ContractSerializer().to_representation(contract))
 
@@ -1190,19 +1203,19 @@ def get_test_tokens(request):
     # print('type', type(token_list), flush=True)
     # print(token_list, flush=True)
 
-    token_list.append(OrderedDict({
-        'token_name': 'OMST',
-        'token_short_name': 'OMST',
-        'platform': 'ethereum',
-        'address': '0xa0379b1ac68027a76373adc7800d87eb5c3fac5e'
-    }))
-
-    token_list.append(OrderedDict({
-        'token_name': 'DAPS',
-        'token_short_name': 'DAPS',
-        'platform': 'ethereum',
-        'address': '0x16e00ca19a4025405a4d9a1ceb92c945583d7c0d'
-    }))
+    # token_list.append(OrderedDict({
+    #     'token_name': 'OMST',
+    #     'token_short_name': 'OMST',
+    #     'platform': 'ethereum',
+    #     'address': '0xa0379b1ac68027a76373adc7800d87eb5c3fac5e'
+    # }))
+    #
+    # token_list.append(OrderedDict({
+    #     'token_name': 'DAPS',
+    #     'token_short_name': 'DAPS',
+    #     'platform': 'ethereum',
+    #     'address': '0x16e00ca19a4025405a4d9a1ceb92c945583d7c0d'
+    # }))
 
     return Response(token_list)
 

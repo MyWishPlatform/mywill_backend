@@ -331,6 +331,11 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
             print('TIME_IS_UP', flush=True)
             contract_details.contract.state = 'TIME_IS_UP'
             contract_details.contract.save()
+        if contract_details.approving_time:
+            if contract_details.approving_time + 10 * 60 < datetime.datetime.now().timestamp():
+                print('POSTPONED', flush=True)
+                contract_details.contract.state = 'POSTPONED'
+                contract_details.contract.save()
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         if contract_details.contract.network.name in ['ETHEREUM_ROPSTEN', 'RSK_TESTNET']:
