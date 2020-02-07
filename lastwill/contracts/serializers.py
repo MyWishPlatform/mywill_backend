@@ -131,6 +131,7 @@ class TokenHolderSerializer(serializers.ModelSerializer):
 
 
 
+
 class ContractSerializer(serializers.ModelSerializer):
     contract_details = serializers.JSONField(write_only=True)
 
