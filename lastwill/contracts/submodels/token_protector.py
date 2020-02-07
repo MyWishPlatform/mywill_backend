@@ -6,7 +6,6 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
 from django.db import models
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
-import binascii
 
 
 @contract_details('Token protector contract')

@@ -130,6 +130,7 @@ class TokenHolderSerializer(serializers.ModelSerializer):
         fields = ('address', 'amount', 'freeze_date', 'name')
 
 
+
 class ContractSerializer(serializers.ModelSerializer):
     contract_details = serializers.JSONField(write_only=True)
 
