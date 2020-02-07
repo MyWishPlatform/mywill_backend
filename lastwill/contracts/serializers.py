@@ -167,6 +167,8 @@ class ContractSerializer(serializers.ModelSerializer):
         try:
             contract = super().create(validated_data)
             details_serializer.create(contract, contract_details)
+            print('DETAILS', contract_details, flush=True)
+            print(type(contract_details), flush=True)
         except:
             transaction.rollback()
             raise
@@ -177,7 +179,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if validated_data['user'].email:
             network = validated_data['network']
             network_name = MAIL_NETWORK[network.name]
-            if contract.contract_type not in (11, 20, 21):
+            if contract.contract_type not in (11, 20, 21, 23):
                 send_mail(
                     email_messages.create_subject,
                     email_messages.create_message.format(
