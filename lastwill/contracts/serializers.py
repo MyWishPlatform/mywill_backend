@@ -169,8 +169,6 @@ class ContractSerializer(serializers.ModelSerializer):
         try:
             contract = super().create(validated_data)
             details_serializer.create(contract, contract_details)
-            print('DETAILS', contract_details, flush=True)
-            print(type(contract_details), flush=True)
         except:
             transaction.rollback()
             raise
@@ -197,11 +195,12 @@ class ContractSerializer(serializers.ModelSerializer):
                     validated_data['user'].email
                 )
             elif contract.contract_type == 23:
+                email = contract_details['email'] if contract_details['email'] else validated_data['user'].email
                 send_mail(
                     email_messages.protector_create_subject,
                     email_messages.protector_create_text,
                     DEFAULT_FROM_EMAIL,
-                    [validated_data['user'].email]
+                    [email]
                 )
             else:
                 send_mail(
@@ -267,7 +266,6 @@ class ContractSerializer(serializers.ModelSerializer):
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
 
-        # print('representation', res, flush=True)
 
         return res
 

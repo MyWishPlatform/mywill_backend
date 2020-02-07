@@ -38,7 +38,7 @@ class ContractDetailsTokenProtector(CommonDetails):
             protector_deployed_subject,
             protector_deployed_text,
             DEFAULT_FROM_EMAIL,
-            email
+            [email]
         )
 
     @classmethod
