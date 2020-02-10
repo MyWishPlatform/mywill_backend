@@ -1,8 +1,10 @@
 import time
 import pika
 import os
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
+
 django.setup()
 
 from django.utils import timezone
@@ -12,6 +14,7 @@ from lastwill.contracts.models import Contract
 from lastwill.parint import *
 from lastwill.settings import DEFAULT_FROM_EMAIL, LASTWILL_ALIVE_TIMEOUT
 import email_messages
+import datetime
 
 
 def check_all():
@@ -27,11 +30,14 @@ def check_all():
             #     send_in_pika(contract)
             pass
         elif contract.contract_type == 23:
-            if details.mail_time_check(7) and not details.week_mail_sent:
-                details.week_before_mail()
-
-            elif details.mail_time_check(1) and not details.day_mail_sent:
-                details.day_before_mail()
+            print('days for execution', (datetime.datetime.fromtimestamp(
+                    details.end_timestamp) - timezone.now()).days, flush=True)
+            if (datetime.datetime.fromtimestamp(
+                    details.end_timestamp) - timezone.now()).days == 7 and not details.week_mail_sent:
+                details.execution_before_mail(7)
+            elif (datetime.datetime.fromtimestamp(
+                    details.end_timestamp) - timezone.now()).days == 1 and not details.day_mail_sent:
+                details.execution_before_mail(1)
 
             if details.end_timestamp < timezone.now().timestamp():
                 try:
@@ -42,7 +48,7 @@ def check_all():
         else:
             try:
                 if details.active_to < timezone.now():
-                    contract.state='EXPIRED'
+                    contract.state = 'EXPIRED'
                     contract.save()
                 elif details.next_check and details.next_check <= timezone.now():
                     send_in_pika(contract)
@@ -56,10 +62,10 @@ def create_reminder(contract, day):
     day = 1 if day <= 1 else day
     print('{days} day message'.format(days=day), contract.id, flush=True)
     send_mail(
-            email_messages.remind_subject,
-            email_messages.remind_message.format(days=day),
-            DEFAULT_FROM_EMAIL,
-            [contract.user.email]
+        email_messages.remind_subject,
+        email_messages.remind_message.format(days=day),
+        DEFAULT_FROM_EMAIL,
+        [contract.user.email]
     )
 
 
@@ -70,7 +76,7 @@ def send_reminders(contract):
             if details.next_check:
                 now = timezone.now()
                 delta = details.next_check - now
-                if delta.days <= 1 or delta.days in {5,10}:
+                if delta.days <= 1 or delta.days in {5, 10}:
                     create_reminder(contract, delta.days)
 
 

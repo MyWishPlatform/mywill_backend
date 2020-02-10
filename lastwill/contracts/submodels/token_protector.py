@@ -257,32 +257,19 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.save()
 
 
-    def day_before_mail(self):
+    def execution_before_mail(self, days):
         email = self.email if self.email else self.contract.user.email
         send_mail(
             protector_execution_subject,
-            protector_execution_text.format(days=1),
+            protector_execution_text.format(days=days),
             DEFAULT_FROM_EMAIL,
             [email]
         )
-        self.day_mail_sent = True
+        if days == 1:
+            self.day_mail_sent = True
+        else:
+            self.week_mail_sent = True
         self.save()
-
-    def week_before_mail(self):
-        email = self.email if self.email else self.contract.user.email
-        send_mail(
-            protector_execution_subject,
-            protector_execution_text.format(days=7),
-            DEFAULT_FROM_EMAIL,
-            [email]
-        )
-        self.week_mail_sent = True
-        self.save()
-
-    def mail_time_check(self, days):
-        if self.end_timestamp - days * 24 * 60 * 60 > timezone.now().timestamp() and \
-                self.end_timestamp - (days + 1) * 24 * 60 * 60 < timezone.now().timestamp():
-            return True
 
 
 
