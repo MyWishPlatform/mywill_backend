@@ -39,6 +39,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'WAITING_FOR_APPROVE'
         self.contract.save()
         email = self.email if self.email else self.contract.user.email
+        print('email', email)
         send_mail(
             protector_deployed_subject,
             protector_deployed_text,
