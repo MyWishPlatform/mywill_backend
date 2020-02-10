@@ -334,6 +334,8 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         if contract_details.approving_time:
             if contract_details.approving_time + 10 * 60 < datetime.datetime.now().timestamp():
                 print('POSTPONED', flush=True)
+                contract_details.approving_time = None
+                contract_details.save()
                 contract_details.contract.state = 'POSTPONED'
                 contract_details.contract.save()
         res = super().to_representation(contract_details)
