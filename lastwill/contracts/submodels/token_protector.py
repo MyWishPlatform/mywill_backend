@@ -126,13 +126,14 @@ class ContractDetailsTokenProtector(CommonDetails):
         ]
 
     def try_confirm_execute(self):
-        front_tokens_count = len(ApprovedToken.objects.filter(contract=self, approve_from_front=True))
-        approved_tokens_count = len(
-            ApprovedToken.objects.filter(contract=self, approve_from_scanner=True, approve_from_front=True))
-        if approved_tokens_count == front_tokens_count:
-            self.approving_time = None
-            self.save()
-            self.confirm_tokens()
+        if self.approving_time:
+            front_tokens_count = len(ApprovedToken.objects.filter(contract=self, approve_from_front=True))
+            approved_tokens_count = len(
+                ApprovedToken.objects.filter(contract=self, approve_from_scanner=True, approve_from_front=True))
+            if approved_tokens_count == front_tokens_count:
+                self.approving_time = None
+                self.save()
+                self.confirm_tokens()
 
 
     @check_transaction
@@ -171,8 +172,9 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         self.approving_time = datetime.datetime.now().timestamp()
         self.save()
-        self.contract.state = 'WAITING_FOR_CONFIRM'
-        self.contract.save()
+        if self.contract.state == 'WAITING_FOR_APPROVE':
+            self.contract.state = 'WAITING_FOR_CONFIRM'
+            self.contract.save()
 
         self.try_confirm_execute()
 
