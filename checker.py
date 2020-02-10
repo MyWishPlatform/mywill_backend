@@ -31,7 +31,8 @@ def check_all():
             pass
         elif contract.contract_type == 23:
             print('days for execution', datetime.timedelta(seconds=
-                    details.end_timestamp - timezone.now().timestamp()).days, flush=True)
+                    details.end_timestamp - timezone.now().timestamp()).days, type(datetime.timedelta(seconds=
+                    details.end_timestamp - timezone.now().timestamp()).days), flush=True)
 
             if datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days == 7 and not details.week_mail_sent:
