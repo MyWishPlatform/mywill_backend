@@ -40,8 +40,8 @@ def check_all():
                 print('week mail sent', flush=True)
             elif datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days == 1 and not details.day_mail_sent:
-                print('day mail sent', flush=True)
                 details.execution_before_mail(1)
+                print('day mail sent', flush=True)
 
             if details.end_timestamp < timezone.now().timestamp():
                 try:
