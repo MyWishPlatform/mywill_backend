@@ -30,14 +30,16 @@ def check_all():
             #     send_in_pika(contract)
             pass
         elif contract.contract_type == 23:
-            print('days for execution', datetime.timedelta(
+            print('days for execution', datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days, flush=True)
 
             if datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days == 7 and not details.week_mail_sent:
                 details.execution_before_mail(7)
+                print('week mail sent', flush=True)
             elif datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days == 1 and not details.day_mail_sent:
+                print('day mail sent', flush=True)
                 details.execution_before_mail(1)
 
             if details.end_timestamp < timezone.now().timestamp():
