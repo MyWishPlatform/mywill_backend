@@ -278,6 +278,7 @@ class ContractSerializer(serializers.ModelSerializer):
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
 
+
         return res
 
     def update(self, contract, validated_data):
