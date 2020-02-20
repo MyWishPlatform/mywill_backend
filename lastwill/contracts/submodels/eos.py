@@ -40,6 +40,8 @@ def implement_cleos_command(command_list):
         try:
             timer.start()
             stdout, stderr = proc.communicate()
+            print('stdout', stdout.decode(), flush=True)
+            print('stderr', stderr.decode(), flush=True)
         finally:
             timer.cancel()
         result = stdout.decode()
