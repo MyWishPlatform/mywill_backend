@@ -1142,13 +1142,22 @@ def confirm_protector_info(request):
         print(3, flush=True)
         raise PermissionDenied
     print(4, flush=True)
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=23)
-    for c in confirm_contracts:
-        c.state = 'WAITING_FOR_PAYMENT'
-        c.save()
-    contract.state = 'WAITING_FOR_PAYMENT'
-    contract.save()
-    autodeploing(contract.user.id, 5)
+    # confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=23)
+    # for c in confirm_contracts:
+    #     c.state = 'WAITING_FOR_PAYMENT'
+    #     c.save()
+    if contract.network.name == 'ETHEREUM_MAINNET':
+        contract.state = 'WAITING_FOR_PAYMENT'
+        contract.save()
+        autodeploing(contract.user.id, 5)
+    elif contract.network.name == 'ETHEREUM_ROPSTEN':
+        contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.save()
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        queue = NETWORKS[contract.network.name]['queue']
+        print('skip payment', flush=True)
+        send_in_queue(contract.id, 'launch', queue)
     print('protector confirm ok', flush=True)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
