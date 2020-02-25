@@ -178,7 +178,7 @@ class ContractDetailsTRONToken(CommonDetails):
             owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
             origin_energy_limit=100000000
         )
-        fcntl.fcntl(1, fcntl.F_SETFL, 0)
+        # fcntl.fcntl(1, fcntl.F_SETFL, 0)
 
         print('deployed contract: ', res, flush=True)
 
