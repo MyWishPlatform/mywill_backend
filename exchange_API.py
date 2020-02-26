@@ -1,6 +1,8 @@
 import requests
 import json
 import time
+from binance.client import Client
+from lastwill.settings import BINANCE_PAYMENT_ADDRESS, BINANCE_PAYMENT_PASSWORD
 
 
 class memoize_timeout:
@@ -11,30 +13,32 @@ class memoize_timeout:
     def __call__(self, f):
         def func(*args, **kwargs):
             key = (args, tuple(sorted(kwargs.items())))
-            v = self.cache.get(key, (0,0))
+            v = self.cache.get(key, (0, 0))
             # print('cache')
             if time.time() - v[1] > self.timeout:
                 # print('updating')
                 v = self.cache[key] = f(*args, **kwargs), time.time()
             return v[0]
+
         return func
 
 
-@memoize_timeout(10*60)
+@memoize_timeout(10 * 60)
 def convert(fsym, tsyms):
     eosish_factor = 1.0
     swap_factor = 1.0
     revesre_convert_eos = False
     revesre_convert_swap = False
-    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES', 'SWAP'}
+    allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES',
+               'SWAP'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
-        requests.get('https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos')
-            .json()['eosish']['eos']
+            requests.get('https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos')
+                .json()['eosish']['eos']
         )
-        #requests.get('https://api.chaince.com/tickers/eosisheos/',
+        # requests.get('https://api.chaince.com/tickers/eosisheos/',
         #             headers={'accept-version': 'v1'}).json()['price']
-        #)
+        # )
         print('eosish factor', eosish_factor, flush=True)
         if fsym == 'EOSISH':
             fsym = 'EOS'
@@ -62,9 +66,10 @@ def convert(fsym, tsyms):
         answer[tsyms] = answer[tsyms] * 0.02
         return answer
     if fsym == 'SWAP' or tsyms == 'SWAP':
-        swap_factor = float(requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swaps-network&vs_currencies=eth')
-                            .json()['swaps-network']['eth']
-        )
+        swap_factor = float(
+            requests.get('https://api.coingecko.com/api/v3/simple/price?ids=swaps-network&vs_currencies=eth')
+            .json()['swaps-network']['eth']
+            )
         print('swap factor', swap_factor, flush=True)
         if fsym == 'SWAP':
             fsym = 'ETH'
@@ -105,3 +110,10 @@ def to_wish(curr, amount=1):
 
 def swap_to_wish(amount=1):
     return amount * to_wish('SWAP', amount)
+
+
+def bnb_to_wish():
+    client = Client(BINANCE_PAYMENT_ADDRESS, BINANCE_PAYMENT_PASSWORD)
+    client.API_URL = 'https://dex.binance.org/api'
+    wish_price = client.get_ticker(symbol='WISH-2D5_BNB')[0]['lastPrice']
+    return 1 / float(wish_price)

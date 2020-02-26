@@ -1070,10 +1070,15 @@ def autodeploing(user_id, subsite_id):
     bb = UserSiteBalance.objects.get(subsite__id=subsite_id, user__id=user_id)
     if subsite_id == 4:
         contract_type = 20
+        contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type,
+                                            network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by(
+            '-created_date')
     else:
         # subsite_id == 5:
         contract_type = 23
-    contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
+        contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type,
+                                            state='WAITING_FOR_PAYMENT').order_by('-created_date')
+    # contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type, network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by('-created_date')
     for contract in contracts:
         print('check5', flush=True)
         contract_details = contract.get_details()
@@ -1130,19 +1135,29 @@ def confirm_protector_info(request):
     if contract.contract_type != 23:
         print(2, flush=True)
         raise PermissionDenied
-    if contract.network.name != 'ETHEREUM_MAINNET':
+    if contract.network.name not in ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN']:
+        print(2.5, flush=True)
         raise PermissionDenied
     if host != TOKEN_PROTECTOR_URL:
         print(3, flush=True)
         raise PermissionDenied
     print(4, flush=True)
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=23)
-    for c in confirm_contracts:
-        c.state = 'WAITING_FOR_PAYMENT'
-        c.save()
-    contract.state = 'WAITING_FOR_PAYMENT'
-    contract.save()
-    autodeploing(contract.user.id, 5)
+    # confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=23)
+    # for c in confirm_contracts:
+    #     c.state = 'WAITING_FOR_PAYMENT'
+    #     c.save()
+    if contract.network.name == 'ETHEREUM_MAINNET':
+        contract.state = 'WAITING_FOR_PAYMENT'
+        contract.save()
+        autodeploing(contract.user.id, 5)
+    elif contract.network.name == 'ETHEREUM_ROPSTEN':
+        contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.save()
+        contract_details = contract.get_details()
+        contract_details.predeploy_validate()
+        queue = NETWORKS[contract.network.name]['queue']
+        print('skip payment', flush=True)
+        send_in_queue(contract.id, 'launch', queue)
     print('protector confirm ok', flush=True)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
@@ -1153,10 +1168,23 @@ def confirm_protector_tokens(request):
     print('data type', type(request.data), flush=True)
     contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user, contract_type=23).first()
     if contract:
+        token_list = request.data.get('tokens')
         protector_contract = ContractDetailsTokenProtector.objects.get(contract=contract)
-        print('protector', protector_contract.__dict__, flush=True)
-        print('protector', protector_contract.eth_contract.__dict__, flush=True)
-        protector_contract.confirm_tokens()
+        protector_contract.approve_from_front(token_list)
+        # protector_contract.confirm_tokens()
+
+        return JsonResponse(ContractSerializer().to_representation(contract))
+
+    raise PermissionDenied
+
+
+@api_view(http_method_names=['POST'])
+def skip_protector_approve(request):
+    contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user,
+                                       contract_type=23, state='WAITING_FOR_APPROVE').first()
+    if contract:
+        contract.state = 'ACTIVE'
+        contract.save()
 
         return JsonResponse(ContractSerializer().to_representation(contract))
 
@@ -1184,19 +1212,19 @@ def get_test_tokens(request):
     # print('type', type(token_list), flush=True)
     # print(token_list, flush=True)
 
-    token_list.append(OrderedDict({
-        'token_name': 'OMST',
-        'token_short_name': 'OMST',
-        'platform': 'ethereum',
-        'address': '0xa0379b1ac68027a76373adc7800d87eb5c3fac5e'
-    }))
-
-    token_list.append(OrderedDict({
-        'token_name': 'DAPS',
-        'token_short_name': 'DAPS',
-        'platform': 'ethereum',
-        'address': '0x16e00ca19a4025405a4d9a1ceb92c945583d7c0d'
-    }))
+    # token_list.append(OrderedDict({
+    #     'token_name': 'OMST',
+    #     'token_short_name': 'OMST',
+    #     'platform': 'ethereum',
+    #     'address': '0xa0379b1ac68027a76373adc7800d87eb5c3fac5e'
+    # }))
+    #
+    # token_list.append(OrderedDict({
+    #     'token_name': 'DAPS',
+    #     'token_short_name': 'DAPS',
+    #     'platform': 'ethereum',
+    #     'address': '0x16e00ca19a4025405a4d9a1ceb92c945583d7c0d'
+    # }))
 
     return Response(token_list)
 
