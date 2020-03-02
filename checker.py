@@ -36,19 +36,24 @@ def check_all():
 
             if datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days == 6 and not details.week_mail_sent:
-                details.execution_before_mail(7)
-                print('week mail sent', flush=True)
+                try:
+                    details.execution_before_mail(7)
+                    print('week mail sent', flush=True)
+                except Exception as err:
+                    print('week mail failed', str(err), flush=True)
             elif datetime.timedelta(seconds=
                     details.end_timestamp - timezone.now().timestamp()).days == 0 and not details.day_mail_sent:
-                details.execution_before_mail(1)
-                print('day mail sent', flush=True)
-
+                try:
+                    details.execution_before_mail(1)
+                    print('day mail sent', flush=True)
+                except Exception as err:
+                    print('day mail failed', str(err), flush=True)
             if details.end_timestamp < timezone.now().timestamp():
                 try:
                     details.execute_contract()
                     print(contract.id, 'executed', flush=True)
-                except:
-                    print(contract.id, 'execution failed', flush=True)
+                except Exception as err:
+                    print(contract.id, 'execution failed', str(err), flush=True)
         else:
             try:
                 if details.active_to < timezone.now():
