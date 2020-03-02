@@ -39,13 +39,16 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'WAITING_FOR_APPROVE'
         self.contract.save()
         email = self.email if self.email else self.contract.user.email
-        print('email', email)
-        send_mail(
-            protector_deployed_subject,
-            protector_deployed_text,
-            DEFAULT_FROM_EMAIL,
-            [email]
-        )
+        print('email', email, flush=True)
+        try:
+            send_mail(
+                protector_deployed_subject,
+                protector_deployed_text,
+                DEFAULT_FROM_EMAIL,
+                [email]
+            )
+        except Exception as err:
+            print('deployed mail failed', str(err), flush=True)
 
     @classmethod
     def min_cost(cls):
