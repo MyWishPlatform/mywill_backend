@@ -27,18 +27,17 @@ class memoize_timeout:
 def convert(fsym, tsyms):
     eosish_factor = 1.0
     swap_factor = 1.0
-    revesre_convert_eos = False
-    revesre_convert_swap = False
+    wish_factor = 1.0
+    reverse_convert_eos = False
+    reverse_convert_swap = False
+    reverse_convert_wish = False
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES',
                'SWAP'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
             requests.get('https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos')
-                .json()['eosish']['eos']
+            .json()['eosish']['eos']
         )
-        # requests.get('https://api.chaince.com/tickers/eosisheos/',
-        #             headers={'accept-version': 'v1'}).json()['price']
-        # )
         print('eosish factor', eosish_factor, flush=True)
         if fsym == 'EOSISH':
             fsym = 'EOS'
@@ -48,7 +47,7 @@ def convert(fsym, tsyms):
             tsyms = 'EOS'
             if tsyms == fsym:
                 return {'EOSISH': 1 / eosish_factor}
-            revesre_convert_eos = True
+            reverse_convert_eos = True
             eosish_factor = 1 / eosish_factor
     tronish = False
     if tsyms == 'TRONISH':
@@ -79,8 +78,24 @@ def convert(fsym, tsyms):
             tsyms = 'ETH'
             if tsyms == fsym:
                 return {'SWAP': 1 / swap_factor}
-            revesre_convert_swap = True
+            reverse_convert_swap = True
             swap_factor = 1 / swap_factor
+    if fsym == 'WISH' or tsyms == 'WISH':
+        wish_factor = float(
+            requests.get('https://api.coingecko.com/api/v3/simple/price?ids=mywish&vs_currencies=eth')
+            .json()['mywish']['eth']
+            )
+        print('wish factor', wish_factor, flush=True)
+        if fsym == 'WISH':
+            fsym = 'ETH'
+            if tsyms == fsym:
+                return {'ETH': wish_factor}
+        else:
+            tsyms = 'ETH'
+            if tsyms == fsym:
+                return {'SWAP': 1 / wish_factor}
+            reverse_convert_wish = True
+            wish_factor = 1 / wish_factor
 
     if fsym not in allowed or any([x not in allowed for x in tsyms.split(',')]):
         raise Exception('currency not allowed')
@@ -89,15 +104,19 @@ def convert(fsym, tsyms):
         'http://127.0.0.1:5001/convert?fsym={fsym}&tsyms={tsyms}'.format(fsym=fsym, tsyms=tsyms)
     ).content.decode())
     # print('currency_proxi answer', answer, flush=True)
-    if revesre_convert_eos:
+    if reverse_convert_eos:
         answer = {'EOSISH': answer['EOS']}
         tsyms = 'EOSISH'
-    if revesre_convert_swap:
+    if reverse_convert_swap:
         answer = {'SWAP': answer['ETH']}
         tsyms = 'SWAP'
+    if reverse_convert_wish:
+        answer = {'WISH': answer['ETH']}
     if eosish_factor != 1.0:
         answer[tsyms] = answer[tsyms] * eosish_factor
     if swap_factor != 1.0:
+        answer[tsyms] = answer[tsyms] * swap_factor
+    if wish_factor != 1.0:
         answer[tsyms] = answer[tsyms] * swap_factor
     if tronish:
         answer['TRONISH'] = answer['TRX'] / 0.02
