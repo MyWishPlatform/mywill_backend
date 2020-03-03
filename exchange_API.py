@@ -117,7 +117,7 @@ def convert(fsym, tsyms):
     if swap_factor != 1.0:
         answer[tsyms] = answer[tsyms] * swap_factor
     if wish_factor != 1.0:
-        answer[tsyms] = answer[tsyms] * swap_factor
+        answer[tsyms] = answer[tsyms] * wish_factor
     if tronish:
         answer['TRONISH'] = answer['TRX'] / 0.02
     return answer
