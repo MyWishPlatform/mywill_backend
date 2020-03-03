@@ -112,6 +112,7 @@ def convert(fsym, tsyms):
         tsyms = 'SWAP'
     if reverse_convert_wish:
         answer = {'WISH': answer['ETH']}
+        tsyms = 'WISH'
     if eosish_factor != 1.0:
         answer[tsyms] = answer[tsyms] * eosish_factor
     if swap_factor != 1.0:
