@@ -93,7 +93,7 @@ def convert(fsym, tsyms):
         else:
             tsyms = 'ETH'
             if tsyms == fsym:
-                return {'SWAP': 1 / wish_factor}
+                return {'WISH': 1 / wish_factor}
             reverse_convert_wish = True
             wish_factor = 1 / wish_factor
 
