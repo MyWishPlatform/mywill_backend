@@ -142,10 +142,11 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     @check_transaction
     def TokenProtectorApprove(self, message):
+        token_address = message['tokenAddress'].lower()
         if int(message['tokens']) > 0:
-            approved_token = ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first()
+            approved_token = ApprovedToken.objects.filter(contract=self, address=token_address).first()
             if not approved_token:
-                approved_token = ApprovedToken(contract=self, address=message['tokenAddress'],
+                approved_token = ApprovedToken(contract=self, address=token_address,
                                                approve_from_scanner=True)
                 approved_token.save()
                 print('approved from scanner', flush=True)
@@ -154,7 +155,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                 approved_token.save()
                 print('already approved, scanner', flush=True)
         else:
-            disapproved_token = ApprovedToken.objects.filter(contract=self, address=message['tokenAddress']).first()
+            disapproved_token = ApprovedToken.objects.filter(contract=self, address=token_address).first()
             if disapproved_token:
                 disapproved_token.delete()
 
@@ -163,6 +164,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     def approve_from_front(self, tokens):
         for token in tokens:
+            token = token.lower()
             approved_token = ApprovedToken.objects.filter(contract=self, address=token).first()
             if not approved_token:
                 approved_token = ApprovedToken(contract=self, address=token,
