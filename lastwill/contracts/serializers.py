@@ -384,7 +384,9 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         if 'owner_address' not in contract_details or 'reserve_address' not in contract_details or 'end_timestamp' not in contract_details:
             raise ValidationError
         check.is_address(contract_details['owner_address'])
+        contract_details['owner_address'] = contract_details['owner_address'].lower()
         check.is_address(contract_details['reserve_address'])
+        contract_details['reserve_address'] = contract_details['reserve_address'].lower()
         if contract_details['end_timestamp'] < timezone.now().timestamp() + 30 * 60:
             raise ValidationError
 
