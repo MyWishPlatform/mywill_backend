@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from rest_framework.response import Response
 from collections import OrderedDict
 
-from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
@@ -263,51 +263,103 @@ def get_users(names):
     return users
 
 
-def get_currency_statistics():
-    mywish_info = json.loads(requests.get(URL_STATS_CURRENCY['MYWISH']).content.decode())[0]
-    mywish_info_eth = json.loads(requests.get(URL_STATS_CURRENCY['MYWISH_ETH']).content.decode())[0]
-    btc_info = json.loads(requests.get(URL_STATS_CURRENCY['BTC']).content.decode())[0]
-    eos_info = json.loads(requests.get(URL_STATS_CURRENCY['EOS']).content.decode())[0]
-    eth_info = json.loads(requests.get(URL_STATS_CURRENCY['ETH']).content.decode())[0]
-    eosish_info = float(
-        requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos']
-        )
-    usd_info = get_usd_rub_rates()
-    answer = {
-        'wish_price_usd': round(
-        float(mywish_info['price_usd']), 10),
-                          'wish_usd_percent_change_24h': round(
-        float(mywish_info[
-                  'percent_change_24h']), 10
-        ),
-    'wish_price_eth': round(float(mywish_info_eth['price_eth']), 10),
-    'wish_eth_percent_change_24h': round(
-        float(eth_info['percent_change_24h']) / float(
-            mywish_info_eth['percent_change_24h']), 10
-    ),
-    'btc_price_usd': round(float(btc_info['price_usd'])),
-    'btc_percent_change_24h': round(float(
-        btc_info['percent_change_24h']), 10
-    ),
-    'eth_price_usd': round(
-        float(eth_info['price_usd'])),
-    'eth_percent_change_24h': round(
-        float(eth_info['percent_change_24h']), 10
-    ),
-    'eos_price_usd':  round(
-        float(eos_info['price_usd']), 10),
-    'eos_percent_change_24h': round(
-        float(eos_info['percent_change_24h']), 10
-        ),
-    'eos_rank': eos_info['rank'],
-    'mywish_rank': mywish_info['rank'],
-    'bitcoin_rank': btc_info['rank'],
-    'eth_rank': eth_info['rank'],
-    'eosish_price_eos': eosish_info,
-    'eosish_price_usd': round(eosish_info * float(eos_info['price_usd']), 10),
-    'usd_price_rub': round(float(usd_info['price']), 10),
-    'usd_percent_change_24h': round(float(usd_info['change_24h']), 10)
+def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
+    parameters = {
+        'id': id_list,
+        'convert': convert_currency
     }
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[2],
+    }
+
+    session = requests.Session()
+    session.headers.update(headers)
+
+    try:
+        response = session.get(URL_STATS_CURRENCY['CoinMarketCap'], params=parameters)
+        data = response.text
+        # print(data)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.TooManyRedirects) as e:
+        print(e)
+        data = {'error': 'Exception in fetching coinmarketcap statistics'}
+        return data
+
+    return data
+
+
+def get_currency_statistics():
+    currencies_request_ids = ','.join(str(curr_id) for curr_id in URL_STATS_CURRENCY_ID.values())
+    cmc_info_usd = json.loads(get_coinmarketcap_statistics(currencies_request_ids))
+    cmc_info_eth = json.loads(get_coinmarketcap_statistics(currencies_request_ids, 'ETH'))
+
+    info_error_usd = cmc_info_usd['status']['error_message']
+    info_error_eth = cmc_info_eth['status']['error_message']
+
+    if info_error_usd is not None:
+        raise Exception(info_error_usd)
+    if info_error_eth is not None:
+        raise Exception(info_error_eth)
+
+    data_usd = cmc_info_usd['data']
+    data_eth = cmc_info_eth['data']
+
+    eosish_info = float(requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos'])
+    usd_info = get_usd_rub_rates()
+
+    currency_info = {}
+
+    for curr_id, curr_data in data_usd.items():
+        currency = curr_data['slug']
+        info = curr_data['quote']['USD']
+
+        price = info['price']
+        price_change_24h = info['percent_change_24h']
+        rank = curr_data['cmc_rank']
+
+        if currency == 'mywish':
+            price_field = 'wish_price_usd'
+            price_change_field = 'wish_usd_percent_change_24h'
+            rank_field = 'mywish_rank'
+        elif currency == 'bitcoin':
+            price_field = 'btc_price_usd'
+            price_change_field = 'btc_percent_change_24h'
+            rank_field = 'bitcoin_rank'
+        elif currency == 'ethereum':
+            price_field = 'eth_price_usd'
+            price_change_field = 'eth_percent_change_24h'
+            rank_field = 'eth_rank'
+        elif currency == 'eos':
+            price_field = 'eos_price_usd'
+            price_change_field = 'eos_percent_change_24h'
+            rank_field = 'eos_rank'
+        else:
+            raise Exception('cannot translate currency %s to field' % currency)
+
+        currency_info[price_field] = price
+        currency_info[price_change_field] = price_change_24h
+        currency_info[rank_field] = rank
+
+    wish_eth_info = data_eth[str(URL_STATS_CURRENCY_ID['MYWISH'])]['quote']['ETH']
+    currency_info['wish_price_eth'] = wish_eth_info['price']
+    wish_eth_change = currency_info['eth_percent_change_24h'] / wish_eth_info['percent_change_24h']
+    currency_info['wish_eth_percent_change_24h'] = wish_eth_change
+    currency_info['eosish_price_eos'] = eosish_info
+    currency_info['eosish_price_usd'] = eosish_info * currency_info['eos_price_usd']
+    answer['usd_price_rub'] = usd_info['price']
+    answer['usd_percent_change_24h'] = usd_info['change_24h']
+
+    answer = {}
+    for key, value in currency_info.items():
+        if 'rank' in key:
+            result_value = value
+        elif key == 'eosish_price_usd':
+            result_value = round(value, 10)
+        else:
+            result_value = round(float(value), 10)
+
+        answer[key] = result_value
+
     return answer
 
 
