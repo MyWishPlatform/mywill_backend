@@ -355,6 +355,8 @@ def get_currency_statistics():
             result_value = value
         elif key == 'eosish_price_usd':
             result_value = round(value, 2)
+        elif key == 'wish_price_eth':
+            result_value = round(float(value), 4)
         else:
             result_value = round(float(value), 2)
 
