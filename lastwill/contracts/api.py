@@ -346,8 +346,8 @@ def get_currency_statistics():
     currency_info['wish_eth_percent_change_24h'] = wish_eth_change
     currency_info['eosish_price_eos'] = eosish_info
     currency_info['eosish_price_usd'] = eosish_info * currency_info['eos_price_usd']
-    answer['usd_price_rub'] = usd_info['price']
-    answer['usd_percent_change_24h'] = usd_info['change_24h']
+    currency_info['usd_price_rub'] = usd_info['price']
+    currency_info['usd_percent_change_24h'] = usd_info['change_24h']
 
     answer = {}
     for key, value in currency_info.items():
