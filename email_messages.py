@@ -273,7 +273,7 @@ protector_deployed_subject = """Your Protector is on"""
 protector_deployed_text = """Congratulations!
 
 Your protector contract was deployed to Ethereum successfully. 
-Please make sure that you choosed tokens for the protection.
+Please make sure you select tokens for protection.
 
 You can manage the contract in your profile on protector.mywish.io
 Please contact support@mywish.io in case of any questions.
