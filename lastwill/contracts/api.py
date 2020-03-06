@@ -354,9 +354,9 @@ def get_currency_statistics():
         if 'rank' in key:
             result_value = value
         elif key == 'eosish_price_usd':
-            result_value = round(value, 10)
+            result_value = round(value, 2)
         else:
-            result_value = round(float(value), 10)
+            result_value = round(float(value), 2)
 
         answer[key] = result_value
 
