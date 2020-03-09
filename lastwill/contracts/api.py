@@ -17,7 +17,7 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue,\
-    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, ContractsStatisticsCache
+    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
