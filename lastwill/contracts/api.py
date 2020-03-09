@@ -305,6 +305,7 @@ def get_currency_statistics():
         stats = cached_stats.__dict__
 
     if '_state' in stats.keys():
+        stats.pop('id')
         stats.pop('_state')
 
     return stats
