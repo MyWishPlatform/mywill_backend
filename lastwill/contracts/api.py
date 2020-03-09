@@ -16,7 +16,8 @@ from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue,\
+    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, ContractsStatisticsCache
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -289,6 +290,27 @@ def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
 
 
 def get_currency_statistics():
+    now = timezone.now()
+    cached_stats = CurrencyStatisticsCache.objects.first()
+    # using_cached = False
+    if not cached_stats or cached_stats.updated_at <  now - datetime.timedelta(hours=1):
+        try:
+            stats = get_new_currency_statistics()
+            cached_stats = CurrencyStatisticsCache(**stats)
+            cached_stats.save()
+        except Exception as e:
+            print('Exception in retrieving coinmarketcap data. Error is:', flush=True)
+            print(e, flush=True)
+            stats = cached_stats.__dict__
+            # using_cached = True
+    else:
+        stats = cached_stats.__dict__
+        # using_cached = True
+
+    return stats
+
+
+def get_new_currency_statistics():
     currencies_request_ids = ','.join(str(curr_id) for curr_id in URL_STATS_CURRENCY_ID.values())
     cmc_info_usd = json.loads(get_coinmarketcap_statistics(currencies_request_ids))
     cmc_info_eth = json.loads(get_coinmarketcap_statistics(currencies_request_ids, 'ETH'))
