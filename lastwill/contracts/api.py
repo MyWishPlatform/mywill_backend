@@ -292,7 +292,6 @@ def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
 def get_currency_statistics():
     now = timezone.now()
     cached_stats = CurrencyStatisticsCache.objects.first()
-    # using_cached = False
     if not cached_stats or cached_stats.updated_at <  now - datetime.timedelta(hours=1):
         try:
             stats = get_new_currency_statistics()
@@ -302,10 +301,11 @@ def get_currency_statistics():
             print('Exception in retrieving coinmarketcap data. Error is:', flush=True)
             print(e, flush=True)
             stats = cached_stats.__dict__
-            # using_cached = True
     else:
         stats = cached_stats.__dict__
-        # using_cached = True
+
+    if '_state' in stats.keys():
+        stats.pop('_state')
 
     return stats
 
