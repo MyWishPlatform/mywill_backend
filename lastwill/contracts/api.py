@@ -560,8 +560,8 @@ def get_ieo_statistics():
 def get_usd_rub_rates():
     res = requests.get(url=URL_STATS_CURRENCY['RUB'], headers=BROWSER_HEADERS)
     rub_rate = {
-        'price': res.json()['price'],
-        'change_24h': res.json()['change']
+        'price': res.json()['ticker']['price'],
+        'change_24h': res.json()['ticker']['change']
     }
 
     return rub_rate
