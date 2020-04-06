@@ -503,7 +503,7 @@ class ContractDetailsEOSICO(CommonDetails):
             contract_addr = 'dubravaleriy'
         else:
             contract_addr = 'mywishtest15'
-            acc_name = token_address
+            # acc_name = token_address
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
             contract_addr, 'init', str(dates)
