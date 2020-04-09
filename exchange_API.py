@@ -83,7 +83,7 @@ def convert(fsym, tsyms):
     if fsym == 'WISH' or tsyms == 'WISH':
         wish_factor = float(
             requests.get('https://api.coingecko.com/api/v3/exchanges/binance_dex/tickers?coin_ids=mywish')
-            .json()['tickers']['converted_last']['eth']
+            .json()['tickers'][0]['converted_last']['eth']
             )
         print('wish factor', wish_factor, flush=True)
         if fsym == 'WISH':
