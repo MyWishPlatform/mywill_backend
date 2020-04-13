@@ -20,7 +20,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     month_mail_sent = models.BooleanField(default=False)
     day_mail_sent = models.BooleanField(default=False)
     week_mail_sent = models.BooleanField(default=False)
-    with_oracle = models.BooleanField(default=False, null=True)
+    with_oracle = models.BooleanField(default=False)
     oracle_inactive_interval = models.IntegerField()
     last_account_nonce = models.IntegerField()
     last_active_time = models.DateTimeField(null=True, default=None)
