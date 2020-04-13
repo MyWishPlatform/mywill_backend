@@ -390,7 +390,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         if contract_details['end_timestamp'] < timezone.now().timestamp() + 30 * 60:
             raise ValidationError
 
-        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        eth_int = EthereumProvider().get_provider(network=contract_details.contract.network.name)
         contract_details['last_account_nonce'] = int(eth_int.eth_getTransactionCount(self.owner_address, "pending"), 16)
 
         return contract_details
