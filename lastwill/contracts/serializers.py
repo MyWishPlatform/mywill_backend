@@ -394,7 +394,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
             raise ValidationError
 
         if 'oracle_inactive_interval' not in contract_details:
-            contract_details['oracle_inactive_interval'] = 0
+            contract_details['oracle_inactive_interval'] = 24 * 3600
 
         return contract_details
 

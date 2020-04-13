@@ -226,6 +226,7 @@ class ContractDetailsTokenProtector(CommonDetails):
             approved_token.save()
 
         self.contract.state = 'ACTIVE'
+        self.last_active_time = timezone.now()
         self.contract.save()
 
 
