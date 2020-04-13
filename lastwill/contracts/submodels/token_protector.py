@@ -24,6 +24,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
     day_mail_sent = models.BooleanField(default=False)
     week_mail_sent = models.BooleanField(default=False)
+    with_oracle = models.BooleanField(default=False, null=True)
 
     def predeploy_validate(self):
         # now = timezone.now().timestamp()
@@ -89,11 +90,15 @@ class ContractDetailsTokenProtector(CommonDetails):
             config_name='c-preprocessor-config.json'
         )
 
+        backend_address = checksum_encode(NETWORKS[self.contract.network.name]['address'])
+
         preproc_params = {'constants': {
             "D_OWNER_ADDRESS": checksum_encode(self.owner_address),
             "D_RESERVE_ADDRESS": checksum_encode(self.reserve_address),
-            "D_BACKEND_ADDRESS": checksum_encode(NETWORKS[self.contract.network.name]['address']),
-            "D_END_TIMESTAMP": self.end_timestamp
+            "D_BACKEND_ADDRESS": backend_address,
+            "D_END_TIMESTAMP": self.end_timestamp,
+            "D_ORACLE_ENABLE": self.with_oracle,
+            "D_ORACLE_ADDRESS": backend_address
         }}
 
         print('params for testing', preproc_params, flush=True)
