@@ -34,7 +34,7 @@ def check_all():
             user_active = None
             if details.with_oracle:
                 user_active = details.check_account_active()
-                execution_timestamp = details.last_active_time + details.oracle_inactive_interval
+                execution_timestamp = details.last_active_time + datetime.timedelta(seconds=details.oracle_inactive_interval)
             else:
                 execution_timestamp = details.end_timestamp
 
