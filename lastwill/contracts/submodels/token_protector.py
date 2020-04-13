@@ -284,6 +284,9 @@ class ContractDetailsTokenProtector(CommonDetails):
         if current_nonce > previous_nonce:
             self.last_account_nonce = current_nonce
             self.last_active_time = timezone.now()
+            self.month_mail_sent = False
+            self.week_mail_sent = False
+            self.day_mail_sent = False
             self.save()
             return True
         else:
