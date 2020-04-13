@@ -12,19 +12,19 @@ from web3 import Web3, HTTPProvider, IPCProvider
 class ContractDetailsTokenProtector(CommonDetails):
     owner_address = models.CharField(max_length=50)
     reserve_address = models.CharField(max_length=50)
-
     end_timestamp = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
-
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-
     temp_directory = models.CharField(max_length=36)
-
     approving_time = models.IntegerField(null=True, default=None)
-
+    month_mail_sent = models.BooleanField(default=False)
     day_mail_sent = models.BooleanField(default=False)
     week_mail_sent = models.BooleanField(default=False)
     with_oracle = models.BooleanField(default=False, null=True)
+    oracle_inactive_interval = models.IntegerField()
+    last_account_nonce = models.IntegerField()
+    last_active_time = models.DateTimeField(null=True, default=None)
+
 
     def predeploy_validate(self):
         # now = timezone.now().timestamp()
@@ -269,10 +269,25 @@ class ContractDetailsTokenProtector(CommonDetails):
         )
         if days == 1:
             self.day_mail_sent = True
-        else:
+        elif days > 7:
             self.week_mail_sent = True
+        else:
+            self.month_mail_sent = True
         self.save()
 
+    def check_account_active(self):
+        previous_nonce = self.last_account_nonce
+
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        current_nonce = int(eth_int.eth_getTransactionCount(self.owner_address, "pending"), 16)
+
+        if current_nonce > previous_nonce:
+            self.last_account_nonce = current_nonce
+            self.last_active_time = timezone.now()
+            self.save()
+            return True
+        else:
+            return False
 
 
 class ApprovedToken(models.Model):
@@ -281,3 +296,7 @@ class ApprovedToken(models.Model):
     is_confirmed = models.BooleanField(default=False)
     approve_from_scanner = models.BooleanField(default=False)
     approve_from_front = models.BooleanField(default=False)
+
+
+class ProtectorChecker(models.Model):
+    last_check = models.DateTimeField(default=None, null=True)

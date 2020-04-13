@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.core.mail import send_mail
 
 from lastwill.contracts.models import Contract
+from lastwill.contracts.submodels.token_protector import ProtectorChecker
 from lastwill.parint import *
 from lastwill.settings import DEFAULT_FROM_EMAIL, LASTWILL_ALIVE_TIMEOUT
 import email_messages
@@ -30,25 +31,42 @@ def check_all():
             #     send_in_pika(contract)
             pass
         elif contract.contract_type == 23:
-            print('days for execution', datetime.timedelta(seconds=
-                    details.end_timestamp - timezone.now().timestamp()).days, type(datetime.timedelta(seconds=
-                    details.end_timestamp - timezone.now().timestamp()).days), flush=True)
+            user_active = None
+            if details.with_oracle:
+                user_active = details.check_account_active()
+                execution_timestamp = details.last_active_time + details.oracle_inactive_interval
+            else:
+                execution_timestamp = details.end_timestamp
+
+            print('days for execution', datetime.timedelta(
+                seconds=execution_timestamp - timezone.now().timestamp()).days,
+                type(datetime.timedelta(seconds=execution_timestamp - timezone.now().timestamp()).days),
+                flush=True
+            )
 
             if datetime.timedelta(seconds=
-                    details.end_timestamp - timezone.now().timestamp()).days == 6 and not details.week_mail_sent:
+                    execution_timestamp - timezone.now().timestamp()).days == 29 and not details.month_mail_sent:
+                try:
+                    details.execution_before_mail(30)
+                    print('month mail sent', flush=True)
+                except Exception as err:
+                    print('month mail failed', str(err), flush=True)
+            elif datetime.timedelta(seconds=
+                    execution_timestamp - timezone.now().timestamp()).days == 6 and not details.week_mail_sent:
                 try:
                     details.execution_before_mail(7)
                     print('week mail sent', flush=True)
                 except Exception as err:
                     print('week mail failed', str(err), flush=True)
             elif datetime.timedelta(seconds=
-                    details.end_timestamp - timezone.now().timestamp()).days == 0 and not details.day_mail_sent:
+                    execution_timestamp - timezone.now().timestamp()).days == 0 and not details.day_mail_sent:
                 try:
                     details.execution_before_mail(1)
                     print('day mail sent', flush=True)
                 except Exception as err:
                     print('day mail failed', str(err), flush=True)
-            if details.end_timestamp < timezone.now().timestamp():
+
+            if execution_timestamp < timezone.now().timestamp():
                 try:
                     details.execute_contract()
                     print(contract.id, 'executed', flush=True)
