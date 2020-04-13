@@ -375,7 +375,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
 
         eth_int = EthereumProvider().get_provider(network=contract.network.name)
-        contract_details['last_account_nonce'] = int(eth_int.eth_getTransactionCount(contract_details['owner_address'], "pending"), 16)
+        kwargs['last_account_nonce'] = int(eth_int.eth_getTransactionCount(contract_details['owner_address'], "pending"), 16)
         return super().create(kwargs)
 
     def update(self, contract, details, contract_details):
@@ -392,6 +392,9 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         contract_details['reserve_address'] = contract_details['reserve_address'].lower()
         if contract_details['end_timestamp'] < timezone.now().timestamp() + 30 * 60:
             raise ValidationError
+
+        if 'oracle_inactive_interval' not in contract_details:
+            contract_details['oracle_inactive_interval'] = 0
 
         return contract_details
 
