@@ -98,7 +98,8 @@ class ContractDetailsTokenProtector(CommonDetails):
             "D_BACKEND_ADDRESS": backend_address,
             "D_END_TIMESTAMP": self.end_timestamp,
             "D_ORACLE_ENABLE": self.with_oracle,
-            "D_ORACLE_ADDRESS": backend_address
+            "D_ORACLE_ADDRESS": backend_address,
+            "D_TIMESTAMP_INTERVAL": self.oracle_inactive_interval
         }}
 
         print('params for testing', preproc_params, flush=True)
