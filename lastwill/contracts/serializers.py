@@ -376,6 +376,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
 
         eth_int = EthereumProvider().get_provider(network=contract.network.name)
         kwargs['last_account_nonce'] = int(eth_int.eth_getTransactionCount(contract_details['owner_address'], "pending"), 16)
+        kwargs['last_active_time'] = timezone.now()
         return super().create(kwargs)
 
     def update(self, contract, details, contract_details):
