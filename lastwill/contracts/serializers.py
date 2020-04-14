@@ -335,7 +335,7 @@ class ContractSerializer(serializers.ModelSerializer):
 class TokenProtectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTokenProtector
-        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email']
+        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email', 'with_oracle', 'oracle_inactive_interval']
 
     def to_representation(self, contract_details):
         if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state in [
