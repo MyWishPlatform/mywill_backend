@@ -85,6 +85,7 @@ def second_request(token_list):
 
 
 def find_by_parameters(current_time, checker_object):
+    excluded_tokens = ['THR']
     id_rank = first_request()
 
     info_for_save = second_request(id_rank)
@@ -98,6 +99,9 @@ def find_by_parameters(current_time, checker_object):
 
         token_platform = None
         token_address = '0x0000000000000000000000000000000000000000'
+
+        if value['symbol'] in excluded_tokens:
+            continue
 
         if value['platform'] is not None:
             token_platform = value['platform']['slug']
