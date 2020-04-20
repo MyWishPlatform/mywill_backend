@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.settings import LASTWILL_ALIVE_TIMEOUT
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 
 
 @contract_details('Will contract')
@@ -131,7 +131,7 @@ class ContractDetailsLastwill(CommonDetails):
         ) + 80000
         if network.name == 'RSK_MAINNET':
             result += 2 * NET_DECIMALS['ETH']
-        return 30 * NET_DECIMALS['USDT']
+        return CONTRACT_PRICE_USDT['ETH_LASTWILL'] * NET_DECIMALS['USDT']
 
     @postponable
     @check_transaction

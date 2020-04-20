@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from rest_framework.exceptions import ValidationError
 
-from lastwill.consts import CONTRACT_PRICE_EOS
+from lastwill.consts import CONTRACT_PRICE_EOS, CONTRACT_PRICE_USDT
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.json_templates import create_eos_json
 from lastwill.settings import EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
@@ -104,7 +104,7 @@ class ContractDetailsEOSToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(99 * NET_DECIMALS['USDT'])
+        return int(CONTRACT_PRICE_USDT['EOS_TOKEN'] * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):
@@ -345,7 +345,7 @@ class ContractDetailsEOSICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        cost = 195 * NET_DECIMALS['USDT']
+        cost = CONTRACT_PRICE_USDT['EOS_ICO'] * NET_DECIMALS['USDT']
         return cost
 
     @staticmethod

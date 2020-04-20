@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
-from lastwill.consts import NET_DECIMALS
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
 from lastwill.settings import TRON_NODE
 
 from tronapi import Tron, HttpProvider
@@ -85,7 +85,7 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(79 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['TRON_TOKEN'] * NET_DECIMALS['USDT'])
         return result
 
     @classmethod
@@ -262,7 +262,7 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(45 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['TRON_GAME_ASSETS'] * NET_DECIMALS['USDT'])
         return result
 
     @classmethod
@@ -428,7 +428,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(75 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['TRON_AIRDROP'] * NET_DECIMALS['USDT'])
         return result
 
     @classmethod
@@ -667,7 +667,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         )
         tron_cost = (constructPrice + checkPrice + triggerPrice) * 200 / 10 ** 6
         # result = (int(tron_cost) * convert('TRX', 'ETH')['ETH'] * 10 ** 18)
-        result = int(30 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['TRON_LOSTKEY'] * NET_DECIMALS['USDT'])
         return result
 
     @classmethod

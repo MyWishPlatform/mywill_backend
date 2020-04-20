@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from lastwill.contracts.submodels.eos import *
 from lastwill.json_templates import create_eos_token_sa_json
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
-from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS
+from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT
 
 class ContractDetailsEOSTokenSA(CommonDetails):
     token_short_name = models.CharField(max_length=64)
@@ -44,7 +44,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(195 * NET_DECIMALS['USDT'])
+        return int(CONTRACT_PRICE_USDT['EOS_TOKEN_SA'] * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost_eos(kwargs, network):

@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
-from lastwill.consts import NET_DECIMALS
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
 from lxml.html import parse, fromstring, etree
 
 
@@ -141,7 +141,7 @@ class ContractDetailsLostKey(CommonDetails):
         #     Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (
         #                 Gp * Cc + O) * DxC
         # ) + 80000
-        return 50 * NET_DECIMALS['USDT']
+        return CONTRACT_PRICE_USDT['ETH_LOSTKEY'] * NET_DECIMALS['USDT']
 
     @postponable
     @check_transaction
@@ -281,7 +281,7 @@ class ContractDetailsLostKeyTokens(CommonDetails):
         triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
 
         # return constructPrice + checkPrice + triggerPrice
-        return int(50 * NET_DECIMALS['USDT'])
+        return int(CONTRACT_PRICE_USDT['ETH_LOSTKEY_TOKENS'] * NET_DECIMALS['USDT'])
 
     @postponable
     @check_transaction

@@ -16,7 +16,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
 from email_messages import waves_sto_subject, waves_sto_text
 import json
 
@@ -225,7 +225,7 @@ class ContractDetailsWavesSTO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(50 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['WAVES_STO'] * NET_DECIMALS['USDT'])
         return result
 
     @classmethod

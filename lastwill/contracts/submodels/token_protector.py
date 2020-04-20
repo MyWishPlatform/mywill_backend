@@ -2,7 +2,7 @@ from lastwill.contracts.submodels.common import *
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 import datetime
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 from django.db import models
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
@@ -61,13 +61,13 @@ class ContractDetailsTokenProtector(CommonDetails):
     def calc_cost_usdt(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(25 * NET_DECIMALS['USDT'])
+        return int(CONTRACT_PRICE_USDT['ETH_TOKEN_PROTECTOR'] * NET_DECIMALS['USDT'])
 
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(25 * NET_DECIMALS['USDT'])
+        return int(CONTRACT_PRICE_USDT['ETH_TOKEN_PROTECTOR'] * NET_DECIMALS['USDT'])
 
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN_PROTECTOR']

@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 from email_messages import *
 
 
@@ -88,7 +88,7 @@ class ContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(125 * NET_DECIMALS['USDT'])
+        return int(149 * NET_DECIMALS['USDT'])
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -338,9 +338,10 @@ class ContractDetailsToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(79 * NET_DECIMALS['USDT'])
+        price = CONTRACT_PRICE_USDT['ETH_TOKEN']
+        result = int(price * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(79 + 450 * NET_DECIMALS['USDT'])
+            result = int(price + CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO'] * NET_DECIMALS['USDT'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):

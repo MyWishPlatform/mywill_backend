@@ -6,7 +6,7 @@ from ethereum.utils import checksum_encode
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 #from lastwill.swaps_common.models import UnifiedSwapsTable
 from email_messages import *
 
@@ -92,7 +92,7 @@ class ContractDetailsSWAPS(CommonDetails):
     def calc_cost_usdt(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(10 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['ETH_SWAPS'] * NET_DECIMALS['USDT'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -284,6 +284,6 @@ class ContractDetailsSWAPS2(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         #result = int(0.5 * NET_DECIMALS['ETH'])
-        result = int(10 * NET_DECIMALS['USDT'])
+        result = int(CONTRACT_PRICE_USDT['ETH_SWAPS'] * NET_DECIMALS['USDT'])
         return result
 
