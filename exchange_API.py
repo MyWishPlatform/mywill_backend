@@ -33,7 +33,8 @@ def convert(fsym, tsyms):
         try:
             answer = convert_symbols(fsym, tsyms)
             if tsyms not in answer:
-                print(answer)
+                print('failed to fetch convertible sum, retrying', flush=True)
+                print('answer', answer, flush=True)
                 raise ConvertationFetchError
             else:
                 break
