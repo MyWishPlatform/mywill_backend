@@ -780,7 +780,10 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         result = result.filter(contract=contract, active=True)
         state = self.request.query_params.get('state', None)
         if state:
-            result = result.filter(state=state)
+            if state == 'all_sent':
+                result = result.filter(state__in=['sent', 'completed'])
+            else:
+                result = result.filter(state=state)
         result = result.order_by('id')
         return result
 
