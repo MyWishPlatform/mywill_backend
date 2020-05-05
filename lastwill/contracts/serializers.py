@@ -227,34 +227,13 @@ class ContractSerializer(serializers.ModelSerializer):
                 contract.contract_type
             ).calc_cost(res['contract_details'], contract.network)
         usdt_cost = int(usdt_cost)
-        convert_eth_cost = convert('USDT', 'ETH')['ETH']
-        if 'ETH' not in convert_eth_cost:
-            print(convert_eth_cost)
-            raise ValidationError('could not fetch cost')
-        convert_wish_cost = convert('USDT', 'WISH')['WISH']
-        if 'WISH' not in convert_wish_cost:
-            print(convert_wish_cost)
-            raise ValidationError('could not fetch cost')
-        convert_btc_cost = convert('USDT', 'BTC')['BTC']
-        if 'BTC' not in convert_btc_cost:
-            print(convert_btc_cost)
-            raise ValidationError('could not fetch cost')
-        convert_eos_cost = convert('USDT', 'EOS')['EOS']
-        if 'EOS' not in convert_eos_cost:
-            print(convert_eos_cost)
-            raise ValidationError('could not fetch cost')
-        convert_tron_cost = convert('USDT', 'TRX')['TRX']
-        if 'TRON' not in convert_tron_cost:
-            print(convert_tron_cost)
-            raise ValidationError('could not fetch cost')
-
         res['cost'] = {
             'USDT': str(usdt_cost),
-            'ETH': str(int(int(usdt_cost) / 10 ** 6 * convert_eth_cost['ETH'] * 10 ** 18)),
-            'WISH': str(int(int(usdt_cost) / 10 ** 6 * convert_wish_cost['WISH'] * 10 ** 18)),
-            'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * convert_btc_cost['BTC'] * 10 ** 8), 0))),
-            'EOS': str(int(int(usdt_cost) / 10 ** 6 * convert_eos_cost['EOS'] * 10 ** 4)),
-            'TRON': str(int(round((int(usdt_cost) * convert_tron_cost['TRX']), 0))),
+            'ETH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
+            'WISH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
+            'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8), 0))),
+            'EOS': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'EOS')['EOS'] * 10 ** 4)),
+            'TRON': str(int(round((int(usdt_cost) * convert('USDT', 'TRX')['TRX']), 0))),
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(

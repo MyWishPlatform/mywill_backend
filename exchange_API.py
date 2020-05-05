@@ -5,6 +5,10 @@ from binance.client import Client
 from lastwill.settings import BINANCE_PAYMENT_ADDRESS, BINANCE_PAYMENT_PASSWORD
 
 
+class ConvertationFetchError(Exception):
+    pass
+
+
 class memoize_timeout:
     def __init__(self, timeout):
         self.timeout = timeout
@@ -25,6 +29,23 @@ class memoize_timeout:
 
 @memoize_timeout(10 * 60)
 def convert(fsym, tsyms):
+    for convert_attempt in range(5):
+        try:
+            answer = convert_symbols(fsym, tsyms)
+            if tsyms not in answer:
+                print(answer)
+                raise ConvertationFetchError
+            else:
+                break
+        except ConvertationFetchError:
+            pass
+    else:
+        raise Exception('cannot fetch cost for 5 attempts')
+
+    return answer
+
+
+def convert_symbols(fsym, tsyms):
     eosish_factor = 1.0
     swap_factor = 1.0
     wish_factor = 1.0
