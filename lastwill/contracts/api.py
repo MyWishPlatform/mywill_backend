@@ -823,7 +823,9 @@ def load_airdrop(request):
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
             raise PermissionDenied
-        contract.airdropaddress_set.all().delete()
+        elif details.airdrop_in_progress:
+            raise PermissionDenied
+        contract.airdropaddress_set.exclude(state='completed').delete()
         addresses = request.data.get('addresses')
         if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET']:
             for x in addresses:
@@ -835,8 +837,7 @@ def load_airdrop(request):
         AirdropAddress.objects.bulk_create([AirdropAddress(
                 contract=contract,
                 address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
-                amount=x['amount'],
-                iteration=details.addresses_iteration,
+                amount=x['amount']
         ) for x in addresses])
     else:
         if contract.eosairdropaddress_set.filter(state__in=('processing', 'sent')).count():

@@ -13,7 +13,6 @@ class AirdropAddress(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
         db_index=True
     )
-    iteration = models.IntegerField(default=0)
 
 
 @contract_details('Airdrop')
@@ -23,7 +22,7 @@ class ContractDetailsAirdrop(CommonDetails):
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
-    addresses_iteration = models.IntegerField(default=0)
+    airdrop_in_progress = models.BooleanField(default=False)
 
     def get_arguments(self, *args, **kwargs):
         return [
@@ -86,7 +85,6 @@ class ContractDetailsAirdrop(CommonDetails):
                 contract=self.contract,
                 active=True,
                 state=old_state,
-                iteration=self.addresses_iteration,
             ).exclude(id__in=ids).first()
             # in case 'pending' msg was lost or dropped, but 'commited' is there
             if addr is None and message['status'] == 'COMMITTED':
@@ -97,7 +95,6 @@ class ContractDetailsAirdrop(CommonDetails):
                     contract=self.contract,
                     active=True,
                     state=old_state,
-                    iteration = self.addresses_iteration,
                 ).exclude(id__in=ids).first()
             if addr is None:
                 continue
@@ -110,6 +107,12 @@ class ContractDetailsAirdrop(CommonDetails):
         AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
         if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
                                               active=True).count() == 0:
-            self.addresses_iteration += 1
-            # self.contract.state = 'ENDED'
-            # self.contract.save()
+            self.airdrop_in_progress = False
+            self.save()
+
+            self.contract.airdropaddress_set.filter(active=True).update(state='completed')
+
+        else:
+            self.airdrop_in_progress = True
+            self.save()
+
