@@ -85,7 +85,7 @@ class ContractViewSet(ModelViewSet):
     def get_queryset(self):
         result = self.queryset.order_by('-created_date')
         host = self.request.META['HTTP_HOST']
-        print('host is', host, flush=True)
+        # print('host is', host, flush=True)
         if host == MY_WISH_URL:
             result = result.exclude(contract_type__in=[20, 21, 22, 23])
             # result = result.exclude(contract_type__in=[20, 21, 22])
