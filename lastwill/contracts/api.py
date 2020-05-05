@@ -834,7 +834,8 @@ def load_airdrop(request):
         AirdropAddress.objects.bulk_create([AirdropAddress(
                 contract=contract,
                 address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
-                amount=x['amount']
+                amount=x['amount'],
+                iteration=x['iteration']
         ) for x in addresses])
     else:
         if contract.eosairdropaddress_set.filter(state__in=('processing', 'sent')).count():
