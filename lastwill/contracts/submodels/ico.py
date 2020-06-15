@@ -14,8 +14,10 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USD
 from email_messages import *
 
 
-@contract_details('MyWish ICO')
-class ContractDetailsICO(CommonDetails):
+class AbstractContractDetailsICO(CommonDetails):
+    class Meta:
+        abstract = True
+
     sol_path = 'lastwill/contracts/contracts/ICO.sol'
 
     soft_cap = models.DecimalField(
@@ -298,8 +300,15 @@ class ContractDetailsICO(CommonDetails):
         self.save()
 
 
-@contract_details('Token contract')
-class ContractDetailsToken(CommonDetails):
+@contract_details('MyWish ICO')
+class ContractDetailsICO(AbstractContractDetailsICO):
+    pass
+
+
+class AbstractContractDetailsToken(CommonDetails):
+    class Meta:
+        abstract = True
+
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
@@ -401,7 +410,8 @@ class ContractDetailsToken(CommonDetails):
                 mint_info = mint_info + '\n' + th.address + '\n'
                 mint_info = mint_info + str(th.amount) + '\n'
                 if th.freeze_date:
-                    mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+                    mint_info = mint_info + str(
+                        datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
             mail = EmailMessage(
                 subject=authio_subject,
                 body=authio_message.format(
@@ -448,3 +458,8 @@ class ContractDetailsToken(CommonDetails):
 
     def initialized(self, message):
         pass
+
+
+@contract_details('Token contract')
+class ContractDetailsToken(AbstractContractDetailsToken):
+    pass

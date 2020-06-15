@@ -15,8 +15,9 @@ class AirdropAddress(models.Model):
     )
 
 
-@contract_details('Airdrop')
-class ContractDetailsAirdrop(CommonDetails):
+class AbstractContractDetailsAirdrop(CommonDetails):
+    class Meta:
+        abstract = True
 
     contract = models.ForeignKey(Contract, null=True)
     admin_address = models.CharField(max_length=50)
@@ -51,7 +52,7 @@ class ContractDetailsAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        #return 0.5 * 10**18
+        # return 0.5 * 10**18
         return CONTRACT_PRICE_USDT['ETH_AIRDROP'] * NET_DECIMALS['USDT']
 
     @classmethod
@@ -106,7 +107,7 @@ class ContractDetailsAirdrop(CommonDetails):
                   flush=True)
         AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
         if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
-                                              active=True).count() == 0:
+                                                   active=True).count() == 0:
             self.airdrop_in_progress = False
             self.save()
 
@@ -116,3 +117,8 @@ class ContractDetailsAirdrop(CommonDetails):
             self.airdrop_in_progress = True
             self.save()
 
+
+
+@contract_details('Airdrop')
+class ContractDetailsAirdrop(AbstractContractDetailsAirdrop):
+    pass
