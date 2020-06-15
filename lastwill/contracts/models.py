@@ -14,6 +14,14 @@ from .submodels.tron import *
 from .submodels.swaps import *
 from .submodels.waves import *
 from .submodels.token_protector import *
+from .submodels.binance.airdrop import *
+from .submodels.binance.deffered import *
+from .submodels.binance.ico import *
+from .submodels.binance.investment_pool import *
+from .submodels.binance.lastwill import *
+from .submodels.binance.lost_key import *
+from .submodels.binance.lost_key_tokens import *
+from .submodels.binance.token import *
 
 
 class CurrencyStatisticsCache(models.Model):
