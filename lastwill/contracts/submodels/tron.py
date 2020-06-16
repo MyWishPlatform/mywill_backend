@@ -180,17 +180,17 @@ class ContractDetailsTRONToken(CommonDetails):
         )
         # fcntl.fcntl(1, fcntl.F_SETFL, 0)
 
-        print('deployed contract: ', res, flush=True)
+        print('deployed contract. address: {}, tx: {}'.format(res['txID'], res['contract_address']), flush=True)
 
         self.tron_contract_token.address = res['contract_address']
         self.tron_contract_token.save()
 
 
         sign = tron.trx.sign(res)
-        print('signed contract: ', sign, flush=True)
+        print('signed tx: ', sign['signature'], flush=True)
 
         res = tron.trx.broadcast(sign)
-        print('broadcast: ', res, flush=True)
+        print('broadcast result: ', res['result'], flush=True)
 
         if res['result']:
             self.tron_contract_token.tx_hash = res['transaction']['txID']
