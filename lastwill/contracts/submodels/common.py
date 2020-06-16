@@ -341,6 +341,14 @@ class Contract(models.Model):
         waves = apps.get_model('contracts', 'ContractDetailsWavesSTO')
         swap2 = apps.get_model('contracts', 'ContractDetailsSWAPS2')
         token_protector = apps.get_model('contracts', 'ContractDetailsTokenProtector')
+        binance_lastwill = apps.get_model('contracts', 'ContractDetailsBinanceLastwill')
+        binance_lostkey = apps.get_model('contracts', 'ContractDetailsBinanceLostKey')
+        binance_deffered = apps.get_model('contracts', 'ContractDetailsBinanceDelayedPayment')
+        binance_ico = apps.get_model('contracts', 'ContractDetailsBinanceICO')
+        binance_token = apps.get_model('contracts', 'ContractDetailsBinanceToken')
+        binance_airdrop = apps.get_model('contracts', 'ContractDetailsBinanceAirdrop')
+        binance_investment = apps.get_model('contracts', 'ContractDetailsBinanceInvestmentPool')
+        binance_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsBinanceLostKeyTokens')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -367,6 +375,14 @@ class Contract(models.Model):
         contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
         contract_details_types[21] = {'name': 'SWAPS Contract', 'model': swap2}
         contract_details_types[23] = {'name': 'Token protector contract', 'model': token_protector}
+        contract_details_types[24] = {'name': 'Binance Will contract', 'model': binance_lastwill}
+        contract_details_types[25] = {'name': 'Binance Wallet contract (lost key)', 'model': binance_lostkey}
+        contract_details_types[26] = {'name': 'Binance Deferred payment contract', 'model': binance_deffered}
+        contract_details_types[27] = {'name': 'Binance MyWish ICO', 'model': binance_ico}
+        contract_details_types[28] = {'name': 'Binance Token contract', 'model': binance_token}
+        contract_details_types[29] = {'name': 'Binance Airdrop', 'model': binance_airdrop}
+        contract_details_types[30] = {'name': 'Binance Investment Pool', 'model': binance_investment}
+        contract_details_types[31] = {'name': 'Binance LostKey with tokens', 'model': binance_lostkey_tokens}
 
         return contract_details_types
 

@@ -29,7 +29,10 @@ from lastwill.contracts.models import (
     ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
     ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
     ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2,
-    ContractDetailsTokenProtector, ApprovedToken
+    ContractDetailsTokenProtector, ApprovedToken,
+    ContractDetailsBinanceLostKeyTokens, ContractDetailsBinanceToken, ContractDetailsBinanceDelayedPayment,
+    ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
+    ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -128,8 +131,6 @@ class TokenHolderSerializer(serializers.ModelSerializer):
     class Meta:
         model = TokenHolder
         fields = ('address', 'amount', 'freeze_date', 'name')
-
-
 
 
 class ContractSerializer(serializers.ModelSerializer):
@@ -278,7 +279,6 @@ class ContractSerializer(serializers.ModelSerializer):
                 'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
             }
 
-
         return res
 
     def update(self, contract, validated_data):
@@ -328,14 +328,23 @@ class ContractSerializer(serializers.ModelSerializer):
             20: ContractDetailsSWAPSSerializer,
             22: ContractDetailsSTOSerializer,
             21: ContractDetailsSWAPS2Serializer,
-            23: TokenProtectorSerializer
+            23: TokenProtectorSerializer,
+            24: ContractDetailsBinanceLastwill,
+            25: ContractDetailsBinanceLostKey,
+            26: ContractDetailsBinanceDelayedPayment,
+            27: ContractDetailsBinanceICO,
+            28: ContractDetailsBinanceToken,
+            29: ContractDetailsBinanceAirdrop,
+            30: ContractDetailsBinanceInvestmentPool,
+            31: ContractDetailsBinanceLostKeyTokens
         }[contract_type]
 
 
 class TokenProtectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTokenProtector
-        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email', 'with_oracle', 'oracle_inactive_interval']
+        fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email', 'with_oracle',
+                  'oracle_inactive_interval']
 
     def to_representation(self, contract_details):
         if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state in [
@@ -375,7 +384,8 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
         kwargs['contract'] = contract
 
         eth_int = EthereumProvider().get_provider(network=contract.network.name)
-        kwargs['last_account_nonce'] = int(eth_int.eth_getTransactionCount(contract_details['owner_address'], "pending"), 16)
+        kwargs['last_account_nonce'] = int(
+            eth_int.eth_getTransactionCount(contract_details['owner_address'], "pending"), 16)
         kwargs['last_active_time'] = timezone.now()
         return super().create(kwargs)
 
@@ -931,7 +941,7 @@ class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         address_set = contract_details.contract.airdropaddress_set
-        res['added_count'] = address_set.filter(state='added',active=True).count()
+        res['added_count'] = address_set.filter(state='added', active=True).count()
         res['processing_count'] = address_set.filter(state='processing', active=True).count()
         res['sent_count'] = address_set.filter(state='sent', active=True).count()
         res['total_sent_count'] = address_set.filter(state='sent', active=True).count() + \
@@ -1763,3 +1773,123 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
         if 'soft_cap' not in details:
             details['soft_cap'] = 0
         return details
+
+
+class ContractDetailsBinanceAirdropSerializer(ContractDetailsAirdropSerializer):
+    class Meta(ContractDetailsAirdropSerializer.Meta):
+        model = ContractDetailsBinanceAirdrop
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = BinanceContractSerializer().to_representation(contract_details.eth_contract)
+        address_set = contract_details.contract.airdropaddress_set
+        res['added_count'] = address_set.filter(state='added', active=True).count()
+        res['processing_count'] = address_set.filter(state='processing', active=True).count()
+        res['sent_count'] = address_set.filter(state='sent', active=True).count()
+        res['total_sent_count'] = address_set.filter(state='sent', active=True).count() + \
+                                  address_set.filter(state='completed', active=True).count()
+        return res
+
+
+class ContractDetailsBinanceDelayedPaymentSerializer(ContractDetailsDelayedPaymentSerializer):
+    class Meta(ContractDetailsDelayedPaymentSerializer.Meta):
+        model = ContractDetailsBinanceDelayedPayment
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+
+class ContractDetailsBinanceICOSerializer(ContractDetailsICOSerializer):
+    class Meta(ContractDetailsICOSerializer.Meta):
+        model = ContractDetailsBinanceICO
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(
+            contract_details.eth_contract_crowdsale)
+        res['rate'] = int(res['rate'])
+        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+            res['eth_contract_crowdsale']['source_code'] = ''
+        return res
+
+
+class ContractDetailsBinanceInvestmentPoolSerializer(ContractDetailsInvestmentPoolSerializer):
+    class Meta(ContractDetailsInvestmentPoolSerializer.Meta):
+        model = ContractDetailsBinanceInvestmentPool
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        if contract_details.contract.state not in ('ACTIVE', 'CANCELLED', 'DONE', 'ENDED'):
+            res.pop('link', '')
+        res['last_balance'] = count_last_balance(contract_details.contract)
+        return res
+
+
+class ContractDetailsBinanceLastwillSerializer(ContractDetailsLastwillSerializer):
+    class Meta(ContractDetailsLastwillSerializer.Meta):
+        model = ContractDetailsBinanceLastwill
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        heir_serializer = HeirSerializer()
+        if not contract_details:
+            print('*' * 50, contract_details.id, flush=True)
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+
+class ContractDetailsBinanceLostKeySerializer(ContractDetailsLostKeySerializer):
+    class Meta(ContractDetailsLostKeySerializer.Meta):
+        model = ContractDetailsBinanceLostKey
+
+
+class ContractDetailsBinanceLostKeyTokensSerializer(ContractDetailsLostKeyTokensSerializer):
+    class Meta(ContractDetailsLostKeyTokensSerializer.Meta):
+        model = ContractDetailsBinanceLostKeyTokens
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        heir_serializer = HeirSerializer()
+        if not contract_details:
+            print('*' * 50, contract_details.id, flush=True)
+        res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
+
+        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+            res['eth_contract']['source_code'] = ''
+        return res
+
+
+class ContractDetailsBinanceTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsBinanceToken
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(
+                contract__state='ACTIVE'):
+            res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(
+                contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
+        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+        return res
