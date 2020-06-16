@@ -36,9 +36,8 @@ class ParInt:
             else:
                 network = 'ETHEREUM_MAINNET'
         print('network', network, type(network))
-        self.addr = NETWORKS[network]['host']
-        self.port = NETWORKS[network]['port']
-        print('parity interface', self.addr, self.port, flush=True)
+        self.node_url = NETWORKS[network]['node_url']
+        print('parity interface', self.node_url, flush=True)
 
     def __getattr__(self, method):
         def f(*args):
@@ -49,8 +48,7 @@ class ParInt:
                     'jsonrpc': '2.0',
             }
             try:
-                temp = requests.post(
-                        'http://{}:{}/'.format(self.addr, self.port),
+                temp = requests.post(self.node_url,
                         json=arguments,
                         headers={'Content-Type': 'application/json'}
                 )
