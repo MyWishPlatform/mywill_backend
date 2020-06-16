@@ -329,14 +329,14 @@ class ContractSerializer(serializers.ModelSerializer):
             22: ContractDetailsSTOSerializer,
             21: ContractDetailsSWAPS2Serializer,
             23: TokenProtectorSerializer,
-            24: ContractDetailsBinanceLastwill,
-            25: ContractDetailsBinanceLostKey,
-            26: ContractDetailsBinanceDelayedPayment,
-            27: ContractDetailsBinanceICO,
-            28: ContractDetailsBinanceToken,
-            29: ContractDetailsBinanceAirdrop,
-            30: ContractDetailsBinanceInvestmentPool,
-            31: ContractDetailsBinanceLostKeyTokens
+            24: ContractDetailsBinanceLastwillSerializer,
+            25: ContractDetailsBinanceLostKeySerializer,
+            26: ContractDetailsBinanceDelayedPaymentSerializer,
+            27: ContractDetailsBinanceICOSerializer,
+            28: ContractDetailsBinanceTokenSerializer,
+            29: ContractDetailsBinanceAirdropSerializer,
+            30: ContractDetailsBinanceInvestmentPoolSerializer,
+            31: ContractDetailsBinanceLostKeyTokensSerializer
         }[contract_type]
 
 
