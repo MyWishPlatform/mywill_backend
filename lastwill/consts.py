@@ -11,7 +11,9 @@ MAIL_NETWORK = {
     'TRON_MAINNET': 'TRON',
     'TRON_TESTNET': 'TRON Testnet',
     'WAVES_MAINNET': 'WAVES',
-    'WAVES_TESTNET': 'WAVES Testnet'
+    'WAVES_TESTNET': 'WAVES Testnet',
+    'BINANCE_MAINNET': 'Binance',
+    'BINANCE_TESTNET': 'Binance Testnet'
 }
 
 API_NETWORK = {
