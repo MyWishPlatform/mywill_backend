@@ -17,3 +17,12 @@ class ContractDetailsBinanceLastwill(AbstractContractDetailsLastwill):
         if NETWORKS[network.name]['is_free']:
             return 0
         return CONTRACT_PRICE_USDT['BINANCE_LASTWILL'] * NET_DECIMALS['USDT']
+
+    def get_arguments(self, *args, **kwargs):
+        return [
+            self.user_address,
+            [h.address for h in self.contract.heir_set.all()],
+            [h.percentage for h in self.contract.heir_set.all()],
+            self.check_interval,
+            False,
+        ]

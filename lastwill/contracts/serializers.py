@@ -1781,7 +1781,7 @@ class ContractDetailsBinanceAirdropSerializer(ContractDetailsAirdropSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        res['eth_contract'] = BinanceContractSerializer().to_representation(contract_details.eth_contract)
+        res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         address_set = contract_details.contract.airdropaddress_set
         res['added_count'] = address_set.filter(state='added', active=True).count()
         res['processing_count'] = address_set.filter(state='processing', active=True).count()
@@ -1886,9 +1886,9 @@ class ContractDetailsBinanceTokenSerializer(ContractDetailsTokenSerializer):
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
                                 contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.binance_ico_details_token.filter(
                 contract__state='ACTIVE'):
-            res['crowdsale'] = contract_details.eth_contract_token.ico_details_token.filter(
+            res['crowdsale'] = contract_details.eth_contract_token.binance_ico_details_token.filter(
                 contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
         if contract_details.contract.network.name in ['BINANCE_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
