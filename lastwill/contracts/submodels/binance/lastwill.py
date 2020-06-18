@@ -8,7 +8,7 @@ class ContractDetailsBinanceLastwill(AbstractContractDetailsLastwill):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='BINANCE_MAINNET')
+        network = Network.objects.get(name='BINANCE_SMART_MAINNET')
         cost = cls.calc_cost({}, network)
         return cost
 

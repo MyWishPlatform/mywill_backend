@@ -1798,7 +1798,7 @@ class ContractDetailsBinanceDelayedPaymentSerializer(ContractDetailsDelayedPayme
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+        if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
             res['eth_contract']['source_code'] = ''
         return res
 
@@ -1816,7 +1816,7 @@ class ContractDetailsBinanceICOSerializer(ContractDetailsICOSerializer):
         res['eth_contract_crowdsale'] = EthContractSerializer().to_representation(
             contract_details.eth_contract_crowdsale)
         res['rate'] = int(res['rate'])
-        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+        if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
             res['eth_contract_crowdsale']['source_code'] = ''
         return res
@@ -1829,7 +1829,7 @@ class ContractDetailsBinanceInvestmentPoolSerializer(ContractDetailsInvestmentPo
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
-        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+        if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
             res['eth_contract']['source_code'] = ''
         if contract_details.contract.state not in ('ACTIVE', 'CANCELLED', 'DONE', 'ENDED'):
             res.pop('link', '')
@@ -1849,7 +1849,7 @@ class ContractDetailsBinanceLastwillSerializer(ContractDetailsLastwillSerializer
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
-        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+        if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
             res['eth_contract']['source_code'] = ''
         return res
 
@@ -1871,7 +1871,7 @@ class ContractDetailsBinanceLostKeyTokensSerializer(ContractDetailsLostKeyTokens
         res['heirs'] = [heir_serializer.to_representation(heir) for heir in contract_details.contract.heir_set.all()]
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
 
-        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+        if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
             res['eth_contract']['source_code'] = ''
         return res
 
@@ -1890,6 +1890,6 @@ class ContractDetailsBinanceTokenSerializer(ContractDetailsTokenSerializer):
                 contract__state='ACTIVE'):
             res['crowdsale'] = contract_details.eth_contract_token.binance_ico_details_token.filter(
                 contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
-        if contract_details.contract.network.name in ['BINANCE_TESTNET']:
+        if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res
