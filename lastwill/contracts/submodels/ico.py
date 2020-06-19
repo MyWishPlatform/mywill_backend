@@ -181,7 +181,7 @@ class AbstractContractDetailsICO(CommonDetails):
             print('nonce', nonce)
             print('transferOwnership message signed')
             signed_data = sign_transaction(
-                address, nonce, 100000, self.contract.network.name,
+                address, nonce, 1000000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
                 contract_data=binascii.hexlify(tr.encode_function_call(
                     'transferOwnership', [self.eth_contract_crowdsale.address]
