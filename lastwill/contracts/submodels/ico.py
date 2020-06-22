@@ -241,7 +241,8 @@ class AbstractContractDetailsICO(CommonDetails):
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])
-            ).decode()
+            ).decode(),
+            gas_price=int(41 * 10 ** 9 * 1.2)
         )
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
