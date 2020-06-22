@@ -17,7 +17,8 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue,\
-    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache
+    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache,\
+    ContractDetailsBinanceInvestmentPool
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -857,11 +858,16 @@ def load_airdrop(request):
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_link(request):
-    details = ContractDetailsInvestmentPool.objects.get(
+    details = ContractDetailsInvestmentPool.objects.filter(
         link=request.query_params['link'],
         contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
     )
-    contract = details.contract
+    if not details:
+        details = ContractDetailsBinanceInvestmentPool.objects.filter(
+            link=request.query_params['link'],
+            contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
+        )
+    contract = details.first().contract
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 
