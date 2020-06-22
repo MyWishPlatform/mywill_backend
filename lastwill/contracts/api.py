@@ -821,7 +821,7 @@ def convert_airdrop_address_to_hex(address):
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     details = contract.get_details()
-    if contract.user != request.user or contract.contract_type not in [8, 13, 17] or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13, 17, 29] or contract.state != 'ACTIVE':
         raise PermissionDenied
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
