@@ -16,7 +16,7 @@ def get_parsing_tokenholdings(address):
     pages = 16
     results = []
     for i in range(pages):
-        page = get_tokenholdings_page(address, i+1)
+        page = get_tokenholdings_page(address, i + 1)
         if len(page) != 0:
             results.extend(page)
     return results
@@ -35,11 +35,11 @@ def get_tokenholdings_page(address, page):
         if el.tag == 'tr':
             tr_list.append(el)
 
-    tr_list = tr_list[:int((len(tr_list)/2))]
+    tr_list = tr_list[:int((len(tr_list) / 2))]
 
     if len(tr_list) >= 1:
         res = []
-        tr_list = tr_list[:int((len(tr_list)/2))]
+        tr_list = tr_list[:int((len(tr_list) / 2))]
         for el in tr_list:
             value = el[3].text_content().split()
             amount = value[0].replace(',', '')
@@ -68,8 +68,10 @@ def get_tokenholdings_page(address, page):
         return []
 
 
-@contract_details('Wallet contract (lost key)')
-class ContractDetailsLostKey(CommonDetails):
+class AbstractContractDetailsLostKey(CommonDetails):
+    class Meta:
+        abstract = True
+
     sol_path = 'lastwill/lost-key/'
     source_filename = 'contracts/LostKeyDelayedPaymentWallet.sol'
     result_filename = 'build/contracts/LostKeyDelayedPaymentWallet.json'
@@ -93,7 +95,7 @@ class ContractDetailsLostKey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            2**256-1,
+            2 ** 256 - 1,
             0,
         ]
 
@@ -134,7 +136,7 @@ class ContractDetailsLostKey(CommonDetails):
         B = heirs_num
         Cc = 124852
         DxC = max(abs((
-                                  datetime.date.today() - active_to).total_seconds() / check_interval),
+                              datetime.date.today() - active_to).total_seconds() / check_interval),
                   1)
         O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
         # return 2 * int(
@@ -205,7 +207,14 @@ class ContractDetailsLostKey(CommonDetails):
 
 
 @contract_details('Wallet contract (lost key)')
-class ContractDetailsLostKeyTokens(CommonDetails):
+class ContractDetailsLostKey(AbstractContractDetailsLostKey):
+    pass
+
+
+class AbstractContractDetailsLostKeyTokens(CommonDetails):
+    class Meta:
+        abstract = True
+
     user_address = models.CharField(max_length=50, null=True, default=None)
     check_interval = models.IntegerField()
     active_to = models.DateTimeField()
@@ -266,11 +275,11 @@ class ContractDetailsLostKeyTokens(CommonDetails):
         triggerGas = 32000
         triggerGasPerHeir = 42000
         triggerGasPerToken = 18000
-        heirsCount= int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(
+        heirsCount = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(
             kwargs['heirs'])
 
         constructPrice = gasPrice * (
-        constructGas + heirsCount * constructGasPerHeir)
+                constructGas + heirsCount * constructGasPerHeir)
 
         checkCount = max(abs(
             (datetime.date.today() - active_to).total_seconds() / check_interval
@@ -278,7 +287,7 @@ class ContractDetailsLostKeyTokens(CommonDetails):
         checkPrice = checkGas * gasPrice * checkCount
 
         triggerPrice = gasPrice * (
-        triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
+                triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
 
         # return constructPrice + checkPrice + triggerPrice
         return int(CONTRACT_PRICE_USDT['ETH_LOSTKEY_TOKENS'] * NET_DECIMALS['USDT'])
@@ -391,3 +400,8 @@ class ContractDetailsLostKeyTokens(CommonDetails):
         eth_contract.save()
         self.eth_contract = eth_contract
         self.save()
+
+
+@contract_details('Wallet contract (lost key)')
+class ContractDetailsLostKeyTokens(AbstractContractDetailsLostKeyTokens):
+    pass

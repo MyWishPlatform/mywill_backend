@@ -17,7 +17,8 @@ from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue,\
-    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache
+    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache,\
+    ContractDetailsBinanceInvestmentPool
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
@@ -126,33 +127,73 @@ def get_token_contracts(request):
     if request.user.is_anonymous:
         return Response([])
     res = []
-    eth_contracts = EthContract.objects.filter(
-             contract__contract_type__in=(4, 5),
-             contract__user=request.user,
-             address__isnull=False,
-             contract__network=request.query_params['network'],
-    )
+    network_id = int(request.query_params['network'])
+    if network_id not in [22, 23]:
+        eth_contracts = EthContract.objects.filter(
+                 contract__contract_type__in=(4, 5),
+                 contract__user=request.user,
+                 address__isnull=False,
+                 contract__network=network_id,
+        )
+        get_eth_token_contracts(eth_contracts, res)
+    else:
+        binance_contracts = EthContract.objects.filter(
+                 contract__contract_type__in=(27, 28),
+                 contract__user=request.user,
+                 address__isnull=False,
+                 contract__network=network_id,
+        )
+        get_binance_token_contracts(binance_contracts, res)
+
+    return Response(res)
+
+
+def get_eth_token_contracts(eth_contracts, res):
     for ec in eth_contracts:
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
-            if any([x.contract.contract_type == 4 and x.contract.state not in ('CREATED', 'ENDED') for x in ec.ico_details_token.all()]):
+            if any([x.contract.contract_type == 4 and x.contract.state not in ('CREATED', 'ENDED') for x in
+                    ec.ico_details_token.all()]):
                 state = 'running'
-            elif any([x.contract.contract_type == 4 and not x.continue_minting and x.contract.state =='ENDED' for x in ec.ico_details_token.all()]):
+            elif any([x.contract.contract_type == 4 and not x.continue_minting and x.contract.state == 'ENDED' for x in
+                      ec.ico_details_token.all()]):
                 state = 'closed'
             elif any([x.contract.contract_type == 5 and x.contract.state == 'ENDED' for x in ec.token_details_token.all()]):
                 state = 'closed'
             else:
                 state = 'ok'
             res.append({
-                    'id': ec.id,
-                    'address': ec.address,
-                    'token_name': details.token_name,
-                    'token_short_name': details.token_short_name,
-                    'decimals': details.decimals,
-                    'state': state
+                'id': ec.id,
+                'address': ec.address,
+                'token_name': details.token_name,
+                'token_short_name': details.token_short_name,
+                'decimals': details.decimals,
+                'state': state
             })
-    return Response(res)
 
+
+def get_binance_token_contracts(binance_contracts, res):
+    for ec in binance_contracts:
+        details = ec.contract.get_details()
+        if details.eth_contract_token == ec:
+            if any([x.contract.contract_type == 27 and x.contract.state not in ('CREATED', 'ENDED') for x in
+                    ec.binance_ico_details_token.all()]):
+                state = 'running'
+            elif any([x.contract.contract_type == 27 and not x.continue_minting and x.contract.state == 'ENDED' for x in
+                      ec.binance_ico_details_token.all()]):
+                state = 'closed'
+            elif any([x.contract.contract_type == 28 and x.contract.state == 'ENDED' for x in ec.binance_token_details_token.all()]):
+                state = 'closed'
+            else:
+                state = 'ok'
+            res.append({
+                'id': ec.id,
+                'address': ec.address,
+                'token_name': details.token_name,
+                'token_short_name': details.token_short_name,
+                'decimals': details.decimals,
+                'state': state
+            })
 
 def check_error_promocode(promo_str, contract_type):
     promo = Promo.objects.filter(promo_str=promo_str).first()
@@ -821,7 +862,7 @@ def convert_airdrop_address_to_hex(address):
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     details = contract.get_details()
-    if contract.user != request.user or contract.contract_type not in [8, 13, 17] or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13, 17, 29] or contract.state != 'ACTIVE':
         raise PermissionDenied
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
@@ -857,11 +898,16 @@ def load_airdrop(request):
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_link(request):
-    details = ContractDetailsInvestmentPool.objects.get(
+    details = ContractDetailsInvestmentPool.objects.filter(
         link=request.query_params['link'],
         contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
     )
-    contract = details.contract
+    if not details:
+        details = ContractDetailsBinanceInvestmentPool.objects.filter(
+            link=request.query_params['link'],
+            contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
+        )
+    contract = details.first().contract
     return JsonResponse(ContractSerializer().to_representation(contract))
 
 

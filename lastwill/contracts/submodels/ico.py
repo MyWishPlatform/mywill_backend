@@ -14,8 +14,10 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USD
 from email_messages import *
 
 
-@contract_details('MyWish ICO')
-class ContractDetailsICO(CommonDetails):
+class AbstractContractDetailsICO(CommonDetails):
+    class Meta:
+        abstract = True
+
     sol_path = 'lastwill/contracts/contracts/ICO.sol'
 
     soft_cap = models.DecimalField(
@@ -179,11 +181,12 @@ class ContractDetailsICO(CommonDetails):
             print('nonce', nonce)
             print('transferOwnership message signed')
             signed_data = sign_transaction(
-                address, nonce, 100000, self.contract.network.name,
+                address, nonce, 1000000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
                 contract_data=binascii.hexlify(tr.encode_function_call(
                     'transferOwnership', [self.eth_contract_crowdsale.address]
                 )).decode(),
+                gas_price=int(41 * 10 ** 9 * 1.2)
             )
             self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(
                 '0x' + signed_data
@@ -238,7 +241,8 @@ class ContractDetailsICO(CommonDetails):
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])
-            ).decode()
+            ).decode(),
+            gas_price=int(41 * 10 ** 9 * 1.2)
         )
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
@@ -298,8 +302,15 @@ class ContractDetailsICO(CommonDetails):
         self.save()
 
 
-@contract_details('Token contract')
-class ContractDetailsToken(CommonDetails):
+@contract_details('MyWish ICO')
+class ContractDetailsICO(AbstractContractDetailsICO):
+    pass
+
+
+class AbstractContractDetailsToken(CommonDetails):
+    class Meta:
+        abstract = True
+
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
@@ -401,7 +412,8 @@ class ContractDetailsToken(CommonDetails):
                 mint_info = mint_info + '\n' + th.address + '\n'
                 mint_info = mint_info + str(th.amount) + '\n'
                 if th.freeze_date:
-                    mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+                    mint_info = mint_info + str(
+                        datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
             mail = EmailMessage(
                 subject=authio_subject,
                 body=authio_message.format(
@@ -448,3 +460,8 @@ class ContractDetailsToken(CommonDetails):
 
     def initialized(self, message):
         pass
+
+
+@contract_details('Token contract')
+class ContractDetailsToken(AbstractContractDetailsToken):
+    pass
