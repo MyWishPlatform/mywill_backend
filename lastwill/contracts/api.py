@@ -867,7 +867,7 @@ def load_airdrop(request):
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
             raise PermissionDenied
-        elif details.airdrop_in_progress:
+        elif contract.contract_type in [8, 29] and details.airdrop_in_progress:
             raise PermissionDenied
         contract.airdropaddress_set.exclude(state='completed').delete()
         addresses = request.data.get('addresses')
