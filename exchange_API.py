@@ -49,9 +49,11 @@ def convert(fsym, tsyms):
 def convert_symbols(fsym, tsyms):
     eosish_factor = 1.0
     swap_factor = 1.0
+    okb_factor = 1.0
     wish_factor = 1.0
     reverse_convert_eos = False
     reverse_convert_swap = False
+    reverse_convert_okb = False
     reverse_convert_wish = False
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES',
                'SWAP'}
@@ -102,6 +104,22 @@ def convert_symbols(fsym, tsyms):
                 return {'SWAP': 1 / swap_factor}
             reverse_convert_swap = True
             swap_factor = 1 / swap_factor
+    if fsym == 'OKB' or tsyms == 'OKB':
+        okb_factor = float(
+            requests.get('https://api.coingecko.com/api/v3/simple/price?ids=okb&vs_currencies=eth')
+            .json()['okb']['eth']
+            )
+        print('okb factor', okb_factor, flush=True)
+        if fsym == 'OKB':
+            fsym = 'ETH'
+            if tsyms == fsym:
+                return {'ETH': okb_factor}
+        else:
+            tsyms = 'ETH'
+            if tsyms == fsym:
+                return {'OKB': 1 / okb_factor}
+            reverse_convert_okb = True
+            okb_factor = 1 / okb_factor
     if fsym == 'WISH' or tsyms == 'WISH':
         wish_factor = float(
             requests.get('https://api.coingecko.com/api/v3/exchanges/binance_dex/tickers?coin_ids=mywish')
@@ -132,6 +150,9 @@ def convert_symbols(fsym, tsyms):
     if reverse_convert_swap:
         answer = {'SWAP': answer['ETH']}
         tsyms = 'SWAP'
+    if reverse_convert_okb:
+        answer = {'OKB': answer['ETH']}
+        tsyms = 'OKB'
     if reverse_convert_wish:
         answer = {'WISH': answer['ETH']}
         tsyms = 'WISH'
@@ -139,6 +160,8 @@ def convert_symbols(fsym, tsyms):
         answer[tsyms] = answer[tsyms] * eosish_factor
     if swap_factor != 1.0:
         answer[tsyms] = answer[tsyms] * swap_factor
+    if okb_factor != 1.0:
+        answer[tsyms] = answer[tsyms] * okb_factor
     if wish_factor != 1.0:
         answer[tsyms] = answer[tsyms] * wish_factor
     if tronish:
