@@ -56,7 +56,7 @@ def convert_symbols(fsym, tsyms):
     reverse_convert_okb = False
     reverse_convert_wish = False
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES',
-               'SWAP'}
+               'SWAP', 'OKB'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
         eosish_factor = float(
             requests.get('https://api.coingecko.com/api/v3/simple/price?ids=eosish&vs_currencies=eos')
