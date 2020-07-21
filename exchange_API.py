@@ -197,10 +197,12 @@ def convert_symbols(fsym, tsyms):
             )
         print('okb factor', okb_factor, flush=True)
         if fsym == 'OKB':
-            if tsyms == "ETH":
+            fsym = 'ETH'
+            if tsyms == fsym:
                 return {'ETH': okb_factor}
         else:
-            if "ETH" == fsym:
+            tsyms = 'ETH'
+            if tsyms == fsym:
                 return {'OKB': 1 / okb_factor}
             reverse_convert_okb = True
             okb_factor = 1 / okb_factor
@@ -211,10 +213,12 @@ def convert_symbols(fsym, tsyms):
             )
         print('wish factor', wish_factor, flush=True)
         if fsym == 'WISH':
-            if tsyms == 'ETH':
+            fsym = 'ETH'
+            if tsyms == fsym:
                 return {'ETH': wish_factor}
         else:
-            if tsyms == 'ETH':
+            tsyms = 'ETH'
+            if tsyms == fsym:
                 return {'WISH': 1 / wish_factor}
             reverse_convert_wish = True
             wish_factor = 1 / wish_factor
