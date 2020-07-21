@@ -1,7 +1,9 @@
-import requests
 import json
 import time
+
+import requests
 from binance.client import Client
+
 from lastwill.settings import BINANCE_PAYMENT_ADDRESS, BINANCE_PAYMENT_PASSWORD
 
 
@@ -46,15 +48,91 @@ def convert(fsym, tsyms):
     return answer
 
 
+class Converter:
+    USD = "USD"
+    ETH = "ETH"
+    EOS = "EOS"
+    main_curr = [USD, ETH, EOS]
+
+    convert_dict = {
+        "SWAP": {
+            "id": "swaps-network",
+            "compare_curr": ETH
+        },
+        "OKB": {
+            "id": "okb",
+            "compare_curr": ETH
+        },
+        "WISH": {
+            "id": "wish",
+            "compare_curr": ETH
+        },
+    }
+
+    allowed = [k for k in convert_dict.keys()] + [i for i in main_curr]
+
+    @classmethod
+    def process(cls, fsym, tsym):
+        if fsym == tsym:
+            return {tsym: 1.0}
+
+        for s in fsym, tsym:
+            if s not in cls.allowed:
+                raise Exception('currency not allowed')
+
+        ref_curr = cls.get_ref(fsym, tsym)
+        r0 = cls._get_rates(fsym, ref_curr)
+        r1 = cls._get_rates(tsym, ref_curr)
+
+        return {tsym: 1 / r1 * r0}
+
+    @classmethod
+    def get_ref(cls, fsym, tsym):
+        main_curr = [i for i in (fsym, tsym) if i in cls.main_curr]
+        main_curr_len = len(main_curr)
+
+        if main_curr_len == 2:
+            return 'USD'
+        elif main_curr_len == 1:
+            return main_curr[0]
+        else:
+            return cls.convert_dict[fsym]['compare_curr']
+
+
+    @classmethod
+    def _get_rates(cls, curr, ref_curr):
+        if curr == ref_curr:
+            return 1.0
+        factor = cls._get_factor(curr, ref_curr)
+        return factor
+
+    @classmethod
+    def _get_factor(cls, sym, curr='usd'):
+        _id = cls.convert_dict[sym]['id']
+        curr = curr.lower()
+
+        if sym == 'WISH':
+            return cls._get_wish_factor(curr)
+
+        return float(
+            requests.get(
+                'https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}'.format(
+                    _id, curr
+                )).json()[_id][curr]
+        )
+
+    @classmethod
+    def _get_wish_factor(cls, curr='usd'):
+        wish_factor = float(
+            requests.get('https://api.coingecko.com/api/v3/exchanges/binance_dex/tickers?coin_ids=mywish')
+            .json()['tickers'][0]['converted_last'][curr]
+            )
+        return wish_factor
+
+
 def convert_symbols(fsym, tsyms):
-    eosish_factor = 1.0
-    swap_factor = 1.0
-    okb_factor = 1.0
-    wish_factor = 1.0
-    reverse_convert_eos = False
-    reverse_convert_swap = False
-    reverse_convert_okb = False
-    reverse_convert_wish = False
+    eosish_factor = swap_factor = okb_factor = wish_factor = 1.0
+    reverse_convert_eos = reverse_convert_swap = reverse_convert_okb = reverse_convert_wish = False
     allowed = {'WISH', 'USD', 'ETH', 'EUR', 'BTC', 'NEO', 'EOS', 'EOSISH', 'BNB', 'TRX', 'TRONISH', 'USDT', 'WAVES',
                'SWAP', 'OKB'}
     if fsym == 'EOSISH' or tsyms == 'EOSISH':
@@ -182,3 +260,12 @@ def bnb_to_wish():
     client.API_URL = 'https://dex.binance.org/api'
     wish_price = client.get_ticker(symbol='WISH-2D5_BNB')[0]['lastPrice']
     return 1 / float(wish_price)
+
+
+if __name__ == '__main__':
+    # w = to_wish("WISH")
+    # print(w)
+    c = convert('WISH', 'ETH')
+    print(c)
+    f = Converter.process('WISH', 'ETH')
+    print(f)
