@@ -33,7 +33,7 @@ class memoize_timeout:
 def convert(fsym, tsyms):
     for convert_attempt in range(5):
         try:
-            answer = convert_symbols(fsym, tsyms)
+            answer = Converter.try_convert(fsym, tsyms) or convert_symbols(fsym, tsyms)
             if tsyms not in answer:
                 print('failed to fetch convertible sum, retrying', flush=True)
                 print('answer', answer, flush=True)
@@ -70,6 +70,18 @@ class Converter:
     }
 
     allowed = [k for k in convert_dict.keys()] + [i for i in main_curr]
+
+    @classmethod
+    def try_convert(cls, fsym, tsym):
+        """
+        Placeholder until old converter doesn't removed.
+        Try to convert currencies, return false on error.
+        """
+        try:
+            answer = cls.process(fsym, tsym)
+        except Exception as e:
+            return False
+        return answer
 
     @classmethod
     def process(cls, fsym, tsym):
@@ -252,12 +264,3 @@ def bnb_to_wish():
     client.API_URL = 'https://dex.binance.org/api'
     wish_price = client.get_ticker(symbol='WISH-2D5_BNB')[0]['lastPrice']
     return 1 / float(wish_price)
-
-
-if __name__ == '__main__':
-    # w = to_wish("WISH")
-    # print(w)
-    c = convert('WISH', 'ETH')
-    print(c)
-    f = Converter.process('WISH', 'ETH')
-    print(f)
