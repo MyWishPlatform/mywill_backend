@@ -100,32 +100,28 @@ class Converter:
 
 
     @classmethod
-    def _get_rates(cls, curr, ref_curr):
+    def _get_rates(cls, curr, ref_curr='usd'):
         if curr == ref_curr:
             return 1.0
-        factor = cls._get_factor(curr, ref_curr)
-        return factor
 
-    @classmethod
-    def _get_factor(cls, sym, curr='usd'):
-        _id = cls.convert_dict[sym]['id']
-        curr = curr.lower()
+        _id = cls.convert_dict[curr]['id']
+        ref_curr = ref_curr.lower()
 
-        if sym == 'WISH':
-            return cls._get_wish_factor(curr)
+        if curr == 'WISH':
+            return cls._get_wish_rates(ref_curr)
 
         return float(
             requests.get(
                 'https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}'.format(
-                    _id, curr
-                )).json()[_id][curr]
+                    _id, ref_curr
+                )).json()[_id][ref_curr]
         )
 
     @classmethod
-    def _get_wish_factor(cls, curr='usd'):
+    def _get_wish_rates(cls, ref_curr):
         wish_factor = float(
             requests.get('https://api.coingecko.com/api/v3/exchanges/binance_dex/tickers?coin_ids=mywish')
-            .json()['tickers'][0]['converted_last'][curr]
+            .json()['tickers'][0]['converted_last'][ref_curr]
             )
         return wish_factor
 
@@ -189,12 +185,10 @@ def convert_symbols(fsym, tsyms):
             )
         print('okb factor', okb_factor, flush=True)
         if fsym == 'OKB':
-            fsym = 'ETH'
-            if tsyms == fsym:
+            if tsyms == "ETH":
                 return {'ETH': okb_factor}
         else:
-            tsyms = 'ETH'
-            if tsyms == fsym:
+            if "ETH" == fsym:
                 return {'OKB': 1 / okb_factor}
             reverse_convert_okb = True
             okb_factor = 1 / okb_factor
@@ -205,12 +199,10 @@ def convert_symbols(fsym, tsyms):
             )
         print('wish factor', wish_factor, flush=True)
         if fsym == 'WISH':
-            fsym = 'ETH'
-            if tsyms == fsym:
+            if tsyms == 'ETH':
                 return {'ETH': wish_factor}
         else:
-            tsyms = 'ETH'
-            if tsyms == fsym:
+            if tsyms == 'ETH':
                 return {'WISH': 1 / wish_factor}
             reverse_convert_wish = True
             wish_factor = 1 / wish_factor
