@@ -264,7 +264,8 @@ class ContractSerializer(serializers.ModelSerializer):
                 'WISH': str(int(cost) * convert('USDT', 'WISH')['WISH'] * NET_DECIMALS['WISH']),
                 'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
+                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP']),
+                'OKB': str(int(cost) * convert('USDT', 'OKB')['OKB'] * NET_DECIMALS['OKB'])
             }
         elif contract.contract_type == 23:
             cost = Contract.get_details_model(
@@ -276,7 +277,8 @@ class ContractSerializer(serializers.ModelSerializer):
                 'WISH': str(int(cost) * convert('USDT', 'BNB')['BNB'] * bnb_to_wish() * NET_DECIMALS['WISH']),
                 'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
                 'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP'])
+                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP']),
+                'OKB': str(int(cost) * convert('USDT', 'OKB')['OKB'] * NET_DECIMALS['OKB'])
             }
 
         return res
