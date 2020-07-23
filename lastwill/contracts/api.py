@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from bs4 import BeautifulSoup
 from rest_framework.response import Response
 from collections import OrderedDict
+import cloudscraper
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL
@@ -599,7 +600,8 @@ def get_ieo_statistics():
 
 
 def get_usd_rub_rates():
-    res = requests.get(url=URL_STATS_CURRENCY['RUB'], headers=BROWSER_HEADERS)
+    scraper = cloudscraper.create_scraper()
+    res = scraper.get(url=URL_STATS_CURRENCY['RUB'], headers=BROWSER_HEADERS)
     rub_rate = {
         'price': res.json()['ticker']['price'],
         'change_24h': res.json()['ticker']['change']
