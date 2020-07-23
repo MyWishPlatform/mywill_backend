@@ -267,3 +267,5 @@ ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
 ETHPLORER_KEY = 'freekey'
 
 ETH_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+ETH_COMMON_GAS_PRICE = 70 * 10 ** 9

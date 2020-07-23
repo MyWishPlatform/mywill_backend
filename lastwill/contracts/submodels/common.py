@@ -21,7 +21,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
 from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICE
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
@@ -477,11 +477,10 @@ class CommonDetails(models.Model):
 
         print('DATA', data, flush=True)
 
-        gas_price = 41 * 10 ** 9
         signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
             self.contract.network.name, value=self.get_value(),
-            contract_data=data, gas_price=gas_price
+            contract_data=data, gas_price=ETH_COMMON_GAS_PRICE
         )
         print('fields of transaction', flush=True)
         print('source', address, flush=True)

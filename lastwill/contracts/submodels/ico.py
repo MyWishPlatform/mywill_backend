@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICE
 from email_messages import *
 
 
@@ -186,7 +186,7 @@ class AbstractContractDetailsICO(CommonDetails):
                 contract_data=binascii.hexlify(tr.encode_function_call(
                     'transferOwnership', [self.eth_contract_crowdsale.address]
                 )).decode(),
-                gas_price=int(41 * 10 ** 9 * 1.2)
+                gas_price=int(ETH_COMMON_GAS_PRICE * 1.2)
             )
             self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(
                 '0x' + signed_data
@@ -242,7 +242,7 @@ class AbstractContractDetailsICO(CommonDetails):
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])
             ).decode(),
-            gas_price=int(41 * 10 ** 9 * 1.2)
+            gas_price=int(ETH_COMMON_GAS_PRICE * 1.2)
         )
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
