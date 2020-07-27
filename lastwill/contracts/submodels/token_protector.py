@@ -2,7 +2,7 @@ from lastwill.contracts.submodels.common import *
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 import datetime
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICE
 from django.db import models
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
@@ -210,7 +210,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
                                   self.contract.network.name, value=0,
                                   dest=self.eth_contract.address, contract_data=txn['data'][2:],
-                                  gas_price=2000000000)
+                                  gas_price=ETH_COMMON_GAS_PRICE)
 
         print('signed', signed, flush=True)
 
@@ -237,7 +237,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
                                   self.contract.network.name, value=0,
                                   dest=self.eth_contract.address, contract_data=None,
-                                  gas_price=2000000000)
+                                  gas_price=ETH_COMMON_GAS_PRICE)
 
         print('signed', signed, flush=True)
 
