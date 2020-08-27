@@ -5,6 +5,7 @@ import json
 from flask import Flask, request
 from flask_restful import Resource, Api
 
+from lastwill.settings_local import CRYTOCOMPARE_API_KEY
 
 app = Flask(__name__)
 
@@ -33,8 +34,8 @@ class CurrencyProxi(Resource):
         fsym = request.args.get('fsym')
         tsyms = request.args.get('tsyms')
         return json.loads(requests.get(
-            'https://min-api.cryptocompare.com/data/price?fsym={fsym}&tsyms={tsyms}'.format(
-                fsym=fsym, tsyms=tsyms)
+            'https://min-api.cryptocompare.com/data/price?fsym={fsym}&tsyms={tsyms}&api_key={apikey}'.format(
+                fsym=fsym, tsyms=tsyms, apikey=CRYPTOCOMPARE_API_KEY)
         ).content.decode())
 
 
