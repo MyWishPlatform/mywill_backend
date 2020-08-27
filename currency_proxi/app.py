@@ -5,7 +5,7 @@ import json
 from flask import Flask, request
 from flask_restful import Resource, Api
 
-from lastwill.settings_local import CRYTOCOMPARE_API_KEY
+from .settings_local import CRYTOCOMPARE_API_KEY
 
 app = Flask(__name__)
 
