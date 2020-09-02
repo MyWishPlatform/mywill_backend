@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICE
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES
 from email_messages import *
 
 
@@ -178,6 +178,7 @@ class AbstractContractDetailsICO(CommonDetails):
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
             eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
             nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+            gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
             print('nonce', nonce)
             print('transferOwnership message signed')
             signed_data = sign_transaction(
@@ -186,7 +187,7 @@ class AbstractContractDetailsICO(CommonDetails):
                 contract_data=binascii.hexlify(tr.encode_function_call(
                     'transferOwnership', [self.eth_contract_crowdsale.address]
                 )).decode(),
-                gas_price=int(ETH_COMMON_GAS_PRICE * 1.2)
+                gas_price=int(gas_price * 1.2)
             )
             self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(
                 '0x' + signed_data
@@ -232,6 +233,7 @@ class AbstractContractDetailsICO(CommonDetails):
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = 100000 + 80000 * self.contract.tokenholder_set.all().count()
+        gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         print('nonce', nonce)
         print('init message signed')
         signed_data = sign_transaction(
@@ -242,7 +244,7 @@ class AbstractContractDetailsICO(CommonDetails):
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])
             ).decode(),
-            gas_price=int(ETH_COMMON_GAS_PRICE * 1.2)
+            gas_price=int(gas_price * 1.2)
         )
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(
             '0x' + signed_data
