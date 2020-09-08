@@ -4,7 +4,7 @@ import smtplib
 from ethereum.utils import checksum_encode
 
 from lastwill.contracts.submodels.common import *
-from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
+from lastwill.settings import SITE_PROTOCOL, SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 #from lastwill.swaps_common.models import UnifiedSwapsTable

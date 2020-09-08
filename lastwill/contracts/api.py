@@ -12,7 +12,7 @@ from collections import OrderedDict
 import cloudscraper
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, RUBIC_FIN_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
@@ -95,7 +95,7 @@ class ContractViewSet(ModelViewSet):
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
-        if host == SWAPS_URL:
+        if host in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
             #result = result.filter(contract_type__in=[20, 21, 23])
             result = result.filter(contract_type__in=[20])
         if host == WAVES_URL:
@@ -1239,7 +1239,7 @@ def confirm_swaps_info(request):
         raise PermissionDenied
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
-    if host != SWAPS_URL:
+    if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
     confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
     for c in confirm_contracts:
@@ -1394,7 +1394,7 @@ def change_contract_state(request):
         raise PermissionDenied
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
-    if host != SWAPS_URL:
+    if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
     contract.state = 'WAITING_FOR_ACTIVATION'
     contract.save()
