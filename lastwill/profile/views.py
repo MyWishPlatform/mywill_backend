@@ -157,7 +157,7 @@ def profile_view(request):
     if site_name == WAVES_URL:
         site_name = MY_WISH_URL
     if site_name == RUBIC_EXC_URL:
-        site_name ==
+        site_name = SWAPS_URL
     site = SubSite.objects.get(site_name=site_name)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
 
