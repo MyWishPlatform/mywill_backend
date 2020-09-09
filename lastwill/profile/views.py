@@ -141,10 +141,11 @@ class UserConfirmEmailView(ConfirmEmailView):
 
 @api_view()
 def profile_view(request):
+    site_name = request.META['HTTP_HOST']
+    print('site is', site_name, flush=True)
     if request.user.is_anonymous:
         print('anonymous', flush=True)
         raise PermissionDenied()
-    site_name = request.META['HTTP_HOST']
     if site_name.startswith('cn'):
         site_name = site_name[2:]
     if site_name.startswith('local'):
