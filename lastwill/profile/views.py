@@ -35,7 +35,8 @@ from tron_wif.hex2wif import hex2tronwif
 from exchange_API import to_wish, convert
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
+from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL, \
+    SWAPS_URL, RUBIC_EXC_URL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 
@@ -155,6 +156,8 @@ def profile_view(request):
         site_name = site_name.replace('trondev', 'dev')
     if site_name == WAVES_URL:
         site_name = MY_WISH_URL
+    if site_name == RUBIC_EXC_URL:
+        site_name ==
     site = SubSite.objects.get(site_name=site_name)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
 
