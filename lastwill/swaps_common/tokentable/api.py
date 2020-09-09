@@ -114,11 +114,14 @@ def get_all_coinmarketcap_tokens(request):
 
 
 def get_cmc_tokens(request):
-    scheme_part = request.META['HTTP_REFERER'][5:]
-    if scheme_part[-1] == ':':
-        scheme = 'http'
+    if 'HTTP_REFERER' in request.META:
+        scheme_part = request.META['HTTP_REFERER'][5:]
+        if scheme_part[-1] == ':':
+            scheme = 'http'
+        else:
+            scheme = 'https'
     else:
-        scheme = 'https'
+        scheme = request.scheme
     token_list = []
     token_objects = TokensCoinMarketCap.objects.all()
 
