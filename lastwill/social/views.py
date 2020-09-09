@@ -167,6 +167,10 @@ class MetamaskLoginSerializer(SocialLoginSerializer):
         session = self.context['request'].session
         message = session.get('metamask_message')
 
+        if message is None:
+            message = attrs['msg']
+
+        print('metamask login, address', address, 'message', message, 'signature', signature, flush=True)
         if valid_metamask_message(address, message, signature):
             metamask_user = User.objects.filter(username=address).first()
             if metamask_user is None:
