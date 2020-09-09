@@ -158,6 +158,7 @@ class GoogleLogin(ProfileAndTotpSocialLoginView):
 
 class MetamaskLoginSerializer(SocialLoginSerializer):
     address = serializers.CharField(required=False, allow_blank=True)
+    msg = serializers.CharField(required=False, allow_blank=True)
     signed_msg = serializers.CharField(required=False, allow_blank=True)
     totp = serializers.CharField(required=False, allow_blank=True)
 
