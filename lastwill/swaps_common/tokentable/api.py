@@ -120,6 +120,8 @@ def get_cmc_tokens(request):
             scheme = 'http'
         else:
             scheme = 'https'
+    elif request.META['HTTP_HOST'] == 'rubic.exchange':
+        scheme = 'https'
     else:
         scheme = request.scheme
     token_list = []
