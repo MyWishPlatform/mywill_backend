@@ -15,7 +15,8 @@ from rest_auth.serializers import (
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL, \
-    ROOT_PUBLIC_KEY_TRON, ROOT_PUBLIC_KEY_SWAPS, SWAPS_URL, ROOT_PUBLIC_KEY_PROTECTOR, TOKEN_PROTECTOR_URL
+    ROOT_PUBLIC_KEY_TRON, ROOT_PUBLIC_KEY_SWAPS, SWAPS_URL, ROOT_PUBLIC_KEY_PROTECTOR, TOKEN_PROTECTOR_URL, \
+    RUBIC_FIN_URL, RUBIC_EXC_URL
 from lastwill.profile.helpers import valid_totp
 from lastwill.profile.forms import SubSitePasswordResetForm
 
@@ -133,7 +134,7 @@ class UserRegisterSerializer(RegisterSerializer):
     def save(self, request):
         user = super().save(request)
         host = request.META['HTTP_HOST']
-        if host == SWAPS_URL:
+        if host in [SWAPS_URL, RUBIC_FIN_URL, RUBIC_EXC_URL]:
             swaps = True
         else:
             swaps = False
