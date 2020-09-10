@@ -128,6 +128,7 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=
     # eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address4 = keys.PublicKey(swaps_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
+    eth_address5 = keys.PublicKey(protector_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address6 = keys.PublicKey(swaps_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
     Profile(user=user, is_social=is_social, metamask_address=metamask_address, lang=lang, is_swaps=swaps).save()
