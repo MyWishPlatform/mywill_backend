@@ -313,11 +313,9 @@ def get_swap_v3_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_swap_v3_public(request):
-    backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('state_changed_at')
-    if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
-        backend_contracts = backend_contracts.filter(is_rubic_order=True)
-    else:
-        backend_contracts = backend_contracts.filter(is_rubic_order=False)
+    is_rubic = True if request.META['HTTP_HOST'] == RUBIC_EXC_URL else False
+
+    backend_contracts = OrderBookSwaps.objects.filter(public=True, is_rubic_order=is_rubic).order_by('state_changed_at')
 
     res = []
     for order in backend_contracts:
