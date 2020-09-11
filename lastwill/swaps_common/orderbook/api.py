@@ -163,6 +163,9 @@ def create_contract_swaps_backend(request):
     if whitelist:
         backend_contract.whitelist_address = contract_details['whitelist_address']
 
+    if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
+        backend_contract.is_rubic_order = True
+
     backend_contract.state = 'ACTIVE'
     backend_contract.contract_state = 'CREATED'
     backend_contract.save()
@@ -311,6 +314,8 @@ def get_swap_v3_for_unique_link(request):
 @api_view(http_method_names=['GET'])
 def get_swap_v3_public(request):
     backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('state_changed_at')
+    if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
+        backend_contracts.filter(is_rubic_order=True)
 
     res = []
     for order in backend_contracts:

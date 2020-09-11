@@ -57,6 +57,8 @@ class OrderBookSwaps(models.Model):
     notification_telegram_name = models.CharField(max_length=50, null=True, default=None)
     notification = models.BooleanField(default=False)
 
+    is_rubic_order = models.BooleanField(default=False)
+
     @check_transaction
     def msg_deployed(self, message):
 
