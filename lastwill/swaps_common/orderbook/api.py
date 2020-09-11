@@ -316,6 +316,8 @@ def get_swap_v3_public(request):
     backend_contracts = OrderBookSwaps.objects.filter(public=True).order_by('state_changed_at')
     if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
         backend_contracts = backend_contracts.filter(is_rubic_order=True)
+    else:
+        backend_contracts = backend_contracts.filter(is_rubic_order=False)
 
     res = []
     for order in backend_contracts:
