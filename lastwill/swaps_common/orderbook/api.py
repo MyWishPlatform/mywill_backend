@@ -13,7 +13,7 @@ from lastwill.contracts.submodels.common import Contract, send_in_queue
 from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
-from lastwill.settings import SWAPS_ORDERBOOK_QUEUE
+from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, RUBIC_EXC_URL
 
 excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
 
