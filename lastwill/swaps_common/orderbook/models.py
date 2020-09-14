@@ -58,6 +58,7 @@ class OrderBookSwaps(models.Model):
     notification = models.BooleanField(default=False)
 
     is_rubic_order = models.BooleanField(default=False)
+    rubic_initialized = models.BooleanField(default=False)
 
     @check_transaction
     def msg_deployed(self, message):

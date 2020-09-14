@@ -267,6 +267,10 @@ def edit_contract_swaps_backend(request, swap_id):
     if 'notification' in params:
         swap_order.notification = params['notification']
 
+    if 'rubic_initialized' in params:
+        swap_order.rubic_initialized = params['rubic_initialized']
+
+
     if swap_order.notification:
         if not ('notification_email' in params or 'notification_tg' in params):
             raise ParseError('notificaion_email or notification_tg must be passed')
