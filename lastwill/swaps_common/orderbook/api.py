@@ -65,7 +65,9 @@ def get_swap_from_orderbook(swap_id):
         'quote_amount_contributed': str(backend_contract.quote_amount_contributed),
         'notification_email': backend_contract.notification_email,
         'notification_tg': backend_contract.notification_telegram_name,
-        'notification': backend_contract.notification
+        'notification': backend_contract.notification,
+        'is_rubic_order': backend_contract.is_rubic_order,
+        'rubic_initialized': backend_contract.rubic_initialized
     }
     return saved_details
 
@@ -201,7 +203,7 @@ def show_user_contract_swaps_backend(request):
     orders = OrderBookSwaps.objects.filter(user=request.user).order_by('state_changed_at')
 
     if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
-        orders.filter(is_rubic_order=True, rubic_initialized=True)
+        orders = orders.filter(is_rubic_order=True, rubic_initialized=True)
 
     for order in orders:
         details = get_swap_from_orderbook(swap_id=order.id)
