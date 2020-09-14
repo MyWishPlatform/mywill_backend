@@ -249,14 +249,14 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.public = params['public']
     if 'broker_fee' in params:
         swap_order.broker_fee = params['broker_fee']
-    if params['broker_fee']:
-        swap_order.broker_fee = params['broker_fee']
-        if 'broker_fee_address' in params:
-            swap_order.broker_fee_address = params['broker_fee_address'].lower()
-        if 'broker_fee_base' in params:
-            swap_order.broker_fee_base = params['broker_fee_base']
-        if 'broker_fee_quote' in params:
-            swap_order.broker_fee_quote = params['broker_fee_quote']
+        if params['broker_fee']:
+            swap_order.broker_fee = params['broker_fee']
+            if 'broker_fee_address' in params:
+                swap_order.broker_fee_address = params['broker_fee_address'].lower()
+            if 'broker_fee_base' in params:
+                swap_order.broker_fee_base = params['broker_fee_base']
+            if 'broker_fee_quote' in params:
+                swap_order.broker_fee_quote = params['broker_fee_quote']
     if 'min_base_wei' in params:
         swap_order.min_base_wei = params['min_base_wei']
     if 'min_quote_wei' in params:
