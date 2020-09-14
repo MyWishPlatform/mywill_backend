@@ -198,7 +198,11 @@ def show_user_contract_swaps_backend(request):
         raise PermissionDenied
 
     orders_list = []
-    orders = OrderBookSwaps.objects.filter(user=request.user)
+    orders = OrderBookSwaps.objects.filter(user=request.user).order_by('state_changed_at')
+
+    if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
+        orders.filter(is_rubic_order=True, rubic_initialized=True)
+
     for order in orders:
         details = get_swap_from_orderbook(swap_id=order.id)
         if details['state'] != 'HIDDEN':
