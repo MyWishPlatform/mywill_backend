@@ -430,12 +430,12 @@ def admin_delete_swaps_v3(request):
     order = order.first()
 
     if order.base_address and order.quote_address:
-        if not order.contract_state == 'CREATED':
-            raise ParseError  # only for created
-        else:
-            if order.swap_ether_contract:
-                order.swap_ether_contract.delete()
-            order.delete()
+        # if not order.contract_state == 'CREATED':
+        #     raise ParseError  # only for created
+        # else:
+        if order.swap_ether_contract:
+            order.swap_ether_contract.delete()
+        order.delete()
     else:
         order.delete()
 
