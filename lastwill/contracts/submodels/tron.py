@@ -190,7 +190,7 @@ class ContractDetailsTRONToken(CommonDetails):
         print('signed tx: ', sign['signature'], flush=True)
 
         res = tron.trx.broadcast(sign)
-        print('broadcast result: ', res['result'], flush=True)
+        print('broadcast result: ', res, flush=True)
 
         if res['result']:
             self.tron_contract_token.tx_hash = res['transaction']['txID']
