@@ -158,6 +158,16 @@ class ContractDetailsTRONToken(CommonDetails):
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         self.compile()
         print('deploy tron token')
+        
+        # temporary fix
+        write_flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL)
+        write_blocking = write_flags & os.O_NONBLOCK
+        if write_blocking != 0:
+            print('Blocking write mode detected. Resetting blocking flag, previous was:',
+                write_blocking, flush=True
+            )
+        fcntl.fcntl(1, fcntl.F_SETFL, 0)
+        
         abi = json.dumps(self.tron_contract_token.abi)
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
