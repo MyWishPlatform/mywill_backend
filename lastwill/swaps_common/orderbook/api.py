@@ -36,6 +36,7 @@ def get_swap_from_orderbook(swap_id):
     saved_details = {
         'id': backend_contract.id,
         'name': backend_contract.name,
+        'network': backend_contract.network.id,
         'base_address': backend_contract.base_address,
         'base_limit': backend_contract.base_limit,
         'base_coin_id': backend_contract.base_coin_id,
@@ -83,6 +84,7 @@ def create_contract_swaps_backend(request):
     quote_address = contract_details['quote_address'] if 'quote_address' in contract_details else ""
     owner_address = contract_details['owner_address'] if 'owner_address' in contract_details else ""
     contract_name = contract_details['name'] if 'name' in contract_details else ""
+    network_id = contract_details.get('network', 1)
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
@@ -127,6 +129,7 @@ def create_contract_swaps_backend(request):
 
     backend_contract = OrderBookSwaps(
             name=contract_name,
+            network_id=network_id,
             base_address=base_address.lower(),
             base_limit=contract_details['base_limit'],
             base_coin_id=base_coin_id_param,
@@ -234,6 +237,8 @@ def edit_contract_swaps_backend(request, swap_id):
 
     if 'name' in params:
         swap_order.name = params['name']
+    if 'network' in  params:
+        swap_order.network_id = params['network']
     if 'stop_date' in params:
         stop_date = datetime.datetime.strptime(params['stop_date'], '%Y-%m-%d %H:%M')
         swap_order.stop_date = stop_date

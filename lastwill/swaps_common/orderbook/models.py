@@ -7,7 +7,7 @@ from lastwill.settings import SITE_PROTOCOL, SWAPS_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.contracts.decorators import check_transaction
 from lastwill.contracts.submodels.swaps import sendEMail
-from lastwill.contracts.submodels.common import Contract
+from lastwill.contracts.submodels.common import Contract, Network
 from lastwill.consts import MAX_WEI_DIGITS
 from email_messages import *
 
@@ -28,6 +28,7 @@ class OrderBookSwaps(models.Model):
     unique_link = models.CharField(max_length=50, null=True, default=None)
     memo_contract = models.CharField(max_length=70, null=True, default=None)
     user = models.ForeignKey(User)
+    network = models.ForeignKey(Network, default=1)
 
     broker_fee = models.BooleanField(default=False)
     broker_fee_address = models.CharField(max_length=50, null=True, default=None)
