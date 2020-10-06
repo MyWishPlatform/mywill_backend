@@ -140,6 +140,7 @@ NET_DECIMALS = {
     'USDT': 10 ** 6,
     'SWAP': 10 ** 18,
     'OKB': 10 ** 18,
+    'RBC': 10 ** 18,
 }
 
 TRON_REPLENISH_THRESHOLD = {
