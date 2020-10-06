@@ -67,6 +67,10 @@ class Converter:
             "id": "wish",
             "compare_curr": ETH
         },
+        "RBC": {
+            "id": "rubic",
+            "compare_curr": ETH
+        }
     }
 
     allowed = [k for k in convert_dict.keys()] + [i for i in main_curr]
