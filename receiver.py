@@ -67,10 +67,6 @@ class Receiver(threading.Thread):
         print('message["amount"]', message['amount'])
         print('payment ok', flush=True)
 
-        # Temporarily hardcode
-        if message['currency'] == 'SWAP':
-            message['currency'] = 'RBC'
-
         create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'], message['siteId'])
         if message['siteId'] in [4, 5]:
             autodeploing(message['userId'], message['siteId'])
