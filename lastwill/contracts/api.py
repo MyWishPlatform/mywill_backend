@@ -12,25 +12,28 @@ from collections import OrderedDict
 import cloudscraper
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, RUBIC_FIN_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
+    RUBIC_FIN_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
 from lastwill.contracts.api_eos import *
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue,\
-    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache,\
+from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, \
+    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache, \
     ContractDetailsBinanceInvestmentPool
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
+from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
+    EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
 from django.db.models import Q
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
+
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     wish_cost = to_wish('ETH', int(cost))
@@ -40,21 +43,21 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
                 promo_str, contract_type, user
             )
         except PermissionDenied:
-           promo_str = None
+            promo_str = None
         else:
-           cost = cost - cost * discount / 100
+            cost = cost - cost * discount / 100
         if promo_str:
             Promo.objects.select_for_update().filter(
-                    promo_str=promo_str.upper()
+                promo_str=promo_str.upper()
             ).update(
-                    use_count=F('use_count') + 1,
-                    referral_bonus=F('referral_bonus') + wish_cost
+                use_count=F('use_count') + 1,
+                referral_bonus=F('referral_bonus') + wish_cost
             )
     return cost
 
 
 def sendEMail(sub, text, mail):
-    server = smtplib.SMTP('smtp.yandex.ru',587)
+    server = smtplib.SMTP('smtp.yandex.ru', 587)
     server.starttls()
     server.ehlo()
     server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
@@ -96,7 +99,7 @@ class ContractViewSet(ModelViewSet):
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
         if host in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-            #result = result.filter(contract_type__in=[20, 21, 23])
+            # result = result.filter(contract_type__in=[20, 21, 23])
             result = result.filter(contract_type__in=[20])
         if host == WAVES_URL:
             result = result.filter(contract_type=22)
@@ -129,23 +132,30 @@ def get_token_contracts(request):
         return Response([])
     res = []
     network_id = int(request.query_params['network'])
-    if network_id not in [22, 23]:
+    if network_id not in [22, 23, 24, 25]:
         eth_contracts = EthContract.objects.filter(
-                 contract__contract_type__in=(4, 5),
-                 contract__user=request.user,
-                 address__isnull=False,
-                 contract__network=network_id,
+            contract__contract_type__in=(4, 5),
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
         )
         get_eth_token_contracts(eth_contracts, res)
-    else:
+    elif network_id in [22, 23]:
         binance_contracts = EthContract.objects.filter(
-                 contract__contract_type__in=(27, 28),
-                 contract__user=request.user,
-                 address__isnull=False,
-                 contract__network=network_id,
+            contract__contract_type__in=(27, 28),
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
         )
         get_binance_token_contracts(binance_contracts, res)
-
+    else:
+        matic_contracts = EthContract.objects.filter(
+            contract__contract_type__in=(32, 33),
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
+        )
+        get_matic_token_contracts(matic_contracts, res)
     return Response(res)
 
 
@@ -159,7 +169,8 @@ def get_eth_token_contracts(eth_contracts, res):
             elif any([x.contract.contract_type == 4 and not x.continue_minting and x.contract.state == 'ENDED' for x in
                       ec.ico_details_token.all()]):
                 state = 'closed'
-            elif any([x.contract.contract_type == 5 and x.contract.state == 'ENDED' for x in ec.token_details_token.all()]):
+            elif any([x.contract.contract_type == 5 and x.contract.state == 'ENDED' for x in
+                      ec.token_details_token.all()]):
                 state = 'closed'
             else:
                 state = 'ok'
@@ -183,7 +194,8 @@ def get_binance_token_contracts(binance_contracts, res):
             elif any([x.contract.contract_type == 27 and not x.continue_minting and x.contract.state == 'ENDED' for x in
                       ec.binance_ico_details_token.all()]):
                 state = 'closed'
-            elif any([x.contract.contract_type == 28 and x.contract.state == 'ENDED' for x in ec.binance_token_details_token.all()]):
+            elif any([x.contract.contract_type == 28 and x.contract.state == 'ENDED' for x in
+                      ec.binance_token_details_token.all()]):
                 state = 'closed'
             else:
                 state = 'ok'
@@ -195,6 +207,32 @@ def get_binance_token_contracts(binance_contracts, res):
                 'decimals': details.decimals,
                 'state': state
             })
+
+
+def get_matic_token_contracts(matic_contracts, res):
+    for ec in matic_contracts:
+        details = ec.contract.get_details()
+        if details.eth_contract_token == ec:
+            if any([x.contract.contract_type == 32 and x.contract.state not in ('CREATED', 'ENDED') for x in
+                    ec.matic_ico_details_token.all()]):
+                state = 'running'
+            elif any([x.contract.contract_type == 32 and not x.continue_minting and x.contract.state == 'ENDED' for x in
+                      ec.matic_ico_details_token.all()]):
+                state = 'closed'
+            elif any([x.contract.contract_type == 33 and x.contract.state == 'ENDED' for x in
+                      ec.matic_token_details_token.all()]):
+                state = 'closed'
+            else:
+                state = 'ok'
+            res.append({
+                'id': ec.id,
+                'address': ec.address,
+                'token_name': details.token_name,
+                'token_short_name': details.token_short_name,
+                'decimals': details.decimals,
+                'state': state
+            })
+
 
 def check_error_promocode(promo_str, contract_type):
     promo = Promo.objects.filter(promo_str=promo_str).first()
@@ -275,7 +313,8 @@ def i_am_alive(request):
 @api_view(http_method_names=['POST'])
 def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (0, 1, 18):
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (
+    0, 1, 18):
         raise PermissionDenied()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'cancel', queue)
@@ -285,7 +324,6 @@ def cancel(request):
 class ICOtokensView(View):
 
     def get(self, request, *args, **kwargs):
-
         address = request.GET.get('address', None)
         if not EthContract.objects.filter(address=address):
             raise PermissionDenied
@@ -323,7 +361,8 @@ def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
         response = session.get(URL_STATS_CURRENCY['CoinMarketCap'], params=parameters)
         data = response.text
         # print(data)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.TooManyRedirects) as e:
+    except (
+    requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.TooManyRedirects) as e:
         print(e)
         data = {'error': 'Exception in fetching coinmarketcap statistics'}
         return data
@@ -444,13 +483,18 @@ def get_balances_statistics():
         if curr['asset'] == 'NEO':
             neo_balance = curr['amount']
     eth_account_balance = float(json.loads(requests.get(url=
-        URL_STATS_BALANCE['ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
-            address=ETH_MAINNET_ADDRESS,api_key=ETHERSCAN_API_KEY),
-        headers=BROWSER_HEADERS).content.decode())['result']) / NET_DECIMALS['ETH']
+                                                        URL_STATS_BALANCE[
+                                                            'ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
+                                                            address=ETH_MAINNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
+                                                        headers=BROWSER_HEADERS).content.decode())['result']) / \
+                          NET_DECIMALS['ETH']
     eth_test_account_balance = float(json.loads(requests.get(url=
-        URL_STATS_BALANCE['ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
-            address=ETH_TESTNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
-        headers=BROWSER_HEADERS).content.decode())['result']) / NET_DECIMALS['ETH']
+                                                             URL_STATS_BALANCE[
+                                                                 'ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
+                                                                 address=ETH_TESTNET_ADDRESS,
+                                                                 api_key=ETHERSCAN_API_KEY),
+                                                             headers=BROWSER_HEADERS).content.decode())['result']) / \
+                               NET_DECIMALS['ETH']
 
     # eth_account_balance = float(json.loads(requests.get(
     #     'https://api.etherscan.io/api?module=account&action=balance'
@@ -579,18 +623,18 @@ def get_balances_statistics():
     #         'cannot make tx with %i attempts' % EOS_ATTEMPTS_COUNT)
     eos_account_balance = 0
     return {
-    'eth_account_balance': eth_account_balance,
-    'eth_test_account_balance': eth_test_account_balance,
-    'eos_account_balance':  eos_account_balance,
-    'eos_test_account_balance': eos_test_account_balance,
-    'eos_cpu_test_builder': eos_cpu_test_builder,
-    'eos_net_test_builder': eos_net_test_builder,
-    'eos_ram_test_builder': eos_ram_test_builder,
-    'eos_cpu_builder': eos_cpu_builder,
-    'eos_net_builder': eos_net_builder,
-    'eos_ram_builder': eos_ram_builder,
-    'neo_test_balance': neo_balance,
-    'gas_test_balance': gas_balance
+        'eth_account_balance': eth_account_balance,
+        'eth_test_account_balance': eth_test_account_balance,
+        'eos_account_balance': eos_account_balance,
+        'eos_test_account_balance': eos_test_account_balance,
+        'eos_cpu_test_builder': eos_cpu_test_builder,
+        'eos_net_test_builder': eos_net_test_builder,
+        'eos_ram_test_builder': eos_ram_test_builder,
+        'eos_cpu_builder': eos_cpu_builder,
+        'eos_net_builder': eos_net_builder,
+        'eos_ram_builder': eos_ram_builder,
+        'neo_test_balance': neo_balance,
+        'gas_test_balance': gas_balance
     }
 
 
@@ -646,13 +690,13 @@ def get_contracts_for_network(net, all_contracts, now, day):
         'now_error': len(now_error),
         'launch': len(in_progress),
         'now_launch': len(now_in_progress)
-        }
+    }
     contract_details_types = Contract.get_all_details_model()
     for ctype in contract_details_types:
-        answer['contract_type_'+str(ctype)] = contracts.filter(
+        answer['contract_type_' + str(ctype)] = contracts.filter(
             contract_type=ctype
         ).count()
-        answer['contract_type_'+str(ctype)+'_new'] = contracts.filter(
+        answer['contract_type_' + str(ctype) + '_new'] = contracts.filter(
             contract_type=ctype
         ).filter(created_date__lte=now, created_date__gte=day).count()
     return answer
@@ -661,7 +705,6 @@ def get_contracts_for_network(net, all_contracts, now, day):
 @api_view(http_method_names=['GET'])
 # @permission_classes((permissions.IsAdminUser,))
 def get_statistics(request):
-
     now = datetime.datetime.now()
     day = datetime.datetime.combine(
         datetime.datetime.now().today(),
@@ -761,7 +804,7 @@ def get_cost_all_contracts(request):
     answer = {}
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
-        answer[i] ={
+        answer[i] = {
             'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
             'WISH': str(int(
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
@@ -864,7 +907,7 @@ def convert_airdrop_address_to_hex(address):
 def load_airdrop(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     details = contract.get_details()
-    if contract.user != request.user or contract.contract_type not in [8, 13, 17, 29] or contract.state != 'ACTIVE':
+    if contract.user != request.user or contract.contract_type not in [8, 13, 17, 29, 34] or contract.state != 'ACTIVE':
         raise PermissionDenied
     if contract.network.name not in ['EOS_MAINNET', 'EOS_TESTNET']:
         if contract.airdropaddress_set.filter(state__in=('processing', 'sent')).count():
@@ -881,9 +924,9 @@ def load_airdrop(request):
                     if not x['address'].startswith('41'):
                         x['address'] = convert_airdrop_address_to_hex(x['address'])
         AirdropAddress.objects.bulk_create([AirdropAddress(
-                contract=contract,
-                address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower() ,
-                amount=x['amount']
+            contract=contract,
+            address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower(),
+            amount=x['amount']
         ) for x in addresses])
     else:
         if contract.eosairdropaddress_set.filter(state__in=('processing', 'sent')).count():
@@ -891,9 +934,9 @@ def load_airdrop(request):
         contract.eosairdropaddress_set.all().delete()
         addresses = request.data.get('addresses')
         EOSAirdropAddress.objects.bulk_create([EOSAirdropAddress(
-                contract=contract,
-                address=x['address'].lower(),
-                amount=x['amount']
+            contract=contract,
+            address=x['address'].lower(),
+            amount=x['amount']
         ) for x in addresses])
     return JsonResponse({'result': 'ok'})
 
@@ -958,14 +1001,15 @@ def check_status(request):
         command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table',
                    addr, addr, 'state']
     else:
-        command = ['cleos', '-u', 'http://%s:%s' % (host,port), 'get', 'table', addr, addr, 'state']
+        command = ['cleos', '-u', 'http://%s:%s' % (host, port), 'get', 'table', addr, addr, 'state']
     stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
     if stdout:
         result = json.loads(stdout.decode())['rows'][0]
         if now > result['finish'] and int(result['total_tokens']) < details.soft_cap:
             contract.state = 'CANCELLED'
             contract.save()
-        elif details.is_transferable_at_once and now > result['finish'] and int(result['total_tokens']) >= details.soft_cap:
+        elif details.is_transferable_at_once and now > result['finish'] and int(
+                result['total_tokens']) >= details.soft_cap:
             contract.state = 'DONE'
             contract.save()
         elif details.is_transferable_at_once and int(result['total_tokens']) >= details.hard_cap:
@@ -1034,9 +1078,9 @@ def check_eos_accounts_exists(request):
     )
 
     accounts = request.data['accounts']
-    response =requests.post(
-            eos_url+'/v1/chain-ext/get_accounts',
-            json={'verbose': False, 'accounts': accounts}
+    response = requests.post(
+        eos_url + '/v1/chain-ext/get_accounts',
+        json={'verbose': False, 'accounts': accounts}
     ).json()
     print(accounts, flush=True)
     print(response, flush=True)
@@ -1050,18 +1094,19 @@ def send_authio_info(contract, details, authio_email):
         mint_info = mint_info + '\n' + th.address + '\n'
         mint_info = mint_info + str(th.amount) + '\n'
         if th.freeze_date:
-            mint_info = mint_info + str(datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+            mint_info = mint_info + str(
+                datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
     EmailMessage(
         subject=authio_subject,
         body=authio_message.format(
-        address=details.eth_contract_token.address,
-        email=authio_email,
-        token_name=details.token_name,
-        token_short_name=details.token_short_name,
-        token_type=details.token_type,
-        decimals=details.decimals,
-        mint_info=mint_info if mint_info else 'No',
-        admin_address=details.admin_address
+            address=details.eth_contract_token.address,
+            email=authio_email,
+            token_name=details.token_name,
+            token_short_name=details.token_short_name,
+            token_type=details.token_type,
+            decimals=details.decimals,
+            mint_info=mint_info if mint_info else 'No',
+            admin_address=details.admin_address
         ),
         from_email=DEFAULT_FROM_EMAIL,
         to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
@@ -1094,7 +1139,7 @@ def buy_brand_report(request):
     create_payment(request.user.id, '', currency, -cost, site_id, net)
     details.authio_date_payment = datetime.datetime.now().date()
     details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
-            days=3)
+        days=3)
     details.authio_email = authio_email
     details.authio = True
     details.save()
@@ -1152,13 +1197,13 @@ def get_tokens_for_eth_address(request):
             result.append(
                 {
                     'tokenInfo':
-                     {
-                         'address': details.eth_contract_token.address,
-                         'decimals': details.decimals,
-                         'symbol': details.token_short_name,
-                         'name': details.token_name,
-                         'owner': details.admin_address
-                     },
+                        {
+                            'address': details.eth_contract_token.address,
+                            'decimals': details.decimals,
+                            'symbol': details.token_short_name,
+                            'name': details.token_name,
+                            'owner': details.admin_address
+                        },
                     'balance': 0
                 }
             )
@@ -1192,7 +1237,6 @@ def get_tronish_balance(request):
                 'balance': tronish_info.balance / 10000
             })
     return Response({'balance': 0})
-
 
 
 def autodeploing(user_id, subsite_id):
@@ -1250,6 +1294,7 @@ def confirm_swaps_info(request):
     autodeploing(contract.user.id, 4)
     return JsonResponse(ContractSerializer().to_representation(contract))
 
+
 @api_view(http_method_names=['POST'])
 def confirm_protector_info(request):
     print('protector confirm', flush=True)
@@ -1295,7 +1340,8 @@ def confirm_protector_info(request):
 def confirm_protector_tokens(request):
     print('data', request.data, flush=True)
     print('data type', type(request.data), flush=True)
-    contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user, contract_type=23).first()
+    contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user,
+                                       contract_type=23).first()
     if contract:
         token_list = request.data.get('tokens')
         protector_contract = ContractDetailsTokenProtector.objects.get(contract=contract)
@@ -1322,7 +1368,8 @@ def skip_protector_approve(request):
 
 @api_view(http_method_names=['GET'])
 def get_test_tokens(request):
-    tokens_serializer = ContractDetailsTokenSerializer(ContractDetailsToken.objects.filter(~Q(eth_contract_token = None)), many=True)
+    tokens_serializer = ContractDetailsTokenSerializer(ContractDetailsToken.objects.filter(~Q(eth_contract_token=None)),
+                                                       many=True)
     for token in tokens_serializer.data:
         token['platform'] = 'ethereum'
         token.pop('admin_address')
