@@ -114,16 +114,21 @@ def get_all_coinmarketcap_tokens(request):
 
 
 def get_cmc_tokens(request):
+    serve_url = MY_WISH_URL
     if 'HTTP_REFERER' in request.META:
         scheme_part = request.META['HTTP_REFERER'][5:]
         if scheme_part[-1] == ':':
             scheme = 'http'
         else:
             scheme = 'https'
+            serve_url = RUBIC_EXC_URL
     elif request.META['HTTP_HOST'] == RUBIC_EXC_URL:
         scheme = 'https'
+        serve_url = RUBIC_EXC_URL
     else:
         scheme = request.scheme
+
+
     token_list = []
     token_objects = TokensCoinMarketCap.objects.all()
 
@@ -135,7 +140,7 @@ def get_cmc_tokens(request):
             'token_short_name': t.token_short_name,
             'platform': t.token_platform,
             'address':  t.token_address,
-            'image_link': '{}://{}{}'.format(scheme, MY_WISH_URL, t.image.url),
+            'image_link': '{}://{}{}'.format(scheme, serve_url, t.image.url),
             'rank': t.token_rank,
             'rate': t.token_price
         })
