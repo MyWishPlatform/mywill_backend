@@ -7,7 +7,7 @@ from rest_framework.exceptions import ParseError
 from django.core.files.base import ContentFile
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL, RUBIC_EXC_URL, DEBUG
+from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL, RUBIC_EXC_URL
 
 
 def add_eth_for_test(result):
@@ -114,20 +114,16 @@ def get_all_coinmarketcap_tokens(request):
 
 
 def get_cmc_tokens(request):
-    if not DEBUG:
-        if 'HTTP_REFERER' in request.META:
-            scheme_part = request.META['HTTP_REFERER'][5:]
-            if scheme_part[-1] == ':':
-                scheme = 'http'
-            else:
-                scheme = 'https'
-        elif request.META['HTTP_HOST'] == RUBIC_EXC_URL:
-            scheme = 'https'
+    if 'HTTP_REFERER' in request.META:
+        scheme_part = request.META['HTTP_REFERER'][5:]
+        if scheme_part[-1] == ':':
+            scheme = 'http'
         else:
-            scheme = request.scheme
+            scheme = 'https'
+    elif request.META['HTTP_HOST'] == RUBIC_EXC_URL:
+        scheme = 'https'
     else:
-        scheme = 'http'
-
+        scheme = request.scheme
     token_list = []
     token_objects = TokensCoinMarketCap.objects.all()
 
