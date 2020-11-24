@@ -349,6 +349,9 @@ class Contract(models.Model):
         binance_airdrop = apps.get_model('contracts', 'ContractDetailsBinanceAirdrop')
         binance_investment = apps.get_model('contracts', 'ContractDetailsBinanceInvestmentPool')
         binance_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsBinanceLostKeyTokens')
+        matic_ico = apps.get_model('contracts', 'ContractDetailsMaticICO')
+        matic_token = apps.get_model('contracts', 'ContractDetailsMaticToken')
+        matic_airdrop = apps.get_model('contracts', 'ContractDetailsMaticAirdrop')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -383,6 +386,9 @@ class Contract(models.Model):
         contract_details_types[29] = {'name': 'Binance Airdrop', 'model': binance_airdrop}
         contract_details_types[30] = {'name': 'Binance Investment Pool', 'model': binance_investment}
         contract_details_types[31] = {'name': 'Binance LostKey with tokens', 'model': binance_lostkey_tokens}
+        contract_details_types[32] = {'name': 'Matic MyWish ICO', 'model': matic_ico}
+        contract_details_types[33] = {'name': 'Matic Token contract', 'model': matic_token}
+        contract_details_types[34] = {'name': 'Matic Airdrop', 'model': matic_airdrop}
 
         return contract_details_types
 

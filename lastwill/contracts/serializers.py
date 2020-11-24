@@ -32,7 +32,8 @@ from lastwill.contracts.models import (
     ContractDetailsTokenProtector, ApprovedToken,
     ContractDetailsBinanceLostKeyTokens, ContractDetailsBinanceToken, ContractDetailsBinanceDelayedPayment,
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
-    ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop
+    ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
+    ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -338,7 +339,10 @@ class ContractSerializer(serializers.ModelSerializer):
             28: ContractDetailsBinanceTokenSerializer,
             29: ContractDetailsBinanceAirdropSerializer,
             30: ContractDetailsBinanceInvestmentPoolSerializer,
-            31: ContractDetailsBinanceLostKeyTokensSerializer
+            31: ContractDetailsBinanceLostKeyTokensSerializer,
+            32: ContractDetailsMaticICOSerializer,
+            33: ContractDetailsMaticTokenSerializer,
+            34: ContractDetailsMaticAirdropSerializer,
         }[contract_type]
 
 
@@ -1893,5 +1897,41 @@ class ContractDetailsBinanceTokenSerializer(ContractDetailsTokenSerializer):
             res['crowdsale'] = contract_details.eth_contract_token.binance_ico_details_token.filter(
                 contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
         if contract_details.contract.network.name in ['BINANCE_SMART_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+        return res
+
+
+class ContractDetailsMaticAirdropSerializer(ContractDetailsAirdropSerializer):
+    class Meta(ContractDetailsAirdropSerializer.Meta):
+        model = ContractDetailsMaticAirdrop
+
+
+class ContractDetailsMaticICOSerializer(ContractDetailsICOSerializer):
+    class Meta(ContractDetailsICOSerializer.Meta):
+        model = ContractDetailsMaticICO
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        if contract_details.contract.network.name in ['MATIC_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+            res['eth_contract_crowdsale']['source_code'] = ''
+        return res
+
+
+class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsMaticToken
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.tokenholder_set.order_by('id').all()]
+        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.matic_ico_details_token.filter(
+                contract__state='ACTIVE'):
+            res['crowdsale'] = contract_details.eth_contract_token.matic_ico_details_token.filter(
+                contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
+        if contract_details.contract.network.name in ['MATIC_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res

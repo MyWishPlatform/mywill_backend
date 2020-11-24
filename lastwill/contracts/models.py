@@ -22,6 +22,9 @@ from .submodels.binance.lastwill import *
 from .submodels.binance.lost_key import *
 from .submodels.binance.lost_key_tokens import *
 from .submodels.binance.token import *
+from .submodels.matic.token import *
+from .submodels.matic.ico import *
+from .submodels.matic.airdrop import *
 
 
 class CurrencyStatisticsCache(models.Model):
