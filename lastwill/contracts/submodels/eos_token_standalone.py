@@ -114,7 +114,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
             our_public_key, '--stake-net', '10' + ' EOS',
-            '--stake-cpu', '10' + ' EOS',
+            '--stake-cpu', '11' + ' EOS',
             '--buy-ram-kbytes', '250',
             '--transfer', '-j'
         ]
@@ -184,6 +184,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
+        print(tx_hash, flush=True)
         print('SUCCESS')
         self.eos_contract.tx_hash = tx_hash
         self.eos_contract.save()
