@@ -34,6 +34,7 @@ def unlock_eos_account(wallet_name, password):
 def implement_cleos_command(command_list):
     print('command list', command_list, flush=True)
     print('raw command', ' '.join(str(x) for x in command_list), flush=True)
+    stderr = None
     for attempt in range(EOS_ATTEMPTS_COUNT):
         print('attempt', attempt, flush=True)
         proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -41,9 +42,9 @@ def implement_cleos_command(command_list):
         try:
             timer.start()
             stdout, stderr = proc.communicate()
-            if attempt == EOS_ATTEMPTS_COUNT - 1:
-                print('stdout', stdout.decode(), flush=True)
-                print('stderr', stderr.decode(), flush=True)
+            # if attempt == EOS_ATTEMPTS_COUNT - 1:
+            print('stdout', stdout.decode(), flush=True)
+            print('stderr', stderr.decode(), flush=True)
         finally:
             timer.cancel()
         result = stdout.decode()
