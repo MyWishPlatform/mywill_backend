@@ -1,14 +1,12 @@
 """
-
+    Добавляет в базу данных новые данные о всех токенах, имеющиеся в GoinGecko.
 """
 from requests import Session, get
-
-from django import setup as django_setup
 
 from lastwill.swaps_common.tokentable.models import (
     Tokens,
     TokensCoinMarketCap,
-    TokensUpdateTime,
+    TokensUpdateTime
 )
 
 
@@ -156,9 +154,9 @@ def sync_data_with_db():
     """
     Записывает и сохраняет полученые данные в базу данных.
     """
-    data_for_sync = prepare_data_for_sync_with_db()[:10]
+    data_for_sync = prepare_data_for_sync_with_db()
 
-    # Продумать вариант с сохранением объектов пачками, а не всем
+    # Продумать вариант с сохранением объектов порционно, а не всем
     # перечнем (6К записей на 4.12.2020).
     try:
         sync_transaction = TokensCoinMarketCap.objects.bulk_create(
@@ -183,4 +181,6 @@ def sync_data_with_db():
     sync_update = TokensUpdateTime.objects.create()
     sync_update.save()
 
-    return f'Token market data has beed synced at {sync_update.last_time_updated}'
+    print(f'Tokens has been add: {len(data_for_sync)}.\nToken market data has beed synced at {sync_update.last_time_updated}.')
+
+    return 0

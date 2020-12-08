@@ -4,7 +4,7 @@ templates/account/.DS_Store
 .DS_Store
 .idea/
 .venv/
-__pycache__/
+**__pycache__**
 */.DS_Store
 */__pycache__/
 */contracts/__pycache__/
@@ -27,7 +27,7 @@ gunicorn.conf.py
 lastwill/contracts/serializers.py.save
 temp/
 test_btc_addreses.txt
-env/
+**env/
 jon.cs
 jon_new.cs
 lastwill/contracts/submodels/common.py.save
@@ -38,5 +38,6 @@ node_modules/
 api_params.json
 get_secret_key_Dasha.py
 tst.json
-.vscode/
-
+*.vscode/
+**.sql**
+**/0**.py

@@ -3,8 +3,10 @@ from rest_framework.decorators import api_view
 from requests import Session
 import json
 from rest_framework.exceptions import ParseError
+from rest_framework.status import HTTP_404_NOT_FOUND
 
 from django.core.files.base import ContentFile
+from django.db.models import Subquery, Max
 from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
 from lastwill.contracts.models import *
 from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL, RUBIC_EXC_URL
@@ -185,3 +187,51 @@ def get_coins_rate(request):
     return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'],
                      'coin2': data['data'][str(id2)]['quote']['USD']['price']})
 
+
+@api_view()
+def get_all_coingecko_tokens(request):
+    tokens = get_coingecko_tokens(request)
+    return Response(tokens)
+
+
+def get_coingecko_tokens(request):
+    serve_url = MY_WISH_URL
+    if 'HTTP_REFERER' in request.META:
+        scheme_part = request.META['HTTP_REFERER'][5:]
+        if scheme_part[-1] == ':':
+            scheme = 'http'
+        else:
+            scheme = 'https'
+            serve_url = RUBIC_EXC_URL
+    elif request.META['HTTP_HOST'] == RUBIC_EXC_URL:
+        scheme = 'https'
+        serve_url = RUBIC_EXC_URL
+    else:
+        scheme = request.scheme
+
+    token_list = []
+    token_objects = TokensCoinMarketCap.objects \
+                    .filter(
+                        updated_at__in=Subquery(
+                            TokensCoinMarketCap.objects \
+                            .values('token_short_name')
+                            .annotate(created_at=Max('updated_at')) \
+                            .values_list('created_at')
+                        )
+                    ) \
+                    .order_by('token_short_name')
+
+    for t in token_objects:
+        token_list.append({
+            'cmc_id': t.token_cmc_id,
+            'mywish_id': t.id,
+            'token_name': t.token_name,
+            'token_short_name': t.token_short_name,
+            'platform': t.token_platform,
+            'address':  t.token_address,
+            'image_link': '{}://{}{}'.format(scheme, serve_url, t.image.url),
+            'rank': t.token_rank,
+            'rate': t.token_price
+        })
+
+    return token_list

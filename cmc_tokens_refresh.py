@@ -15,6 +15,8 @@ django.setup()
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap, TokensUpdateTime
 from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
 
+from coingecko_market_sync import sync_data_with_db as goingecko_sync_data
+
 class CMCException(Exception):
     pass
 
@@ -172,6 +174,7 @@ if __name__ == '__main__':
             print('token parsing start', flush=True)
             try:
                 find_by_parameters(now, previous_check)
+                goingecko_sync_data()
             except CMCException:
                 pass
 
