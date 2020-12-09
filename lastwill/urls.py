@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
 # from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
@@ -61,7 +62,6 @@ from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, s
 from lastwill.swaps_common.orderbook.api_exchange import create_swaps_order_api, create_token_for_session, \
     get_cmc_tokens_for_api, get_user_orders_for_api, delete_order_for_user, create_token_for_session_mywish
 from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
-from lastwill.admin import lastwill_admin
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -75,7 +75,7 @@ urlpatterns = [
     url(r'^reset', index),
     url(r'^', include('django.contrib.auth.urls')),
     # url(r'^jopa/', admin.site.urls),
-    url(r'^jopa/', lastwill_admin.urls),
+    url(r'^jopa/', admin.site.urls),
     url(r'^api/', include(router.urls)),
     url(
             r'^api/rest-auth/registration/account-confirm-email/(?P<key>[-:\w]+)/$',
