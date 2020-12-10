@@ -8,6 +8,7 @@ from lastwill.swaps_common.tokentable.models import (
     TokensCoinMarketCap,
     TokensUpdateTime
 )
+from django.core.files.base import ContentFile
 
 
 def push_request_to_coingecko(url, params=None):
@@ -76,7 +77,7 @@ def get_token_market_data_from_coingecko(start=0, stop_slice=300):
                     f'\nSending the request has been failed!\nError message: "{response["error"]}".'
                 )
 
-            result += push_request_to_coingecko(target_url, params)
+            result += response
             start = stop_slice
             stop_slice += 300
 
@@ -156,12 +157,31 @@ def sync_data_with_db():
     """
     data_for_sync = prepare_data_for_sync_with_db()
 
+    print(f'Total coingecko tokens: {len(data_for_sync)}.')
+
+    counter = 0
     # Продумать вариант с сохранением объектов порционно, а не всем
     # перечнем (6К записей на 4.12.2020).
     try:
-        sync_transaction = TokensCoinMarketCap.objects.bulk_create(
-            [
-                TokensCoinMarketCap(
+        for _, item in enumerate(data_for_sync):
+
+            token_market_data = TokensCoinMarketCap.objects \
+                                .filter(
+                                    token_cmc_id=0,
+                                    token_name=item['token_name'],
+                                    token_short_name=item['token_short_name']
+                                )
+            if token_market_data.exists():
+                token_market_data.update(
+                    token_name=item['token_name'],
+                    token_short_name=item['token_short_name'],
+                    token_rank=item['token_rank'],
+                    token_price=item['token_price'],
+                )
+            else:
+                pic_name = item['image_link'].split('/')[-1].split('?')[0]
+
+                new_token = TokensCoinMarketCap(
                     token_cmc_id=0,
                     token_name=item['token_name'],
                     token_short_name=item['token_short_name'],
@@ -169,18 +189,28 @@ def sync_data_with_db():
                     token_address='0x0000000000000000000000000000000000000000',
                     image_link=item['image_link'],
                     token_rank=item['token_rank'],
-                    token_price=item['token_price']
-                ) for _, item in enumerate(data_for_sync)
-            ]
-        )
+                    token_price=item['token_price'],
+                )
+
+                if item['image_link'] != 'missing_large.png':
+                    new_token.image.save(
+                        name=f'cg_logo_{item["token_short_name"]}_{pic_name}',
+                        content=ContentFile(get(item['image_link']).content)
+                    )
+
+                new_token.save()
+
+            counter += 1
+
     except TypeError as exception_error:
         raise Exception(exception_error)
-    except:
-        raise Exception('Something went wrong!')
+    except Exception as exception_error:
+        print(exception_error)
+        pass
 
     sync_update = TokensUpdateTime.objects.create()
     sync_update.save()
 
-    print(f'Tokens has been add: {len(data_for_sync)}.\nToken market data has beed synced at {sync_update.last_time_updated}.')
+    print(f'Total tokens has been refreshed: {counter}.\nToken market data has beed synced at {sync_update.last_time_updated}.')
 
-    return 0
+    return 1

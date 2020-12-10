@@ -41,3 +41,4 @@ tst.json
 *.vscode/
 **.sql**
 **/0**.py
+**media**

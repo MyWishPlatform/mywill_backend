@@ -132,7 +132,7 @@ def get_cmc_tokens(request):
 
 
     token_list = []
-    token_objects = TokensCoinMarketCap.objects.all()
+    token_objects = TokensCoinMarketCap.objects.filter(token_cmc_id__gt=0)
 
     for t in token_objects:
         token_list.append({
@@ -189,12 +189,12 @@ def get_coins_rate(request):
 
 
 @api_view()
-def get_all_coingecko_tokens(request):
-    tokens = get_coingecko_tokens(request)
+def get_coingecko_tokens(request):
+    tokens = get_actual_coingecko_tokens(request)
     return Response(tokens)
 
 
-def get_coingecko_tokens(request):
+def get_actual_coingecko_tokens(request):
     serve_url = MY_WISH_URL
     if 'HTTP_REFERER' in request.META:
         scheme_part = request.META['HTTP_REFERER'][5:]
@@ -211,27 +211,20 @@ def get_coingecko_tokens(request):
 
     token_list = []
     token_objects = TokensCoinMarketCap.objects \
-                    .filter(
-                        updated_at__in=Subquery(
-                            TokensCoinMarketCap.objects \
-                            .values('token_short_name')
-                            .annotate(created_at=Max('updated_at')) \
-                            .values_list('created_at')
-                        )
-                    ) \
+                    .filter(token_cmc_id=0) \
                     .order_by('token_short_name')
 
-    for t in token_objects:
+    for token in token_objects:
         token_list.append({
-            'cmc_id': t.token_cmc_id,
-            'mywish_id': t.id,
-            'token_name': t.token_name,
-            'token_short_name': t.token_short_name,
-            'platform': t.token_platform,
-            'address':  t.token_address,
-            'image_link': '{}://{}{}'.format(scheme, serve_url, t.image.url),
-            'rank': t.token_rank,
-            'rate': t.token_price
+            'cmc_id': token.token_cmc_id,
+            'mywish_id': token.id,
+            'token_name': token.token_name,
+            'token_short_name': token.token_short_name,
+            'platform': token.token_platform,
+            'address':  token.token_address,
+            'image_link': '{}://{}{}'.format(scheme, serve_url, token.image.url),
+            'rank': token.token_rank,
+            'rate': token.token_price,
         })
 
     return token_list
