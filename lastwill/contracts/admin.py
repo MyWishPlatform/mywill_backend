@@ -46,16 +46,16 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
     Настройки панели администратора модели TokensCoinMarketCap.
     """
     fields = (
-        'token_cmc_id',
+        # 'token_cmc_id',
         'token_name',
         'token_short_name',
         'token_platform',
         'token_address',
-        'image_link',
-        'token_rank',
+        # 'image_link',
+        # 'token_rank',
         'image',
-        'token_price',
-        'updated_at',
+        # 'token_price',
+        # 'updated_at',
     )
     list_display = (
         'id',
@@ -70,6 +70,7 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
     list_filter = (
         'token_cmc_id',
         'token_short_name',
+        'token_address',
         'updated_at',
     )
     search_fields = (
