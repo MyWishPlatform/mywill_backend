@@ -1,14 +1,15 @@
 """
     Добавляет в базу данных новые данные о всех токенах, имеющиеся в GoinGecko.
 """
-from requests import Session, get
+import time
+from requests import get
+
+from django.core.files.base import ContentFile
 
 from lastwill.swaps_common.tokentable.models import (
-    Tokens,
     TokensCoinMarketCap,
     TokensUpdateTime
 )
-from django.core.files.base import ContentFile
 
 
 def push_request_to_coingecko(url, params=None):
@@ -81,6 +82,8 @@ def get_token_market_data_from_coingecko(start=0, stop_slice=300):
             start = stop_slice
             stop_slice += 300
 
+            time.sleep(5)
+
             continue
         else:
             params.update({
@@ -98,41 +101,38 @@ def get_token_market_data_from_coingecko(start=0, stop_slice=300):
 def prepare_data_for_sync_with_db():
     """
     Фильтрует данные для сохранения в базу данных.
-
-    ---
-
-    Пример данных:
-    [
-        {
-            "id": "1337", -
-            "symbol": "1337", as short name
-            "name": "Elite", as repr name
-            "image": "https://assets.coingecko.com/coins/images/686/large/EliteLogo256.png?1559143523", as image link
-            "current_price": 0.00001408, as token price
-            "market_cap": 415426, -
-            "market_cap_rank": 1247, as token rank
-            "fully_diluted_valuation": null, -
-            "total_volume": 5.26, -
-            "high_24h": 0.0000185, -
-            "low_24h": 0.00001542, -
-            "price_change_24h": -0.00000274, -
-            "price_change_percentage_24h": -16.31284, -
-            "market_cap_change_24h": -80975.61992168, -
-            "market_cap_change_percentage_24h": -16.31252, -
-            "circulating_supply": 29515041222.0315, -
-            "total_supply": null, -
-            "max_supply": null, -
-            "ath": 0.00108002, -
-            "ath_change_percentage": -98.69678, -
-            "ath_date": "2018-01-09T00:00:00.000Z", -
-            "atl": 2.2e-7, -
-            "atl_change_percentage": 6281.09, -
-            "atl_date": "2020-06-26T11:53:55.843Z", -
-            "roi": null, -
-            "last_updated": "2020-12-04T14:12:07.411Z" -
-        },
-    ]
     """
+    # Пример данных:
+    # [
+    #     {
+    #         "id": "1337", -
+    #         "symbol": "1337", as short name
+    #         "name": "Elite", as repr name
+    #         "image": "https://assets.coingecko.com/coins/images/686/large/EliteLogo256.png?1559143523", as image link
+    #         "current_price": 0.00001408, as token price
+    #         "market_cap": 415426, -
+    #         "market_cap_rank": 1247, as token rank
+    #         "fully_diluted_valuation": null, -
+    #         "total_volume": 5.26, -
+    #         "high_24h": 0.0000185, -
+    #         "low_24h": 0.00001542, -
+    #         "price_change_24h": -0.00000274, -
+    #         "price_change_percentage_24h": -16.31284, -
+    #         "market_cap_change_24h": -80975.61992168, -
+    #         "market_cap_change_percentage_24h": -16.31252, -
+    #         "circulating_supply": 29515041222.0315, -
+    #         "total_supply": null, -
+    #         "max_supply": null, -
+    #         "ath": 0.00108002, -
+    #         "ath_change_percentage": -98.69678, -
+    #         "ath_date": "2018-01-09T00:00:00.000Z", -
+    #         "atl": 2.2e-7, -
+    #         "atl_change_percentage": 6281.09, -
+    #         "atl_date": "2020-06-26T11:53:55.843Z", -
+    #         "roi": null, -
+    #         "last_updated": "2020-12-04T14:12:07.411Z" -
+    #     },
+    # ]
     token_market_data = get_token_market_data_from_coingecko()
 
     result = []
@@ -156,6 +156,9 @@ def sync_data_with_db():
     Записывает и сохраняет полученые данные в базу данных.
     """
     data_for_sync = prepare_data_for_sync_with_db()
+    existed_cg_tokens = TokensCoinMarketCap.objects \
+                        .all() \
+                        .filter(token_cmc_id=0)
 
     print(f'Total coingecko tokens: {len(data_for_sync)}.')
 
@@ -165,9 +168,8 @@ def sync_data_with_db():
     try:
         for _, item in enumerate(data_for_sync):
 
-            token_market_data = TokensCoinMarketCap.objects \
+            token_market_data = existed_cg_tokens \
                                 .filter(
-                                    token_cmc_id=0,
                                     token_name=item['token_name'],
                                     token_short_name=item['token_short_name']
                                 )

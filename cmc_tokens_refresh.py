@@ -177,7 +177,6 @@ if __name__ == '__main__':
                 goingecko_sync_data()
             except CMCException:
                 pass
-
         else:
             print('last check was %s, skipping' % previous_check.last_time_updated, flush=True)
 
