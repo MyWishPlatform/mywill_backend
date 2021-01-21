@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'lastwill.promo',
     'lastwill.snapshot',
     'lastwill.swaps_common',
+    'lastwill.panama_bridge',
 ]
 
 MIDDLEWARE = [

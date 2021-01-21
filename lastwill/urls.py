@@ -62,6 +62,7 @@ from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, s
 from lastwill.swaps_common.orderbook.api_exchange import create_swaps_order_api, create_token_for_session, \
     get_cmc_tokens_for_api, get_user_orders_for_api, delete_order_for_user, create_token_for_session_mywish
 from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
+from lastwill.panama_bridge.views import UserTransactionsView
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -184,7 +185,10 @@ urlpatterns = [
     url(r'^api/get_non_active_swap3', get_non_active_orders),
     url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
     url(r'^api/get_cmc_token_rate', get_coins_rate),
-    url(r'^api/get_all_promos/$', get_all_promos_api)
+    url(r'^api/get_all_promos/$', get_all_promos_api),
+
+    #panama_bridge
+    url(r'^api/v1/bridge/transactions/', UserTransactionsView.as_view())
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),
