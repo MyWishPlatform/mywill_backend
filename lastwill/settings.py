@@ -220,27 +220,27 @@ SOCIALACCOUNT_PROVIDERS = {
 
 
 
-LOGGING = {
-  'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-  'handlers': {
-      'logstash': {
-          'level': 'DEBUG',
-          'class': 'logstash.LogstashHandler',
-          'host': 'kibana.mywish.io',
-          'port': 5045,
-          'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-          'fqdn': False, # Fully qualified domain name. Default value: false.
-          'tags': ['tag1', 'tag2'], # list of tags. Default: None.
-      },
-  },
-  'loggers': {
-      'django.request': {
-          'handlers': ['logstash'],
-          'level': 'DEBUG',
-          'propagate': True,
-      },
-  },
-}
+# LOGGING = {
+#   'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+#   'handlers': {
+#       'logstash': {
+#           'level': 'DEBUG',
+#           'class': 'logstash.LogstashHandler',
+#           'host': 'kibana.mywish.io',
+#           'port': 5045,
+#           'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
+#           'fqdn': False, # Fully qualified domain name. Default value: false.
+#           'tags': ['tag1', 'tag2'], # list of tags. Default: None.
+#       },
+#   },
+#   'loggers': {
+#       'django.request': {
+#           'handlers': ['logstash'],
+#           'level': 'DEBUG',
+#           'propagate': True,
+#       },
+#   },
+# }
 
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
@@ -259,10 +259,10 @@ SESSION_COOKIE_DOMAIN = '.mywish.io'
 
 UNBLOCKING_EMAIL = 'hello@rocknblock.io'
 
-try:
-    from lastwill.settings_local import *
-except ImportError as exc:
-    print("Can't load local settings")
-
+# try:
+#     from lastwill.settings_local import *
+# except ImportError as exc:
+#     print("Can't load local settings")
+SECRET_KEY ="^{a/-_l&1yb_s]bdjwtm\79o%l.w/8u)?q#2dn,66z{+]v4f"
 
 
