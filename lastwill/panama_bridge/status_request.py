@@ -1,14 +1,9 @@
-import os
-import sys
-from django.conf import settings
-from django.db.models import Q
-import django
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rubic_exchange.settings.settings_development')
-django.setup()
-
 import requests
-from panama_bridge.models import PanamaTransaction
+
+from django.db.models import Q
+
+from .models import PanamaTransaction
+
 
 API_PANAMA = "http://api.binance.org/bridge"
 
@@ -79,5 +74,5 @@ def make_status(panama_trans_id):
 
 
 # test data
-panama_trans_id = "e6e0c42fa1dd4c9eba8bfcf24465ec56"
-make_status(panama_trans_id)
+# panama_trans_id = "e6e0c42fa1dd4c9eba8bfcf24465ec56"
+# make_status(panama_trans_id)

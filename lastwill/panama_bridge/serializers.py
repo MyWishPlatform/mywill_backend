@@ -1,9 +1,9 @@
-from rest_framework import serializers
-from panama_bridge.models import PanamaTransaction
+from rest_framework.serializers import ModelSerializer
+
+from .models import PanamaTransaction
 
 
-class UserTransactionSerializer(serializers.ModelSerializer):
-
+class UserTransactionSerializer(ModelSerializer):
     class Meta:
         model = PanamaTransaction
         fields = (

@@ -1,7 +1,7 @@
 """
 Celery task module.
 """
-from rubic_exchange.celery import app
+from lastwill.celery import app
 
 from .status_request import update_transactions_status
 
@@ -12,5 +12,5 @@ def update_binance_bridge_transaction_status():
         update_transactions_status()
     except Exception as exception_error:
         print(
-            f'A$AP!\n~~~~~~~~~~~~~~~\n{exception_error}\n~~~~~~~~~~~~~~~'
+            f'~~~~~~~~~~~~~~~\n{exception_error}\n~~~~~~~~~~~~~~~'
         )

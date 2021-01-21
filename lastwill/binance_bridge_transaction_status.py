@@ -1,14 +1,15 @@
 import os
-import sys
+import requests
+from time import sleep
+
+import django
 from django.conf import settings
 from django.db.models import Q
-import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+from .panama_bridge.models import PanamaTransaction
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rubic_exchange.settings.settings_development')
 django.setup()
-
-import requests
-from panama_bridge.models import PanamaTransaction
 
 BINANCE_BRIDGE_API_URL = "http://api.binance.org/bridge"
 

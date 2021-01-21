@@ -1,9 +1,9 @@
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
 
-from status_request import get_status_by_id
-from panama_bridge.models import PanamaTransaction
-from panama_bridge.serializers import UserTransactionSerializer
+from .status_request import get_status_by_id
+from .models import PanamaTransaction
+from .serializers import UserTransactionSerializer
 
 
 class UserTransactionsView(ListAPIView, CreateAPIView):

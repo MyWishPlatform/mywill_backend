@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
 import os
 
+from celery.schedules import crontab
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,9 +26,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,6 +47,7 @@ INSTALLED_APPS = [
     'rest_auth',
     'rest_auth.registration',
     'djcelery_email',
+    'django_celery_beat',
 
     'lastwill.main',
     'lastwill.contracts',
@@ -95,7 +94,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lastwill.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
@@ -111,11 +109,8 @@ DATABASES = {
     }
 }
 
-
-
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -145,11 +140,8 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
-
 PROJECT_STATIC_ROOT = os.path.join(BASE_DIR, 'lastwill-frontend/dist/static')
 STATIC_ROOT = os.path.join(ROOT, 'static_collect/')
 STATIC_URL = '/static/'
@@ -162,7 +154,6 @@ ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 STATICFILES_DIRS = (
     PROJECT_STATIC_ROOT,
 )
-
 
 SITE_ID = 1
 REST_SESSION_LOGIN = True
@@ -220,28 +211,27 @@ SOCIALACCOUNT_PROVIDERS = {
 
 
 
-# LOGGING = {
-#   'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-#   'handlers': {
-#       'logstash': {
-#           'level': 'DEBUG',
-#           'class': 'logstash.LogstashHandler',
-#           'host': 'kibana.mywish.io',
-#           'port': 5045,
-#           'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-#           'fqdn': False, # Fully qualified domain name. Default value: false.
-#           'tags': ['tag1', 'tag2'], # list of tags. Default: None.
-#       },
-#   },
-#   'loggers': {
-#       'django.request': {
-#           'handlers': ['logstash'],
-#           'level': 'DEBUG',
-#           'propagate': True,
-#       },
-#   },
-# }
-
+LOGGING = {
+  'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+  'handlers': {
+      'logstash': {
+          'level': 'DEBUG',
+          'class': 'logstash.LogstashHandler',
+          'host': 'kibana.mywish.io',
+          'port': 5045,
+          'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
+          'fqdn': False, # Fully qualified domain name. Default value: false.
+          'tags': ['tag1', 'tag2'], # list of tags. Default: None.
+      },
+  },
+  'loggers': {
+      'django.request': {
+          'handlers': ['logstash'],
+          'level': 'DEBUG',
+          'propagate': True,
+      },
+  },
+}
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 
@@ -259,10 +249,31 @@ SESSION_COOKIE_DOMAIN = '.mywish.io'
 
 UNBLOCKING_EMAIL = 'hello@rocknblock.io'
 
-# try:
-#     from lastwill.settings_local import *
-# except ImportError as exc:
-#     print("Can't load local settings")
+try:
+    from lastwill.settings_local import *
+except ImportError as exc:
+    print("Can't load local settings")
+
 SECRET_KEY ="^{a/-_l&1yb_s]bdjwtm\79o%l.w/8u)?q#2dn,66z{+]v4f"
 
+# REDIS settings
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = '6379'
+BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600, }
 
+# CELERY settings
+CELERY_DATA_FORMAT = 'json'
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/0'
+CELERY_ACCEPT_CONTENT = [f'application/{CELERY_DATA_FORMAT}', ]
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
+CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {
+    'update_binance_bridge_transaction_status_every_minute': {
+        'task': 'panama_bridge.tasks.update_binance_bridge_transaction_status',
+        'schedule': crontab(minute='*'),
+    },
+}
