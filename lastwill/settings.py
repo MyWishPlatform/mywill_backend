@@ -273,7 +273,7 @@ CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
     'update_binance_bridge_transaction_status_every_minute': {
-        'task': 'panama_bridge.tasks.update_binance_bridge_transaction_status',
+        'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
         'schedule': crontab(minute='*'),
     },
 }
