@@ -3,6 +3,7 @@ from django.contrib.admin import ModelAdmin, register
 from lastwill.swaps_common.tokentable.models import (
     Tokens,
     TokensCoinMarketCap,
+    CoinGeckoToken,
     TokensUpdateTime
 )
 
@@ -27,9 +28,6 @@ class TokensModelAdmin(ModelAdmin):
         'decimals',
         'image_link',
     )
-    list_filter = (
-        'token_short_name',
-    )
     search_fields = (
         'id',
         'token_short_name',
@@ -46,16 +44,11 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
     Настройки панели администратора модели TokensCoinMarketCap.
     """
     fields = (
-        # 'token_cmc_id',
         'token_name',
         'token_short_name',
         'token_platform',
         'token_address',
-        # 'image_link',
-        # 'token_rank',
         'image',
-        # 'token_price',
-        # 'updated_at',
     )
     list_display = (
         'id',
@@ -65,13 +58,14 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
         'token_address',
         'token_rank',
         'token_price',
+        'created_at',
         'updated_at',
+        'is_displayed',
     )
     list_filter = (
-        'token_cmc_id',
-        'token_short_name',
-        'token_address',
+        'created_at',
         'updated_at',
+        'is_displayed',
     )
     search_fields = (
         'token_cmc_id',
@@ -79,6 +73,47 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
         'token_short_name',
         'token_platform',
         'token_address',
+    )
+    ordering = (
+        'id',
+    )
+
+
+@register(CoinGeckoToken)
+class CoinGeckoTokenModelAdmin(ModelAdmin):
+    """
+    Настройки панели администратора модели CoinGeckoToken.
+    """
+    fields = (
+        'title',
+        'short_title',
+        'address',
+        'platform',
+        'decimals',
+        'source_image_link',
+        'image_file',
+        'rank',
+        'usd_price',
+        'is_displayed',
+    )
+    list_display = (
+        'id',
+        'title',
+        'short_title',
+        'token_platform',
+        'token_address',
+        'created_at',
+        'updated_at',
+        'is_displayed',
+    )
+    list_filter = (
+        'created_at',
+        'updated_at',
+        'is_displayed',
+    )
+    search_fields = (
+        'title',
+        'short_title',
     )
     ordering = (
         'id',
