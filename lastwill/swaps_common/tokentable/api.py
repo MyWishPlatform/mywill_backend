@@ -1,15 +1,23 @@
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from requests import Session
 import json
-from rest_framework.exceptions import ParseError
-from rest_framework.status import HTTP_404_NOT_FOUND
 
 from django.core.files.base import ContentFile
-from django.db.models import Subquery, Max
-from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
+from requests import Session
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+
+from lastwill.swaps_common.tokentable.models import (
+    CoinGeckoToken,
+    Tokens,
+    TokensCoinMarketCap,
+)
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL, RUBIC_EXC_URL
+from lastwill.settings import (
+    DEFAULT_IMAGE_LINK,
+    COINMARKETCAP_API_KEYS,
+    MY_WISH_URL,
+    RUBIC_EXC_URL
+)
 
 
 def add_eth_for_test(result):
@@ -190,8 +198,36 @@ def get_coins_rate(request):
 
 @api_view()
 def get_coingecko_tokens(request):
-    tokens = get_actual_coingecko_tokens(request)
-    return Response(tokens)
+    """
+    Возвращает список актуальных токенов CoinGecko.
+
+    ---
+
+    Принимаемые параметры:
+    - request
+    """
+    coingecko_tokens = get_actual_coingecko_tokens(request)
+
+    if not coingecko_tokens:
+        return get_response('No coingecko tokens.', HTTP_404_NOT_FOUND)
+
+    return get_response(coingecko_tokens)
+
+
+def get_response(data_to_response, status_to_response=HTTP_200_OK):
+    """
+    Возвращает объект Response.
+
+    ---
+
+    Принимаемые параметры:
+    - data_to_response : Any
+    - status_to_response : int, по-умолчанию - 200
+    """
+    return Response(
+        data=data_to_response,
+        status=status_to_response,
+    )
 
 
 def get_actual_coingecko_tokens(request):
@@ -210,21 +246,20 @@ def get_actual_coingecko_tokens(request):
         scheme = request.scheme
 
     token_list = []
-    token_objects = TokensCoinMarketCap.objects \
-                    .filter(token_cmc_id=0) \
-                    .order_by('token_short_name')
+    coingecko_tokens = CoinGeckoToken.objects \
+                       .filter(is_displayed=True) \
+                       .order_by('short_title')
 
-    for token in token_objects:
-        token_list.append({
-            'cmc_id': token.token_cmc_id,
-            'mywish_id': token.id,
-            'token_name': token.token_name,
-            'token_short_name': token.token_short_name,
-            'platform': token.token_platform,
-            'address':  token.token_address,
-            'image_link': '{}://{}{}'.format(scheme, serve_url, token.image.url),
-            'rank': token.token_rank,
-            'rate': token.token_price,
-        })
+    if coingecko_tokens.exists():
+        for token in coingecko_tokens:
+            token_list.append({
+                'token_title': token.title,
+                'token_short_title': token.short_title,
+                'address':  token.address,
+                'platform': token.platform,
+                'image_link': '{}://{}{}'.format(scheme, serve_url, token.image_file.url),
+                'rank': token.rank,
+                'rate': token.usd_price,
+            })
 
     return token_list

@@ -39,4 +39,5 @@ get_secret_key_Dasha.py
 tst.json
 .vscode/
 **media**
+**static**
 **.sql**

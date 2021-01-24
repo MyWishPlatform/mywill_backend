@@ -155,7 +155,7 @@ urlpatterns = [
     url(r'^api/get_all_tokens/$', get_all_tokens),
     url(r'^api/get_standarts_tokens/$', get_standarts_tokens),
     url(r'^api/get_coinmarketcap_tokens/$', get_all_coinmarketcap_tokens),
-    url(r'^api/get_coingecko_tokens/$', get_coingecko_tokens),
+    url(r'^api/coingecko_tokens/$', get_coingecko_tokens),
     url(r'^api/confirm_swaps_info/$', confirm_swaps_info),
     url(r'^api/confirm_protector_info/$', confirm_protector_info),
     url(r'^api/confirm_protector_tokens/$', confirm_protector_tokens),

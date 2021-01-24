@@ -2,7 +2,7 @@ import os
 import datetime
 import django
 import requests
-from requests import Session, ConnectionError, Timeout, TooManyRedirects
+from requests import Session
 import json
 import time
 from django.core.files.base import ContentFile
@@ -13,9 +13,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
 
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap, TokensUpdateTime
-from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
+from lastwill.settings import COINMARKETCAP_API_KEYS
 
-from coingecko_market_sync import sync_data_with_db as goingecko_sync_data
 
 class CMCException(Exception):
     pass
@@ -117,7 +116,12 @@ def find_by_parameters(current_time, checker_object):
         except KeyError:
             price = None
 
-        token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
+        token_from_cmc = TokensCoinMarketCap.objects \
+            .filter(
+                token_name=value['name'],
+                token_short_name=value['symbol'],
+            ) \
+            .first()
         if token_from_cmc:
             if price is not None and token_from_cmc.token_price != price:
                 token_from_cmc.token_price = price
@@ -174,7 +178,6 @@ if __name__ == '__main__':
             print('token parsing start', flush=True)
             try:
                 find_by_parameters(now, previous_check)
-                goingecko_sync_data()
             except CMCException:
                 pass
         else:
