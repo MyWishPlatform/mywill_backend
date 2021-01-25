@@ -34,7 +34,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
         return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
-        walletAddress = self.request.COOKIES.get("walletAddress")
+        walletAddress = self.request.query_params.get("walletAddress")
         return list(PanamaTransaction.objects.filter(walletFromAddress=walletAddress))
 
     def get(self, request, *args, **kwargs):
