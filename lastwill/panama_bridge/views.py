@@ -3,6 +3,7 @@ from rest_framework.response import Response
 
 from .status_request import get_status_by_id
 from .models import PanamaTransaction
+from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
 from .serializers import UserTransactionSerializer
 
 
@@ -25,7 +26,6 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             request.data["toNetwork"] = transactionFullInfo.get("toNetwork")
             request.data["actualFromAmount"] = transactionFullInfo.get("actualFromAmount")
             request.data["actualToAmount"] = transactionFullInfo.get("actualToAmount")
-            request.data["symbol"] = transactionFullInfo.get("symbol")
             request.data["status"] = transactionFullInfo.get("status")
             request.data["walletFromAddress"] = transactionFullInfo.get("walletFromAddress")
             request.data["walletToAddress"] = transactionFullInfo.get("walletToAddress")
@@ -34,10 +34,21 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
         return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
-        return list(PanamaTransaction.objects.filter(walletFromAddress="0xfCf49f25a2D1E49631d05614E2eCB45296F26258"))
+        walletAddress = self.request.COOKIES.get("walletAddress")
+        return list(PanamaTransaction.objects.filter(walletFromAddress=walletAddress))
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
+
+        for _, token in enumerate(serializer.data):
+            tokenInfo = TokensCoinMarketCap.objects \
+                .filter(
+                    token_short_name=token.get("ethSymbol")
+                ) \
+                .last()
+            token["image_link"] = request.build_absolute_uri(
+                tokenInfo.image.url
+            )
 
         return Response(serializer.data)

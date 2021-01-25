@@ -7,8 +7,16 @@ class UserTransactionSerializer(ModelSerializer):
     class Meta:
         model = PanamaTransaction
         fields = (
-            'fromNetwork', 'toNetwork', 'actualFromAmount', 'actualToAmount',
-            'symbol', 'updateTime', 'status', 'transaction_id',
-            'walletFromAddress', 'walletToAddress',
+            'fromNetwork',
+            'toNetwork',
+            'actualFromAmount',
+            'actualToAmount',
+            'ethSymbol',
+            'bscSymbol',
+            'updateTime',
+            'status',
+            'transaction_id',
+            'walletFromAddress',
+            'walletToAddress',
             'walletDepositAddress',
         )

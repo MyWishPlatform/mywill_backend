@@ -188,7 +188,7 @@ urlpatterns = [
     url(r'^api/get_all_promos/$', get_all_promos_api),
 
     #panama_bridge
-    url(r'^api/v1/bridge/transactions/', UserTransactionsView.as_view())
+    url(r'^api/bridge/transactions', UserTransactionsView.as_view())
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

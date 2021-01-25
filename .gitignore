@@ -13,7 +13,7 @@ lastwill-frontend/
 lastwill/static_collect/
 mywill_frontend/
 mywill_sign/
-test.py
+test**
 **/migrations/????_**.py
 */*/test_addresses.json
 emails.csv
@@ -39,4 +39,5 @@ get_secret_key_Dasha.py
 tst.json
 .vscode/
 **.sql**
-media
+**media**
+

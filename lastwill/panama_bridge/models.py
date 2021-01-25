@@ -12,11 +12,11 @@ class PanamaTransaction(models.Model):
     toNetwork = models.CharField(max_length=4)
     actualFromAmount = models.FloatField()
     actualToAmount = models.FloatField()
-    symbol = models.CharField(max_length=4)
+    ethSymbol = models.CharField(max_length=6)
+    bscSymbol = models.CharField(max_length=6)
     updateTime = models.DateTimeField()
     status = models.CharField(max_length=20)
     transaction_id = models.CharField(max_length=33)
     walletFromAddress = models.CharField(max_length=42)
     walletToAddress = models.CharField(max_length=42)
     walletDepositAddress = models.CharField(max_length=42)
-
