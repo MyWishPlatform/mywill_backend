@@ -42,6 +42,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
         serializer = self.get_serializer(queryset, many=True)
 
         for _, token in enumerate(serializer.data):
+            # add token image link to response
             tokenInfo = TokensCoinMarketCap.objects \
                 .filter(
                     token_short_name=token.get("ethSymbol")
@@ -50,5 +51,11 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             token["image_link"] = request.build_absolute_uri(
                 tokenInfo.image.url
             )
+            # change type of datetime
+            token["year"] = token.get("updateTime").year
+            token["month"] = token.get("updateTime").month
+            token["day"] = token.get("updateTime").day
+            token["hour"] = token.get("updateTime").hour
+            token["minute"] = token.get("minute").day
 
         return Response(serializer.data)
