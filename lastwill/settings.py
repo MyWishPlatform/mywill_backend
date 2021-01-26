@@ -151,7 +151,7 @@ USE_TZ = True
 
 PROJECT_STATIC_ROOT = os.path.join(BASE_DIR, 'lastwill-frontend/dist/static')
 STATIC_ROOT = os.path.join(ROOT, 'static_collect/')
-STATIC_URL = '/static/'
+STATIC_URL = '/django_static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 MEDIA_URL = '/media/'
