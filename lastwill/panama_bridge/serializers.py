@@ -1,12 +1,14 @@
-import re
-from rest_framework.serializers import ModelSerializer, DateField, SerializerMethodField
+from rest_framework.serializers import (
+    ModelSerializer,
+    DateTimeField,
+    SerializerMethodField,
+)
 
 from .models import PanamaTransaction
 
 
 class UserTransactionSerializer(ModelSerializer):
-    status = SerializerMethodField('change_status_view')
-    updateTime = DateField(format="%Y-%m-%d %H:%M")
+    updateTime = DateTimeField(format="%Y-%m-%d %H:%M")
 
     class Meta:
         model = PanamaTransaction
@@ -24,5 +26,3 @@ class UserTransactionSerializer(ModelSerializer):
             'walletToAddress',
             'walletDepositAddress',
         )
-    def change_status_view(self, obj):
-        return  re.sub(r"(\w)([A-Z])", r"\1 \2", self.status).capitalize()

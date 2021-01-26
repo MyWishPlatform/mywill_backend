@@ -1,3 +1,5 @@
+import re
+
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
 
@@ -48,14 +50,13 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                     token_short_name=token.get("ethSymbol")
                 ) \
                 .last()
+
+            token["status"] = re.sub(
+                r"(\w)([A-Z])", r"\1 \2",
+                token.get("status")
+            ).capitalize()
             token["image_link"] = request.build_absolute_uri(
                 tokenInfo.image.url
             )
-            # change type of datetime
-            token["year"] = token.get("updateTime").year
-            token["month"] = token.get("updateTime").month
-            token["day"] = token.get("updateTime").day
-            token["hour"] = token.get("updateTime").hour
-            token["minute"] = token.get("minute").day
 
         return Response(serializer.data)
