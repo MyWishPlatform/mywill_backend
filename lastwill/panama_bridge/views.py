@@ -27,14 +27,14 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             request.data["actualFromAmount"] = transactionFullInfo.get("actualFromAmount")
             request.data["actualToAmount"] = transactionFullInfo.get("actualToAmount")
             request.data["status"] = transactionFullInfo.get("status")
-            request.data["walletFromAddress"] = transactionFullInfo.get("walletFromAddress")
-            request.data["walletToAddress"] = transactionFullInfo.get("walletToAddress")
-            request.data["walletDepositAddress"] = transactionFullInfo.get("walletDepositAddress")
+            request.data["walletFromAddress"] = transactionFullInfo.get("walletFromAddress").lower()
+            request.data["walletToAddress"] = transactionFullInfo.get("walletToAddress").lower()
+            request.data["walletDepositAddress"] = transactionFullInfo.get("walletDepositAddress").lower()
 
         return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
-        walletAddress = self.request.query_params.get("walletAddress")
+        walletAddress = self.request.query_params.get("walletAddress").lower()
         return list(PanamaTransaction.objects.filter(walletFromAddress=walletAddress))
 
     def get(self, request, *args, **kwargs):
