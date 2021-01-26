@@ -8,7 +8,7 @@ from .models import PanamaTransaction
 
 
 class UserTransactionSerializer(ModelSerializer):
-    updateTime = DateTimeField(format="%Y-%m-%d %H:%M")
+    updateTime = DateTimeField(format="%d-%m-%Y %H:%M")
 
     class Meta:
         model = PanamaTransaction

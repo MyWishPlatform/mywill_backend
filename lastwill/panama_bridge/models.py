@@ -16,7 +16,7 @@ class PanamaTransaction(models.Model):
     bscSymbol = models.CharField(max_length=6)
     updateTime = models.DateTimeField()
     status = models.CharField(max_length=20)
-    transaction_id = models.CharField(max_length=33)
+    transaction_id = models.CharField(max_length=33, unique=True)
     walletFromAddress = models.CharField(max_length=42)
     walletToAddress = models.CharField(max_length=42)
     walletDepositAddress = models.CharField(max_length=42)

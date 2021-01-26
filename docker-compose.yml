@@ -1,0 +1,18 @@
+
+version: '3'
+
+services:
+  # django web-site
+  backend:
+    container_name: django
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/code
+#    expose:
+#      - '8000'
+    ports:
+      - '8000:8000'
+    command: python manage.py runserver

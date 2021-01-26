@@ -16,15 +16,15 @@ def get_status_by_id(panama_trans_id):
     if response.json().get("code") == 20000:
         data = response.json().get("data")
         """ IF response didn't get actualFromAmount and actualToAmount do:
-            actualFromAmount = amouth
-            actualToAmount = amouth - networfFee
+            actualFromAmount = amount
+            actualToAmount = amount - networfFee
         """
         try:
             actualFromAmount=data.get("actualFromAmount")
             actualToAmount=data.get("actualToAmount")
         except Exception:
-            actualFromAmount=data.get("amouth")
-            actualToAmount=int(data.get("amouth")) - int(data.get("networkFee"))
+            actualFromAmount=data.get("amount")
+            actualToAmount=int(data.get("amount")) - int(data.get("networkFee"))
             
         return dict(
             fromNetwork=data.get("fromNetwork"),
