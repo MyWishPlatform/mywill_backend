@@ -40,5 +40,3 @@ tst.json
 .vscode/
 **.sql**
 **media**
-Dockerfile
-docker-compose.yml

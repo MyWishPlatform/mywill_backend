@@ -2,6 +2,7 @@ import re
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .status_request import get_status_by_id
 from .models import PanamaTransaction
@@ -19,7 +20,20 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
     # get data from request and create new entry in db
     def post(self, request, *args, **kwargs):
-        transaction_id = request.data.get("transaction_id")
+        try:
+            transaction_id = request.data.get("transaction_id")
+        except KeyError:
+            return Response(
+                data='No wallet address from Cookie.',
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        if PanamaTransaction.objects.filter(transaction_id=transaction_id).exists():
+            return Response(
+                data='This transaction has been exists in database.',
+                status=HTTP_400_BAD_REQUEST
+            )
+
         transactionFullInfo = get_status_by_id(transaction_id)
 
         if transactionFullInfo:
