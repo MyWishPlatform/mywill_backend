@@ -65,6 +65,15 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                 ) \
                 .last()
 
+            # magic_code - start
+            if token.get("status") == "Cancelled":
+                token['code'] = 0  # red
+            elif token.get("status") == "Completed":
+                token["code"] = 2  # green
+            else:
+                token["code"] = 1  # yellow
+            # magic_code - finish
+
             token["status"] = re.sub(
                 r"(\w)([A-Z])", r"\1 \2",
                 token.get("status")
