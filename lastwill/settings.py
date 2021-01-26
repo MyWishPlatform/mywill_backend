@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'lastwill.promo',
     'lastwill.snapshot',
     'lastwill.swaps_common',
+    'lastwill.swaps_common.tokentable',
     'lastwill.panama_bridge',
 ]
 

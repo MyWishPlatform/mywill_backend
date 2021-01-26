@@ -17,7 +17,7 @@ def get_status_by_id(panama_trans_id):
         data = response.json().get("data")
         """ IF response didn't get actualFromAmount and actualToAmount do:
             actualFromAmount = amount
-            actualToAmount = amount - networfFee
+            actualToAmount = amount - networkFee
         """
         try:
             actualFromAmount=data.get("actualFromAmount")
@@ -25,7 +25,11 @@ def get_status_by_id(panama_trans_id):
         except Exception:
             actualFromAmount=data.get("amount")
             actualToAmount=int(data.get("amount")) - int(data.get("networkFee"))
-            
+        else:
+            if not actualToAmount or not actualToAmount:
+                actualFromAmount = data.get("amount")
+                actualToAmount = int(data.get("amount")) - int(data.get("networkFee"))
+
         return dict(
             fromNetwork=data.get("fromNetwork"),
             toNetwork=data.get("toNetwork"),
