@@ -47,33 +47,23 @@ def get_status_by_id(panama_trans_id):
 # update one db entry
 def update_or_create_transaction_status(data):
     if data:
-        transaction = PanamaTransaction.objects.update_or_create(
-            transaction_id=data.get("transaction_id"),
-            defaults=dict(
-                fromNetwork=data.get("fromNetwork"),
-                toNetwork=data.get("toNetwork"),
-                actualFromAmount=data.get("actualFromAmount"),
-                actualToAmount=data.get("actualToAmount"),
-                symbol=data.get("symbol"),
-                updateTime=data.get("updateTime"),
-                status=data.get("status"),
-                walletFromAddress=data.get("walletFromAddress"),
-                walletToAddress=data.get("walletToAddress"),
-                walletDepositAddress=data.get("walletDepositAddress"),
-            )
+        PanamaTransaction.objects.filter(
+            transaction_id=data.get("transaction_id")
+        ) \
+        .update(
+            status=data.get("status"),
+            updateTime=data.get("updateTime")
         )
 
 
 # this is base method to autoupdate transaction status in db
-# TODO add celery
 def update_transactions_status():
     # find all database entry with status != completed
     transactions = PanamaTransaction.objects.filter(
         ~Q(status="Completed"), ~Q(status="Cancelled"))
+
     for trans in transactions:
-        # take transaction_id with status != completed
-        trans_id = trans.transaction_id
         # get updating data from binance api
-        update_data = get_status_by_id(trans_id)
+        update_data = get_status_by_id(trans.transaction_id)
         # update local db
         update_or_create_transaction_status(update_data)
