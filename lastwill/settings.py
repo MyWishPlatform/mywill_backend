@@ -255,7 +255,6 @@ try:
 except ImportError as exc:
     print("Can't load local settings")
 
-SECRET_KEY ="^{a/-_l&1yb_s]bdjwtm\79o%l.w/8u)?q#2dn,66z{+]v4f"
 
 # REDIS settings
 REDIS_HOST = '127.0.0.1'
