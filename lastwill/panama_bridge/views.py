@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
@@ -60,10 +61,10 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
         for _, token in enumerate(serializer.data):
             # add token image link to response
             tokenInfo = TokensCoinMarketCap.objects \
-                .filter(
-                    token_short_name=token.get("ethSymbol")
-                ) \
-                .last()
+                        .filter(
+                            token_short_name=token.get("ethSymbol")
+                        ) \
+                        .last()
 
             # magic_code - start
             if token.get("status") == "Cancelled":
@@ -72,14 +73,30 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                 token["code"] = 2  # green
             else:
                 token["code"] = 1  # yellow
-            # magic_code - finish
 
             token["status"] = re.sub(
                 r"(\w)([A-Z])", r"\1 \2",
                 token.get("status")
             ).capitalize()
-            token["image_link"] = request.build_absolute_uri(
-                tokenInfo.image.url
+
+            if tokenInfo is None:
+                tokenInfo=TokensCoinMarketCap.objects \
+                          .filter(
+                              token_short_name = token.get("bscSymbol")
+                          ) \
+                          .last()
+            if tokenInfo is None:
+                token["image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
+            else:
+                token["image_link"] = request.build_absolute_uri(
+                    tokenInfo.image.url
+                )
+            token["actualFromAmount"] = str(
+                Decimal(token.get("actualFromAmount")).normalize()
             )
+            token["actualToAmount"] = str(
+                Decimal(token.get("actualToAmount")).normalize()
+            )
+            # magic_code - finish
 
         return Response(serializer.data)
