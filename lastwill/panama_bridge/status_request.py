@@ -1,5 +1,5 @@
 import requests
-from decimal import Decimal
+
 from django.db.models import Q
 
 from .models import PanamaTransaction
@@ -24,11 +24,11 @@ def get_status_by_id(panama_trans_id):
             actualToAmount=data.get("actualToAmount")
         except Exception:
             actualFromAmount=data.get("amount")
-            actualToAmount=Decimal(data.get("amount")) - Decimal(data.get("networkFee"))
+            actualToAmount=float(data.get("amount")) - float(data.get("networkFee"))
 
         if not actualToAmount or not actualToAmount:
             actualFromAmount = data.get("amount")
-            actualToAmount = Decimal(data.get("amount")) - Decimal(data.get("networkFee"))
+            actualToAmount = float(data.get("amount")) - float(data.get("networkFee"))
 
         return dict(
             fromNetwork=data.get("fromNetwork"),
