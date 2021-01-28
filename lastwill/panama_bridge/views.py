@@ -78,22 +78,8 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                 r"(\w)([A-Z])", r"\1 \2",
                 token.get("status")
             ).capitalize()
-           
-            # magic_code - start
-            if tokenInfo is None:
-                tokenInfo = TokensCoinMarketCap.objects \
-                .filter(
-                    token_short_name=token.get("bscSymbol")
-                ) \
-                .last()
-            if tokenInfo is None:
-                token["image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
-            else:
-                token["image_link"] = request.build_absolute_uri(
-                    tokenInfo.image.url
-                )
-            # magic_code - finish
-            
-            
+            token["image_link"] = request.build_absolute_uri(
+                tokenInfo.image.url
+            )
 
         return Response(serializer.data)
