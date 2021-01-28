@@ -20,15 +20,17 @@ def get_status_by_id(panama_trans_id):
             actualToAmount = amount - networkFee
         """
         try:
-            actualFromAmount=Decimal(data.get("actualFromAmount"))
-            actualToAmount=Decimal(data.get("actualToAmount"))
+            actualFromAmount=data.get("actualFromAmount")
+            actualToAmount=data.get("actualToAmount")
         except Exception:
-            actualFromAmount=Decimal(data.get("amount"))
+            actualFromAmount=data.get("amount")
             actualToAmount=Decimal(data.get("amount")) - Decimal(data.get("networkFee"))
         else:
             if not actualToAmount or not actualToAmount:
                 actualFromAmount = data.get("amount")
-                actualToAmount = int(data.get("amount")) - int(data.get("networkFee"))
+                actualToAmount = Decimal(
+                    data.get("amount")) - Decimal(data.get("networkFee")
+                )
 
         return dict(
             fromNetwork=data.get("fromNetwork"),
