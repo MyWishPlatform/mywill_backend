@@ -10,8 +10,14 @@ class PanamaTransaction(models.Model):
 
     fromNetwork = models.CharField(max_length=4)
     toNetwork = models.CharField(max_length=4)
-    actualFromAmount = models.FloatField()
-    actualToAmount = models.FloatField()
+    actualFromAmount = models.DecimalField(
+        max_digits=50,
+        decimal_places=32
+    )
+    actualToAmount = models.DecimalField(
+        max_digits=50,
+        decimal_places=32
+    )
     ethSymbol = models.CharField(max_length=6)
     bscSymbol = models.CharField(max_length=6)
     updateTime = models.DateTimeField()
