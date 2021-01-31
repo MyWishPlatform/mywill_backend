@@ -16,21 +16,14 @@
     - Подгружаются иконки к каждому НЕ скрытому токену. По-умолчанию в качестве иконки токену устанавливается fa-empire.png.
 
 """
-from datetime import datetime, timedelta, timezone
-from os import environ
 from requests import get
 from time import sleep
 
-from django import setup as django_setup
 from django.core.files.base import ContentFile
 
 from lastwill.swaps_common.tokentable.models import (
     CoinGeckoToken,
 )
-
-
-environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
-django_setup()
 
 
 def push_request_to_coingecko(url, params=None):
@@ -440,27 +433,3 @@ def add_icon_to_token(token_queryset=get_current_coingecko_tokens(), timeout=0):
             sleep(timeout)
 
     return 1
-
-
-def sync_cg_tokens():
-    while 1:
-        now = datetime.now(timezone.utc)
-        previous_check = get_current_coingecko_tokens().last().updated_at
-        if now > previous_check + timedelta(hours=23):
-            try:
-                sync_data_with_db()
-                # sleep(30)
-                add_icon_to_token()
-            except Exception as exception_error:
-                print(exception_error)
-                pass
-        else:
-            print('last check was %s, skipping' %
-                  previous_check, flush=True)
-
-        print('sleeping', flush=True)
-        sleep(3600 * 24)
-
-
-if __name__ == '__main__':
-    sync_cg_tokens()

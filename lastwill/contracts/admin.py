@@ -58,12 +58,10 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
         'token_address',
         'token_rank',
         'token_price',
-        'created_at',
         'updated_at',
         'is_displayed',
     )
     list_filter = (
-        'created_at',
         'updated_at',
         'is_displayed',
     )
@@ -100,8 +98,8 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         'id',
         'title',
         'short_title',
-        'token_platform',
-        'token_address',
+        'platform',
+        'address',
         'created_at',
         'updated_at',
         'is_displayed',

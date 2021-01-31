@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
 import os
 
+from celery.schedules import crontab
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,9 +25,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,6 +46,7 @@ INSTALLED_APPS = [
     'rest_auth',
     'rest_auth.registration',
     'djcelery_email',
+    'django_celery_beat',
 
     'lastwill.main',
     'lastwill.contracts',
@@ -58,9 +57,8 @@ INSTALLED_APPS = [
     'lastwill.promo',
     'lastwill.snapshot',
     'lastwill.swaps_common',
-    'lastwill.swaps_common.mailing',
-    'lastwill.swaps_common.orderbook',
     'lastwill.swaps_common.tokentable',
+    'lastwill.panama_bridge',
 ]
 
 MIDDLEWARE = [
@@ -96,7 +94,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lastwill.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
@@ -112,11 +109,8 @@ DATABASES = {
     }
 }
 
-
-
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -146,14 +140,11 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
-
 PROJECT_STATIC_ROOT = os.path.join(BASE_DIR, 'lastwill-frontend/dist/static')
 STATIC_ROOT = os.path.join(ROOT, 'static_collect/')
-STATIC_URL = '/static/'
+STATIC_URL = '/django_static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 MEDIA_URL = '/media/'
@@ -163,7 +154,6 @@ ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 STATICFILES_DIRS = (
     PROJECT_STATIC_ROOT,
 )
-
 
 SITE_ID = 1
 REST_SESSION_LOGIN = True
@@ -243,7 +233,6 @@ LOGGING = {
   },
 }
 
-
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
@@ -264,3 +253,34 @@ try:
     from lastwill.settings_local import *
 except ImportError as exc:
     print("Can't load local settings")
+
+
+# REDIS settings
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = '6379'
+BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600, }
+
+# CELERY settings
+CELERY_DATA_FORMAT = 'json'
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/0'
+CELERY_ACCEPT_CONTENT = [f'application/{CELERY_DATA_FORMAT}', ]
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
+CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {
+    'update_binance_bridge_transaction_status_every_minute': {
+        'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
+        'schedule': crontab(minute='*'),
+    },
+    'updating_coingecko_tokens_once_at_day': {
+        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
+        'schedule': crontab(hour=1, minute=0),
+    },
+    'updating_coingecko_icons_once_at_week': {
+        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
+        'schedule': crontab(hour=3, minute=0, day_of_week='mon'),
+    },
+}

@@ -13,7 +13,7 @@ lastwill-frontend/
 lastwill/static_collect/
 mywill_frontend/
 mywill_sign/
-test.py
+test**
 **/migrations/????_**.py
 */*/test_addresses.json
 emails.csv

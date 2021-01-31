@@ -1,5 +1,7 @@
 aenum==2.1.2
+alembic==1.5.2
 amqp==5.0.2
+aniso8601==8.1.0
 asgiref==3.3.1
 asn1crypto==0.24.0
 astor==0.7.1
@@ -53,14 +55,20 @@ docopt==0.6.2
 ecdsa==0.13
 eth-abi==2.1.1
 eth-account==0.4.0
-eth-hash==0.2.0
+eth-hash==0.3.1
 eth-keyfile==0.5.1
 eth-keys==0.2.4
 eth-rlp==0.2.1
 eth-typing==2.2.2
-eth-utils==1.9.5
+eth-utils==1.10.0
 ethereum==2.0.4
 Events==0.3
+Flask==0.12.2
+Flask-Ext==0.1
+Flask-Migrate==2.1.1
+Flask-RESTful==0.3.6
+Flask-Script==2.0.5
+Flask-SQLAlchemy==2.2
 furl==2.0.0
 gevent==1.4.0
 google-api-core==1.23.0
@@ -79,6 +87,8 @@ importlib-resources==3.3.0
 incremental==17.5.0
 ipfshttpclient==0.6.1
 iso8601==0.1.13
+itsdangerous==1.1.0
+Jinja2==2.11.2
 jsonschema==3.2.0
 jwt==1.1.0
 klein==17.10.0
@@ -87,6 +97,8 @@ libeospy==2.0.1
 logzero==1.5.0
 lru-dict==1.1.6
 lxml==4.6.2
+Mako==1.1.4
+MarkupSafe==1.1.1
 memory-profiler==0.55.0
 mmh3==2.5.1
 mock==2.0.0
@@ -114,7 +126,7 @@ plyvel==1.0.5
 prompt-toolkit==2.0.7
 protobuf==3.14.0
 psutil==5.4.8
-psycopg2==2.8.6
+psycopg2-binary==2.8.6
 ptyprocess==0.6.0
 py==1.7.0
 pyasn1==0.4.8
@@ -137,6 +149,8 @@ python-axolotl-curve25519==0.4.1.post2
 python-binance==0.7.5
 python-crontab==2.5.1
 python-dateutil==2.7.5
+python-editor==1.0.4
+python-logstash==0.4.6
 python3-openid==3.2.0
 pytz==2018.9
 PyWaves==0.8.36
@@ -151,8 +165,10 @@ rlp==0.6.0
 rsa==4.6
 scrypt==0.8.6
 service-identity==18.1.0
+sha256==0.1
 six==1.15.0
 soupsieve==2.0.1
+SQLAlchemy==1.3.22
 sqlparse==0.4.1
 toolz==0.11.1
 tqdm==4.29.1
@@ -172,6 +188,6 @@ virtualenv==16.2.0
 wcwidth==0.1.7
 web3==5.4.0
 websockets==8.1
-Werkzeug==0.14.1
+Werkzeug==1.0.1
 zipp==3.4.0
 zope.interface==5.2.0
