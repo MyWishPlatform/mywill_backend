@@ -23,12 +23,11 @@ class TokensCoinMarketCap(models.Model):
         blank=True,
     )
     token_price = models.CharField(max_length=100, null=True, default=None)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     is_displayed=models.BooleanField(default=True)
 
     class Meta:
         unique_together = ['token_name', 'token_short_name']
-
 
 
 class CoinGeckoToken(models.Model):
@@ -48,6 +47,7 @@ class CoinGeckoToken(models.Model):
     - token_usd_price : decimal, макс. 255, макс. чисел после запятой 15;
     - created_at : date-time, автодобавляемое;
     - updated_at : date-time, автообновляемое;
+    - is_native : bool, по-умолчанию False;
     - is_displayed : bool, по-умолчанию True;
     """
     title = models.CharField(max_length=255)
@@ -79,8 +79,9 @@ class CoinGeckoToken(models.Model):
         default=0,
         blank=True
     )
-    created_at=models.DateTimeField(auto_now=True)
-    updated_at=models.DateTimeField(auto_now_add=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
+    is_native=models.BooleanField(default=False)
     is_displayed=models.BooleanField(default=True)
 
     class Meta:
@@ -91,6 +92,7 @@ class CoinGeckoToken(models.Model):
             ),
         )
         unique_together = ['title', 'short_title']
+
 
 class TokensUpdateTime(models.Model):
     last_time_updated = models.DateTimeField(auto_now_add=True)

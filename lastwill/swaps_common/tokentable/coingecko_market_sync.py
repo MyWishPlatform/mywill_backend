@@ -107,8 +107,6 @@ def get_token_market_data_from_coingecko(start=0, stop_slice=300, timeout=5):
 
         break
 
-    # print(len(id_list), len(result))
-
     return result
 
 
@@ -261,10 +259,8 @@ def refresh_token_visibility(actual_coingecko_token_list: list):
     if not actual_coingecko_token_list:
         return 0
 
-    current_tokens = get_all_coingecko_tokens()
+    current_tokens = get_all_coingecko_tokens().exclude(is_native=True)
     current_tokens.update(is_displayed=True)
-
-    print(len(current_tokens))
 
     # TODO: Подумать над реализацией. Не рационально отправлять 6К+ запросов
     # в БД. Нужно собрать записи, которые не попали по фильру и одним запросом
@@ -279,8 +275,6 @@ def refresh_token_visibility(actual_coingecko_token_list: list):
                 title=token.title,
                 short_title=token.short_title
             ).update(is_displayed=False)
-
-    print(len(current_tokens))
 
     return 1
 
