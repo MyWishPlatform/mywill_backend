@@ -356,25 +356,19 @@ def sync_data_with_db():
                 token_usd_price = token.get('token_usd_price')
 
                 if not token_rank and not token_usd_price:
-                    cg_token.update(
-                        source_image_link=token.get('token_image_link'),
-                    )
+                    cg_token.source_image_link=token.get('token_image_link')
                 elif not token_rank and token_usd_price:
-                    cg_token.update(
-                        source_image_link=token.get('token_image_link'),
-                        usd_price=token_usd_price,
-                    )
+                    cg_token.source_image_link=token.get('token_image_link')
+                    cg_token.usd_price=token_usd_price
                 elif token_rank and not token_usd_price:
-                    cg_token.update(
-                        source_image_link=token.get('token_image_link'),
-                        usd_price=token_usd_price,
-                    )
+                    cg_token.source_image_link=token.get('token_image_link')
+                    cg_token.usd_price=token_usd_price
                 else:
-                    cg_token.update(
-                        source_image_link=token.get('token_image_link'),
-                        rank=token_rank,
-                        usd_price=token_usd_price,
-                    )
+                    cg_token.source_image_link=token.get('token_image_link')
+                    cg_token.rank=token_rank
+                    cg_token.usd_price=token_usd_price
+
+                cg_token.save()
 
                 print(
                     '{}. Token "{} ({})" has been updated successfully.'.format(
