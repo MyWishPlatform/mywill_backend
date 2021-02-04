@@ -92,6 +92,7 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         'image_file',
         'rank',
         'usd_price',
+        'is_native',
         'is_displayed',
     )
     list_display = (
@@ -102,11 +103,13 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         'address',
         'created_at',
         'updated_at',
+        'is_native',
         'is_displayed',
     )
     list_filter = (
         'created_at',
         'updated_at',
+        'is_native',
         'is_displayed',
     )
     search_fields = (
