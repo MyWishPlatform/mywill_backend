@@ -180,6 +180,7 @@ txaio==20.4.1
 typing==3.7.4.3
 typing-extensions==3.7.4.3
 tzlocal==2.1
+unicode==2.8
 uritemplate==3.0.1
 urllib3==1.24.1
 varint==1.0.2
