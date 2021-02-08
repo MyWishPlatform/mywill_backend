@@ -6,11 +6,6 @@ from lastwill.panama_bridge.models import (
 )
 
 
-class CaseAdmin(admin.ModelAdmin):
-    ...
-    actions = [export_as_csv_action("CSV Export", fields=['field1', 'field2'])]
-
-
 @register(PanamaTransaction)
 class PanamaTransactionModelAdmin(ModelAdmin):
     """
