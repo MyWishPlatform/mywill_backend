@@ -1,5 +1,5 @@
 from django.contrib.admin import ModelAdmin, register
-from actions import export_as_csv_action
+from .actions import export_as_csv_action
 
 from lastwill.panama_bridge.models import (
     PanamaTransaction,
