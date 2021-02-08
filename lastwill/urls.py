@@ -54,7 +54,7 @@ from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.social.views import FacebookLogin, GoogleLogin, MetamaskLogin, FacebookAuth
 from lastwill.promo.api import get_discount, get_all_promos_api
 from lastwill.snapshot.api import snapshot_get_value
-from lastwill.swaps_common.tokentable.api import get_all_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
+from lastwill.swaps_common.tokentable.api import get_all_tokens, get_coingecko_tokens, get_standarts_tokens, get_all_coinmarketcap_tokens, get_coins_rate
 from lastwill.swaps_common.mailing.api import save_swaps_mail
 from lastwill.swaps_common.orderbook.api import create_contract_swaps_backend, show_contract_swaps_backend, \
     edit_contract_swaps_backend, get_swap_v3_for_unique_link, show_user_contract_swaps_backend, \
@@ -155,6 +155,7 @@ urlpatterns = [
     url(r'^api/get_all_tokens/$', get_all_tokens),
     url(r'^api/get_standarts_tokens/$', get_standarts_tokens),
     url(r'^api/get_coinmarketcap_tokens/$', get_all_coinmarketcap_tokens),
+    url(r'^api/coingecko_tokens/$', get_coingecko_tokens),
     url(r'^api/confirm_swaps_info/$', confirm_swaps_info),
     url(r'^api/confirm_protector_info/$', confirm_protector_info),
     url(r'^api/confirm_protector_tokens/$', confirm_protector_tokens),

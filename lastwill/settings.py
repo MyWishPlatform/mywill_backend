@@ -20,7 +20,6 @@ ROOT = os.path.dirname(os.path.realpath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -275,5 +274,13 @@ CELERY_BEAT_SCHEDULE = {
     'update_binance_bridge_transaction_status_every_minute': {
         'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
         'schedule': crontab(minute='*'),
+    },
+    'updating_coingecko_tokens_once_at_day': {
+        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
+        'schedule': crontab(hour=1, minute=0),
+    },
+    'updating_coingecko_icons_once_at_week': {
+        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
+        'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
     },
 }

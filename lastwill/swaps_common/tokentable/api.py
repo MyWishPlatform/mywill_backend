@@ -1,13 +1,23 @@
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from requests import Session
 import json
-from rest_framework.exceptions import ParseError
 
 from django.core.files.base import ContentFile
-from lastwill.swaps_common.tokentable.models import Tokens, TokensCoinMarketCap
+from requests import Session
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+
+from lastwill.swaps_common.tokentable.models import (
+    CoinGeckoToken,
+    Tokens,
+    TokensCoinMarketCap,
+)
 from lastwill.contracts.models import *
-from lastwill.settings import DEFAULT_IMAGE_LINK, COINMARKETCAP_API_KEYS, MY_WISH_URL, RUBIC_EXC_URL
+from lastwill.settings import (
+    DEFAULT_IMAGE_LINK,
+    COINMARKETCAP_API_KEYS,
+    MY_WISH_URL,
+    RUBIC_EXC_URL
+)
 
 
 def add_eth_for_test(result):
@@ -130,7 +140,7 @@ def get_cmc_tokens(request):
 
 
     token_list = []
-    token_objects = TokensCoinMarketCap.objects.all()
+    token_objects = TokensCoinMarketCap.objects.filter(token_cmc_id__gt=0)
 
     for t in token_objects:
         token_list.append({
@@ -185,3 +195,71 @@ def get_coins_rate(request):
     return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'],
                      'coin2': data['data'][str(id2)]['quote']['USD']['price']})
 
+
+@api_view()
+def get_coingecko_tokens(request):
+    """
+    Возвращает список актуальных токенов CoinGecko.
+
+    ---
+
+    Принимаемые параметры:
+    - request
+    """
+    coingecko_tokens = get_actual_coingecko_tokens(request)
+
+    if not coingecko_tokens:
+        return get_response('No coingecko tokens.', HTTP_404_NOT_FOUND)
+
+    return get_response(coingecko_tokens)
+
+
+def get_response(data_to_response, status_to_response=HTTP_200_OK):
+    """
+    Возвращает объект Response.
+
+    ---
+
+    Принимаемые параметры:
+    - data_to_response : Any
+    - status_to_response : int, по-умолчанию - 200
+    """
+    return Response(
+        data=data_to_response,
+        status=status_to_response,
+    )
+
+
+def get_actual_coingecko_tokens(request):
+    serve_url = MY_WISH_URL
+    if 'HTTP_REFERER' in request.META:
+        scheme_part = request.META['HTTP_REFERER'][5:]
+        if scheme_part[-1] == ':':
+            scheme = 'http'
+        else:
+            scheme = 'https'
+            serve_url = RUBIC_EXC_URL
+    elif request.META['HTTP_HOST'] == RUBIC_EXC_URL:
+        scheme = 'https'
+        serve_url = RUBIC_EXC_URL
+    else:
+        scheme = request.scheme
+
+    token_list = []
+    coingecko_tokens = CoinGeckoToken.objects \
+                       .filter(is_displayed=True) \
+                       .order_by('short_title')
+
+    if coingecko_tokens.exists():
+        for token in coingecko_tokens:
+            token_list.append({
+                'token_title': token.title,
+                'token_short_title': token.short_title,
+                'address':  token.address,
+                'platform': token.platform,
+                'image_link': '{}://{}{}'.format(scheme, serve_url, token.image_file.url),
+                'rank': token.rank,
+                'rate': token.usd_price,
+            })
+
+    return token_list
