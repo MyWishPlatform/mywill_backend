@@ -93,7 +93,7 @@ def find_by_parameters(current_time, checker_object):
     rank = [i for i in id_rank.values()]
     count = 0
 
-    for key, value in info_for_save['data'].items():
+    for _, value in info_for_save['data'].items():
         count += 1
         if count >= len(rank):
             break
@@ -116,13 +116,12 @@ def find_by_parameters(current_time, checker_object):
         except KeyError:
             price = None
 
-        token_from_cmc = TokensCoinMarketCap.objects \
-            .filter(
-                token_name=value['name'],
-                token_short_name=value['symbol'],
-            ) \
-            .first()
-        if token_from_cmc:
+        try:
+            token_from_cmc = TokensCoinMarketCap.objects \
+                             .get(
+                                 token_name=value['name'],
+                                 token_short_name=value['symbol'],
+                             )
             if price is not None and token_from_cmc.token_price != price:
                 token_from_cmc.token_price = price
 
@@ -139,7 +138,7 @@ def find_by_parameters(current_time, checker_object):
                   token_from_cmc.token_price,
                   flush=True
                   )
-        else:
+        except TokensCoinMarketCap.DoesNotExist:
             token_from_cmc = TokensCoinMarketCap(
                 token_cmc_id=value['id'],
                 token_name=value['name'],

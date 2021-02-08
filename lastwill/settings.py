@@ -281,6 +281,6 @@ CELERY_BEAT_SCHEDULE = {
     },
     'updating_coingecko_icons_once_at_week': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
-        'schedule': crontab(hour=3, minute=0, day_of_week='mon'),
+        'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
     },
 }

@@ -304,12 +304,39 @@ def sync_data_with_db():
             counter += 1
             token_title = actual_token[0]
             token_short_title = actual_token[1]
-            cg_token = actual_cg_tokens.filter(
-                title=token_title,
-                short_title=token_short_title
-            )
 
-            if not cg_token.exists():
+            try:
+                cg_token = actual_cg_tokens.get(
+                    title=token_title,
+                    short_title=token_short_title
+                )
+                token = data_for_sync.get(token_short_title)
+                token_rank = token.get('token_rank')
+                token_usd_price = token.get('token_usd_price')
+
+                if not token_rank and not token_usd_price:
+                    cg_token.source_image_link=token.get('token_image_link')
+                elif not token_rank and token_usd_price:
+                    cg_token.source_image_link=token.get('token_image_link')
+                    cg_token.usd_price=token_usd_price
+                elif token_rank and not token_usd_price:
+                    cg_token.source_image_link=token.get('token_image_link')
+                    cg_token.usd_price=token_usd_price
+                else:
+                    cg_token.source_image_link=token.get('token_image_link')
+                    cg_token.rank=token_rank
+                    cg_token.usd_price=token_usd_price
+
+                cg_token.save()
+
+                print(
+                    '{}. Token "{} ({})" has been updated successfully.'.format(
+                        counter,
+                        token.get('token_title'),
+                        token.get('token_short_title'),
+                    )
+                )
+            except CoinGeckoToken.DoesNotExist:
                 token = data_for_sync.get(token_short_title)
                 token_rank = token.get('token_rank')
                 token_usd_price = token.get('token_usd_price')
@@ -350,33 +377,6 @@ def sync_data_with_db():
                         token.get('token_short_title'),
                     )
                 )
-            else:
-                token = data_for_sync.get(token_short_title)
-                token_rank = token.get('token_rank')
-                token_usd_price = token.get('token_usd_price')
-
-                if not token_rank and not token_usd_price:
-                    cg_token.source_image_link=token.get('token_image_link')
-                elif not token_rank and token_usd_price:
-                    cg_token.source_image_link=token.get('token_image_link')
-                    cg_token.usd_price=token_usd_price
-                elif token_rank and not token_usd_price:
-                    cg_token.source_image_link=token.get('token_image_link')
-                    cg_token.usd_price=token_usd_price
-                else:
-                    cg_token.source_image_link=token.get('token_image_link')
-                    cg_token.rank=token_rank
-                    cg_token.usd_price=token_usd_price
-
-                cg_token.save()
-
-                print(
-                    '{}. Token "{} ({})" has been updated successfully.'.format(
-                        counter,
-                        token.get('token_title'),
-                        token.get('token_short_title'),
-                    )
-                )
     except (TypeError, Exception) as exception_error:
         print(
             'Error in sync_data_with_db: {}'.format(exception_error)
@@ -393,7 +393,10 @@ def sync_data_with_db():
     return 1
 
 
-def add_icon_to_token(token_queryset=get_current_coingecko_tokens(), timeout=0):
+def add_icon_to_token(
+    token_queryset=get_current_coingecko_tokens(),
+    timeout=0
+):
     """
         Скачивает и добавляет иконку токену.
     """
