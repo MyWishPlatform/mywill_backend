@@ -1,4 +1,5 @@
 import csv
+import unicode
 from django.http import HttpResponse
 
 
