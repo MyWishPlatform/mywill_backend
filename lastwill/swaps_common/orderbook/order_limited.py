@@ -2,28 +2,68 @@ import requests
 import json
 import os
 from web3 import Web3, HTTPProvider
+from gql import Client, gql
+from gql.transport.aiohttp import AIOHTTPTransport
+from .models import OrderBookSwaps
 
-COINGECKO_API = "https://api.coingecko.com"
+
+# COINGECKO_API = "https://api.coingecko.com"
 ETHERSCAN_API = "https://api.etherscan.io/api"
 ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
+UNISWAP_API = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 
 INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
 WALLET_ADDRESS = '0xfCf49f25a2D1E49631d05614E2eCB45296F26258'
-CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
+OLD_MAINNET_CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
+NEW_KOVAN_ADDRESS = "0xB09fe422dE371a86D7148d6ED9DBD499287cc95c"
+RUBIC_ADDRESS = "0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3"
 BLOCKCHAIN_DECIMALS = 10 ** 18
 
 
-def get_rbc_eth_price():
+def get_rbc_eth_ratio_uniswap():
     """
-    Parse exchange rate rbc to eth from coingecko.
-    Return exchange rate(float type).
+        Parse exchange rate rbc to eth from uniswap.
+        Return exchange rate(float type).
     """
 
-    url = "{URL}/api/v3/simple/price?ids={id}&vs_currencies={currency}".format(
-        URL=COINGECKO_API, id="rubic", currency="eth")
-    response = requests.get(url)
+    # Select your transport with a defined url endpoint
+    transport = AIOHTTPTransport(url=UNISWAP_API)
 
-    return response.json().get("rubic").get("eth")
+    # Create a GraphQL client using the defined transport
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+
+    # Provide a GraphQL query
+    query = gql(
+        """
+        {
+            token(id: "0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3"){
+               name
+               symbol
+               decimals
+               derivedETH
+               tradeVolumeUSD
+               totalLiquidity
+            }
+        }
+    """
+    )
+
+    # Execute the query on the transport
+    result = client.execute(query)
+    return float(result.get("token").get("derivedETH"))
+
+
+# def get_rbc_eth_price():
+#     """
+#     Parse exchange rate rbc to eth from coingecko.
+#     Return exchange rate(float type).
+#     """
+#
+#     url = "{URL}/api/v3/simple/price?ids={id}&vs_currencies={currency}".format(
+#         URL=COINGECKO_API, id="rubic", currency="eth")
+#     response = requests.get(url)
+#
+#     return response.json().get("rubic").get("eth")
 
 
 def get_gas_price():
@@ -68,32 +108,102 @@ def is_orderbook_profitable(exchangeRate, gasPrice, rbcValue, ethValue, isRBC):
         return False
 
 
-def test_calling():
-    print(get_rbc_eth_price())
-    print(get_gas_price())
-
-
 def get_abi_by_filename(filename):
-    build_dir = os.path.join(os.getcwd(), 'lastwill/swaps_common/orderbook/')
+    """
+    func input - filename
+    func output - contract abi
+    Needed for a convenient format for storing abi contracts in files
+    and receiving them as variables for further interaction
+    """
+    build_dir = os.path.join(os.getcwd(), 'lastwill/swaps_common/orderbook/contracts_abi/')
 
     with open(os.path.join(build_dir, filename), 'r') as contract:
         return json.load(contract)
 
 
+def get_user_eth_balance(walletAddress):
+    """
+    return user eth balance on wallet on eth(not wei)
+    """
+    return w3.eth.getBalance(walletAddress)/BLOCKCHAIN_DECIMALS
+
+
+def get_user_rbc_balance(walletAddress):
+    """
+    return user rbc balance on wallet on rbc
+    """
+    rubic_abi = get_abi_by_filename("rubic_abi.json")
+    contract = w3.eth.contract(address=RUBIC_ADDRESS, abi=rubic_abi)
+    return contract.functions.balanceOf(walletAddress).call() / BLOCKCHAIN_DECIMALS
+
+
+def test_get_gas_limit_on_mainnet():
+    # mainnet
+    abi = get_abi_by_filename("contract_abi.json")
+    contract = w3.eth.contract(address=OLD_MAINNET_CONTRACT_ADDRESS, abi=abi)
+    function = contract.functions.myWishBasePercent()
+    gas_limit = function.estimateGas({'from': OLD_MAINNET_CONTRACT_ADDRESS})
+    return gas_limit
+
+
+def test_get_gas_limit_on_kovan():
+    # kovan
+    abi_kovan = get_abi_by_filename("kovan_abi.json")
+    contract = w3.eth.contract(address=NEW_KOVAN_ADDRESS, abi=abi_kovan)
+    function = contract.functions.myWishBasePercent()
+    gas_limit = function.estimateGas({'from': NEW_KOVAN_ADDRESS})
+    return gas_limit
+
+
+def get_active_orderbook():
+    """
+    get active orderbook ETH<>RBC from db
+    return 2 queryset of them(ETH->RBC, RBC->ETH)
+    base_coin_id - id of user's token in db,
+    which he/she wants to exchange(we'll give it)
+    quote_coin_id - id of our's token in db,
+    which we send to user
+    """
+    RBC_LOCAL_ID = 0
+    ETH_LOCAL_ID = 0
+
+    orderbooks_eth_rbc = OrderBookSwaps.objects.filter(base_coin_id=ETH_LOCAL_ID, quote_coin_id=RBC_LOCAL_ID).all()
+    orderbooks_rbc_eth = OrderBookSwaps.objects.filter(base_coin_id=RBC_LOCAL_ID, quote_coin_id=ETH_LOCAL_ID).all()
+    return dict(
+        orderbooks_eth_rbc=orderbooks_eth_rbc,
+        orderbooks_rbc_eth=orderbooks_rbc_eth
+    )
+
+
+def check_orderbook_for_profit(orderbooks):
+    """
+    input - two queryset of eth->rbc and rbc->eth orderbooks
+    output - two queryset of profitable orderbooks
+    """
+    pass
+
+
+def test_calling():
+    # check ratio
+    print(get_rbc_eth_ratio_uniswap())
+    # check connection
+    print(w3.isConnected())
+    # get address balance on eth
+    print(get_user_eth_balance(WALLET_ADDRESS))
+    # get address balance of rbc
+    print(get_user_rbc_balance(WALLET_ADDRESS))
+    # get gas price from etherscan
+    print(get_gas_price())
+    # get gas limit mainnet
+    print(test_get_gas_limit_on_mainnet())
+    # get gas limit on kovan
+    print(test_get_gas_limit_on_kovan())
+
+
+# connect to infura
 w3 = Web3(HTTPProvider(INFURA_URL))
+# run test
+test_calling()
 
-
-
-print(w3.isConnected())
-print(w3.eth.getBalance(WALLET_ADDRESS)/BLOCKCHAIN_DECIMALS)
-
-abi = get_abi_by_filename("contract_abi.json")
-contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=abi)
-
-function = contract.functions.myWishBasePercent()
-gas_limit = function.estimateGas({'from': CONTRACT_ADDRESS})
-
-print(gas_limit)
 
 #     tx_crypto_price = gas_limit * w3.eth.gasPrice / BLOCKCHAIN_DECIMALS
-
