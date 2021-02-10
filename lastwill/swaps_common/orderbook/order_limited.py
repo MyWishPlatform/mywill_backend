@@ -18,7 +18,7 @@ OLD_MAINNET_CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
 NEW_KOVAN_ADDRESS = "0xB09fe422dE371a86D7148d6ED9DBD499287cc95c"
 RUBIC_ADDRESS = "0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3"
 BLOCKCHAIN_DECIMALS = 10 ** 18
-MIN_BALANCE_PARAM = 0.01
+MIN_BALANCE_PARAM = 1
 
 
 def get_rbc_eth_ratio_uniswap():
@@ -208,6 +208,31 @@ def is_enought_token_on_wallet(rbc_value, eth_value, isRBC, gasFee):
             return False
 
 
+def change_orderbook_status(orderbook_id):
+    """
+    change status for orderbook if it profit for us
+    """
+    # TODO
+    pass
+
+
+def confirm_orderbook(orderbook_id):
+    """
+    make transaction
+    """
+    # TODO
+    pass
+
+
+def swap_token_on_uniswap(token_send_name, token_give_name, token_give_value):
+    """
+    swap some token on uniswap if it needed
+    return True if swapped, False if not
+    """
+    # TODO
+    pass
+
+
 # TODO add celery to this func
 def orderbook_main():
     """
@@ -227,18 +252,18 @@ def orderbook_main():
     # check active ETH->RBC orderbooks for profit
     for orderbook in active_orderbooks.get("orderbooks_eth_rbc"):
         isRBC = 1
-        eth_value = orderbook.base_amount_contributed
-        rbc_value = orderbook.quote_amount_contributed
+        eth_value = orderbook.base_limit
+        rbc_value = orderbook.quote_limit
         profit = is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, isRBC)
         if profit:
+            change_orderbook_status(orderbook.id)
             if is_enought_token_on_wallet(rbc_value, eth_value, isRBC, gas_fee):
-                # TODO make logic of transaction
-                pass
+                confirm_orderbook(orderbook.id)
             else:
-                # TODO make logic of swaps token on uniswap
-                # next need to check that orderbook profit for us yet
-                # make transaction if profit
-                pass
+                if swap_token_on_uniswap(token_give_name="RBC", token_give_value=rbc_value, token_send_name="ETH"):
+                    # next need to check that orderbook profit for us yet
+                    if is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, isRBC):
+                        confirm_orderbook(orderbook.id)
 
     # check active RBC->ETH orderbooks for profit
     for orderbook in active_orderbooks.get("orderbooks_rbc_eth"):
@@ -247,30 +272,33 @@ def orderbook_main():
         rbc_value = orderbook.base_amount_contributed
         profit = is_orderbook_profitable(exchange_rate, gas_price*gas_limit, rbc_value, eth_value, isRBC)
         if profit:
-            # TODO make logic of transaction
-            pass
+            change_orderbook_status(orderbook.id)
+            if is_enought_token_on_wallet(rbc_value, eth_value, isRBC, gas_fee):
+                confirm_orderbook(orderbook.id)
+            else:
+                # TODO add logic if it not enough ETH on wallet (not high priority task)
 
 
-def test_calling():
-    # check ratio
-    print(get_rbc_eth_ratio_uniswap())
-    # check connection
-    print(w3.isConnected())
-    # get address balance on eth
-    print(get_user_eth_balance(WALLET_ADDRESS))
-    # get address balance of rbc
-    print(get_user_rbc_balance(WALLET_ADDRESS))
-    # get gas price from etherscan
-    print(get_gas_price())
-    # get gas limit mainnet
-    print(test_get_gas_limit_on_mainnet())
-    # get gas limit on kovan
-    print(test_get_gas_limit_on_kovan())
+# def test_calling():
+#     # check ratio
+#     print(get_rbc_eth_ratio_uniswap())
+#     # check connection
+#     print(w3.isConnected())
+#     # get address balance on eth
+#     print(get_user_eth_balance(WALLET_ADDRESS))
+#     # get address balance of rbc
+#     print(get_user_rbc_balance(WALLET_ADDRESS))
+#     # get gas price from etherscan
+#     print(get_gas_price())
+#     # get gas limit mainnet
+#     print(test_get_gas_limit_on_mainnet())
+#     # get gas limit on kovan
+#     print(test_get_gas_limit_on_kovan())
 
 
 # connect to infura
 w3 = Web3(HTTPProvider(INFURA_URL))
 # run test
-test_calling()
+# test_calling()
 
 # tx_crypto_price = gas_limit * w3.eth.gasPrice / BLOCKCHAIN_DECIMALS
