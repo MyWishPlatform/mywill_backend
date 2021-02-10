@@ -79,7 +79,16 @@ def get_gas_price():
     return int(response.json().get("result").get("ProposeGasPrice"))
 
 
-def is_orderbook_profitable(exchangeRate, gasPrice, rbcValue, ethValue, isRBC):
+def get_gas_limit():
+    """
+    return total gasLimit needed to work with contract
+    """
+    # TODO need to understand how to work with contract
+    # Which methods needs to call
+    return test_get_gas_limit_on_mainnet()
+
+
+def is_orderbook_profitable(exchangeRate, gasFee, rbcValue, ethValue, isRBC):
     # profit_coeff - value in ETH showing the minimum profit for which a transaction can be carried out
     profit_coeff = 0.01
     """
@@ -102,7 +111,7 @@ def is_orderbook_profitable(exchangeRate, gasPrice, rbcValue, ethValue, isRBC):
     Output data: True if profit, False if not.
     """
 
-    if isRBC*(ethValue - rbcValue*exchangeRate) - gasPrice - profit_coeff > 0:
+    if isRBC*(ethValue - rbcValue*exchangeRate) - gasFee - profit_coeff > 0:
         return True
     else:
         return False
@@ -175,12 +184,40 @@ def get_active_orderbook():
     )
 
 
-def check_orderbook_for_profit(orderbooks):
+# TODO add celery to this func
+def orderbook_main():
     """
-    input - two queryset of eth->rbc and rbc->eth orderbooks
-    output - two queryset of profitable orderbooks
+    main func to get profit from orderbooks
     """
-    pass
+    # get active orderbooks type=dict(queryset_eth_rbc,queryset_rbc_eth)
+    active_orderbooks = get_active_orderbook()
+
+    # get rbc/eth ratio
+    exchange_rate = get_rbc_eth_ratio_uniswap()
+
+    # get params for calculate gasFee = gasPrice*gasLimit
+    gas_price = get_gas_price()
+    gas_limit = get_gas_limit()
+
+    # check active ETH->RBC orderbooks for profit
+    for orderbook in active_orderbooks.get("orderbooks_eth_rbc"):
+        isRBC = 1
+        eth_value = orderbook.base_amount_contributed
+        rbc_value = orderbook.quote_amount_contributed
+        profit = is_orderbook_profitable(exchange_rate, gas_price*gas_limit, rbc_value, eth_value, isRBC)
+        if profit:
+            # TODO make logic of transaction
+            pass
+
+    # check active RBC->ETH orderbooks for profit
+    for orderbook in active_orderbooks.get("orderbooks_rbc_eth"):
+        isRBC = -1
+        eth_value = orderbook.quote_amount_contributed
+        rbc_value = orderbook.base_amount_contributed
+        profit = is_orderbook_profitable(exchange_rate, gas_price*gas_limit, rbc_value, eth_value, isRBC)
+        if profit:
+            # TODO make logic of transaction
+            pass
 
 
 def test_calling():
@@ -205,5 +242,4 @@ w3 = Web3(HTTPProvider(INFURA_URL))
 # run test
 test_calling()
 
-
-#     tx_crypto_price = gas_limit * w3.eth.gasPrice / BLOCKCHAIN_DECIMALS
+# tx_crypto_price = gas_limit * w3.eth.gasPrice / BLOCKCHAIN_DECIMALS
