@@ -184,6 +184,28 @@ def get_active_orderbook():
     )
 
 
+def is_enought_token_on_wallet(rbc_value, eth_value, isRBC):
+    # TODO add gas accounting logic and think over the parameter -
+    #  the minimum balance on the account after the transaction - MIN_BALANCE_PARAM
+    """
+    func to check wallet's token value
+    input token needed to complete orderbook swaps
+    output - True if possible, False if not
+    """
+    if isRBC == 1:
+        rbc_balance = get_user_rbc_balance(WALLET_ADDRESS)
+        if rbc_balance>rbc_value:
+            return True
+        else:
+            return False
+    else:
+        eth_balance = get_user_eth_balance(WALLET_ADDRESS)
+        if eth_balance>eth_value:
+            return True
+        else:
+            return False
+
+
 # TODO add celery to this func
 def orderbook_main():
     """
