@@ -18,6 +18,7 @@ OLD_MAINNET_CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
 NEW_KOVAN_ADDRESS = "0xB09fe422dE371a86D7148d6ED9DBD499287cc95c"
 RUBIC_ADDRESS = "0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3"
 BLOCKCHAIN_DECIMALS = 10 ** 18
+MIN_BALANCE_PARAM = 0.01
 
 
 def get_rbc_eth_ratio_uniswap():
@@ -184,23 +185,24 @@ def get_active_orderbook():
     )
 
 
-def is_enought_token_on_wallet(rbc_value, eth_value, isRBC):
+def is_enought_token_on_wallet(rbc_value, eth_value, isRBC, gasFee):
     # TODO add gas accounting logic and think over the parameter -
     #  the minimum balance on the account after the transaction - MIN_BALANCE_PARAM
     """
     func to check wallet's token value
-    input token needed to complete orderbook swaps
+    input - token needed to complete orderbook swaps
     output - True if possible, False if not
     """
+    rbc_balance = get_user_rbc_balance(WALLET_ADDRESS)
+    eth_balance = get_user_eth_balance(WALLET_ADDRESS)
+
     if isRBC == 1:
-        rbc_balance = get_user_rbc_balance(WALLET_ADDRESS)
-        if rbc_balance>rbc_value:
+        if rbc_balance > rbc_value and eth_balance > gasFee + MIN_BALANCE_PARAM:
             return True
         else:
             return False
     else:
-        eth_balance = get_user_eth_balance(WALLET_ADDRESS)
-        if eth_balance>eth_value:
+        if eth_balance > eth_value + gasFee + MIN_BALANCE_PARAM:
             return True
         else:
             return False
@@ -220,16 +222,23 @@ def orderbook_main():
     # get params for calculate gasFee = gasPrice*gasLimit
     gas_price = get_gas_price()
     gas_limit = get_gas_limit()
+    gas_fee = gas_price * gas_limit
 
     # check active ETH->RBC orderbooks for profit
     for orderbook in active_orderbooks.get("orderbooks_eth_rbc"):
         isRBC = 1
         eth_value = orderbook.base_amount_contributed
         rbc_value = orderbook.quote_amount_contributed
-        profit = is_orderbook_profitable(exchange_rate, gas_price*gas_limit, rbc_value, eth_value, isRBC)
+        profit = is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, isRBC)
         if profit:
-            # TODO make logic of transaction
-            pass
+            if is_enought_token_on_wallet(rbc_value, eth_value, isRBC, gas_fee):
+                # TODO make logic of transaction
+                pass
+            else:
+                # TODO make logic of swaps token on uniswap
+                # next need to check that orderbook profit for us yet
+                # make transaction if profit
+                pass
 
     # check active RBC->ETH orderbooks for profit
     for orderbook in active_orderbooks.get("orderbooks_rbc_eth"):
