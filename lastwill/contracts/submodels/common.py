@@ -494,7 +494,7 @@ class CommonDetails(models.Model):
 
     # @param speedup_gas_price new gas price to set in transaction
     # @param current_nonce is nonce of pending tx from etherscan
-    def speed_up_deploy(self, speedup_gas_price, current_nonce):
+    def speed_up_deploy(self, speedup_gas_price, current_nonce, eth_contract_attr_name='eth_contract'):
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
             print('speed up allowed only for pending contracts, aborting', flush=True)
             return
