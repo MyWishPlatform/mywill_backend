@@ -8,8 +8,6 @@
     - Из базы данных запрашиваются все записи о токенами. Записи сравниваются с полученным списком по полям токенов title и short title.
         - Если о токене есть НЕ скрытая запись в БД и его нет в списке актуальных токенов, то запись скрывается.
         - Если о токене есть скрытая запись в БД и он есть в списке актуальных токнов, то запись НЕ скрывается.
-        !!! ОГРАНИЧЕНИЯ РЕАЛИЗАЦИИ !!!
-        - В статистике CoinGecko нет данных о платформе и адресе токена, которые позволили бы со 100% точностью их идентифицировать, поэтому при создании токенов используется проверка на совместную уникальность полей title и short_title. В качестве предлагаемого варианта: запрашивать данные на etherscan'е.
     - Из базы данных запрашиваются только НЕ скрытые записи о токенах.
         - Если токена нет в результате запроса в БД, то создается новая запись с этим токеном.
         - Если токен есть в результате запроса в БД, то данные о токене обновляются в БД.
@@ -28,35 +26,52 @@ from lastwill.swaps_common.tokentable.models import (
 
 def push_request_to_coingecko(url, params=None):
     """
-    Отправляет запрос с идентификаторами токенов в CoinGecko.com
+    Отправляет запрос на API CoinGecko.com.
 
     ---
 
     Входные параметры:
-    - tokens : tuple, list.
+    - url : str.
+    - params : dict, по-умолчанию None.
 
     ---
 
     Возвращаемое значение:
-    - Распарсенный JSON : list.
+    - list
     """
     response = get(url, params)
 
     return response.json()
 
 
-def get_coingecko_token_id(exclude_token=['thorecoin', ]):
+def get_actual_tokens():
+    """
+    Возвращает список актуальных крипто-токенов из CoinGecko.com.
+
+    ---
+
+    Возвращаемое значение:
+    - list
+    """
+    target_url = 'https://api.coingecko.com/api/v3/coins/list'
+    params = {
+        'include_platform': 'true',
+    }
+    response = push_request_to_coingecko(target_url, params)
+
+    return response
+
+
+def get_coingecko_token_id(tokens, exclude_token=['thorecoin', ]):
     """
     Возвращает список идентификаторов крипто-токенов из CoinGecko.com.
 
     ---
 
     Возвращаемое значение:
-    - Перечень идентификаторов (str) : list.
+    - list
     """
-    target_url = 'https://api.coingecko.com/api/v3/coins/list'
-    response = get(target_url).json()
-    coingecko_id_list = [item.get('id') for item in response]
+    coingecko_id_list = [item.get('id') for item in tokens]
 
     if exclude_token:
         for token in exclude_token:
@@ -65,11 +80,29 @@ def get_coingecko_token_id(exclude_token=['thorecoin', ]):
     return coingecko_id_list
 
 
-def get_token_market_data_from_coingecko(start=0, stop_slice=300, timeout=5):
+def get_token_market_data(
+    tokens,
+    start=0,
+    stop_slice=300,
+    timeout=5
+):
     """
+    Возвращает актуальные данные по крипто-токенам из CoinGecko.com.
 
+    ---
+
+    Принимаемые параметры:
+    - tokens : dict
+    - start : int, по-умолчанию 0
+    - stop_slice : int, по-умолчанию 300
+    - timeout : int, по-умолчанию 5
+
+    ---
+
+    Возвращаемое значение:
+    - dict
     """
-    id_list = get_coingecko_token_id()
+    actual_token_id = get_coingecko_token_id(tokens)
     target_url = 'https://api.coingecko.com/api/v3/coins/markets'
     params = {
         'vs_currency': 'usd',
@@ -81,9 +114,9 @@ def get_token_market_data_from_coingecko(start=0, stop_slice=300, timeout=5):
         #
         # Запросы отправляются несколько раз по 300 идентификаторов,
         # ответ записывается в результирующий список.
-        if stop_slice < len(id_list):
+        if stop_slice < len(actual_token_id):
             params.update({
-                'ids': ','.join(id_list[start:stop_slice]),
+                'ids': ','.join(actual_token_id[start:stop_slice]),
             })
             response = push_request_to_coingecko(target_url, params)
 
@@ -101,7 +134,7 @@ def get_token_market_data_from_coingecko(start=0, stop_slice=300, timeout=5):
             continue
         else:
             params.update({
-                'ids': ','.join(id_list[start:]),
+                'ids': ','.join(actual_token_id[start:]),
             })
             result += push_request_to_coingecko(target_url, params)
 
@@ -162,24 +195,62 @@ def format_marketdata():
     #         "last_updated": "2020-12-04T14:12:07.411Z" -
     #     },
     # ]
-    token_market_data = get_token_market_data_from_coingecko(timeout=0)
+
+    # [
+    #     {
+    #         "id":"e1337",
+    #         "symbol":"1337",
+    #         "name":"1337",
+    #         "platforms":{
+    #             "ethereum":"0x35872fea6a4843facbcdbce99e3b69596a3680b8"
+    #         }
+    #     }
+    # ]
+    actual_tokens = get_actual_tokens()
+    actual_token_market_data = get_token_market_data(actual_tokens, timeout=0)
     result = {}
 
     try:
-        for _, item in enumerate(token_market_data):
-            prepared_token_data = {
-                'token_title': item.get('name'),
-                'token_short_title': item.get('symbol'),
-                'token_image_link': item.get('image'),
-                'token_rank': item.get('market_cap_rank'),
-                'token_usd_price': item.get('current_price'),
-            }
-            result.update(
-                {
-                    prepared_token_data.get('token_short_title'): prepared_token_data
-                }
-            )
-    except (TypeError, Exception) as exception_error:
+        for _, token in enumerate(actual_tokens):
+            for _, item in enumerate(actual_token_market_data):
+                if token.get('id') == item.get('id'):
+                    token_title = token.get('name', '')
+                    token_short_title = token.get('symbol', '')
+                    platform = ''.join(token.get('platforms', '').keys())
+                    address = ''
+                    token_image_link = item.get('image', '')
+                    token_rank = item.get('market_cap_rank', 0)
+                    token_usd_price = item.get('current_price', 0)
+
+                    if platform:
+                        address = token.get('platforms').get(platform, '')
+
+                    if not address:
+                        address = ''
+
+                    if not token_rank:
+                        token_rank = 0
+
+                    if not token_usd_price:
+                        token_usd_price = 0
+
+                    token_data = {
+                        'token_title': token_title,
+                        'token_short_title': token_short_title,
+                        'platform': platform,
+                        'address': address,
+                        'token_image_link': token_image_link,
+                        'token_rank': token_rank,
+                        'token_usd_price': token_usd_price,
+                    }
+                    result.update(
+                        {
+                            token_data.get('token_short_title'): token_data
+                        }
+                    )
+
+                    del item
+    except Exception as exception_error:
         print(
             'Error in format_marketdata: {}'.format(exception_error)
         )
@@ -304,28 +375,20 @@ def sync_data_with_db():
             counter += 1
             token_title = actual_token[0]
             token_short_title = actual_token[1]
+            token = data_for_sync.get(token_short_title)
+
+            print(token)
 
             try:
                 cg_token = actual_cg_tokens.get(
                     title=token_title,
                     short_title=token_short_title
                 )
-                token = data_for_sync.get(token_short_title)
-                token_rank = token.get('token_rank')
-                token_usd_price = token.get('token_usd_price')
-
-                if not token_rank and not token_usd_price:
-                    cg_token.source_image_link=token.get('token_image_link')
-                elif not token_rank and token_usd_price:
-                    cg_token.source_image_link=token.get('token_image_link')
-                    cg_token.usd_price=token_usd_price
-                elif token_rank and not token_usd_price:
-                    cg_token.source_image_link=token.get('token_image_link')
-                    cg_token.usd_price=token_usd_price
-                else:
-                    cg_token.source_image_link=token.get('token_image_link')
-                    cg_token.rank=token_rank
-                    cg_token.usd_price=token_usd_price
+                cg_token.platform = token.get('platform', '')
+                cg_token.address = token.get('address', '')
+                cg_token.source_image_link=token.get('token_image_link', '')
+                cg_token.token_rank = token.get('token_rank', 0)
+                cg_token.token_usd_price = token.get('token_usd_price', 0)
 
                 cg_token.save()
 
@@ -337,38 +400,15 @@ def sync_data_with_db():
                     )
                 )
             except CoinGeckoToken.DoesNotExist:
-                token = data_for_sync.get(token_short_title)
-                token_rank = token.get('token_rank')
-                token_usd_price = token.get('token_usd_price')
-
-                if not token_rank and not token_usd_price:
-                    CoinGeckoToken.objects.create(
-                        title=token.get('token_title'),
-                        short_title=token.get('token_short_title'),
-                        source_image_link=token.get('token_image_link'),
-                    )
-                elif not token_rank and token_usd_price:
-                    CoinGeckoToken.objects.create(
-                        title=token.get('token_title'),
-                        short_title=token.get('token_short_title'),
-                        source_image_link=token.get('token_image_link'),
-                        usd_price=token.get('token_usd_price'),
-                    )
-                elif token_rank and not token_usd_price:
-                    CoinGeckoToken.objects.create(
-                        title=token.get('token_title'),
-                        short_title=token.get('token_short_title'),
-                        source_image_link=token.get('token_image_link'),
-                        rank=token.get('token_rank'),
-                    )
-                else:
-                    CoinGeckoToken.objects.create(
-                        title=token.get('token_title'),
-                        short_title=token.get('token_short_title'),
-                        source_image_link=token.get('token_image_link'),
-                        rank=token.get('token_rank'),
-                        usd_price=token.get('token_usd_price'),
-                    )
+                CoinGeckoToken.objects.create(
+                    title=token.get('token_title'),
+                    short_title=token.get('token_short_title'),
+                    platform=token.get('platform', ''),
+                    address=token.get('address', ''),
+                    source_image_link=token.get('token_image_link', ''),
+                    rank=token.get('token_rank', 0),
+                    usd_price=token.get('token_usd_price', 0),
+                )
 
                 print(
                     '{}. Token "{} ({})" has been added successfully.'.format(
