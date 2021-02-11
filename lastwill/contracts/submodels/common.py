@@ -507,6 +507,7 @@ class CommonDetails(models.Model):
 
         gas_price = speedup_gas_price * NET_DECIMALS['ETH_GAS_PRICE']
         address = NETWORKS[self.contract.network.name]['address']
+        eth_contract = getattr(self, eth_contract_attr_name)
         data = eth_contract.bytecode + eth_contract.constructor_arguments
 
         signed_data = sign_transaction(
