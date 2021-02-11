@@ -468,18 +468,7 @@ class CommonDetails(models.Model):
         address = NETWORKS[self.contract.network.name]['address']
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce, flush=True)
-        # print('BYTECODE', eth_contract.bytecode, flush=True)
-        # print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
-        data = eth_contract.bytecode + (binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else '')
-        print('data =', data)
-        # if arguments:
-        #     data = eth_contract.bytecode + (binascii.hexlify(
-        #         tr.encode_constructor_arguments(arguments)
-        #     ).decode())
-        # else:
-        #     data = eth_contract.bytecode
+        data = eth_contract.bytecode + eth_contract.constructor_arguments
 
         print('DATA', data, flush=True)
 
@@ -502,6 +491,39 @@ class CommonDetails(models.Model):
         print('transaction sent', flush=True)
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
+
+    def speed_up_deploy(self, speedup_gas_price, current_nonce):
+        if self.contract.state is not 'WAITING_FOR_DEPLOYMENT':
+            print('speed up allowed only for pending contracts, aborting', flush=True)
+            return
+
+        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
+        default_gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name]
+        if speedup_gas_price <= default_gas_price:
+            print('gas price is similar or lower to default, please use higher amount', flush=True)
+            return
+
+        gas_price = speedup_gas_price * NET_DECIMALS['ETH_GAS_PRICE']
+        address = NETWORKS[self.contract.network.name]['address']
+        data = eth_contract.bytecode + eth_contract.constructor_arguments
+
+        signed_data = sign_transaction(
+            address, current_nonce, self.get_gaslimit(),
+            self.contract.network.name, value=self.get_value(),
+            contract_data=data, gas_price=gas_price
+        )
+        print('fields of transaction', flush=True)
+        print('source', address, flush=True)
+        print('gas limit', self.get_gaslimit(), flush=True)
+        print('value', self.get_value(), flush=True)
+        print('network', self.contract.network.name, flush=True)
+        print('signed_data', signed_data, flush=True)
+        eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
+            '0x' + signed_data
+        )
+        eth_contract.save()
+        print('transaction sent', flush=True)
+
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         network_link = NETWORKS[self.contract.network.name]['link_address']
