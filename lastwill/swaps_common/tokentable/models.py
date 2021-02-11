@@ -52,13 +52,13 @@ class CoinGeckoToken(models.Model):
     """
     title = models.CharField(max_length=255)
     short_title = models.CharField(max_length=255)
-    address = models.CharField(
-        max_length=50,
+    platform = models.CharField(
+        max_length=255,
         default='None',
         blank=True,
     )
-    platform = models.CharField(
-        max_length=255,
+    address = models.CharField(
+        max_length=150,
         default='None',
         blank=True,
     )
