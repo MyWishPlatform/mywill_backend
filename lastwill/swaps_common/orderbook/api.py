@@ -2,20 +2,18 @@ import datetime
 import random
 import string
 
+from django.utils import timezone
+from django.core.paginator import Paginator
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied, ParseError, NotFound
 from rest_framework.response import Response
 
-from django.utils import timezone
-from django.core.paginator import Paginator
-from lastwill.contracts.serializers import ContractDetailsSWAPS2Serializer
 from lastwill.contracts.submodels.common import Contract, send_in_queue
-from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS2
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, RUBIC_EXC_URL
 
-excluded_states = ['DONE', 'CANCELLED', 'POSTPONED']
+EXCLUDED_STATES = ['DONE', 'CANCELLED', 'POSTPONED']
 
 
 def get_swap_from_orderbook(swap_id):
@@ -23,7 +21,7 @@ def get_swap_from_orderbook(swap_id):
     now = datetime.datetime.now(timezone.utc)
 
     if now > backend_contract.stop_date:
-        if backend_contract.state not in excluded_states:
+        if backend_contract.state not in EXCLUDED_STATES:
             backend_contract.state = 'EXPIRED'
             if backend_contract.swap_ether_contract:
                 backend_contract.swap_ether_contract.state = 'EXPIRED'
@@ -37,6 +35,7 @@ def get_swap_from_orderbook(swap_id):
         'id': backend_contract.id,
         'name': backend_contract.name,
         'network': backend_contract.network.id,
+        'contract_address': backend_contract.contract_address,
         'base_address': backend_contract.base_address,
         'base_limit': backend_contract.base_limit,
         'base_coin_id': backend_contract.base_coin_id,
@@ -85,6 +84,10 @@ def create_contract_swaps_backend(request):
     owner_address = contract_details['owner_address'] if 'owner_address' in contract_details else ""
     contract_name = contract_details['name'] if 'name' in contract_details else ""
     network_id = contract_details.get('network', 1)
+    # Вариант с обязанностью отправки адреса контракта с фронта. Не факт что
+    # пришлют релевантный сети адрес контракта.
+    contract_address = contract_details['contract_address'].lower()
+    # ---
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
     base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
@@ -130,6 +133,9 @@ def create_contract_swaps_backend(request):
     backend_contract = OrderBookSwaps(
             name=contract_name,
             network_id=network_id,
+            # !---
+            contract_address=contract_address,
+            # ---
             base_address=base_address.lower(),
             base_limit=contract_details['base_limit'],
             base_coin_id=base_coin_id_param,
@@ -239,6 +245,8 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.name = params['name']
     if 'network' in  params:
         swap_order.network_id = params['network']
+    # if 'contract_address' in  params:
+    #     swap_order.contract_address = params['contract_address']
     if 'stop_date' in params:
         stop_date = datetime.datetime.strptime(params['stop_date'], '%Y-%m-%d %H:%M')
         swap_order.stop_date = stop_date
@@ -364,7 +372,7 @@ def set_swaps_expired(request):
 
         order = order.first()
         if now > order.stop_date:
-            if order.state not in excluded_states:
+            if order.state not in EXCLUDED_STATES:
                 order.state = 'EXPIRED'
                 if order.swap_ether_contract:
                     order.swap_ether_contract.state = 'EXPIRED'
@@ -381,7 +389,7 @@ def set_swaps_expired(request):
 
         swaps = swaps.first()
         if now > swaps.get_details().stop_date:
-            if swaps.contract.state not in excluded_states:
+            if swaps.contract.state not in EXCLUDED_STATES:
                 swaps.contract.state = 'EXPIRED'
                 swaps.contract.save()
 
