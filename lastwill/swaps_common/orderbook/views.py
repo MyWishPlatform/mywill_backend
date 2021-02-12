@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -153,7 +155,7 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
 
         new_contract = request.data.copy()
 
-        user=request.user,
+        new_contract = deepcopy(request.data)
         notification = new_contract.get('notification')
 
         if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
@@ -193,7 +195,7 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
         self.perform_create(deserialized_data)
 
         return _get_response_object(
-            message=deserialized_data.data,
+            message=deserialized_data.validated_data,
             status_code=HTTP_201_CREATED
         )
 

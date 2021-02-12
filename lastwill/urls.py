@@ -154,6 +154,7 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
+router.register('orders', OrderBookSwapsModelViewSet)
 
 
 urlpatterns = [
@@ -283,19 +284,6 @@ urlpatterns = [
 
     #panama_bridge
     url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
-    # ---
-
-    # new orders urls
-    url(
-        r'^api/orders',
-        OrderBookSwapsModelViewSet.as_view({'get': 'get_orders'}),
-        name='get_orders'
-    ),
-    url(
-        r'^api/orders',
-        OrderBookSwapsModelViewSet.as_view({'post': 'create_order'}),
-        name='create_order'
-    ),
     # ---
 ]
 

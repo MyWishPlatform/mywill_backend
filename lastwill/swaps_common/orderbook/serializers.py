@@ -1,8 +1,10 @@
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
 
 
 class OrderBookSwapsModelSerializer(ModelSerializer):
+    network = PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = OrderBookSwaps
         fields = (

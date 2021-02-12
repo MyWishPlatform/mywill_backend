@@ -142,7 +142,7 @@ class OrderBookSwaps(models.Model):
         default=_get_unique_link
     )
     created_date = models.DateTimeField(auto_now_add=True)
-    stop_date = models.DateTimeField(timezone.now)
+    stop_date = models.DateTimeField(default=timezone.now)
     contract_state = models.CharField(max_length=63, default='CREATED')
     state = models.CharField(max_length=63, default='CREATED')
     state_changed_at = models.DateTimeField(auto_now_add=True)
