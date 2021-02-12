@@ -182,7 +182,7 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
 
             noti_defaults.save()
 
-        deserialized_data = self.get_serializer(new_contract)
+        deserialized_data = self.get_serializer(data=new_contract)
 
         if not deserialized_data.is_valid():
             return _get_response_object(

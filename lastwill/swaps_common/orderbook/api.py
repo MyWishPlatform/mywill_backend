@@ -107,8 +107,8 @@ def create_contract_swaps_backend(request):
     whitelist = contract_details['whitelist'] if 'whitelist' in contract_details else False
     notification = contract_details['notification'] if 'notification' in contract_details else None
 
-    notification_email = None
-    notification_tg = None
+    notification_email = ''
+    notification_tg = ''
     if notification:
         if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
             raise ParseError('notificaion_email or notification_tg must be passed')
@@ -182,8 +182,8 @@ def create_contract_swaps_backend(request):
     backend_contract.save()
 
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
-    print('sending swap order in queue ', backend_contract.id, flush=True)
-    send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
+    # print('sending swap order in queue ', backend_contract.id, flush=True)
+    # send_in_queue(backend_contract.id, 'launch', SWAPS_ORDERBOOK_QUEUE)
     return Response(details)
 
 
