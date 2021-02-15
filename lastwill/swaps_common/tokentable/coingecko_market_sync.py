@@ -377,8 +377,6 @@ def sync_data_with_db():
             token_short_title = actual_token[1]
             token = data_for_sync.get(token_short_title)
 
-            print(token)
-
             try:
                 cg_token = actual_cg_tokens.get(
                     title=token_title,
