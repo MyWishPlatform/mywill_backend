@@ -252,17 +252,30 @@ def get_actual_coingecko_tokens(request):
 
     token_list = []
     coingecko_tokens = CoinGeckoToken.objects \
-                       .filter(is_displayed=True) \
+                       .filter(
+                           platform__in=[
+                               'ethereum',
+                               'binancecoin',
+                               'binance-smart-chain',
+                               'matic',
+                            ],
+                           is_displayed=True,
+                        ) \
                        .order_by('short_title')
 
     if coingecko_tokens.exists():
         for token in coingecko_tokens:
             token_list.append({
                 'token_title': token.title,
-                'token_short_title': token.short_title,
+                'token_short_title': token.short_title.upper(),
                 'platform': token.platform,
                 'address':  token.address,
-                'image_link': '{}://{}{}'.format(scheme, serve_url, token.image_file.url),
+                'decimals': token.decimals,
+                'image_link': '{}://{}{}'.format(
+                    scheme,
+                    serve_url,
+                    token.image_file.url
+                ),
                 'coingecko_rank': token.rank,
                 'usd_price': token.usd_price,
             })

@@ -129,6 +129,9 @@ def find_by_parameters(current_time, checker_object):
             if token_from_cmc.token_rank != new_rank:
                 token_from_cmc.token_rank = new_rank
 
+            if token_from_cmc.token_address == '0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3' and (token_from_cmc.token_name == 'Rubic' and token_from_cmc.token_short_name == 'RBC'):
+                token_from_cmc.token_rank = -1
+
             token_from_cmc.save()
 
             print('token updated',
