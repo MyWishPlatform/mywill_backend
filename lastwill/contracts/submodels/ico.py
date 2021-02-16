@@ -10,7 +10,8 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
+    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIVICATION_PRICE_USDT
 from email_messages import *
 
 
@@ -333,6 +334,10 @@ class AbstractContractDetailsToken(CommonDetails):
     authio_date_payment = models.DateField(null=True, default=None)
     authio_date_getting = models.DateField(null=True, default=None)
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def predeploy_validate(self):
         now = timezone.now()
         token_holders = self.contract.tokenholder_set.all()
@@ -355,6 +360,8 @@ class AbstractContractDetailsToken(CommonDetails):
         result = int(price * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
             result = int(result + CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO'] * NET_DECIMALS['USDT'])
+        if 'verification' in kwargs and kwargs['verification']:
+            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
@@ -438,6 +445,23 @@ class AbstractContractDetailsToken(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.authio_email]
             )
+        if self.verification:
+            mail = EmailMessage(
+                subject=verification_subject,
+                body=verification_message.format(
+                    network=self.contract.network.name,
+                    address=self.eth_contract_token.address,
+                    compiler_version=self.eth_contract_token.compiler_version,
+                    optimization='Yes',
+                ),
+                from_email=DEFAULT_FROM_EMAIL,
+                to=[SUPPORT_EMAIL]
+            )
+            mail.attach('code.sol', self.eth_contract_token.source_code)
+            mail.send()
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
         return res
 
     def ownershipTransferred(self, message):
