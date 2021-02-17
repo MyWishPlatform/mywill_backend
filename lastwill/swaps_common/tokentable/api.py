@@ -140,7 +140,7 @@ def get_cmc_tokens(request):
 
 
     token_list = []
-    token_objects = TokensCoinMarketCap.objects.filter(token_cmc_id__gt=0)
+    token_objects = TokensCoinMarketCap.objects.all()
 
     for t in token_objects:
         token_list.append({
@@ -211,7 +211,12 @@ def get_coingecko_tokens(request):
     if not coingecko_tokens:
         return get_response('No coingecko tokens.', HTTP_404_NOT_FOUND)
 
-    return get_response(coingecko_tokens)
+    return get_response(
+        data_to_response={
+            'total': len(coingecko_tokens),
+            'tokens': coingecko_tokens,
+        }
+    )
 
 
 def get_response(data_to_response, status_to_response=HTTP_200_OK):
@@ -247,19 +252,32 @@ def get_actual_coingecko_tokens(request):
 
     token_list = []
     coingecko_tokens = CoinGeckoToken.objects \
-                       .filter(is_displayed=True) \
+                       .filter(
+                           platform__in=[
+                               'ethereum',
+                               'binancecoin',
+                               'binance-smart-chain',
+                               'matic',
+                            ],
+                           is_displayed=True,
+                        ) \
                        .order_by('short_title')
 
     if coingecko_tokens.exists():
         for token in coingecko_tokens:
             token_list.append({
                 'token_title': token.title,
-                'token_short_title': token.short_title,
-                'address':  token.address,
+                'token_short_title': token.short_title.upper(),
                 'platform': token.platform,
-                'image_link': '{}://{}{}'.format(scheme, serve_url, token.image_file.url),
-                'rank': token.rank,
-                'rate': token.usd_price,
+                'address':  token.address,
+                'decimals': token.decimals,
+                'image_link': '{}://{}{}'.format(
+                    scheme,
+                    serve_url,
+                    token.image_file.url
+                ),
+                'coingecko_rank': token.rank,
+                'usd_price': token.usd_price,
             })
 
     return token_list

@@ -24,6 +24,7 @@ class TokensCoinMarketCap(models.Model):
     )
     token_price = models.CharField(max_length=100, null=True, default=None)
     updated_at = models.DateTimeField(auto_now=True)
+    is_native = models.BooleanField(default=False)
     is_displayed=models.BooleanField(default=True)
 
     class Meta:
@@ -52,27 +53,28 @@ class CoinGeckoToken(models.Model):
     """
     title = models.CharField(max_length=255)
     short_title = models.CharField(max_length=255)
-    address = models.CharField(
-        max_length=50,
-        default='None',
-        blank=True,
-    )
     platform = models.CharField(
         max_length=255,
-        default='None',
+        default='',
+        blank=True,
+    )
+    address = models.CharField(
+        max_length=150,
+        default='',
         blank=True,
     )
     decimals = models.PositiveIntegerField(default=18)
     source_image_link = models.URLField(
         max_length=512,
         default='',
+        blank=True
     )
     image_file = models.ImageField(
         upload_to=f'token_images/',
         default='token_images/fa-empire.png',
         blank=True,
     )
-    rank = models.PositiveIntegerField(default=0, blank=True)
+    rank = models.IntegerField(default=0, blank=True)
     usd_price = models.DecimalField(
         max_digits=255,
         decimal_places=15,
@@ -92,6 +94,17 @@ class CoinGeckoToken(models.Model):
             ),
         )
         unique_together = ['title', 'short_title']
+
+    def save(self, *args, **kwargs):
+        self.short_title = self.short_title.lower()
+
+        if self.platform and not self.address:
+            self.address = '0x0000000000000000000000000000000000000000'
+
+        if self.title == 'Rubic' and self.short_title == 'rbc':
+            self.rank = -1
+
+        return super().save(*args, **kwargs)
 
 
 class TokensUpdateTime(models.Model):
