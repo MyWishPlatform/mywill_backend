@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
@@ -77,7 +78,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                 r"(\w)([A-Z])", r"\1 \2",
                 token.get("status")
             ).capitalize()
-            
+
             if tokenInfo is None:
                 tokenInfo=TokensCoinMarketCap.objects \
                           .filter(

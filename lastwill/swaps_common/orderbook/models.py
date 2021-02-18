@@ -4,6 +4,7 @@ from string import ascii_lowercase, digits
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.manager import Manager
 from django.utils import timezone
 
 from email_messages import swaps_deploed_subject, swaps_deploed_message
@@ -32,7 +33,44 @@ def _get_unique_link():
     )
 
 
+class ActiveRbcEthOrdersManager(Manager):
+    def __init__(self, state):
+        self.state = state
+        super().__init__()
+
+    @property
+    def get_state(self):
+        return self.state
+
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            # TODO: Посмотреть можно ли сделать регистронезависимый поиск
+            # для поля name.
+            name__in=[
+                'RBC <> ETH',
+                'ETH <> RBC',
+            ],
+            state__iexact=self.get_state
+        )
+
+
 class OrderBookSwaps(models.Model):
+    STATE_CREATED = 'created'
+    STATE_ACTIVE = 'active'
+    STATE_EXPIRED = 'expired'
+    STATE_POSTPONED = 'postponed'
+    STATE_DONE = 'done'
+    STATE_CANCELLED = 'cancelle'
+
+    ORDER_STATES = (
+        (STATE_CREATED, 'CREATED'),
+        (STATE_ACTIVE, 'ACTIVE'),
+        (STATE_EXPIRED, 'EXPIRED'),
+        (STATE_POSTPONED, 'POSTPONED'),
+        (STATE_DONE, 'DONE'),
+        (STATE_CANCELLED, 'CANCELLED'),
+    )
+
     name = models.CharField(
         max_length=512,
         # null=True,
@@ -139,12 +177,21 @@ class OrderBookSwaps(models.Model):
     unique_link = models.CharField(
         max_length=50,
         # null=True,
+        unique=True,
         default=_get_unique_link
     )
     created_date = models.DateTimeField(auto_now_add=True)
     stop_date = models.DateTimeField(default=timezone.now)
-    contract_state = models.CharField(max_length=63, default='CREATED')
-    state = models.CharField(max_length=63, default='CREATED')
+    contract_state = models.CharField(
+        max_length=63,
+        choices=ORDER_STATES,
+        default=STATE_CREATED,
+    )
+    state = models.CharField(
+        max_length=63,
+        choices=ORDER_STATES,
+        default=STATE_CREATED,
+        )
     state_changed_at = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
     whitelist_address = models.CharField(max_length=50, null=True)
@@ -164,16 +211,32 @@ class OrderBookSwaps(models.Model):
     comment = models.TextField(default='')
     is_rubic_order = models.BooleanField(default=False)
     rubic_initialized = models.BooleanField(default=False)
+    is_displayed = models.BooleanField(default=True)
+    # !--- Managers
+    objects = Manager()
+    active_rbc_eth_orders = ActiveRbcEthOrdersManager(state=STATE_ACTIVE)
+    # ---
+
+    class Meta:
+        indexes = (
+            models.Index(
+                fields=['id', 'unique_link',]
+            ),
+        )
+
+    def __str__(self):
+        return f'Order "{self.name}" ({self.unique_link})'
 
     @check_transaction
-    def msg_deployed(self, message):
-        self.state = 'ACTIVE'
-        self.contract_state = 'ACTIVE'
+    def msg_deployed(self):
+        self.state = self.STATE_ACTIVE
+        self.contract_state = self.STATE_ACTIVE
         self.save()
         if self.user.email:
             swaps_link = '{protocol}://{url}/public-v3/{unique_link}'.format(
                 protocol=SITE_PROTOCOL,
-                unique_link=self.unique_link, url=SWAPS_URL
+                unique_link=self.unique_link,
+                url=SWAPS_URL
             )
             sendEMail(
                 swaps_deploed_subject,
@@ -181,15 +244,15 @@ class OrderBookSwaps(models.Model):
                 [self.user.email]
             )
 
-    def finalized(self, message):
-        self.state = 'DONE'
-        self.contract_state = 'DONE'
+    def finalized(self):
+        self.state = self.STATE_DONE
+        self.contract_state = self.STATE_DONE
         self.state_changed_at = datetime.utcnow()
         self.save()
 
-    def cancelled(self, message):
-        self.state = 'CANCELLED'
-        self.contract_state = 'CANCELLED'
+    def cancelled(self):
+        self.state = self.STATE_CANCELLED
+        self.contract_state = self.STATE_CANCELLED
         self.state_changed_at = datetime.utcnow()
         self.save()
 
