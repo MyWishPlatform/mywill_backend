@@ -255,9 +255,7 @@ def get_actual_coingecko_tokens(request):
                        .filter(
                            platform__in=[
                                'ethereum',
-                               'binancecoin',
                                'binance-smart-chain',
-                               'matic',
                             ],
                            is_displayed=True,
                         ) \

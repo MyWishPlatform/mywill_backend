@@ -114,7 +114,8 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
     )
     search_fields = (
         'title',
-        'short_title',
+        '=short_title',
+        '=address',
     )
     ordering = (
         'id',
