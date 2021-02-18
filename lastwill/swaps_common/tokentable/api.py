@@ -256,7 +256,7 @@ def get_actual_coingecko_tokens(request):
                            platform__in=[
                                'ethereum',
                                'binance-smart-chain',
-                            ],
+                           ],
                            is_displayed=True,
                         ) \
                        .order_by('short_title')

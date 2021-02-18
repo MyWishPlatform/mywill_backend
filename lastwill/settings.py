@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_auth.registration',
     'djcelery_email',
     'django_celery_beat',
+    'django_filters',
 
     'lastwill.main',
     'lastwill.contracts',
@@ -79,7 +80,10 @@ ROOT_URLCONF = 'lastwill.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'lastwill-frontend/dist'), os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'lastwill-frontend/dist'),
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -168,7 +172,10 @@ ACCOUNT_ADAPTER = 'lastwill.profile.adapter.SubSiteRegistrationAdapter'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 100,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
