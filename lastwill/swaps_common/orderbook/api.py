@@ -38,10 +38,10 @@ def get_swap_from_orderbook(swap_id):
         'contract_address': backend_contract.contract_address,
         'base_address': backend_contract.base_address,
         'base_limit': backend_contract.base_limit,
-        'base_coin_id': backend_contract.base_coin_id,
+        # 'base_coin_id': backend_contract.base_coin_id,
         'quote_address': backend_contract.quote_address,
         'quote_limit': backend_contract.quote_limit,
-        'quote_coin_id': backend_contract.quote_coin_id,
+        # 'quote_coin_id': backend_contract.quote_coin_id,
         'owner_address': backend_contract.owner_address,
         'stop_date': backend_contract.stop_date,
         'memo_contract': backend_contract.memo_contract,
@@ -89,8 +89,8 @@ def create_contract_swaps_backend(request):
     contract_address = contract_details['contract_address'].lower()
     # ---
     stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
-    base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
-    quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
+    # base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
+    # quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
 
     broker_fee = contract_details['broker_fee'] if 'broker_fee' in contract_details else False
     comment = contract_details['comment'] if 'comment' in contract_details else ""
@@ -138,10 +138,10 @@ def create_contract_swaps_backend(request):
             # ---
             base_address=base_address.lower(),
             base_limit=contract_details['base_limit'],
-            base_coin_id=base_coin_id_param,
+            # base_coin_id=base_coin_id_param,
             quote_address=quote_address.lower(),
             quote_limit=contract_details['quote_limit'],
-            quote_coin_id=quote_coin_id_param,
+            # quote_coin_id=quote_coin_id_param,
             owner_address=owner_address.lower(),
             stop_date=stop_date_conv,
             public=contract_details['public'],
@@ -254,14 +254,14 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.base_address = params['base_address'].lower()
     if 'base_limit' in params:
         swap_order.base_limit = params['base_limit']
-    if 'base_coin_id' in params:
-        swap_order.base_coin_id = params['base_coin_id']
+    # if 'base_coin_id' in params:
+    #     swap_order.base_coin_id = params['base_coin_id']
     if 'quote_address' in params:
         swap_order.quote_address = params['quote_address'].lower()
     if 'quote_limit' in params:
         swap_order.quote_limit = params['quote_limit']
-    if 'quote_coin_id' in params:
-        swap_order.quote_coin_id = params['quote_coin_id']
+    # if 'quote_coin_id' in params:
+    #     swap_order.quote_coin_id = params['quote_coin_id']
     if 'owner_address' in params:
         swap_order.owner_address = params['owner_address'].lower()
     if 'public' in params:
@@ -458,8 +458,8 @@ def admin_delete_swaps_v3(request):
 @api_view(http_method_names=['GET'])
 def get_non_active_orders(request):
     p = request.query_params.get('p', 1)
-    filter_base_coin = request.query_params.get('base_coin_id', None)
-    filter_quote_coin = request.query_params.get('quote_coin_id', None)
+    # filter_base_coin = request.query_params.get('base_coin_id', None)
+    # filter_quote_coin = request.query_params.get('quote_coin_id', None)
     list_size = request.query_params.get('size', 5)
 
     try:
@@ -471,10 +471,10 @@ def get_non_active_orders(request):
 
     order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).exclude(public=False)
 
-    if filter_base_coin:
-        order_list = order_list.filter(base_coin_id=int(filter_base_coin))
-    if filter_quote_coin:
-        order_list = order_list.filter(quote_coin_id=int(filter_quote_coin))
+    # if filter_base_coin:
+    #     order_list = order_list.filter(base_coin_id=int(filter_base_coin))
+    # if filter_quote_coin:
+    #     order_list = order_list.filter(quote_coin_id=int(filter_quote_coin))
 
     order_list = order_list.order_by('-state_changed_at')
     paginator = Paginator(order_list, list_size)

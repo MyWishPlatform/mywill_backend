@@ -153,9 +153,8 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
         # return Response(details)
         # ---
 
-        new_contract = request.data.copy()
-
         new_contract = deepcopy(request.data)
+        user = request.user
         notification = new_contract.get('notification')
 
         if request.META['HTTP_HOST'] == RUBIC_EXC_URL:

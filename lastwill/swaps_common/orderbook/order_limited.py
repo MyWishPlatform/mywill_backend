@@ -68,14 +68,14 @@ def _get_active_orders():
     return OrderBookSwaps.active_rbc_eth_orders.all()
 
 
-def _get_matching_orders(queryset: QuerySet):
+def _get_matching_orders(queryset: QuerySet, matching_eth_value=5):
     """
-        Fill me.
+        Returns ETH <> RBC and RBC <> ETH orders filtered by
+        the amount of ETH.
     """
-    # Сюда не смотреть.
     return queryset.filter(
-        Q(base_address=ETH_ADDRESS, base_limit_lte=5) | \
-        Q(quote_address=ETH_ADDRESS, quote_limit_lte=5)
+        Q(base_address=ETH_ADDRESS, base_limit__lte=matching_eth_value) | \
+        Q(quote_address=ETH_ADDRESS, quote_limit__lte=matching_eth_value)
     )
 
 
@@ -148,7 +148,7 @@ def _set_done_status_order(order: QuerySet):
         Changes order visibility to True and state to 'done'.
     """
     # order.contract_state='done'
-    order.state='done'
+    order.state=OrderBookSwaps.STATE_DONE
     order.is_displayed=True
     order.save()
 

@@ -60,7 +60,7 @@ class OrderBookSwaps(models.Model):
     STATE_EXPIRED = 'expired'
     STATE_POSTPONED = 'postponed'
     STATE_DONE = 'done'
-    STATE_CANCELLED = 'cancelle'
+    STATE_CANCELLED = 'cancelled'
 
     ORDER_STATES = (
         (STATE_CREATED, 'CREATED'),
@@ -92,27 +92,25 @@ class OrderBookSwaps(models.Model):
         verbose_name='Contract address',
         default=''
     )
-    base_coin_id = models.IntegerField(default=0)
+    # base_coin_id = models.IntegerField(default=0)
     base_address = models.CharField(
         max_length=50,
         # null=True,
         default=''
     )
-    base_limit = models.CharField(
-        max_length=512,
-        # null=True,
-        # default=''
+    base_limit = models.DecimalField(
+        max_digits=50,
+        decimal_places=18,
     )
-    quote_coin_id = models.IntegerField(default=0)
+    # quote_coin_id = models.IntegerField(default=0)
     quote_address = models.CharField(
         max_length=50,
         # null=True,
         default=''
     )
-    quote_limit = models.CharField(
-        max_length=512,
-        # null=True,
-        # default=''
+    quote_limit = models.DecimalField(
+        max_digits=50,
+        decimal_places=18,
     )
     user = models.ForeignKey(
         User,
