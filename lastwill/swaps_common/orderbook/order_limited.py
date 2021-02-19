@@ -83,18 +83,23 @@ def main():
     """
         Fill me.
     """
-    active_eth_rbc_orders = _get_active_orders()
+    active_eth_rbc_orders = _get_matching_orders(_get_active_orders())
 
-    eth_currency_quote = ''
-    rbc_currency_quote = ''
+    # eth_currency_quote = ''
+    # rbc_currency_quote = ''
 
-    eth_current_balance = get_eth_balance(LIQUIDITY_PULL_ADDRESS)
-    rbc_current_balance = get_rbc_balance(LIQUIDITY_PULL_ADDRESS)
+    # eth_current_balance = get_eth_balance(LIQUIDITY_PULL_ADDRESS)
+    # rbc_current_balance = get_rbc_balance(LIQUIDITY_PULL_ADDRESS)
 
 
     if active_eth_rbc_orders.exists():
+        print(
+            'Matching orders have been found is: {}.'.format(
+                active_eth_rbc_orders.count()
+            )
+        )
         logging.info(f'Matching orders have been found is: ')
-        for order in active_eth_rbc_orders:
+        for counter, order in enumerate(active_eth_rbc_orders):
             rbc_eth_ratio = _get_rbc_eth_ratio()
 
             if order.base_address == RBC_ADDRESS and \
@@ -102,18 +107,24 @@ def main():
                 if _check_profitability(
                     exchange_rate=rbc_eth_ratio,
                     gas_fee=0,
-                    rbc_value=order.base_limit,
-                    eth_value=order.quote_limit,
+                    rbc_value=float(order.base_limit),
+                    eth_value=float(order.quote_limit),
                     is_rbc=True):
-                    ...
+                    print(f'{counter}. YEP!')
+                    continue
+                print(f'{counter}. NOUP...')
+                ...
             else:
                 if _check_profitability(
                     exchange_rate=rbc_eth_ratio,
                     gas_fee=0,
-                    rbc_value=order.base_limit,
-                    eth_value=order.quote_limit,
+                    rbc_value=float(order.base_limit),
+                    eth_value=float(order.quote_limit),
                     is_rbc=False):
-                    ...
+                    print(f'{counter}. YEP!')
+                    continue
+                print(f'{counter}. NOUP...')
+                ...
             # Проверка сделки на доходность.
             # - Получаем текущий курс RBC в ETH c UniSwap'а.
             # - Если сделка выгодна по текущему курсу обмениваемого токена, то
@@ -128,6 +139,7 @@ def main():
             # - Если сделка НЕ выгодна по текущему курсу обмениваемого токена,
             # то пропускаем (удаляем из плученного пула?).
 
+    print('No active "ETH <> RBC" or "RBC <> ETH" orders yet.')
     logging.info('No active "ETH <> RBC" or "RBC <> ETH" orders yet.')
 
     return 0
