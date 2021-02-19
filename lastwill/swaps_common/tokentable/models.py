@@ -1,5 +1,7 @@
 from django.db import models
 
+from lastwill.consts import ETH_ADDRESS
+
 
 class Tokens(models.Model):
     address = models.CharField(max_length=50)
@@ -99,7 +101,7 @@ class CoinGeckoToken(models.Model):
         self.short_title = self.short_title.lower()
 
         if self.platform and not self.address:
-            self.address = '0x0000000000000000000000000000000000000000'
+            self.address = ETH_ADDRESS
 
         if self.title == 'Rubic' and self.short_title == 'rbc':
             self.rank = -1
