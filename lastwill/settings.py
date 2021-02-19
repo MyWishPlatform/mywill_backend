@@ -256,6 +256,10 @@ SESSION_COOKIE_DOMAIN = '.mywish.io'
 
 UNBLOCKING_EMAIL = 'hello@rocknblock.io'
 
+BSC_ATTEMPTS_COUNT = 10
+
+BSC_ATTEMPTS_COOLDOWN = 15
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
