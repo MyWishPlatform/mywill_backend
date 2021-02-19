@@ -25,7 +25,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
                 amount *= 1.1
             if currency == 'BBNB':
                 currency = 'BNB'
-        value = amount if (currency in ['WISH', 'BWISH']) else to_wish(
+        value = amount if (currency in ['WISH', 'BWISH', 'BSCWISH', 'WWISH']) else to_wish(
             currency, amount
         )
         if currency == 'BTC':
