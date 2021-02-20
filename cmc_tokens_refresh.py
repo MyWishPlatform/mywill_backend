@@ -2,7 +2,7 @@ import os
 import datetime
 import django
 import requests
-from requests import Session, ConnectionError, Timeout, TooManyRedirects
+from requests import Session
 import json
 import time
 from django.core.files.base import ContentFile
@@ -13,7 +13,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 django.setup()
 
 from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap, TokensUpdateTime
-from lastwill.settings import DEFAULT_FROM_EMAIL, CMC_TOKEN_UPDATE_MAIL, COINMARKETCAP_API_KEYS
+from lastwill.settings import COINMARKETCAP_API_KEYS
+
 
 class CMCException(Exception):
     pass
@@ -92,7 +93,7 @@ def find_by_parameters(current_time, checker_object):
     rank = [i for i in id_rank.values()]
     count = 0
 
-    for key, value in info_for_save['data'].items():
+    for _, value in info_for_save['data'].items():
         count += 1
         if count >= len(rank):
             break
@@ -115,14 +116,21 @@ def find_by_parameters(current_time, checker_object):
         except KeyError:
             price = None
 
-        token_from_cmc = TokensCoinMarketCap.objects.filter(token_cmc_id=value['id']).first()
-        if token_from_cmc:
+        try:
+            token_from_cmc = TokensCoinMarketCap.objects \
+                             .get(
+                                 token_name=value['name'],
+                                 token_short_name=value['symbol'],
+                             )
             if price is not None and token_from_cmc.token_price != price:
                 token_from_cmc.token_price = price
 
             new_rank = id_rank[int(value['id'])]
             if token_from_cmc.token_rank != new_rank:
                 token_from_cmc.token_rank = new_rank
+
+            if token_from_cmc.token_address == '0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3' and (token_from_cmc.token_name == 'Rubic' and token_from_cmc.token_short_name == 'RBC'):
+                token_from_cmc.token_rank = -1
 
             token_from_cmc.save()
 
@@ -133,7 +141,7 @@ def find_by_parameters(current_time, checker_object):
                   token_from_cmc.token_price,
                   flush=True
                   )
-        else:
+        except TokensCoinMarketCap.DoesNotExist:
             token_from_cmc = TokensCoinMarketCap(
                 token_cmc_id=value['id'],
                 token_name=value['name'],
@@ -174,7 +182,6 @@ if __name__ == '__main__':
                 find_by_parameters(now, previous_check)
             except CMCException:
                 pass
-
         else:
             print('last check was %s, skipping' % previous_check.last_time_updated, flush=True)
 

@@ -1,32 +1,40 @@
 import time
-from web3.contract import ContractFunction, Contract
-import requests
 import json
 import os
-from web3 import Web3, HTTPProvider
-from web3.types import Wei, HexBytes, ChecksumAddress, ENS, Address, \
-    TxParams
 from typing import Union, Optional
-AddressLike = Union[Address, ChecksumAddress, ENS]
+from web3.contract import ContractFunction, Contract
+from web3 import Web3, HTTPProvider
+from web3.types import (
+    Wei,
+    HexBytes,
+    ChecksumAddress,
+    ENS,
+    Address,
+    TxParams,
+)
 
 
-ETHERSCAN_API = "https://api.etherscan.io/api"
-ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
-UNISWAP_API = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+ETH_ADDRESS = '0x0000000000000000000000000000000000000000'
 UNISWAP_RBC_ETH_CONTRACT_ADDRESS = "0x10db37f4d9b3bc32AE8303B46E6166F7e9652d28"
-
-INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
-WALLET_ADDRESS = '0xfCf49f25a2D1E49631d05614E2eCB45296F26258'
 OLD_MAINNET_CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
 NEW_KOVAN_ADDRESS = "0xB09fe422dE371a86D7148d6ED9DBD499287cc95c"
 RUBIC_ADDRESS = "0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3"
-ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
+UNISWAP_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+WALLET_ADDRESS = '0xfCf49f25a2D1E49631d05614E2eCB45296F26258'
+
+INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
+ETHERSCAN_API = "https://api.etherscan.io/api"
+UNISWAP_API = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+
+PRIVATE_KEY = '0x00'
+ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
+
+MAX_SLIPPAGE = 0.1
 BLOCKCHAIN_DECIMALS = 10 ** 18
 MIN_BALANCE_PARAM = 1
-MAX_SLIPPAGE = 0.1
-PRIVATE_KEY = ""
-UNISWAP_ROUTER02_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 
+
+AddressLike = Union[Address, ChecksumAddress, ENS]
 
 # connect to infura
 w3 = Web3(HTTPProvider(INFURA_URL))
@@ -66,17 +74,20 @@ def get_eth_balance(wallet_address) -> Wei:
 
 def get_rbc_balance(wallet_address) -> Wei:
     """
-    return user rbc balance on wallet on rbc
+        Return user rbc balance on wallet on rbc.
     """
     # TODO: rewrite func to get token status
     #  input: wallet address, token address
     rubic_abi = get_abi_by_filename("rubic.json")
     contract = w3.eth.contract(address=RUBIC_ADDRESS, abi=rubic_abi)
+
     return contract.functions.balanceOf(wallet_address).call()
 
 
 def deadline() -> int:
-    """Get a predefined deadline. 10min by default (same as the Uniswap SDK)."""
+    """
+        Get a predefined deadline. 10min by default (same as the Uniswap SDK).
+    """
     return int(time.time()) + 10 * 60
 
 
@@ -151,6 +162,7 @@ def get_eth_token_output_price(
         quantity_in_wei: int,
         token_address: AddressLike,
 ) -> Wei:
+
     """Public price for ETH to token trades with an exact output."""
     abi = get_abi_by_filename("uniswap_router02.json")
     contract = w3.eth.contract(address=UNISWAP_ROUTER02_ADDRESS, abi=abi)
@@ -166,7 +178,9 @@ def get_token_eth_output_price(
         token_address: AddressLike,
         quantity_in_wei: Wei
 ) -> int:
-    """Public price for token to ETH trades with an exact output."""
+    """
+        Public price for token to ETH trades with an exact output.
+    """
     # Если зотим получить на выходе 1 эфир то нужно закинуть не менее output рубиков
 
     abi = get_abi_by_filename("uniswap_router02.json")
@@ -195,7 +209,9 @@ def eth_to_token_swap_output(
     qty: int,
     recipient: Optional[AddressLike]
 ) -> HexBytes:
-    """Convert ETH to tokens given an output amount."""
+    """
+        Convert ETH to tokens given an output amount.
+    """
 
     if recipient is None:
         recipient = WALLET_ADDRESS
@@ -220,22 +236,17 @@ def eth_to_token_swap_output(
 def token_to_eth_swap_output(
     input_token: AddressLike, qty: Wei
 ) -> HexBytes:
-    """Convert tokens to ETH given an output amount."""
+    """
+        Convert tokens to ETH given an output amount.
+    """
     cost = get_token_eth_output_price(input_token, qty)
     max_tokens = int((1 + MAX_SLIPPAGE) * cost)
 
     router_abi = get_abi_by_filename("uniswap_router02.json")
     router_contract = w3.eth.contract(address=UNISWAP_ROUTER02_ADDRESS, abi=router_abi)
+
     swap_func = router_contract.functions.swapTokensForExactETH
 
-    print(dict(
-        qty=qty,
-        max_tokens=max_tokens,
-        input_token=input_token,
-        ETH_ADDRESS=get_weth_address(),
-        RUBIC_ADDRESS=RUBIC_ADDRESS,
-        deadline=deadline(),
-    ))
     return build_and_send_tx(
         swap_func(
             qty,
@@ -248,10 +259,12 @@ def token_to_eth_swap_output(
 
 
 def build_and_send_tx(
-    function: ContractFunction, tx_params: Optional[TxParams] = None
-    ) -> HexBytes:
-
-    """Build and send a transaction."""
+    function: ContractFunction,
+    tx_params: Optional[TxParams] = None
+) -> HexBytes:
+    """
+        Build and send a transaction.
+    """
     if not tx_params:
         tx_params = get_tx_params()
     transaction = function.buildTransaction(tx_params)
@@ -270,14 +283,3 @@ def get_weth_address() -> ChecksumAddress:
 
     address: ChecksumAddress = router_contract.functions.WETH().call()
     return address
-
-
-
-# test - DONE
-# gg = int(1*BLOCKCHAIN_DECIMALS)
-# print(get_eth_token_output_price(quantity_in_wei=gg, token_address=RUBIC_ADDRESS))
-# print(get_token_eth_output_price(quantity_in_wei=gg, token_address=RUBIC_ADDRESS))
-# approve(RUBIC_ADDRESS)
-print(is_approved(RUBIC_ADDRESS))
-# print(is_approved(ETH_ADDRESS))
-# print(get_weth_address())

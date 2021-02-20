@@ -1,24 +1,27 @@
 import requests
-import json
-import os
 from web3 import Web3, HTTPProvider
 from web3.types import Wei, HexBytes, ChecksumAddress, ENS, Address, \
     TxParams
+import logging
 from typing import Union, Optional
+from django.db.models.query import QuerySet
+from django.db.models import Q
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
-# from .models import OrderBookSwaps
-
-from working_with_uniswap import get_eth_balance,\
-    get_rbc_balance, \
-    get_token_eth_output_price, \
-    get_eth_token_output_price, \
-    eth_to_token_swap_output, \
-    token_to_eth_swap_output, \
-    approve, \
-    is_approved
-
-AddressLike = Union[Address, ChecksumAddress, ENS]
+from gql.transport.requests import RequestsHTTPTransport
+from .models import OrderBookSwaps
+from .working_with_uniswap import (
+    approve,
+    is_approved,
+    eth_to_token_swap_output,
+    get_eth_balance,
+    get_eth_token_output_price,
+    get_rbc_balance,
+    get_token_eth_output_price,
+    token_to_eth_swap_output,
+    AddressLike,
+    Wei
+)
 
 
 ETHERSCAN_API = "https://api.etherscan.io/api"
@@ -38,42 +41,47 @@ MAX_SLIPPAGE = 0.1
 PRIVATE_KEY = "0x00"
 UNISWAP_ROUTER02_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 
+LIQUIDITY_PULL_ADDRESS = 'fill_me'
+GAS_FEE = 'fill_me'
+PROFIT_RATIO = 0.1
+UNISWAP_API = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
+
 
 # connect to infura
 w3 = Web3(HTTPProvider(INFURA_URL))
 
 
-def get_rbc_eth_ratio_uniswap():
-    """
-        Parse exchange rate rbc to eth from uniswap.
-        Return exchange rate(float type).
-    """
-
-    # Select your transport with a defined url endpoint
-    transport = AIOHTTPTransport(url=UNISWAP_API)
-
-    # Create a GraphQL client using the defined transport
-    client = Client(transport=transport, fetch_schema_from_transport=True)
-
-    # Provide a GraphQL query
-    query = gql(
-        """
-        {
-            token(id: "0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3"){
-               name
-               symbol
-               decimals
-               derivedETH
-               tradeVolumeUSD
-               totalLiquidity
-            }
-        }
-    """
-    )
-
-    # Execute the query on the transport
-    result = client.execute(query)
-    return float(result.get("token").get("derivedETH"))
+# def get_rbc_eth_ratio_uniswap():
+#     """
+#         Parse exchange rate rbc to eth from uniswap.
+#         Return exchange rate(float type).
+#     """
+#
+#     # Select your transport with a defined url endpoint
+#     transport = AIOHTTPTransport(url=UNISWAP_API)
+#
+#     # Create a GraphQL client using the defined transport
+#     client = Client(transport=transport, fetch_schema_from_transport=True)
+#
+#     # Provide a GraphQL query
+#     query = gql(
+#         """
+#         {
+#             token(id: "0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3"){
+#                name
+#                symbol
+#                decimals
+#                derivedETH
+#                tradeVolumeUSD
+#                totalLiquidity
+#             }
+#         }
+#     """
+#     )
+#
+#     # Execute the query on the transport
+#     result = client.execute(query)
+#     return float(result.get("token").get("derivedETH"))
 
 
 def get_gas_price():
@@ -87,15 +95,6 @@ def get_gas_price():
     response = requests.get(url)
 
     return int(response.json().get("result").get("ProposeGasPrice"))
-
-
-def get_gas_limit():
-    """
-    return total gasLimit needed to work with contract
-    """
-    # TODO need to understand how to work with contract
-    # Which methods needs to call
-    pass
 
 
 def is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, is_rbc):
@@ -127,55 +126,186 @@ def is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, is_rbc
         return False
 
 
-# def get_active_orderbook():
-#     """
-#     get active orderbook ETH<>RBC from db
-#     return 2 queryset of them(ETH->RBC, RBC->ETH)
-#     base_coin_id - id of user's token in db,
-#     which he/she wants to exchange(we'll give it)
-#     quote_coin_id - id of our's token in db,
-#     which we send to user
-#     """
-#     RBC_LOCAL_ID = 0
-#     ETH_LOCAL_ID = 0
-#
-#     orderbooks_eth_rbc = OrderBookSwaps.objects.filter(base_coin_id=ETH_LOCAL_ID, quote_coin_id=RBC_LOCAL_ID).all()
-#     orderbooks_rbc_eth = OrderBookSwaps.objects.filter(base_coin_id=RBC_LOCAL_ID, quote_coin_id=ETH_LOCAL_ID).all()
-#     return dict(
-#         orderbooks_eth_rbc=orderbooks_eth_rbc,
-#         orderbooks_rbc_eth=orderbooks_rbc_eth
-#     )
-#
-#
-def is_enough_token_on_wallet(rbc_value, eth_value, is_rbc, gas_fee):
-    # TODO add gas accounting logic and think over the parameter -
-    #  the minimum balance on the account after the transaction - MIN_BALANCE_PARAM
+def _get_active_orders():
     """
-    func to check wallet's token value
-    input - token needed to complete orderbook swaps
-    output - True if possible, False if not
+        Returns active ETH <> RBC and RBC <> ETH orders.
     """
-    rbc_balance = get_rbc_balance(WALLET_ADDRESS)
-    eth_balance = get_eth_balance(WALLET_ADDRESS)
+    return OrderBookSwaps.active_rbc_eth_orders.all()
 
-    if is_rbc == 1:
-        if rbc_balance > rbc_value and eth_balance > gas_fee + MIN_BALANCE_PARAM:
-            return True
-        else:
-            return False
+
+def _get_matching_orders(queryset: QuerySet, matching_eth_value=5):
+    """
+        Returns ETH <> RBC and RBC <> ETH orders filtered by
+        the amount of ETH.
+    """
+    return queryset.filter(
+        Q(base_address=ETH_ADDRESS, base_limit__lte=matching_eth_value) | \
+        Q(quote_address=ETH_ADDRESS, quote_limit__lte=matching_eth_value)
+    )
+
+
+def main():
+    """
+        Fill me.
+    """
+    active_eth_rbc_orders = _get_matching_orders(_get_active_orders())
+
+    # eth_currency_quote = ''
+    # rbc_currency_quote = ''
+
+    # eth_current_balance = get_eth_balance(LIQUIDITY_PULL_ADDRESS)
+    # rbc_current_balance = get_rbc_balance(LIQUIDITY_PULL_ADDRESS)
+
+
+    if active_eth_rbc_orders.exists():
+        print(
+            'Matching orders have been found is: {}.'.format(
+                active_eth_rbc_orders.count()
+            )
+        )
+        logging.info(f'Matching orders have been found is: ')
+        for counter, order in enumerate(active_eth_rbc_orders):
+            rbc_eth_ratio = _get_rbc_eth_ratio()
+
+            if order.base_address == RBC_ADDRESS and \
+               order.quote_address == ETH_ADDRESS:
+                if _check_profitability(
+                    exchange_rate=rbc_eth_ratio,
+                    gas_fee=0,
+                    rbc_value=float(order.base_limit),
+                    eth_value=float(order.quote_limit),
+                    is_rbc=True):
+                    print(f'{counter}. YEP!')
+                    continue
+                print(f'{counter}. NOUP...')
+                ...
+            else:
+                if _check_profitability(
+                    exchange_rate=rbc_eth_ratio,
+                    gas_fee=0,
+                    rbc_value=float(order.base_limit),
+                    eth_value=float(order.quote_limit),
+                    is_rbc=False):
+                    print(f'{counter}. YEP!')
+                    continue
+                print(f'{counter}. NOUP...')
+                ...
+            # Проверка сделки на доходность.
+            # - Получаем текущий курс RBC в ETH c UniSwap'а.
+            # - Если сделка выгодна по текущему курсу обмениваемого токена, то
+            # скрываем сделку и отправляем ее на исполнение.
+            #   # - Проверяем доступный остаток средств для закрытия сделки.
+            #   #   - Если доступного остатка на кошельке обмениваемого токена
+            #   #     не достаточно для совершения сделки, то проверяем
+            #   #     доступный остаток исходного токена, для обмена
+            #   #   - Если средств RBC и ETH недоставточно, то записываем в
+            #   #     logging.warning ссобщение о недостаточности средств (и для
+            #   #     обмена между собой) и выходим из функции со статусом 0.
+            # - Если сделка НЕ выгодна по текущему курсу обмениваемого токена,
+            # то пропускаем (удаляем из плученного пула?).
+
+    print('No active "ETH <> RBC" or "RBC <> ETH" orders yet.')
+    logging.info('No active "ETH <> RBC" or "RBC <> ETH" orders yet.')
+
+    return 0
+
+
+def _hide_order(order: QuerySet):
+    """
+        Changes order visiblity to False.
+    """
+    order.is_displayed=False
+    order.save()
+
+    return 1
+
+
+def _set_done_status_order(order: QuerySet):
+    """
+        Changes order visibility to True and state to 'done'.
+    """
+    # order.contract_state='done'
+    order.state=OrderBookSwaps.STATE_DONE
+    order.is_displayed=True
+    order.save()
+
+    return 1
+
+
+def _get_rbc_eth_ratio():
+    """
+        Parse exchange rate rbc to eth from UniSwap.
+        Return exchange rate: float.
+    """
+
+    # Select your transport with a defined url endpoint
+    # transport = AIOHTTPTransport(url=UNISWAP_API)
+    transport = RequestsHTTPTransport(url=UNISWAP_API)
+
+    # Create a GraphQL client using the defined transport
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+
+    # Provide a GraphQL query
+    query = gql(
+        """
+        {
+            token(id: "%s"){
+               name
+               symbol
+               decimals
+               derivedETH
+               tradeVolumeUSD
+               totalLiquidity
+            }
+        }
+        """ % RBC_ADDRESS
+    )
+
+    # Execute the query on the transport
+    result = client.execute(query)
+
+    return float(result.get("token").get("derivedETH"))
+
+
+def _check_profitability(
+    exchange_rate:float,
+    gas_fee:float,
+    rbc_value:float,
+    eth_value:float,
+    is_rbc:bool=True
+):
+    # profit_coeff - value in ETH showing the minimum profit for which a transaction can be carried out
+    """
+    Calculate profit for active orderbook
+
+    RinE = RBC*exch_rate = value RBC in ETH
+    RinE - ETH = free profit
+    RinE - ETH - gas = total profit
+    Total: rbcValue*exchangeRate - ethValue - gasPrice
+
+    Logic:
+    If we have RBC we want that: user's ETH > our RBC*ExchRate
+        (ETH - RBC*ER) - GP - PC > 0
+    If we have ETH we want that: user's RBC*ExchRate > our ETH
+        (RBC*ER - ETH) - GP - PC > 0
+    value isRBC: int =1 if we have RBC, int = -1 if we have ETH
+    Finally we get: isRBC*(ethValue - rbcValue*exchangeRate) - gasPrice - profit_coeff > 0 - it's profit
+    Input data: rbc/eth exchange rate, gasPrice,
+        orderbook's value of eth and rbc, isRBC
+    Output data: True if profit, False if not.
+    """
+    if not is_rbc:
+        is_rbc = -1
     else:
-        if eth_balance > eth_value + gas_fee + MIN_BALANCE_PARAM:
-            return True
-        else:
-            return False
+        is_rbc = int(is_rbc)
 
+    profitability = is_rbc * (eth_value - rbc_value * exchange_rate) - \
+                    gas_fee - PROFIT_RATIO
 
-def change_orderbook_status(orderbook_id):
-    """
-    change status for orderbook if it profit for us
-    """
-    # TODO change status for orderbook if it profit for us
-    pass
+    if profitability > 0:
+        return True
+    else:
+        return False
 
 
 def confirm_orderbook(orderbook_id):
@@ -192,16 +322,13 @@ def swap_token_on_uniswap(input_token: AddressLike,
                           recipient: AddressLike = None
                           ) -> HexBytes:
     """
-    Make a trade by defining the qty of the output token.
-    Input is address of swapped tokens and exact amount of output token
+        Make a trade by defining the qty of the output token.
+        Input is address of swapped tokens and exact amount of output token.
     """
     # TODO: now it works only for ETH->TOKEN and TOKEN->ETH swaps
     #  needed to add TOKEN->TOKEN swap ability
-    print("1111111111")
     if not is_approved(RUBIC_ADDRESS):
         approve(RUBIC_ADDRESS)
-
-    print("222222222")
 
     if input_token == Web3.toChecksumAddress(ETH_ADDRESS):
         balance = get_eth_balance(WALLET_ADDRESS)
@@ -213,15 +340,11 @@ def swap_token_on_uniswap(input_token: AddressLike,
             pass
         else:
             return eth_to_token_swap_output(output_token, qty, recipient)
-        print("333333333")
+
     elif output_token == Web3.toChecksumAddress(ETH_ADDRESS):
-        # print("4444444")
+
         # balance = get_rbc_balance(WALLET_ADDRESS)
-        # print("5555555")
-        # print(output_token)
         # need = get_token_eth_output_price(output_token, qty)
-        #
-        # print("566666666")
         # if balance < need:
         #     # TODO: add logging "not enough eth token"
         #     pass
@@ -277,29 +400,10 @@ def swap_token_on_uniswap(input_token: AddressLike,
 #                 pass
 
 
-# def test_calling():
-#     # check ratio
-#     print(get_rbc_eth_ratio_uniswap())
-#     # check connection
-#     print(w3.isConnected())
-#     # get address balance on eth
-#     print(get_user_eth_balance(WALLET_ADDRESS))
-#     # get address balance of rbc
-#     print(get_user_rbc_balance(WALLET_ADDRESS))
-#     # get gas price from etherscan
-#     print(get_gas_price())
-#     # get gas limit mainnet
-#     print(test_get_gas_limit_on_mainnet())
-#     # get gas limit on kovan
-#     print(test_get_gas_limit_on_kovan())
-
-
 # run test
-# test_calling()
 gg = int(320*BLOCKCHAIN_DECIMALS)
 RBC = Web3.toChecksumAddress(RUBIC_ADDRESS)
 print(RBC)
 ETH = Web3.toChecksumAddress(ETH_ADDRESS)
 print(ETH)
 swap_token_on_uniswap(ETH, RBC, qty=gg)
-
