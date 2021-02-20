@@ -1,9 +1,7 @@
 import requests
-import time
 import json
 import os
 from web3 import Web3, HTTPProvider
-from web3.contract import ContractFunction
 from web3.types import Wei, HexBytes, ChecksumAddress, ENS, Address, \
     TxParams
 from typing import Union, Optional
@@ -11,16 +9,18 @@ from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 # from .models import OrderBookSwaps
 
-from .working_with_uniswap import get_eth_balance,\
+from working_with_uniswap import get_eth_balance,\
+    get_rbc_balance, \
     get_token_eth_output_price, \
     get_eth_token_output_price, \
     eth_to_token_swap_output, \
-    token_to_eth_swap_output
+    token_to_eth_swap_output, \
+    approve, \
+    is_approved
 
 AddressLike = Union[Address, ChecksumAddress, ENS]
 
 
-# COINGECKO_API = "https://api.coingecko.com"
 ETHERSCAN_API = "https://api.etherscan.io/api"
 ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
 UNISWAP_API = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
@@ -36,106 +36,95 @@ BLOCKCHAIN_DECIMALS = 10 ** 18
 MIN_BALANCE_PARAM = 1
 MAX_SLIPPAGE = 0.1
 PRIVATE_KEY = "0x00"
+UNISWAP_ROUTER02_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+
 
 # connect to infura
 w3 = Web3(HTTPProvider(INFURA_URL))
 
 
-# def get_rbc_eth_ratio_uniswap():
-#     """
-#         Parse exchange rate rbc to eth from uniswap.
-#         Return exchange rate(float type).
-#     """
-#
-#     # Select your transport with a defined url endpoint
-#     transport = AIOHTTPTransport(url=UNISWAP_API)
-#
-#     # Create a GraphQL client using the defined transport
-#     client = Client(transport=transport, fetch_schema_from_transport=True)
-#
-#     # Provide a GraphQL query
-#     query = gql(
-#         """
-#         {
-#             token(id: "0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3"){
-#                name
-#                symbol
-#                decimals
-#                derivedETH
-#                tradeVolumeUSD
-#                totalLiquidity
-#             }
-#         }
-#     """
-#     )
-#
-#     # Execute the query on the transport
-#     result = client.execute(query)
-#     return float(result.get("token").get("derivedETH"))
-#
-#
-# def get_gas_price():
-#     """
-#     Get gas price from etherscan api.
-#     Return gas price for average speed(int type)
-#     """
-#
-#     url = "{URL}?module=gastracker&action=gasoracle&apikey={apikey}".format(
-#         URL=ETHERSCAN_API, apikey=ETHERSCAN_API_KEY)
-#     response = requests.get(url)
-#
-#     return int(response.json().get("result").get("ProposeGasPrice"))
-#
-#
-# def get_gas_limit():
-#     """
-#     return total gasLimit needed to work with contract
-#     """
-#     # TODO need to understand how to work with contract
-#     # Which methods needs to call
-#     return test_get_gas_limit_on_mainnet()
-#
-#
-# def is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, is_rbc):
-#     # profit_coeff - value in ETH showing the minimum profit for which a transaction can be carried out
-#     profit_coeff = 0.1
-#     """
-#     Calculate profit for active orderbook
-#
-#     RinE = RBC*exch_rate = value RBC in ETH
-#     RinE - ETH = free profit
-#     RinE - ETH - gas = total profit
-#     Total: rbcValue*exchangeRate - ethValue - gasPrice
-#
-#     Logic:
-#     If we have RBC we want that: user's ETH > our RBC*ExchRate
-#         (ETH - RBC*ER) - GP - PC > 0
-#     If we have ETH we want that: user's RBC*ExchRate > our ETH
-#         (RBC*ER - ETH) - GP - PC > 0
-#     value isRBC: int =1 if we have RBC, int = -1 if we have ETH
-#     Finally we get: isRBC*(ethValue - rbcValue*exchangeRate) - gasPrice - profit_coeff > 0 - it's profit
-#     Input data: rbc/eth exchange rate, gasPrice,
-#         orderbook's value of eth and rbc, isRBC
-#     Output data: True if profit, False if not.
-#     """
-#
-#     if is_rbc*(eth_value - rbc_value * exchange_rate) - gas_fee - profit_coeff > 0:
-#         return True
-#     else:
-#         return False
-
-
-def get_abi_by_filename(filename):
+def get_rbc_eth_ratio_uniswap():
     """
-    func input - filename
-    func output - contract abi
-    Needed for a convenient format for storing abi contracts in files
-    and receiving them as variables for further interaction
+        Parse exchange rate rbc to eth from uniswap.
+        Return exchange rate(float type).
     """
-    build_dir = os.path.join(os.getcwd(), 'lastwill/swaps_common/orderbook/contracts_abi/')
 
-    with open(os.path.join(build_dir, filename), 'r') as contract:
-        return json.load(contract)
+    # Select your transport with a defined url endpoint
+    transport = AIOHTTPTransport(url=UNISWAP_API)
+
+    # Create a GraphQL client using the defined transport
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+
+    # Provide a GraphQL query
+    query = gql(
+        """
+        {
+            token(id: "0xa4eed63db85311e22df4473f87ccfc3dadcfa3e3"){
+               name
+               symbol
+               decimals
+               derivedETH
+               tradeVolumeUSD
+               totalLiquidity
+            }
+        }
+    """
+    )
+
+    # Execute the query on the transport
+    result = client.execute(query)
+    return float(result.get("token").get("derivedETH"))
+
+
+def get_gas_price():
+    """
+    Get gas price from etherscan api.
+    Return gas price for average speed(int type)
+    """
+
+    url = "{URL}?module=gastracker&action=gasoracle&apikey={apikey}".format(
+        URL=ETHERSCAN_API, apikey=ETHERSCAN_API_KEY)
+    response = requests.get(url)
+
+    return int(response.json().get("result").get("ProposeGasPrice"))
+
+
+def get_gas_limit():
+    """
+    return total gasLimit needed to work with contract
+    """
+    # TODO need to understand how to work with contract
+    # Which methods needs to call
+    pass
+
+
+def is_orderbook_profitable(exchange_rate, gas_fee, rbc_value, eth_value, is_rbc):
+    # profit_coeff - value in ETH showing the minimum profit for which a transaction can be carried out
+    profit_coeff = 0.1
+    """
+    Calculate profit for active orderbook
+
+    RinE = RBC*exch_rate = value RBC in ETH
+    RinE - ETH = free profit
+    RinE - ETH - gas = total profit
+    Total: rbcValue*exchangeRate - ethValue - gasPrice
+
+    Logic:
+    If we have RBC we want that: user's ETH > our RBC*ExchRate
+        (ETH - RBC*ER) - GP - PC > 0
+    If we have ETH we want that: user's RBC*ExchRate > our ETH
+        (RBC*ER - ETH) - GP - PC > 0
+    value isRBC: int =1 if we have RBC, int = -1 if we have ETH
+    Finally we get: isRBC*(ethValue - rbcValue*exchangeRate) - gasPrice - profit_coeff > 0 - it's profit
+    Input data: rbc/eth exchange rate, gasPrice,
+        orderbook's value of eth and rbc, isRBC
+    Output data: True if profit, False if not.
+    """
+
+    if is_rbc*(eth_value - rbc_value * exchange_rate) - gas_fee - profit_coeff > 0:
+        return True
+    else:
+        return False
 
 
 # def get_active_orderbook():
@@ -158,71 +147,87 @@ def get_abi_by_filename(filename):
 #     )
 #
 #
-# def is_enough_token_on_wallet(rbc_value, eth_value, is_rbc, gas_fee):
-#     # TODO add gas accounting logic and think over the parameter -
-#     #  the minimum balance on the account after the transaction - MIN_BALANCE_PARAM
-#     """
-#     func to check wallet's token value
-#     input - token needed to complete orderbook swaps
-#     output - True if possible, False if not
-#     """
-#     rbc_balance = get_user_rbc_balance(WALLET_ADDRESS)
-#     eth_balance = get_user_eth_balance(WALLET_ADDRESS)
-#
-#     if is_rbc == 1:
-#         if rbc_balance > rbc_value and eth_balance > gas_fee + MIN_BALANCE_PARAM:
-#             return True
-#         else:
-#             return False
-#     else:
-#         if eth_balance > eth_value + gas_fee + MIN_BALANCE_PARAM:
-#             return True
-#         else:
-#             return False
-#
-#
-# def change_orderbook_status(orderbook_id):
-#     """
-#     change status for orderbook if it profit for us
-#     """
-#     # TODO change status for orderbook if it profit for us
-#     pass
-#
-#
-# def confirm_orderbook(orderbook_id):
-#     """
-#     make transaction
-#     """
-#     # TODO add logic to make transaction with contract
-#     pass
-#
-#
+def is_enough_token_on_wallet(rbc_value, eth_value, is_rbc, gas_fee):
+    # TODO add gas accounting logic and think over the parameter -
+    #  the minimum balance on the account after the transaction - MIN_BALANCE_PARAM
+    """
+    func to check wallet's token value
+    input - token needed to complete orderbook swaps
+    output - True if possible, False if not
+    """
+    rbc_balance = get_rbc_balance(WALLET_ADDRESS)
+    eth_balance = get_eth_balance(WALLET_ADDRESS)
+
+    if is_rbc == 1:
+        if rbc_balance > rbc_value and eth_balance > gas_fee + MIN_BALANCE_PARAM:
+            return True
+        else:
+            return False
+    else:
+        if eth_balance > eth_value + gas_fee + MIN_BALANCE_PARAM:
+            return True
+        else:
+            return False
+
+
+def change_orderbook_status(orderbook_id):
+    """
+    change status for orderbook if it profit for us
+    """
+    # TODO change status for orderbook if it profit for us
+    pass
+
+
+def confirm_orderbook(orderbook_id):
+    """
+    make transaction
+    """
+    # TODO add logic to make transaction with contract
+    pass
 
 
 def swap_token_on_uniswap(input_token: AddressLike,
                           output_token: AddressLike,
-                          qty: Union[int, Wei],):
+                          qty: Union[int, Wei],
+                          recipient: AddressLike = None
+                          ) -> HexBytes:
     """
     Make a trade by defining the qty of the output token.
     Input is address of swapped tokens and exact amount of output token
     """
     # TODO: now it works only for ETH->TOKEN and TOKEN->ETH swaps
     #  needed to add TOKEN->TOKEN swap ability
+    print("1111111111")
+    if not is_approved(RUBIC_ADDRESS):
+        approve(RUBIC_ADDRESS)
 
-    # TODO: add check approved tokens quantity and reapprove if it needed
-    if input_token == ETH_ADDRESS:
+    print("222222222")
+
+    if input_token == Web3.toChecksumAddress(ETH_ADDRESS):
         balance = get_eth_balance(WALLET_ADDRESS)
-        need = get_eth_token_output_price(output_token, qty)
+        need = get_eth_token_output_price(token_address=output_token, quantity_in_wei=qty)
+        print("balance: ", balance, " need: ", need)
         if balance < need:
+
             # TODO: add logging "not enough eth token"
             pass
-        return eth_to_token_swap_output(output_token, qty)
-    else:
-        if output_token == ETH_ADDRESS:
-            # TODO: add check balance of Token
-            qty = Wei(qty)
-            return token_to_eth_swap_output(input_token, qty)
-
+        else:
+            return eth_to_token_swap_output(output_token, qty, recipient)
+        print("333333333")
+    elif output_token == Web3.toChecksumAddress(ETH_ADDRESS):
+        # print("4444444")
+        # balance = get_rbc_balance(WALLET_ADDRESS)
+        # print("5555555")
+        # print(output_token)
+        # need = get_token_eth_output_price(output_token, qty)
+        #
+        # print("566666666")
+        # if balance < need:
+        #     # TODO: add logging "not enough eth token"
+        #     pass
+        # else:
+        qty = Wei(qty)
+        return token_to_eth_swap_output(input_token, qty)
 
 
 # # TODO add celery to this func
@@ -272,11 +277,6 @@ def swap_token_on_uniswap(input_token: AddressLike,
 #                 pass
 
 
-UNISWAP_ROUTER02_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-
-
-
-
 # def test_calling():
 #     # check ratio
 #     print(get_rbc_eth_ratio_uniswap())
@@ -296,5 +296,10 @@ UNISWAP_ROUTER02_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 
 # run test
 # test_calling()
+gg = int(320*BLOCKCHAIN_DECIMALS)
+RBC = Web3.toChecksumAddress(RUBIC_ADDRESS)
+print(RBC)
+ETH = Web3.toChecksumAddress(ETH_ADDRESS)
+print(ETH)
+swap_token_on_uniswap(ETH, RBC, qty=gg)
 
-# tx_crypto_price = gas_limit * w3.eth.gasPrice / BLOCKCHAIN_DECIMALS
