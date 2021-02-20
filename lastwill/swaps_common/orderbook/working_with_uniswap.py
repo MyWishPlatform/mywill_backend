@@ -78,7 +78,7 @@ def get_rbc_balance(wallet_address) -> Wei:
     """
     # TODO: rewrite func to get token status
     #  input: wallet address, token address
-    rubic_abi = get_abi_by_filename("rubic.json")
+    rubic_abi = get_abi_by_filename("rubic_token.json")
     contract = w3.eth.contract(address=RUBIC_ADDRESS, abi=rubic_abi)
 
     return contract.functions.balanceOf(wallet_address).call()

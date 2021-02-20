@@ -8,16 +8,20 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied, ParseError, NotFound
 from rest_framework.response import Response
 
-from lastwill.contracts.submodels.common import Contract, send_in_queue
+from lastwill.contracts.submodels.common import Contract
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
-from lastwill.settings import SWAPS_ORDERBOOK_QUEUE, RUBIC_EXC_URL
+from lastwill.settings import RUBIC_EXC_URL
 
 EXCLUDED_STATES = ['DONE', 'CANCELLED', 'POSTPONED']
 
 
 def get_swap_from_orderbook(swap_id):
-    backend_contract = OrderBookSwaps.objects.filter(id=swap_id).first()
+    backend_contract = OrderBookSwaps.objects \
+                       .filter(
+                           id=swap_id,
+                       ) \
+                       .first()
     now = datetime.datetime.now(timezone.utc)
 
     if now > backend_contract.stop_date:
@@ -209,7 +213,11 @@ def show_user_contract_swaps_backend(request):
         raise PermissionDenied
 
     orders_list = []
-    orders = OrderBookSwaps.objects.filter(user=request.user).order_by('state_changed_at')
+    orders = OrderBookSwaps.objects \
+             .filter(
+                 user=request.user,
+             ) \
+             .order_by('state_changed_at')
 
     if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
         orders = orders.filter(is_rubic_order=True, rubic_initialized=True)
@@ -343,11 +351,14 @@ def get_swap_v3_public(request):
         is_rubic = True
         rubic_initialized = True
 
-    backend_contracts = OrderBookSwaps.objects.filter(
-        public=True,
-        is_rubic_order=is_rubic,
-        rubic_initialized=rubic_initialized
-    ).order_by('state_changed_at')
+    backend_contracts = OrderBookSwaps.objects \
+                        .filter(
+                            public=True,
+                            is_rubic_order=is_rubic,
+                            rubic_initialized=rubic_initialized,
+                            is_displayed=True,
+                        ) \
+                        .order_by('state_changed_at')
 
     res = []
     for order in backend_contracts:

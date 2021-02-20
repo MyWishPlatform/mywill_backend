@@ -33,8 +33,9 @@ def _get_unique_link():
     )
 
 
-class ActiveRbcEthOrdersManager(Manager):
-    def __init__(self, state):
+class PublicActiveOrdersManager(Manager):
+    def __init__(self, state, public=True):
+        self.public = public
         self.state = state
         super().__init__()
 
@@ -46,11 +47,12 @@ class ActiveRbcEthOrdersManager(Manager):
         return super().get_queryset().filter(
             # TODO: Посмотреть можно ли сделать регистронезависимый поиск
             # для поля name.
-            name__in=[
-                'RBC <> ETH',
-                'ETH <> RBC',
-            ],
-            state__iexact=self.get_state
+            # name__in=[
+            #     'RBC <> ETH',
+            #     'ETH <> RBC',
+            # ],
+            public=self.public,
+            state__iexact=self.get_state,
         )
 
 
@@ -212,7 +214,7 @@ class OrderBookSwaps(models.Model):
     is_displayed = models.BooleanField(default=True)
     # !--- Managers
     objects = Manager()
-    active_rbc_eth_orders = ActiveRbcEthOrdersManager(state=STATE_ACTIVE)
+    public_active_orders = PublicActiveOrdersManager(state=STATE_ACTIVE)
     # ---
 
     class Meta:
@@ -223,7 +225,7 @@ class OrderBookSwaps(models.Model):
         )
 
     def __str__(self):
-        return f'Order "{self.name}" ({self.unique_link})'
+        return f'Order "{self.name}" (unique link: {self.unique_link})'
 
     @check_transaction
     def msg_deployed(self):
