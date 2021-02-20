@@ -200,10 +200,10 @@ class AbstractContractDetailsICO(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+    def deploy(self, eth_contract_attr_name='eth_contract_token', attempts=1):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
-        return super().deploy(eth_contract_attr_name)
+        return super().deploy(eth_contract_attr_name, attempts=attempts)
 
     def get_arguments(self, eth_contract_attr_name):
         return {
@@ -391,8 +391,8 @@ class AbstractContractDetailsToken(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
-        return super().deploy(eth_contract_attr_name)
+    def deploy(self, eth_contract_attr_name='eth_contract_token', attempts=1):
+        return super().deploy(eth_contract_attr_name, attempts=attempts)
 
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN']

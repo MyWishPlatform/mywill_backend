@@ -45,8 +45,8 @@ class AbstractContractDetailsAirdrop(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self):
-        return super().deploy()
+    def deploy(self, attempts=1):
+        return super().deploy(attempts=attempts)
 
     @staticmethod
     def calc_cost(kwargs, network):

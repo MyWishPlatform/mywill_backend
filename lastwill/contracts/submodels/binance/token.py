@@ -1,6 +1,7 @@
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
+from lastwill.settings import BSC_WEB3_ATTEMPTS
 
 
 @contract_details('Binance Token contract')
@@ -57,3 +58,8 @@ class ContractDetailsBinanceToken(AbstractContractDetailsToken):
             token_json['compiler']['version'], self.contract, source_code
         )
         self.save()
+
+    @blocking
+    @postponable
+    def deploy(self):
+        return super().deploy(attempts=BSC_WEB3_ATTEMPTS)
