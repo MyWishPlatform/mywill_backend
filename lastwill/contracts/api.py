@@ -1474,9 +1474,10 @@ def buy_verification(request):
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
-    '''
-    if contract.contract_type != 5:
+
+    if contract.contract_type not in (4, 5):
         raise PermissionDenied
+    '''
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
     '''
@@ -1492,19 +1493,36 @@ def buy_verification(request):
     details.verification_date_payment = datetime.datetime.now().date()
     details.save()
 
-    mail = EmailMessage(
-        subject=verification_subject,
-        body=verification_message.format(
-            network=details.contract.network.name,
-            address=details.eth_contract_token.address,
-            compiler_version=details.eth_contract_token.compiler_version,
-            optimization='Yes',
-        ),
-        from_email=DEFAULT_FROM_EMAIL,
-        to=[SUPPORT_EMAIL]
-    )
-    mail.attach('code.sol', details.eth_contract_token.source_code)
-    mail.send()
+    if contract.contract_type == 5:
+        mail = EmailMessage(
+            subject=verification_subject,
+            body=verification_message.format(
+                network=details.contract.network.name,
+                address=details.eth_contract_token.address,
+                compiler_version=details.eth_contract_token.compiler_version,
+                optimization='Yes',
+            ),
+            from_email=DEFAULT_FROM_EMAIL,
+            to=[SUPPORT_EMAIL]
+        )
+        mail.attach('code.sol', details.eth_contract_token.source_code)
+        mail.send()
+    elif contract.contract_type == 4:
+        mail = EmailMessage(
+            subject=verification_subject,
+            body=verification_message.format(
+                network=details.contract.network.name,
+                address=details.eth_contract_token.address + ' ' + details.eth_contract_crowdsale.address,
+                compiler_version=details.eth_contract_token.compiler_version,
+                optimization='Yes',
+            ),
+            from_email=DEFAULT_FROM_EMAIL,
+            to=[SUPPORT_EMAIL]
+        )
+        mail.attach('token.sol', details.eth_contract_token.source_code)
+        mail.attach('ico.sol', details.eth_contract_crowdsale.source_code)
+        mail.send()
+
     return Response('ok')
 
 
