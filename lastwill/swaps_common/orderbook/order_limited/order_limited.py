@@ -6,9 +6,32 @@ from django.db.models.query import QuerySet
 from django.db.models import Q
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
-from web3.contract import Contract
 
-from .models import OrderBookSwaps
+from lastwill.swaps_common.orderbook.models import OrderBookSwaps
+from lastwill.consts import ETH_ADDRESS, NET_DECIMALS
+from .limit_orders_consts import (
+    UNISWAP_API,
+
+    ETHERSCAN_API_KEY,
+
+    RUBIC_ADDRESS,
+    DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS,
+
+    WALLET_ADDRESS,
+    PRIVATE_KEY,
+
+    MIN_BALANCE_PARAM,
+    MAX_SLIPPAGE,
+    DEFAULT_GAS_LIMIT,
+    DEFAULT_NETWORK_ID,
+    ORDERBOOK_CONTRACT_ABI,
+
+    LIQUIDITY_PULL_ADDRESS,
+    GAS_FEE,
+    PROFIT_RATIO,
+    ORDER_FEE,
+)
+
 from .working_with_uniswap import (
     Web3,
     HexBytes, addr_to_str,
@@ -30,7 +53,6 @@ from .working_with_uniswap import (
     w3,
     # TEST_WALLET_ADDRESS,
 )
-
 
 ETHERSCAN_API = "https://api.etherscan.io/api"
 ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
@@ -55,7 +77,7 @@ DEFAULT_GAS_LIMIT = 250000
 DEFAULT_NETWORK_ID = 1
 ETHERSCAN_API_URL = "https://api.etherscan.io/api"
 ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
-ORDERBOOK_CONTRACT_ABI = 'orderbook_contract_abi.json'
+ORDERBOOK_CONTRACT_ABI = 'mainnet_orderbook.json'
 # MIN_BALANCE_PARAM = 1
 # MAX_SLIPPAGE = 0.1
 # PRIVATE_KEY = "0x00"
@@ -367,7 +389,7 @@ def _check_profitability(
         value isRBC: int =1 if we have RBC, int = -1 if we have ETH
 
         Finally we get:
-        is_rbc * ((eth_value - rbc_value * exchange_rate) * BLOCKCHAIN_DECIMALS) - gas_fee - (PROFIT_RATIO * BLOCKCHAIN_DECIMALS) + ORDER_FEE > 0 - it's profit
+        is_rbc * ((eth_value - rbc_value * exchange_rate) * NET_DECIMALS.get("ETH")) - gas_fee - (PROFIT_RATIO * NET_DECIMALS.get("ETH")) + ORDER_FEE > 0 - it's profit
 
         Input data: rbc/eth exchange rate, gasPrice,
             orderbook's value of eth and rbc, isRBC
@@ -379,8 +401,8 @@ def _check_profitability(
         is_rbc = int(is_rbc)
 
     profitability = is_rbc * ((eth_value - rbc_value * exchange_rate) \
-                    * BLOCKCHAIN_DECIMALS) - gas_fee \
-                    - (PROFIT_RATIO * BLOCKCHAIN_DECIMALS) + ORDER_FEE
+                    * NET_DECIMALS.get("ETH")) - gas_fee \
+                    - (PROFIT_RATIO * NET_DECIMALS.get("ETH")) + ORDER_FEE
 
     if profitability > 0:
         return True
@@ -441,7 +463,7 @@ def _confirm_orders(
         # RBC -> ETH
         rbc_eth_ratio = get_eth_token_output_price(
             RUBIC_ADDRESS,
-            Wei(order.qoute_limit * BLOCKCHAIN_DECIMALS),
+            Wei(order.qoute_limit * NET_DECIMALS.get("ETH")),
         )
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
@@ -455,7 +477,7 @@ def _confirm_orders(
             swap_token_on_uniswap(
                 w3.toChecksumAddress(order.base_address),
                 w3.toChecksumAddress(order.qoute_address),
-                qty=Wei(order.qoute_limit * BLOCKCHAIN_DECIMALS)
+                qty=Wei(order.qoute_limit * NET_DECIMALS.get("ETH"))
             )
             _complete_order(order)
         ...
@@ -465,7 +487,7 @@ def _confirm_orders(
         # !--- TODO: needs refactor.
         eth_rbc_ratio = get_token_eth_output_price(
             ETH_ADDRESS,
-            Wei(order.qoute_limit * BLOCKCHAIN_DECIMALS),
+            Wei(order.qoute_limit * NET_DECIMALS.get("ETH")),
         ) # Returns RBC token, not ETH.
         eth_rbc_ratio = eth_rbc_ratio * get_rbc_eth_ratio_uniswap()
         # ---
@@ -482,7 +504,7 @@ def _confirm_orders(
             swap_token_on_uniswap(
                 w3.toChecksumAddress(order.base_address),
                 w3.toChecksumAddress(order.qoute_address),
-                qty=Wei(order.qoute_limit * BLOCKCHAIN_DECIMALS)
+                qty=Wei(order.qoute_limit * NET_DECIMALS.get("ETH"))
             )
             _complete_order(order)
         ...
