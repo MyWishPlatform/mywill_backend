@@ -471,7 +471,7 @@ class AbstractContractDetailsToken(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.authio_email]
             )
-        if self.verification and self.contract.contract_type == 5:
+        if self.verification:
             mail = EmailMessage(
                 subject=verification_subject,
                 body=verification_message.format(
