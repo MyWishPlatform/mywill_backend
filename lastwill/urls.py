@@ -156,7 +156,7 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
-router.register('orders', OrderBookSwapsModelViewSet)
+# router.register('orders', OrderBookSwapsModelViewSet)
 
 
 urlpatterns = [
