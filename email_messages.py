@@ -186,10 +186,10 @@ verification_message = """Hello!
 
 We want to inform you about the contract verification request.
 
-Contract[s] parameters:
+Contract(s) parameters:
 
 1) Network: {network}
-2) Contract address[es]: {addresses}
+2) Contract address(es): {addresses}
 3) Compiler version: {compiler_version}
 4) Optimization: {optimization}
 5) Runs: {runs}
