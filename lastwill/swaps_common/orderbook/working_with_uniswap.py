@@ -20,19 +20,23 @@ OLD_MAINNET_CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
 NEW_KOVAN_ADDRESS = "0xB09fe422dE371a86D7148d6ED9DBD499287cc95c"
 RUBIC_ADDRESS = "0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3"
 UNISWAP_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
-WALLET_ADDRESS = '0xfCf49f25a2D1E49631d05614E2eCB45296F26258'
 
 INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
 ETHERSCAN_API = "https://api.etherscan.io/api"
 UNISWAP_API = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 
-PRIVATE_KEY = '0x00'
+# TEST_PRIVATE_KEY = 'e2331db69cda61275c8d5addbfd288c8ba76d1243e6cdb26fba541d740583fb9'
 ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
-
 MAX_SLIPPAGE = 0.1
 BLOCKCHAIN_DECIMALS = 10 ** 18
 MIN_BALANCE_PARAM = 1
 
+# TEST_WALLET_ADDRESS = '0x226362f9cB9bAfF72f3D63513954838cD86282e1'
+TEST_WALLET_ADDRESS = ''
+# WALLET_ADDRESS = '0xfCf49f25a2D1E49631d05614E2eCB45296F26258'
+WALLET_ADDRESS = TEST_WALLET_ADDRESS
+TEST_PRIVATE_KEY = ''
+PRIVATE_KEY = TEST_PRIVATE_KEY
 
 AddressLike = Union[Address, ChecksumAddress, ENS]
 
@@ -113,7 +117,11 @@ def str_to_addr(s: str) -> AddressLike:
 
 
 # ------ Approval Utils ------------------------------------------------------------
-def approve(token: AddressLike, max_approval: Optional[int] = None) -> None:
+def approve(
+    token: AddressLike,
+    max_approval: Optional[int] = None,
+    contract_address=UNISWAP_ROUTER02_ADDRESS
+) -> None:
     # gg
     max_approval_hex = f"0x{64 * 'f'}"
     max_approval_int = int(max_approval_hex, 16)
@@ -123,10 +131,10 @@ def approve(token: AddressLike, max_approval: Optional[int] = None) -> None:
     """Give an exchange/router max approval of a token."""
     # TODO: now it works only for rubic
     #  change rubic_abi to erc20_abi
-    rubic_abi = get_abi_by_filename("rubic.json")
+    rubic_abi = get_abi_by_filename("rubic_token.json")
     contract = w3.eth.contract(address=token, abi=rubic_abi)
     function = contract.functions.approve(
-        UNISWAP_ROUTER02_ADDRESS, max_approval
+        contract_address, max_approval
     )
 
     tx = build_and_send_tx(function)
@@ -272,7 +280,9 @@ def build_and_send_tx(
         transaction, private_key=PRIVATE_KEY
     )
     print(signed_txn.rawTransaction)
-    return w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    # !--- Commented for test.
+    # return w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    # ---
 
 
 def get_weth_address() -> ChecksumAddress:

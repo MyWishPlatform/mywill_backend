@@ -28,6 +28,7 @@ from .working_with_uniswap import (
     AddressLike,
     Wei,
     w3,
+    # TEST_WALLET_ADDRESS,
 )
 
 
@@ -61,8 +62,10 @@ ORDERBOOK_CONTRACT_ABI = 'orderbook_contract_abi.json'
 LIQUIDITY_PULL_ADDRESS = 'fill_me'
 GAS_FEE = 'fill_me'
 PROFIT_RATIO = 0.15
-ORDER_FEE = 0.015
+# ORDER_FEE = 0.015
+ORDER_FEE = 0.02
 UNISWAP_API = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
+ERC20_CONTRACT_ABI = 'erc20.json'
 
 
 def get_rbc_eth_ratio_uniswap():
@@ -422,7 +425,7 @@ def swap_token_on_uniswap(input_token: AddressLike,
         return token_to_eth_swap_output(input_token, qty)
 
 
-def _confirm_orderbook(
+def _confirm_orders(
     orders: QuerySet,
     base_token_address,
     quote_token_address
@@ -512,7 +515,18 @@ def main(
     if not orders:
         return 0
 
-    _confirm_orderbook(
+    # TODO: добавить проверку зааппрувлен ли кошелек.
+    # approve(
+    #     token=Web3.toChecksumAddress(
+    #         RUBIC_ADDRESS
+    #     ),
+    #     max_approval=int(f'0x{64 * "f"}', 16),
+    #     contract_address=Web3.toChecksumAddress(
+    #         DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS
+    #     ),
+    # )
+
+    _confirm_orders(
         orders,
         base_token_address,
         quote_token_address
@@ -525,95 +539,61 @@ def _complete_order(order:QuerySet=None):
     """
         Переводит токены на адрес контракта.
     """
-    test_order = OrderBookSwaps.objects.filter(network=1).first()
+    # print(transaction)
+    # approve tokens (build tx, sign tx, send tx)
+    # timeout
+    # func call
+    # build tx
+    # sign tx
+    # send tx
+    TEST_HASH = '0x79bd92a8d9b27eac4dc52d7b5aef67e97534868f7b9797018f9805d8ab863a44'
+    TEST_AMOUNT = float('1422.32415256')
+
     orderbook_contract = load_contract(
         ORDERBOOK_CONTRACT_ABI,
-        Web3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
-    )
-
-    # build_and_send_tx(
-    #     orderbook_contract.functions.deposit,
-    #     {
-    #         '_id': order.memo_contract,
-    #         '_token': Web3.toChecksumAddress(order.quote_address),
-    #         '_amount': w3.toWei(order.quote_limit),
-    #     }
-    # )
-
-    # deposit_config = {
-    #     '_id': order.memo_contract,
-    #     '_token': Web3.toChecksumAddress(order.quote_address),
-    #     '_amount': w3.toWei(order.quote_limit),
-    # }
-    print(
-        test_order.quote_address,
-        sep='\n'
-    )
-    deposit_config = {
-        '_id': test_order.memo_contract,
-        # '_token': Web3.toChecksumAddress(test_order.quote_address),
-        '_token': test_order.quote_address,
-        '_amount': w3.toWei(test_order.quote_limit, 'ether'),
-    }
-
-    # !-- TEST
-
-    # tx_config = get_tx_params().update(
-    #     {
-    #         'to': DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS,
-    #         'data': deposit_config,
-    #     }
-    # )
-    tx_config = {
-        "from": addr_to_str(WALLET_ADDRESS),
-        "gas": Wei(250000),
-        "nonce": w3.eth.getTransactionCount(WALLET_ADDRESS),
-        'to': DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS,
-    }
-
-    print(tx_config)
-
-    # transaction = build_and_send_tx(
-    #     orderbook_contract.functions.deposit,
-    #     tx_config
-    # )
-    # print(
-    #     test_order.__dict__
-    # )
-    print(
-        w3.toBytes(text=test_order.memo_contract),
-        w3.toChecksumAddress(ETH_ADDRESS),
-        w3.toWei(test_order.quote_limit, 'ether'),
-        sep='\n'
+        Web3.toChecksumAddress('0xf954DdFbC31b775BaaF245882701FB1593A7e7BC'),
     )
 
     # `deposit`: ['deposit(bytes32,address,uint256)']
-    # transaction = orderbook_contract.functions.deposit(
-    #     w3.toBytes(text=test_order.memo_contract),
-    #     w3.toChecksumAddress(ETH_ADDRESS),
-    #     w3.toWei(number=test_order.quote_limit, unit='ether'),
-    # )
-
-    # transaction.call()
-
-    transaction = orderbook_contract.functions.baseLimit(
-        test_order.memo_contract
+    transaction = orderbook_contract.functions.deposit(
+        TEST_HASH,
+        w3.toChecksumAddress(RUBIC_ADDRESS),
+        w3.toWei(TEST_AMOUNT, unit='ether'),
     )
 
-    print(transaction)
+    # TODO: подключить кошелек?
+    # ValueError: {'code': 3, 'data': '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002f53776170733a20416c6c6f77616e63652073686f756c64206265206e6f74206c65737320746 8616e20616d6f756e740000000000000000000000000000000000', 'message': 'execution reverted: Swaps: Allowance should be not less  than amount'}
 
-    # w3.eth.waitForTransactionReceipt(transaction)
+    print(
+        TEST_HASH,
+        w3.toChecksumAddress(RUBIC_ADDRESS),
+        w3.toWei(TEST_AMOUNT, unit='ether'),
+        sep='\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
+    )
 
-    # _set_done_status_order(order)
+    # tx_params = {
+    #     "from": w3.toChecksumAddress(TEST_WALLET_ADDRESS),
+    #     'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
+    #     "value": w3.toWei(TEST_AMOUNT, unit='ether'),
+    # }
 
-    # print(
-    #     orderbook_contract.functions.deposit(
-    #         test_order.memo_contract,
-    #         Web3.toChecksumAddress(test_order.quote_address),
-    #         w3.toWei(test_order.quote_limit, 'ether'),
-    #     ).estimateGas()
-    # )
+    # gas = w3.eth.estimateGas(tx_params)
 
-    # ---
+    # tx_config = {
+    #     "from": w3.toChecksumAddress(TEST_WALLET_ADDRESS),
+    #     'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
+    #     "value": w3.toWei(TEST_AMOUNT, unit='ether'),
+    #     # "gas": gas,
+    #     "gas": 250000,
+    #     'gasPrice': w3.eth.gasPrice,
+    #     "nonce": w3.eth.getTransactionCount(TEST_WALLET_ADDRESS),
+    # }
 
-# _complete_order()
+    tx_config = get_tx_params(w3.toWei(TEST_AMOUNT, unit='ether'))
+
+    print(tx_config)
+
+    build_and_send_tx(
+        transaction,
+        tx_params=tx_config
+    )
