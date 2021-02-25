@@ -113,9 +113,9 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
-            our_public_key, '--stake-net', '5' + ' EOS',
-            '--stake-cpu', '12' + ' EOS',
-            '--buy-ram-kbytes', '250',
+            our_public_key, '--stake-net', '3' + ' EOS',
+            '--stake-cpu', '15' + ' EOS',
+            '--buy-ram-kbytes', '300',
             '--transfer', '-j'
         ]
         print('command:', command, flush=True)
