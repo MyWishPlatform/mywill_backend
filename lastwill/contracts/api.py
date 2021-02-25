@@ -1475,7 +1475,7 @@ def buy_verification(request):
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
 
-    if contract.contract_type not in (4, 5):
+    if contract.contract_type not in (4, 5, 8):
         raise PermissionDenied
     '''
     if contract.network.name != 'ETHEREUM_MAINNET':
@@ -1521,6 +1521,20 @@ def buy_verification(request):
         )
         mail.attach('token.sol', details.eth_contract_token.source_code)
         mail.attach('ico.sol', details.eth_contract_crowdsale.source_code)
+        mail.send()
+    elif contract.contract_type == 8:
+        mail = EmailMessage(
+            subject=verification_subject,
+            body=verification_message.format(
+                network=details.contract.network.name,
+                address=details.eth_contract.address,
+                compiler_version=details.eth_contract.compiler_version,
+                optimization='Yes',
+            ),
+            from_email=DEFAULT_FROM_EMAIL,
+            to=[SUPPORT_EMAIL]
+        )
+        mail.attach('code.sol', details.eth_contract.source_code)
         mail.send()
 
     return Response('ok')
