@@ -19,7 +19,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('create payment')
     if (SubSite.objects.get(id=site_id).site_name == MY_WISH_URL
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):
-        if currency in ['BWISH', 'BBNB']:
+        if currency in ['BWISH', 'BBNB', 'BSCWISH', 'WWISH']:
             amount = amount * 10 ** 10
             if currency in ['BWISH']:
                 amount *= 1.1
