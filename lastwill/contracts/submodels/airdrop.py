@@ -127,7 +127,7 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     @classmethod
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         super().msg_deployed(message, eth_contract_attr_name='eth_contract')
-        if self.verification and self.eth_contract.address:
+        if self.verification:
             mail = EmailMessage(
                 subject=verification_subject,
                 body=verification_message.format(
