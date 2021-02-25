@@ -252,6 +252,7 @@ def check_promocode(promo_str, user, cost, contract, details):
     if contract.contract_type == 5:
         if details.authio:
             options_price += 450 * NET_DECIMALS['USDT']
+    if contract.contract_type in (5, 4, 8):
         if details.verification:
             options_price += VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
