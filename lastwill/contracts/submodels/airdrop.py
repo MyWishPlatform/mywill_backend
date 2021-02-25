@@ -25,6 +25,10 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     airdrop_in_progress = models.BooleanField(default=False)
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def get_arguments(self, *args, **kwargs):
         return [
             self.admin_address,
@@ -52,8 +56,11 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        # return 0.5 * 10**18
-        return CONTRACT_PRICE_USDT['ETH_AIRDROP'] * NET_DECIMALS['USDT']
+        price = CONTRACT_PRICE_USDT['ETH_AIRDROP']
+        result = int(price * NET_DECIMALS['USDT'])
+        if 'verification' in kwargs and kwargs['verification']:
+            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+        return result
 
     @classmethod
     def min_cost(cls):

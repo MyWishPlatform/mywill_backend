@@ -46,6 +46,10 @@ class AbstractContractDetailsICO(CommonDetails):
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     eth_contract_token = models.ForeignKey(
         EthContract,
         null=True,
@@ -91,7 +95,11 @@ class AbstractContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['ETH_ICO'] * NET_DECIMALS['USDT'])
+        price = CONTRACT_PRICE_USDT['ETH_ICO']
+        result = int(price * NET_DECIMALS['USDT'])
+        if 'verification' in kwargs and kwargs['verification']:
+            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+        return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
