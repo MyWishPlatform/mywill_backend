@@ -203,25 +203,24 @@ class AbstractContractDetailsICO(CommonDetails):
             )
             self.eth_contract_token.save()
             print('transferOwnership message sended')
-
-        if self.verification:
-            mail = EmailMessage(
-                subject=verification_subject,
-                body=verification_message.format(
-                    network=self.contract.network.name,
-                    address=self.eth_contract_token.address + ' ' + self.eth_contract_crowdsale.address,
-                    compiler_version=self.eth_contract_crowdsale.compiler_version,
-                    optimization='Yes',
-                ),
-                from_email=DEFAULT_FROM_EMAIL,
-                to=[SUPPORT_EMAIL]
-            )
-            mail.attach('token.sol', self.eth_contract_token.source_code)
-            mail.attach('ico.sol', self.eth_contract_crowdsale.source_code)
-            mail.send()
-            self.verification_date_payment = datetime.datetime.now().date()
-            self.verification_status = 'IN_PROCESS'
-            self.save()
+            if self.verification:
+                mail = EmailMessage(
+                    subject=verification_subject,
+                    body=verification_message.format(
+                        network=self.contract.network.name,
+                        address=self.eth_contract_token.address + ' ' + self.eth_contract_crowdsale.address,
+                        compiler_version=self.eth_contract_crowdsale.compiler_version,
+                        optimization='Yes',
+                    ),
+                    from_email=DEFAULT_FROM_EMAIL,
+                    to=[SUPPORT_EMAIL]
+                )
+                mail.attach('token.sol', self.eth_contract_token.source_code)
+                mail.attach('ico.sol', self.eth_contract_crowdsale.source_code)
+                mail.send()
+                self.verification_date_payment = datetime.datetime.now().date()
+                self.verification_status = 'IN_PROCESS'
+                self.save()
 
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['ICO']
