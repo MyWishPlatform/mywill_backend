@@ -124,6 +124,26 @@ class AbstractContractDetailsAirdrop(CommonDetails):
             self.airdrop_in_progress = True
             self.save()
 
+    @classmethod
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        super().msg_deployed(message, eth_contract_attr_name='eth_contract')
+        if self.verification:
+            mail = EmailMessage(
+                subject=verification_subject,
+                body=verification_message.format(
+                    network=self.contract.network.name,
+                    address=self.eth_contract.address,
+                    compiler_version=self.eth_contract.compiler_version,
+                    optimization='Yes',
+                ),
+                from_email=DEFAULT_FROM_EMAIL,
+                to=[SUPPORT_EMAIL]
+            )
+            mail.attach('code.sol', self.eth_contract.source_code)
+            mail.send()
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
 
 
 @contract_details('Airdrop')
