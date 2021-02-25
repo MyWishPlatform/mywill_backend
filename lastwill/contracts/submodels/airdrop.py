@@ -132,9 +132,10 @@ class AbstractContractDetailsAirdrop(CommonDetails):
                 subject=verification_subject,
                 body=verification_message.format(
                     network=self.contract.network.name,
-                    address=self.eth_contract.address,
+                    addresses=self.eth_contract.address,
                     compiler_version=self.eth_contract.compiler_version,
                     optimization='Yes',
+                    runs='200',
                 ),
                 from_email=DEFAULT_FROM_EMAIL,
                 to=[SUPPORT_EMAIL]

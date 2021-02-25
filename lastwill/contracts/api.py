@@ -1499,9 +1499,10 @@ def buy_verification(request):
             subject=verification_subject,
             body=verification_message.format(
                 network=details.contract.network.name,
-                address=details.eth_contract_token.address,
+                addresses=details.eth_contract_token.address,
                 compiler_version=details.eth_contract_token.compiler_version,
                 optimization='Yes',
+                runs='200',
             ),
             from_email=DEFAULT_FROM_EMAIL,
             to=[SUPPORT_EMAIL]
@@ -1513,9 +1514,10 @@ def buy_verification(request):
             subject=verification_subject,
             body=verification_message.format(
                 network=details.contract.network.name,
-                address=details.eth_contract_token.address + ' ' + details.eth_contract_crowdsale.address,
+                addresses=details.eth_contract_token.address + ', ' + details.eth_contract_crowdsale.address,
                 compiler_version=details.eth_contract_token.compiler_version,
                 optimization='Yes',
+                runs='200',
             ),
             from_email=DEFAULT_FROM_EMAIL,
             to=[SUPPORT_EMAIL]
@@ -1528,9 +1530,10 @@ def buy_verification(request):
             subject=verification_subject,
             body=verification_message.format(
                 network=details.contract.network.name,
-                address=details.eth_contract.address,
+                addresses=details.eth_contract.address,
                 compiler_version=details.eth_contract.compiler_version,
                 optimization='Yes',
+                runs='200',
             ),
             from_email=DEFAULT_FROM_EMAIL,
             to=[SUPPORT_EMAIL]

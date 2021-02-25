@@ -298,9 +298,10 @@ class AbstractContractDetailsICO(CommonDetails):
                 subject=verification_subject,
                 body=verification_message.format(
                     network=self.contract.network.name,
-                    address=self.eth_contract_token.address + ' ' + self.eth_contract_crowdsale.address,
+                    addresses=self.eth_contract_token.address + ', ' + self.eth_contract_crowdsale.address,
                     compiler_version=self.eth_contract_crowdsale.compiler_version,
                     optimization='Yes',
+                    runs='200',
                 ),
                 from_email=DEFAULT_FROM_EMAIL,
                 to=[SUPPORT_EMAIL]
@@ -476,9 +477,10 @@ class AbstractContractDetailsToken(CommonDetails):
                 subject=verification_subject,
                 body=verification_message.format(
                     network=self.contract.network.name,
-                    address=self.eth_contract_token.address,
+                    addresses=self.eth_contract_token.address,
                     compiler_version=self.eth_contract_token.compiler_version,
                     optimization='Yes',
+                    runs='200'
                 ),
                 from_email=DEFAULT_FROM_EMAIL,
                 to=[SUPPORT_EMAIL]
