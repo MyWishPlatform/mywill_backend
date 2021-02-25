@@ -56,7 +56,9 @@ from lastwill.contracts.api import (
     neo_crowdsale_finalize,
     send_message_author_swap,
     skip_protector_approve,
-    test_comp
+    test_comp,
+    get_verification_cost,
+    buy_verification,
 )
 from lastwill.contracts.api_common import (
     get_available_contracts,
@@ -281,6 +283,8 @@ urlpatterns = [
     url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
     url(r'^api/get_cmc_token_rate', get_coins_rate),
     url(r'^api/get_all_promos/$', get_all_promos_api),
+    url(r'^api/buy_verification/$', buy_verification),
+    url(r'^api/get_verification_cost/$', get_verification_cost),
 
     #panama_bridge
     url(r'^api/bridge/transactions', UserTransactionsView.as_view()),

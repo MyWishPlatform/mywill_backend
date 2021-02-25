@@ -575,8 +575,13 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             'time_bonuses', 'amount_bonuses', 'continue_minting',
             'cold_wallet_address', 'reused_token',
             'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
-            'whitelist'
+            'whitelist',
+            'verification', 'verification_status', 'verification_date_payment'
         )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         token_id = contract_details.pop('token_id', None)
@@ -719,12 +724,14 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         fields = (
             'token_name', 'token_short_name', 'decimals',
             'admin_address', 'token_type', 'future_minting',
-            'authio', 'authio_email', 'authio_date_payment',
-            'authio_date_getting'
+            'authio', 'authio_email', 'authio_date_payment', 'authio_date_getting',
+            'verification', 'verification_status', 'verification_date_payment'
         )
         extra_kwargs = {
             'authio_date_payment': {'read_only': True},
             'authio_date_getting': {'read_only': True},
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
         }
 
     def create(self, contract, contract_details):
@@ -941,7 +948,11 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = ('admin_address', 'token_address', 'verification', 'verification_status', 'verification_date_payment')
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

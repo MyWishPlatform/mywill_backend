@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL
-from lastwill.consts import NET_DECIMALS
+from lastwill.consts import NET_DECIMALS, VERIVICATION_PRICE_USDT
 from exchange_API import *
 from .models import *
 
@@ -52,13 +52,15 @@ def get_discount(request):
                 'EOSISH': str(float(cost) * convert('EOS', 'EOSISH')['EOSISH'])
             }
         elif host == MY_WISH_URL:
-            cost = contract.cost * (100 - discount) / 100
+            options_cost = 0
             if contract.contract_type == 5:
-                print('token token', flush=True)
                 if contract_details.authio:
-                    print('token with authio', flush=True)
-                    cost = (contract.cost - 450 * NET_DECIMALS['USDT']) * (100 - discount) / 100 + 450 * NET_DECIMALS[
-                        'USDT']
+                    options_cost += 450 * NET_DECIMALS['USDT']
+            if contract.contract_type in (5, 4, 8):
+                if contract_details.verification:
+                    options_cost += VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT']
+
+            cost = (contract.cost - options_cost) * (100 - discount) / 100 + options_cost
             answer['discount_price'] = {
                 'USDT': str(cost),
                 'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),

@@ -181,6 +181,23 @@ Best wishes,
 MyWish Team.
 """
 
+verification_subject = """MyWish - Verification Request"""
+verification_message = """Hello!
+
+We want to inform you about the contract verification request.
+
+Contract parameters:
+
+1) Network: {network}
+2) Contract address: {address}
+3) Compiler version: {compiler_version}
+4) Optimization: {optimization}
+
+
+Best wishes,
+MyWish Team.
+"""
+
 authio_google_subject = """Branded Audit Report: Project details request"""
 authio_google_message = """Hello!
 
