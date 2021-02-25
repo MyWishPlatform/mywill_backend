@@ -254,7 +254,7 @@ def check_promocode(promo_str, user, cost, contract, details):
             options_price += 450 * NET_DECIMALS['USDT']
     if contract.contract_type in (5, 4, 8):
         if details.verification:
-            options_price += VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT']
+            options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
     cost = check_and_apply_promocode(
         promo_str, user, contract.cost - options_price, contract.contract_type, contract.id
@@ -1483,7 +1483,7 @@ def buy_verification(request):
         raise PermissionDenied
     '''
     details = contract.get_details()
-    cost = VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT']
+    cost = VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
     network = contract.network.name
@@ -1543,7 +1543,7 @@ def buy_verification(request):
 
 @api_view(http_method_names=['GET'])
 def get_verification_cost(request):
-    usdt_cost = str(VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+    usdt_cost = str(VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
     eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
     wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
     btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])

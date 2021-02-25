@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
-    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIVICATION_PRICE_USDT
+    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT
 from email_messages import *
 
 
@@ -98,7 +98,7 @@ class AbstractContractDetailsICO(CommonDetails):
         price = CONTRACT_PRICE_USDT['ETH_ICO']
         result = int(price * NET_DECIMALS['USDT'])
         if 'verification' in kwargs and kwargs['verification']:
-            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+            result = int(result + VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
         return result
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
@@ -387,7 +387,7 @@ class AbstractContractDetailsToken(CommonDetails):
         if 'authio' in kwargs and kwargs['authio']:
             result = int(result + CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO'] * NET_DECIMALS['USDT'])
         if 'verification' in kwargs and kwargs['verification']:
-            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+            result = int(result + VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
         return result
 
     def get_arguments(self, eth_contract_attr_name):
