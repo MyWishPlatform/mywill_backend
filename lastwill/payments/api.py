@@ -162,7 +162,24 @@ def get_payment_statistics(start, stop=None):
     payments = InternalPayment.objects.filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     ).order_by('datetime')
-    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0, 'TRX': 0.0, 'TRONISH': 0.0, 'BWISH': 0.0, 'SWAP': 0.0, 'OKB': 0.0}
+
+    total_payments = {
+        'ETH': 0.0,
+        'WISH': 0.0,
+        'BTC': 0.0,
+        'BNB': 0.0,
+        'EOS': 0.0,
+        'EOSISH': 0.0,
+        'TRX': 0.0,
+        'TRONISH': 0.0,
+        'BWISH': 0.0,
+        'SWAP': 0.0,
+        'OKB': 0.0,
+        'RBC': 0.0,
+        'BSCWISH': 0.0,
+        'WWISH': 0.0
+    }
+
     user_ids = []
     for pay in payments:
         print(
