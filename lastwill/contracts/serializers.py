@@ -575,7 +575,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             'time_bonuses', 'amount_bonuses', 'continue_minting',
             'cold_wallet_address', 'reused_token',
             'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
-            'whitelist'
+            'whitelist',
             'verification', 'verification_status', 'verification_date_payment'
         )
         extra_kwargs = {
@@ -948,7 +948,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address',  'verification', 'verification_status', 'verification_date_payment')
+        fields = ('admin_address', 'token_address', 'verification', 'verification_status', 'verification_date_payment')
         extra_kwargs = {
             'verification_status': {'read_only': True},
             'verification_date_payment': {'read_only': True},
