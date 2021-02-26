@@ -140,14 +140,14 @@ def _get_matching_orders(
     """
         Returns orders filtered by the amount.
     """
-    print(queryset.values())
+    print(queryset.filter(unique_link__in=['8q4xk5', 'y0fngv']).values())
     return queryset.filter(
         Q(
             network=network,
             contract_address=contract_address,
             base_address=base_token_address,
             base_limit__lte=matching_value,
-            base_amount_contributed=F('base_limit'),
+            base_amount_contributed=F('base_limit') * BLOCKCHAIN_DECIMALS,
             quote_address=quote_token_address,
         ) | \
         Q(
@@ -156,7 +156,7 @@ def _get_matching_orders(
             base_address=quote_token_address,
             quote_address=base_token_address,
             quote_limit__lte=matching_value,
-            quote_amount_contributed=F('quote_limit'),
+            quote_amount_contributed=F('quote_limit') * BLOCKCHAIN_DECIMALS,
         )
     )
 
@@ -358,6 +358,28 @@ def get_gas_price() -> int:
         )
 
 
+def _check_profitability_eth_to_token(
+    exchange_rate:float,
+    gas_fee:float,
+    rbc_value:float,
+    eth_value:float,
+    is_rbc:bool=True
+):
+
+    if not is_rbc:
+        is_rbc = -1
+    else:
+        is_rbc = int(is_rbc)
+    # eth_value and rbc_value in RBC
+    # (eth_value - rbc_value) is diff in RBC token
+    profitability = is_rbc * (eth_value - rbc_value) * exchange_rate * NET_DECIMALS.get("ETH") + (ORDER_FEE * BLOCKCHAIN_DECIMALS) - gas_fee - (PROFIT_RATIO * NET_DECIMALS.get("ETH"))
+
+    if profitability > 0:
+        return True
+    else:
+        return False
+
+
 def _check_profitability(
     exchange_rate:float,
     gas_fee:float,
@@ -464,14 +486,17 @@ def _confirm_orders(
             rbc_eth_ratio / NET_DECIMALS.get("ETH"),
             gas_fee,
             eth_value=float(order.base_limit),
-            rbc_value=float(order.quote_limit),
+            # TODO: Need fix. "rbc_eth_ratio / NET_DECIMALS.get("ETH")" is RBC # qty in ETH value.
+            # rbc_value=float(order.quote_limit),
+            # ---
+            rbc_value=1,
             is_rbc=True
         ):
-            swap_token_on_uniswap(
-                w3.toChecksumAddress(order.base_address),
-                w3.toChecksumAddress(order.quote_address),
-                qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
-            )
+            # swap_token_on_uniswap(
+            #     w3.toChecksumAddress(order.base_address),
+            #     w3.toChecksumAddress(order.quote_address),
+            #     qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
+            # )
             _complete_order(order)
 
     for _, order in enumerate(rbc_to_eth_orders):
@@ -485,19 +510,19 @@ def _confirm_orders(
         # ---
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
-        if _check_profitability(
-            eth_rbc_ratio / NET_DECIMALS.get("ETH"),
+        if _check_profitability_eth_to_token(
+            get_rbc_eth_ratio_uniswap(),
             gas_fee,
             rbc_value=float(order.base_limit),
-            eth_value=float(order.quote_limit),
+            eth_value=eth_rbc_ratio / NET_DECIMALS.get("ETH"),
             is_rbc=False
 
         ):
-            swap_token_on_uniswap(
-                w3.toChecksumAddress(order.base_address),
-                w3.toChecksumAddress(order.quote_address),
-                qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
-            )
+            # swap_token_on_uniswap(
+            #     w3.toChecksumAddress(order.base_address),
+            #     w3.toChecksumAddress(order.quote_address),
+            #     qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
+            # )
             _complete_order(order)
 
 
@@ -579,20 +604,20 @@ def _complete_order(order:QuerySet=None):
         sep='\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
     )
 
-    tx_params = {
-        "from": w3.toChecksumAddress(WALLET_ADDRESS),
-        # 'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
-        "value": w3.toWei(float(order.quote_limit), unit='ether'),
-    }
+    # tx_params = {
+    #     "from": w3.toChecksumAddress(WALLET_ADDRESS),
+    #     # 'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
+    #     "value": w3.toWei(float(order.quote_limit), unit='ether'),
+    # }
 
-    gas = w3.eth.estimateGas(tx_params)
+    # gas = w3.eth.estimateGas(tx_params)
 
     tx_config = {
         "from": w3.toChecksumAddress(WALLET_ADDRESS),
         # 'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
         "value": w3.toWei(float(order.quote_limit), unit='ether'),
-        "gas": int(gas + (gas * 0.15)),
-        # "gas": 250000,
+        # "gas": int(gas + (gas * 0.15)),
+        "gas": DEFAULT_GAS_LIMIT,
         'gasPrice': w3.eth.gasPrice,
         "nonce": w3.eth.getTransactionCount(WALLET_ADDRESS),
     }
