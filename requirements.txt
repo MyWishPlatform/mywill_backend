@@ -14,6 +14,7 @@ base58==2.0.1
 beautifulsoup4==4.9.3
 billiard==3.6.3.0
 bip32utils==0.3.post4
+bitarray==1.2.2
 bitcoin==1.1.42
 blessings==1.7
 bpython==0.17.1
@@ -77,6 +78,8 @@ google-api-python-client==1.12.8
 google-auth==1.23.0
 google-auth-httplib2==0.0.4
 googleapis-common-protos==1.52.0
+gql==2.0.0
+graphql-core==2.3.2
 greenlet==0.4.15
 gunicorn==19.7.1
 hexbytes==0.2.1
@@ -124,6 +127,7 @@ pika==1.1.0
 Pillow==8.0.1
 pluggy==0.8.1
 plyvel==1.0.5
+promise==2.3
 prompt-toolkit==2.0.7
 protobuf==3.14.0
 psutil==5.4.8
@@ -164,6 +168,7 @@ requests-oauthlib==1.3.0
 requests-toolbelt==0.9.1
 rlp==0.6.0
 rsa==4.6
+Rx==1.6.1
 scrypt==0.8.6
 service-identity==18.1.0
 sha256==0.1
@@ -188,7 +193,7 @@ varint==1.0.2
 vine==5.0.0
 virtualenv==16.2.0
 wcwidth==0.1.7
-web3==5.4.0
+web3==5.17.0
 websockets==8.1
 Werkzeug==1.0.1
 zipp==3.4.0
