@@ -96,10 +96,9 @@ class AbstractContractDetailsICO(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['ETH_ICO']
-        result = int(price * NET_DECIMALS['USDT'])
         if 'verification' in kwargs and kwargs['verification']:
-            result = int(result + VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
-        return result
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -384,12 +383,11 @@ class AbstractContractDetailsToken(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['ETH_TOKEN']
-        result = int(price * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(result + CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO'] * NET_DECIMALS['USDT'])
+            price += CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO']
         if 'verification' in kwargs and kwargs['verification']:
-            result = int(result + VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
-        return result
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def get_arguments(self, eth_contract_attr_name):
         return []

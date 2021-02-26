@@ -57,10 +57,9 @@ class AbstractContractDetailsAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['ETH_AIRDROP']
-        result = int(price * NET_DECIMALS['USDT'])
         if 'verification' in kwargs and kwargs['verification']:
-            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
-        return result
+            price += VERIVICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost(cls):
