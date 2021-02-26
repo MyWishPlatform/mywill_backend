@@ -177,15 +177,27 @@ def get_eth_token_output_price(
         quantity_in_wei: int,
         token_address: AddressLike,
 ) -> Wei:
-
-    """Public price for ETH to token trades with an exact output."""
-    abi = get_abi_by_filename("uniswap_router02.json")
-    contract = w3.eth.contract(address=UNISWAP_ROUTER02_ADDRESS, abi=abi)
+    """
+        Public price for ETH to token trades with an exact output.
+    """
+    contract = load_contract(
+        'uniswap_router02.json',
+        UNISWAP_ROUTER02_ADDRESS
+    )
+    # abi = get_abi_by_filename("uniswap_router02.json")
+    # contract = w3.eth.contract(address=UNISWAP_ROUTER02_ADDRESS, abi=abi)
     # function_get_price = contract.get_function_by_name("getAmountsIn")
-    print("token_address: ", token_address, "quantity_in_wei: ", quantity_in_wei)
+    # print("token_address:", token_address, "quantity_in_wei:", quantity_in_wei)
     price = contract.functions.getAmountsIn(
-        quantity_in_wei, [get_weth_address(), token_address]
+        quantity_in_wei,
+        [
+            Web3.toChecksumAddress(get_weth_address()),
+            Web3.toChecksumAddress(token_address),
+            # get_weth_address(),
+            # token_address,
+        ]
     ).call()[0]
+
     return price
 
 
@@ -295,8 +307,19 @@ def build_and_send_tx(
 def get_weth_address() -> ChecksumAddress:
     # Contract calls should always return checksummed addresses
 
-    router_abi = get_abi_by_filename("uniswap_router02.json")
-    router_contract = w3.eth.contract(address=UNISWAP_ROUTER02_ADDRESS, abi=router_abi)
+    router_contract = load_contract(
+        'uniswap_router02.json',
+        UNISWAP_ROUTER02_ADDRESS,
+    )
 
-    address: ChecksumAddress = router_contract.functions.WETH().call()
+    # router_abi = get_abi_by_filename("uniswap_router02.json")
+    # router_contract = w3.eth.contract(
+    #     address=UNISWAP_ROUTER02_ADDRESS,
+    #     abi=router_abi
+    # )
+
+    # address: ChecksumAddress = router_contract.functions.WETH().call()
+    # address = router_contract.functions.WETH().call()
+    address = router_contract.functions.WETH().call()
     return address
+    # return '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'

@@ -42,4 +42,3 @@ def exc_rate(request):
 
 def redirect_contribute(request):
     return redirect('https://forms.gle/od7CYHHUcjHAQXEF7')
-

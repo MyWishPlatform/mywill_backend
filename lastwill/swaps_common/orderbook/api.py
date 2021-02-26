@@ -13,7 +13,22 @@ from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.settings import RUBIC_EXC_URL
 
-EXCLUDED_STATES = ['DONE', 'CANCELLED', 'POSTPONED']
+STATE_EXPIRED = OrderBookSwaps.STATE_EXPIRED
+STATE_DONE = OrderBookSwaps.STATE_DONE
+STATE_CANCELLED = OrderBookSwaps.STATE_CANCELLED
+STATE_POSTPONED = OrderBookSwaps.STATE_POSTPONED
+STATE_CREATED = OrderBookSwaps.STATE_CREATED
+STATE_ACTIVE = OrderBookSwaps.STATE_ACTIVE
+STATE_HIDDEN = OrderBookSwaps.STATE_HIDDEN
+
+EXCLUDED_STATES = [
+    STATE_DONE,
+    STATE_CANCELLED,
+    STATE_POSTPONED,
+    STATE_DONE.upper(),
+    STATE_CANCELLED.upper(),
+    STATE_POSTPONED.upper(),
+]
 
 
 def get_swap_from_orderbook(swap_id):
@@ -26,12 +41,15 @@ def get_swap_from_orderbook(swap_id):
 
     if now > backend_contract.stop_date:
         if backend_contract.state not in EXCLUDED_STATES:
-            backend_contract.state = 'EXPIRED'
+            # backend_contract.state = 'EXPIRED'
+            backend_contract.state = STATE_EXPIRED
             if backend_contract.swap_ether_contract:
-                backend_contract.swap_ether_contract.state = 'EXPIRED'
+                # backend_contract.swap_ether_contract.state = 'EXPIRED'
+                backend_contract.swap_ether_contract.state = STATE_EXPIRED
                 backend_contract.contract_state = backend_contract.swap_ether_contract.state
             else:
-                backend_contract.contract_state = 'EXPIRED'
+                # backend_contract.contract_state = 'EXPIRED'
+                backend_contract.contract_state = STATE_EXPIRED
             backend_contract.save()
             backend_contract.refresh_from_db()
 
@@ -181,8 +199,10 @@ def create_contract_swaps_backend(request):
     if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
         backend_contract.is_rubic_order = True
 
-    backend_contract.state = 'ACTIVE'
-    backend_contract.contract_state = 'CREATED'
+    # backend_contract.state = 'ACTIVE'
+    backend_contract.state = STATE_ACTIVE
+    # backend_contract.contract_state = 'CREATED'
+    backend_contract.contract_state = STATE_CREATED
     backend_contract.save()
 
     details = get_swap_from_orderbook(swap_id=backend_contract.id)
@@ -199,7 +219,8 @@ def show_contract_swaps_backend(request):
     swap_id = request.query_params.get('swap_id', None)
     if swap_id is not None:
         details = get_swap_from_orderbook(swap_id=swap_id)
-        if details['state'] != 'HIDDEN':
+        # if details['state'] != 'HIDDEN':
+        if details['state'] not in [STATE_HIDDEN, STATE_HIDDEN.upper()]:
             return Response(details)
         else:
             raise NotFound
@@ -224,7 +245,8 @@ def show_user_contract_swaps_backend(request):
 
     for order in orders:
         details = get_swap_from_orderbook(swap_id=order.id)
-        if details['state'] != 'HIDDEN':
+        # if details['state'] != 'HIDDEN':
+        if details['state'] not in [STATE_HIDDEN, STATE_HIDDEN.upper()]:
             orders_list.append(details)
 
     return Response(orders_list)
@@ -240,7 +262,8 @@ def edit_contract_swaps_backend(request, swap_id):
 
     swap_order = OrderBookSwaps.objects.filter(id=swap_id).first()
 
-    if swap_order.state == 'HIDDEN':
+    # if swap_order.state == 'HIDDEN':
+    if swap_order.state == STATE_HIDDEN:
         raise NotFound
 
     if request.user != swap_order.user:
@@ -336,7 +359,8 @@ def get_swap_v3_for_unique_link(request):
 
     details = get_swap_from_orderbook(swaps_order.id)
 
-    if details['state'] == 'HIDDEN':
+    # if details['state'] == 'HIDDEN':
+    if details['state'] in [STATE_HIDDEN, STATE_HIDDEN.upper()]:
         raise NotFound
 
     return Response(details)
@@ -362,7 +386,8 @@ def get_swap_v3_public(request):
 
     res = []
     for order in backend_contracts:
-        if order.state != 'EXPIRED' and order.state == 'ACTIVE':
+        # if order.state != 'EXPIRED' and order.state == 'ACTIVE':
+        if order.state not in [STATE_EXPIRED, STATE_EXPIRED.upper()] and order.state in [STATE_ACTIVE, STATE_ACTIVE.upper()]:
             res.append(get_swap_from_orderbook(order.id))
 
     return Response(res)
@@ -384,12 +409,15 @@ def set_swaps_expired(request):
         order = order.first()
         if now > order.stop_date:
             if order.state not in EXCLUDED_STATES:
-                order.state = 'EXPIRED'
+                # order.state = 'EXPIRED'
+                order.state = STATE_EXPIRED
                 if order.swap_ether_contract:
-                    order.swap_ether_contract.state = 'EXPIRED'
+                    # order.swap_ether_contract.state = 'EXPIRED'
+                    order.swap_ether_contract.state = STATE_EXPIRED
                     order.contract_state = order.swap_ether_contract.state
                 else:
-                    order.contract_state = 'EXPIRED'
+                    # order.contract_state = 'EXPIRED'
+                    order.contract_state = STATE_EXPIRED
                 order.state_changed_at = datetime.datetime.utcnow()
                 order.save()
 
@@ -401,7 +429,8 @@ def set_swaps_expired(request):
         swaps = swaps.first()
         if now > swaps.get_details().stop_date:
             if swaps.contract.state not in EXCLUDED_STATES:
-                swaps.contract.state = 'EXPIRED'
+                # swaps.contract.state = 'EXPIRED'
+                swaps.contract.state = STATE_EXPIRED
                 swaps.contract.save()
 
     return Response({'result': 'ok'})
@@ -416,7 +445,8 @@ def delete_swaps_v3(request):
         raise ParseError
 
     order = order.first()
-    order.state = 'HIDDEN'
+    # order.state = 'HIDDEN'
+    order.state = STATE_HIDDEN
     order.save()
     return Response({"result": order.id})
 
@@ -431,10 +461,13 @@ def cancel_swaps_v3(request):
 
     order = order.first()
     if not (order.base_address and order.quote_address):
-        order.state = 'CANCELLED'
-        order.contract_state = 'CANCELLED'
+        # order.state = 'CANCELLED'
+        order.state = STATE_CANCELLED
+        # order.contract_state = 'CANCELLED'
+        order.contract_state = STATE_CANCELLED
         if order.swap_ether_contract:
-            order.swap_ether_contract.state = 'CANCELLED'
+            # order.swap_ether_contract.state = 'CANCELLED'
+            order.swap_ether_contract.state = STATE_CANCELLED
         order.state_changed_at = datetime.datetime.utcnow()
         order.save()
         return Response({"result": order.id})
@@ -480,7 +513,8 @@ def get_non_active_orders(request):
         p = 1
         list_size = 5
 
-    order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).exclude(public=False)
+    # order_list = OrderBookSwaps.objects.all().exclude(state__in=['ACTIVE', 'HIDDEN']).exclude(public=False)
+    order_list = OrderBookSwaps.objects.all().exclude(state__in=[STATE_ACTIVE, STATE_ACTIVE.upper(), STATE_HIDDEN, STATE_HIDDEN.upper()]).exclude(public=False)
 
     # if filter_base_coin:
     #     order_list = order_list.filter(base_coin_id=int(filter_base_coin))

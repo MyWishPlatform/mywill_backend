@@ -63,6 +63,7 @@ class OrderBookSwaps(models.Model):
     STATE_POSTPONED = 'postponed'
     STATE_DONE = 'done'
     STATE_CANCELLED = 'cancelled'
+    STATE_HIDDEN = 'hidden'
 
     ORDER_STATES = (
         (STATE_CREATED, 'CREATED'),
@@ -71,6 +72,7 @@ class OrderBookSwaps(models.Model):
         (STATE_POSTPONED, 'POSTPONED'),
         (STATE_DONE, 'DONE'),
         (STATE_CANCELLED, 'CANCELLED'),
+        (STATE_HIDDEN, 'HIDDEN'),
     )
 
     name = models.CharField(
