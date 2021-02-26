@@ -41,7 +41,3 @@ tst.json
 **media**
 **static**
 **.sql**
-
-Dockerfile
-docker-compose.yml
-.devcontainer

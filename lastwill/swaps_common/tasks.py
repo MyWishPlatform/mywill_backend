@@ -3,7 +3,7 @@ Celery task module.
 """
 from lastwill.celery import app
 
-from .order_limited.order_limited import main
+from .orderbook.order_limited.order_limited import main
 
 
 @app.task()
