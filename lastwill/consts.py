@@ -65,9 +65,10 @@ CONTRACT_PRICE_USDT = {
     'ETH_SWAPS': 10,
     'ETH_TOKEN_PROTECTOR': 500,
 
-    'EOS_ICO': 195,
-    'EOS_TOKEN': 99,
-    'EOS_TOKEN_SA': 195,
+    'EOS_ACCOUNT': 55,
+    'EOS_ICO': 345,
+    'EOS_TOKEN': 199,
+    'EOS_TOKEN_SA': 295,
 
     'TRON_TOKEN': 199,
     'TRON_GAME_ASSETS': 45,
