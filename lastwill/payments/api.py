@@ -21,10 +21,11 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):
         if currency in ['BWISH', 'BBNB', 'BSCWISH', 'WWISH']:
             amount = amount * 10 ** 10
-            if currency in ['BWISH']:
-                amount *= 1.1
             if currency == 'BBNB':
                 currency = 'BNB'
+            else:
+                amount *= 1.1
+
         value = amount if (currency in ['WISH', 'BWISH', 'BSCWISH', 'WWISH']) else to_wish(
             currency, amount
         )
