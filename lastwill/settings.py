@@ -101,26 +101,15 @@ WSGI_APPLICATION = 'lastwill.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'lastwill_new',
-#         'USER': 'lastwill_new',
-#         'PASSWORD': 'lastwill_new',
-#         'HOST': 'localhost',
-#         'PORT': 5432,
-#         'CONN_MAX_AGE': None
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'rubic_test',
-        'USER': 'master',
-        'PASSWORD': '1234567890',
-        'HOST': 'database',
+        'NAME': 'lastwill_new',
+        'USER': 'lastwill_new',
+        'PASSWORD': 'lastwill_new',
+        'HOST': 'localhost',
         'PORT': 5432,
+        'CONN_MAX_AGE': None
     }
 }
 
@@ -248,6 +237,11 @@ LOGGING = {
           'level': 'DEBUG',
           'propagate': True,
       },
+  },
+  'lastwill.swaps_common': {
+    'level': 'DEBUG',
+    'handlers': ['console', 'file'],
+    'propagate': False
   },
 }
 

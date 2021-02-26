@@ -88,39 +88,6 @@ UNISWAP_API = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
 ERC20_CONTRACT_ABI = 'erc20.json'
 
 
-def get_rbc_eth_ratio_uniswap():
-    """
-        Parse exchange rate rbc to eth from uniswap.
-        Return exchange rate(float type).
-    """
-
-    # Select your transport with a defined url endpoint
-    transport = RequestsHTTPTransport(url=UNISWAP_API)
-
-    # Create a GraphQL client using the defined transport
-    client = Client(transport=transport, fetch_schema_from_transport=True)
-
-    # Provide a GraphQL query
-    query = gql(
-        """
-        {
-            token(id: "%s"){
-               name
-               symbol
-               decimals
-               derivedETH
-               tradeVolumeUSD
-               totalLiquidity
-            }
-        }
-        """ % RUBIC_ADDRESS
-    )
-
-    # Execute the query on the transport
-    result = client.execute(query)
-    return float(result.get("token").get("derivedETH"))
-
-
 def _get_active_orders():
     """
         Returns public active orders.
@@ -325,8 +292,12 @@ def _get_rbc_eth_ratio():
         """ % RUBIC_ADDRESS.lower()
     )
 
-    # Execute the query on the transport
-    result = client.execute(query)
+    while 1:
+        # Execute the query on the transport
+        result = client.execute(query)
+
+        if result:
+            break
 
     return float(result.get("token").get("derivedETH"))
 
@@ -492,11 +463,11 @@ def _confirm_orders(
             rbc_value=1,
             is_rbc=True
         ):
-            # swap_token_on_uniswap(
-            #     w3.toChecksumAddress(order.base_address),
-            #     w3.toChecksumAddress(order.quote_address),
-            #     qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
-            # )
+            swap_token_on_uniswap(
+                w3.toChecksumAddress(order.base_address),
+                w3.toChecksumAddress(order.quote_address),
+                qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
+            )
             _complete_order(order)
 
     for _, order in enumerate(rbc_to_eth_orders):
@@ -504,25 +475,25 @@ def _confirm_orders(
         # !--- TODO: needs refactor.
         eth_rbc_ratio = get_token_eth_output_price(
             int(order.quote_limit * NET_DECIMALS.get("ETH")),
-            ETH_ADDRESS,
+            RUBIC_ADDRESS,
         ) # Returns RBC token, not ETH.
-        eth_rbc_ratio = eth_rbc_ratio * get_rbc_eth_ratio_uniswap()
+        # eth_rbc_ratio = eth_rbc_ratio * get_rbc_eth_ratio_uniswap()
         # ---
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
         if _check_profitability_eth_to_token(
-            get_rbc_eth_ratio_uniswap(),
+            _get_rbc_eth_ratio(),
             gas_fee,
             rbc_value=float(order.base_limit),
             eth_value=eth_rbc_ratio / NET_DECIMALS.get("ETH"),
             is_rbc=False
 
         ):
-            # swap_token_on_uniswap(
-            #     w3.toChecksumAddress(order.base_address),
-            #     w3.toChecksumAddress(order.quote_address),
-            #     qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
-            # )
+            swap_token_on_uniswap(
+                w3.toChecksumAddress(order.base_address),
+                w3.toChecksumAddress(order.quote_address),
+                qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
+            )
             _complete_order(order)
 
 
@@ -625,21 +596,29 @@ def _complete_order(order:QuerySet=None):
     # tx_config = get_tx_params(w3.toWei(float(order.quote_limit), unit='ether'))
 
     print(tx_config)
+    logging.info(tx_config)
+
 
     sended_transaction = build_and_send_tx(
         transaction,
         tx_params=tx_config
     )
 
+    logging.info(sended_transaction)
+
     result = w3.eth.waitForTransactionReceipt(
         sended_transaction,
         timeout=600
     )
 
+    logging.info(result)
+
     if result:
         _set_done_status_order(order)
 
     return 1
+
+
 # def check_tx_success(self, tx):
 #     try:
 #         receipt = self.web3interface.eth.getTransactionReceipt(tx)
