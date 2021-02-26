@@ -57,10 +57,9 @@ class AbstractContractDetailsAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['ETH_AIRDROP']
-        result = int(price * NET_DECIMALS['USDT'])
         if 'verification' in kwargs and kwargs['verification']:
-            result = int(result + VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
-        return result
+            price += VERIVICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost(cls):
@@ -127,14 +126,15 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     @classmethod
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         super().msg_deployed(message, eth_contract_attr_name='eth_contract')
-        if self.verification and self.eth_contract.address:
+        if self.verification:
             mail = EmailMessage(
                 subject=verification_subject,
                 body=verification_message.format(
                     network=self.contract.network.name,
-                    address=self.eth_contract.address,
+                    addresses=self.eth_contract.address,
                     compiler_version=self.eth_contract.compiler_version,
                     optimization='Yes',
+                    runs='200',
                 ),
                 from_email=DEFAULT_FROM_EMAIL,
                 to=[SUPPORT_EMAIL]

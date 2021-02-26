@@ -254,7 +254,7 @@ def check_promocode(promo_str, user, cost, contract, details):
             options_price += 450 * NET_DECIMALS['USDT']
     if contract.contract_type in (5, 4, 8):
         if details.verification:
-            options_price += VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT']
+            options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
     cost = check_and_apply_promocode(
         promo_str, user, contract.cost - options_price, contract.contract_type, contract.id
@@ -1483,7 +1483,7 @@ def buy_verification(request):
         raise PermissionDenied
     '''
     details = contract.get_details()
-    cost = VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT']
+    cost = VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
     network = contract.network.name
@@ -1499,9 +1499,10 @@ def buy_verification(request):
             subject=verification_subject,
             body=verification_message.format(
                 network=details.contract.network.name,
-                address=details.eth_contract_token.address,
+                addresses=details.eth_contract_token.address,
                 compiler_version=details.eth_contract_token.compiler_version,
                 optimization='Yes',
+                runs='200',
             ),
             from_email=DEFAULT_FROM_EMAIL,
             to=[SUPPORT_EMAIL]
@@ -1513,9 +1514,10 @@ def buy_verification(request):
             subject=verification_subject,
             body=verification_message.format(
                 network=details.contract.network.name,
-                address=details.eth_contract_token.address + ' ' + details.eth_contract_crowdsale.address,
+                addresses=details.eth_contract_token.address + ', ' + details.eth_contract_crowdsale.address,
                 compiler_version=details.eth_contract_token.compiler_version,
                 optimization='Yes',
+                runs='200',
             ),
             from_email=DEFAULT_FROM_EMAIL,
             to=[SUPPORT_EMAIL]
@@ -1528,9 +1530,10 @@ def buy_verification(request):
             subject=verification_subject,
             body=verification_message.format(
                 network=details.contract.network.name,
-                address=details.eth_contract.address,
+                addresses=details.eth_contract.address,
                 compiler_version=details.eth_contract.compiler_version,
                 optimization='Yes',
+                runs='200',
             ),
             from_email=DEFAULT_FROM_EMAIL,
             to=[SUPPORT_EMAIL]
@@ -1543,7 +1546,7 @@ def buy_verification(request):
 
 @api_view(http_method_names=['GET'])
 def get_verification_cost(request):
-    usdt_cost = str(VERIVICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+    usdt_cost = str(VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
     eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
     wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
     btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
