@@ -298,7 +298,7 @@ EOS_TOKEN_SA_DEPLOY_PARAMS = {
     },
     'EOS_TESTNET': {
         'CPU': 15,
-        'NET': 9,
+        'NET': 15,
         'RAM': 300
     }
 }
