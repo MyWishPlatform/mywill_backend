@@ -56,7 +56,7 @@ def get_discount(request):
             if contract.contract_type == 5:
                 if contract_details.authio:
                     options_cost += 450 * NET_DECIMALS['USDT']
-            if contract.contract_type in (5, 4, 8):
+            if contract.contract_type in (5, 4, 8, 27, 28):
                 if contract_details.verification:
                     options_cost += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
