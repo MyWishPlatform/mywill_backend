@@ -123,9 +123,10 @@ class AbstractContractDetailsAirdrop(CommonDetails):
             self.airdrop_in_progress = True
             self.save()
 
-    @classmethod
+    @postponable
+    @check_transaction
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
-        super().msg_deployed(message, eth_contract_attr_name='eth_contract')
+        super().msg_deployed(message, 'eth_contract')
         if self.verification:
             mail = EmailMessage(
                 subject=verification_subject,

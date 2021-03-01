@@ -214,7 +214,7 @@ class ContractDetailsEOSAccount(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        eos_cost_base = 20 * NET_DECIMALS['USDT']
+        eos_cost_base = CONTRACT_PRICE_USDT['EOS_ACCOUNT'] * NET_DECIMALS['USDT']
         eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
         cost = eos_cost * convert('EOS', 'ETH')['ETH']
         print('convert eos cost', cost, flush=True)
