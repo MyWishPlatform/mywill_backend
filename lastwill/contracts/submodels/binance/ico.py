@@ -31,7 +31,10 @@ class ContractDetailsBinanceICO(AbstractContractDetailsICO):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['BINANCE_ICO'] * NET_DECIMALS['USDT'])
+        price = CONTRACT_PRICE_USDT['BINANCE_ICO']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIVICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
