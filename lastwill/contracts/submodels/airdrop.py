@@ -1,7 +1,7 @@
 from django.db import models
 
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
 
 
 class AirdropAddress(models.Model):
@@ -58,7 +58,7 @@ class AbstractContractDetailsAirdrop(CommonDetails):
             return 0
         price = CONTRACT_PRICE_USDT['ETH_AIRDROP']
         if 'verification' in kwargs and kwargs['verification']:
-            price += VERIVICATION_PRICE_USDT
+            price += VERIFICATION_PRICE_USDT
         return price * NET_DECIMALS['USDT']
 
     @classmethod
