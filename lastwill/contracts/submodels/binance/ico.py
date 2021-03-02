@@ -1,6 +1,7 @@
 from lastwill.contracts.submodels.ico import AbstractContractDetailsICO
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
+from lastwill.settings import BSC_WEB3_ATTEMPTS
 
 
 @contract_details('Binance MyWish ICO')
@@ -30,7 +31,10 @@ class ContractDetailsBinanceICO(AbstractContractDetailsICO):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['BINANCE_ICO'] * NET_DECIMALS['USDT'])
+        price = CONTRACT_PRICE_USDT['BINANCE_ICO']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -90,3 +94,8 @@ class ContractDetailsBinanceICO(AbstractContractDetailsICO):
                 token_json['compiler']['version'], self.contract, source_code
             )
         self.save()
+
+    @blocking
+    @postponable
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        return super().deploy(eth_contract_attr_name, attempts=BSC_WEB3_ATTEMPTS)

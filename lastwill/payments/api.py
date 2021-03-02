@@ -19,13 +19,14 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('create payment')
     if (SubSite.objects.get(id=site_id).site_name == MY_WISH_URL
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):
-        if currency in ['BWISH', 'BBNB']:
+        if currency in ['BWISH', 'BBNB', 'BSCWISH', 'WWISH']:
             amount = amount * 10 ** 10
-            if currency in ['BWISH']:
-                amount *= 1.1
             if currency == 'BBNB':
                 currency = 'BNB'
-        value = amount if (currency in ['WISH', 'BWISH']) else to_wish(
+            else:
+                amount *= 1.1
+
+        value = amount if (currency in ['WISH', 'BWISH', 'BSCWISH', 'WWISH']) else to_wish(
             currency, amount
         )
         if currency == 'BTC':
@@ -162,7 +163,24 @@ def get_payment_statistics(start, stop=None):
     payments = InternalPayment.objects.filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     ).order_by('datetime')
-    total_payments = {'ETH': 0.0, 'WISH': 0.0, 'BTC': 0.0, 'BNB': 0.0, 'EOS': 0.0, 'EOSISH': 0.0, 'TRX': 0.0, 'TRONISH': 0.0, 'BWISH': 0.0, 'SWAP': 0.0, 'OKB': 0.0}
+
+    total_payments = {
+        'ETH': 0.0,
+        'WISH': 0.0,
+        'BTC': 0.0,
+        'BNB': 0.0,
+        'EOS': 0.0,
+        'EOSISH': 0.0,
+        'TRX': 0.0,
+        'TRONISH': 0.0,
+        'BWISH': 0.0,
+        'SWAP': 0.0,
+        'OKB': 0.0,
+        'RBC': 0.0,
+        'BSCWISH': 0.0,
+        'WWISH': 0.0
+    }
+
     user_ids = []
     for pay in payments:
         print(

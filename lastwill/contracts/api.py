@@ -248,19 +248,18 @@ def check_error_promocode(promo_str, contract_type):
 
 
 def check_promocode(promo_str, user, cost, contract, details):
-    # check token with authio
-    if contract.contract_type == 5 and details.authio:
-        price_without_brand_report = contract.cost - 450 * NET_DECIMALS['USDT']
-        cost = check_and_apply_promocode(
-            promo_str, user, price_without_brand_report, contract.contract_type, contract.id
-        )
-        total_cost = cost + 450 * NET_DECIMALS['USDT']
-    else:
-        # count discount
-        total_cost = check_and_apply_promocode(
-            promo_str, user, cost, contract.contract_type, contract.id
-        )
-    return total_cost
+    options_price = 0
+    if contract.contract_type == 5:
+        if details.authio:
+            options_price += 450 * NET_DECIMALS['USDT']
+    if contract.contract_type in (5, 4, 8, 27, 28, 29):
+        if details.verification:
+            options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+
+    cost = check_and_apply_promocode(
+        promo_str, user, contract.cost - options_price, contract.contract_type, contract.id
+    )
+    return cost + options_price
 
 
 @api_view(http_method_names=['POST'])
@@ -1383,6 +1382,9 @@ def get_test_tokens(request):
         token.pop('token_holders')
         token['address'] = token['eth_contract_token']['address']
         token.pop('eth_contract_token')
+        token.pop('verification')
+        token.pop('verification_status')
+        token.pop('verification_date_payment')
 
     token_list = tokens_serializer.data
     # print('type', type(token_list), flush=True)
@@ -1465,3 +1467,87 @@ def send_message_author_swap(request):
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def buy_verification(request):
+    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    contract = Contract.objects.get(id=request.data.get('contract_id'))
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
+        raise PermissionDenied
+
+    if contract.contract_type not in (4, 5, 8, 27, 28, 29):
+        raise PermissionDenied
+    '''
+    if contract.network.name != 'ETHEREUM_MAINNET':
+        raise PermissionDenied
+    '''
+    details = contract.get_details()
+    cost = VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+    currency = 'USDT'
+    site_id = 1
+    network = contract.network.name
+    create_payment(request.user.id, '', currency, -cost, site_id, network)
+
+    details.verification = True
+    details.verification_status = 'IN_PROCESS'
+    details.verification_date_payment = datetime.datetime.now().date()
+    details.save()
+
+    if contract.contract_type in (5, 28):
+        mail = EmailMessage(
+            subject=verification_subject,
+            body=verification_message.format(
+                network=details.contract.network.name,
+                addresses=details.eth_contract_token.address,
+                compiler_version=details.eth_contract_token.compiler_version,
+                optimization='Yes',
+                runs='200',
+            ),
+            from_email=DEFAULT_FROM_EMAIL,
+            to=[SUPPORT_EMAIL]
+        )
+        mail.attach('code.sol', details.eth_contract_token.source_code)
+        mail.send()
+    elif contract.contract_type in (4, 27):
+        mail = EmailMessage(
+            subject=verification_subject,
+            body=verification_message.format(
+                network=details.contract.network.name,
+                addresses=details.eth_contract_token.address + ', ' + details.eth_contract_crowdsale.address,
+                compiler_version=details.eth_contract_token.compiler_version,
+                optimization='Yes',
+                runs='200',
+            ),
+            from_email=DEFAULT_FROM_EMAIL,
+            to=[SUPPORT_EMAIL]
+        )
+        mail.attach('token.sol', details.eth_contract_token.source_code)
+        mail.attach('ico.sol', details.eth_contract_crowdsale.source_code)
+        mail.send()
+    elif contract.contract_type in (8, 29):
+        mail = EmailMessage(
+            subject=verification_subject,
+            body=verification_message.format(
+                network=details.contract.network.name,
+                addresses=details.eth_contract.address,
+                compiler_version=details.eth_contract.compiler_version,
+                optimization='Yes',
+                runs='200',
+            ),
+            from_email=DEFAULT_FROM_EMAIL,
+            to=[SUPPORT_EMAIL]
+        )
+        mail.attach('code.sol', details.eth_contract.source_code)
+        mail.send()
+
+    return Response('ok')
+
+
+@api_view(http_method_names=['GET'])
+def get_verification_cost(request):
+    usdt_cost = str(VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
+    eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
+    wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
+    btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})

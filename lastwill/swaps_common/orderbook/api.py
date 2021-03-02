@@ -38,6 +38,7 @@ def get_swap_from_orderbook(swap_id):
             id=swap_id,
         ) \
         .first()
+
     now = datetime.datetime.now(timezone.utc)
 
     if now > backend_contract.stop_date:
@@ -114,6 +115,7 @@ def create_contract_swaps_backend(request):
     stop_date_conv = datetime.datetime.strptime(
         contract_details['stop_date'], '%Y-%m-%d %H:%M'
     )
+
     # base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     # quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
 
@@ -293,6 +295,7 @@ def edit_contract_swaps_backend(request, swap_id):
         swap_order.base_address = params['base_address'].lower()
     if 'base_limit' in params:
         swap_order.base_limit = Decimal(params['base_limit'])
+
     # if 'base_coin_id' in params:
     #     swap_order.base_coin_id = params['base_coin_id']
     if 'quote_address' in params:

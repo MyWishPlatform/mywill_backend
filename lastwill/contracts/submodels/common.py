@@ -19,7 +19,7 @@ from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
 
-from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR
+from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
 from lastwill.deploy.models import Network
@@ -451,7 +451,7 @@ class CommonDetails(models.Model):
         setattr(self, eth_contract_attr_name, eth_contract)
         self.save()
 
-    def deploy(self, eth_contract_attr_name='eth_contract'):
+    def deploy(self, eth_contract_attr_name='eth_contract', attempts=1):
         if self.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
@@ -466,7 +466,18 @@ class CommonDetails(models.Model):
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = NETWORKS[self.contract.network.name]['address']
-        nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+
+        for attempt in range(attempts):
+            print(f'attempt {attempt} to get a nonce', flush=True)
+            try:
+                nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+                break
+            except Exception:
+                print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
+            time.sleep(WEB3_ATTEMPT_COOLDOWN)
+        else:
+            raise Exception(f'cannot get nonce with {attempts} attempts')
+
         print('nonce', nonce, flush=True)
         # print('BYTECODE', eth_contract.bytecode, flush=True)
         # print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
@@ -495,9 +506,19 @@ class CommonDetails(models.Model):
         print('value', self.get_value(), flush=True)
         print('network', self.contract.network.name, flush=True)
         print('signed_data', signed_data, flush=True)
-        eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
-            '0x' + signed_data
-        )
+
+        for attempt in range(attempts):
+            print(f'attempt {attempt} to send deploy tx', flush=True)
+            try:
+                tx_hash = eth_int.eth_sendRawTransaction('0x' + signed_data)
+                break
+            except Exception:
+                print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
+            time.sleep(WEB3_ATTEMPT_COOLDOWN)
+        else:
+            raise Exception(f'cannot send deploy tx with {attempts} attempts')
+
+        eth_contract.tx_hash = tx_hash
         eth_contract.save()
         print('transaction sent', flush=True)
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'

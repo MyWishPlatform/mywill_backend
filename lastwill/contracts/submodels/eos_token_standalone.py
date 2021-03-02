@@ -3,7 +3,9 @@ from django.core.mail import send_mail
 from lastwill.contracts.submodels.eos import *
 from lastwill.json_templates import create_eos_token_sa_json
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
-from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT
+from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT, \
+    EOS_TOKEN_SA_DEPLOY_PARAMS
+
 
 class ContractDetailsEOSTokenSA(CommonDetails):
     token_short_name = models.CharField(max_length=64)
@@ -110,12 +112,18 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             str(NETWORKS[self.contract.network.name]['host']))
         else:
             eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+
+        stake_params = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]
+        cpu_amount = stake_params['CPU']
+        net_amount = stake_params['NET']
+        ram_amount = stake_params['RAM']
+
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
-            our_public_key, '--stake-net', '5' + ' EOS',
-            '--stake-cpu', '12' + ' EOS',
-            '--buy-ram-kbytes', '250',
+            our_public_key, '--stake-net', str(net_amount) + ' EOS',
+            '--stake-cpu', str(cpu_amount) + ' EOS',
+            '--buy-ram-kbytes', str(ram_amount),
             '--transfer', '-j'
         ]
         print('command:', command, flush=True)

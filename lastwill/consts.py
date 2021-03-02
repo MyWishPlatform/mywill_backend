@@ -65,9 +65,10 @@ CONTRACT_PRICE_USDT = {
     'ETH_SWAPS': 10,
     'ETH_TOKEN_PROTECTOR': 500,
 
-    'EOS_ICO': 195,
-    'EOS_TOKEN': 99,
-    'EOS_TOKEN_SA': 195,
+    'EOS_ACCOUNT': 55,
+    'EOS_ICO': 345,
+    'EOS_TOKEN': 199,
+    'EOS_TOKEN_SA': 295,
 
     'TRON_TOKEN': 199,
     'TRON_GAME_ASSETS': 45,
@@ -287,3 +288,19 @@ ETH_COMMON_GAS_PRICES = {
     'MATIC_MAINNET': 1,
     'MATIC_TESTNET': 20,
 }
+
+
+EOS_TOKEN_SA_DEPLOY_PARAMS = {
+    'EOS_MAINNET': {
+        'CPU': 15,
+        'NET': 3,
+        'RAM': 300
+    },
+    'EOS_TESTNET': {
+        'CPU': 15,
+        'NET': 15,
+        'RAM': 300
+    }
+}
+
+VERIFICATION_PRICE_USDT = 50

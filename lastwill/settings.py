@@ -261,6 +261,10 @@ SESSION_COOKIE_DOMAIN = '.mywish.io'
 
 UNBLOCKING_EMAIL = 'hello@rocknblock.io'
 
+WEB3_ATTEMPT_COOLDOWN = 10
+
+BSC_WEB3_ATTEMPTS = 10
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
@@ -289,7 +293,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'updating_coingecko_tokens_once_at_day': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
-        'schedule': crontab(hour=1, minute=0),
+        'schedule': crontab(hour='*', minute=0),
     },
     'updating_coingecko_icons_once_at_week': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
