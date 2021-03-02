@@ -7,34 +7,27 @@ from django.db.models import Q, F
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 
-from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS
-from .limit_orders_consts import (
+from lastwill.swaps_common.orderbook.models import OrderBookSwaps
+from lastwill.settings_local import WALLET_ADDRESS
+from .consts import (
     UNISWAP_API,
 
+    ETHERSCAN_API_URL,
     ETHERSCAN_API_KEY,
 
     RUBIC_ADDRESS,
-    DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS,
+    MAINNET_CONTRACT_ADDRESS,
 
-    WALLET_ADDRESS,
-    PRIVATE_KEY,
-
-    MIN_BALANCE_PARAM,
-    MAX_SLIPPAGE,
     DEFAULT_GAS_LIMIT,
     DEFAULT_NETWORK_ID,
     ORDERBOOK_CONTRACT_ABI,
-
-    LIQUIDITY_PULL_ADDRESS,
-    GAS_FEE,
-    PROFIT_RATIO,
     ORDER_FEE,
+    PROFIT_RATIO,
 )
 
-from .working_with_uniswap import (
-    Web3,
-    HexBytes, addr_to_str,
+from .uniswap import (
+    HexBytes,
 
     approve,
     build_and_send_tx,
@@ -51,46 +44,15 @@ from .working_with_uniswap import (
     AddressLike,
     Wei,
     w3,
-    WALLET_ADDRESS,
 )
 
-ETHERSCAN_API = "https://api.etherscan.io/api"
-ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
-UNISWAP_API = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
-UNISWAP_RBC_ETH_CONTRACT_ADDRESS = "0x10db37f4d9b3bc32AE8303B46E6166F7e9652d28"
-
-INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
-OLD_MAINNET_CONTRACT_ADDRESS = '0xAAaCFf66942df4f1e1cB32C21Af875AC971A8117'
-NEW_KOVAN_ADDRESS = "0xB09fe422dE371a86D7148d6ED9DBD499287cc95c"
-RUBIC_ADDRESS = "0xA4EED63db85311E22dF4473f87CcfC3DaDCFA3E3"
-ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
-BLOCKCHAIN_DECIMALS = 10 ** 18
-MIN_BALANCE_PARAM = 1
-MAX_SLIPPAGE = 0.1
-UNISWAP_ROUTER02_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-
-BLOCKCHAIN_DECIMALS = 10 ** 18
-DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS = '0xf954ddfbc31b775baaf245882701fb1593a7e7bc'
-DEFAULT_GAS_LIMIT = 250000
-DEFAULT_NETWORK_ID = 1
-ETHERSCAN_API_URL = "https://api.etherscan.io/api"
-ETHERSCAN_API_KEY = "D8QKZPVM9BMRWS7BY41RU9EKU2VMWT8PM5"
-ORDERBOOK_CONTRACT_ABI = 'mainnet_orderbook.json'
-# MIN_BALANCE_PARAM = 1
-# MAX_SLIPPAGE = 0.1
-# PRIVATE_KEY = "0x00"
-LIQUIDITY_PULL_ADDRESS = 'fill_me'
-GAS_FEE = 'fill_me'
-PROFIT_RATIO = 0.2
-# ORDER_FEE = 0.015
-ORDER_FEE = 0.015
-UNISWAP_API = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
-ERC20_CONTRACT_ABI = 'erc20.json'
+ETH_DECIMALS = NET_DECIMALS.get('ETH', 10 ** 18)
+RBC_DECIMALS = NET_DECIMALS.get('RBC', ETH_DECIMALS)
 
 
 def _get_active_orders():
     """
-        Returns public active orders.
+    Returns public active orders.
     """
     return OrderBookSwaps.public_active_orders.all()
 
@@ -101,29 +63,39 @@ def _get_matching_orders(
     quote_token_address,
     network,
     contract_address,
-    matching_value=5,
+    max_eth_value=5,
+    max_rbc_value=20000,
     # кол-во рубиков в эфире.
 ):
     """
-        Returns orders filtered by the amount.
+    Returns orders filtered by the amount.
     """
-    print(queryset.filter(unique_link__in=['8q4xk5', 'y0fngv']).values())
+    # print(list(queryset.values()))
+
+    logging.info(
+        'Total public and active orders: '.join(
+            list(queryset.values())
+        )
+    )
+
     return queryset.filter(
         Q(
             network=network,
             contract_address=contract_address,
             base_address=base_token_address,
-            base_limit__lte=matching_value,
-            base_amount_contributed=F('base_limit') * BLOCKCHAIN_DECIMALS,
+            base_limit__lte=max_eth_value,
+            base_amount_contributed=F('base_limit') * ETH_DECIMALS,
             quote_address=quote_token_address,
-        ) | \
+        ) |
         Q(
             network=network,
             contract_address=contract_address,
             base_address=quote_token_address,
             quote_address=base_token_address,
-            quote_limit__lte=matching_value,
-            quote_amount_contributed=F('quote_limit') * BLOCKCHAIN_DECIMALS,
+            # quote_limit__lte=matching_value,
+            # quote_amount_contributed=F('quote_limit') * BLOCKCHAIN_DECIMALS,
+            base_limit__lte=max_rbc_value,
+            base_amount_contributed=F('base_limit') * ETH_DECIMALS,
         )
     )
 
@@ -151,7 +123,6 @@ def _get_profitability_order(
     # - Если сделка НЕ выгодна по текущему курсу обмениваемого токена,
     # то пропускаем (удаляем из плученного пула?).
 
-
     # TODO: переименовать под более подхдящее имя, потому что в сделках могут
     # участвовать не только эфир и рубик.
     active_eth_rbc_orders = _get_matching_orders(
@@ -163,6 +134,10 @@ def _get_profitability_order(
         # TODO: передать предельную сумму в эфире (до 5 включительно)
         # и обмениваемого токена эквивателнтного до 5 эфира по текущему курсу.
     )
+    # !---
+    print(list(active_eth_rbc_orders.values()))
+    logging.info(list(active_eth_rbc_orders.values()))
+    # ---
     matching_order_count = active_eth_rbc_orders.count()
 
     profitable_orders = []
@@ -170,7 +145,6 @@ def _get_profitability_order(
         'total': matching_order_count,
         'profitable_orders': 0,
     }
-
 
     if active_eth_rbc_orders.exists():
         print(
@@ -187,7 +161,7 @@ def _get_profitability_order(
         for _, order in enumerate(active_eth_rbc_orders):
 
             if (
-                order.base_address == base_token_address.lower() and \
+                order.base_address == base_token_address.lower() and
                 order.quote_address == quote_token_address.lower()
             ):
                 if not _check_profitability(
@@ -206,7 +180,7 @@ def _get_profitability_order(
 
                 _hide_order(order)
             elif (
-                order.base_address == quote_token_address.lower() and \
+                order.base_address == quote_token_address.lower() and
                 order.quote_address == base_token_address.lower()
             ):
                 if not _check_profitability(
@@ -226,13 +200,7 @@ def _get_profitability_order(
                 continue
 
         print(result)
-
-        # print(
-        #     profitable_orders,
-        #     active_eth_rbc_orders.filter(id__in=profitable_orders).count(),
-        #     active_eth_rbc_orders.filter(id__in=profitable_orders),
-        #     sep='\n'
-        # )
+        logging.info(result)
 
         return active_eth_rbc_orders.filter(id__in=profitable_orders)
 
@@ -246,7 +214,7 @@ def _hide_order(order: QuerySet):
     """
         Changes order visiblity to False.
     """
-    order.is_displayed=False
+    order.is_displayed = False
     order.save()
 
     return 1
@@ -256,27 +224,20 @@ def _set_done_status_order(order: QuerySet):
     """
         Changes order visibility to True and state to 'done'.
     """
-    order.state=OrderBookSwaps.STATE_DONE
-    order.is_displayed=True
+    order.state = OrderBookSwaps.STATE_DONE
+    order.is_displayed = True
     order.save()
 
     return 1
 
 
-def _get_rbc_eth_ratio():
+def _get_rbc_eth_ratio() -> float:
     """
-        Parse exchange rate rbc to eth from UniSwap.
-        Return exchange rate: float.
+    Parse exchange rate rbc to eth from UniSwap.
+    Return exchange rate: float.
     """
-
-    # Select your transport with a defined url endpoint
-    # transport = AIOHTTPTransport(url=UNISWAP_API)
     transport = RequestsHTTPTransport(url=UNISWAP_API)
-
-    # Create a GraphQL client using the defined transport
     client = Client(transport=transport, fetch_schema_from_transport=True)
-
-    # Provide a GraphQL query
     query = gql(
         """
         {
@@ -296,16 +257,19 @@ def _get_rbc_eth_ratio():
         # Execute the query on the transport
         result = client.execute(query)
 
+
         if result:
+            logging.info('UNISWAP GQL response: '.join(result))
+
             break
 
-    return float(result.get("token").get("derivedETH"))
+    return result.get("token").get("derivedETH")
 
 
 def get_gas_price() -> int:
     """
-        Get gas price from etherscan api.
-        Returns gas price for average speed : int.
+    Get gas price from etherscan api.
+    Returns gas price for average speed : int.
     """
 
     response = requests.get(
@@ -330,20 +294,19 @@ def get_gas_price() -> int:
 
 
 def _check_profitability_eth_to_token(
-    exchange_rate:float,
-    gas_fee:float,
-    rbc_value:float,
-    eth_value:float,
-    is_rbc:bool=True
+    exchange_rate: float,
+    gas_fee: float,
+    rbc_value: float,
+    eth_value: float,
+    is_rbc: bool = True
 ):
-
     if not is_rbc:
         is_rbc = -1
     else:
         is_rbc = int(is_rbc)
     # eth_value and rbc_value in RBC
     # (eth_value - rbc_value) is diff in RBC token
-    profitability = is_rbc * (eth_value - rbc_value) * exchange_rate * NET_DECIMALS.get("ETH") + (ORDER_FEE * BLOCKCHAIN_DECIMALS) - gas_fee - (PROFIT_RATIO * NET_DECIMALS.get("ETH"))
+    profitability = is_rbc * (eth_value - rbc_value) * exchange_rate * ETH_DECIMALS + (ORDER_FEE * ETH_DECIMALS) - gas_fee - (PROFIT_RATIO * ETH_DECIMALS)
 
     if profitability > 0:
         return True
@@ -352,11 +315,11 @@ def _check_profitability_eth_to_token(
 
 
 def _check_profitability(
-    exchange_rate:float,
-    gas_fee:float,
-    rbc_value:float,
-    eth_value:float,
-    is_rbc:bool=True
+    exchange_rate: float,
+    gas_fee: float,
+    rbc_value: float,
+    eth_value: float,
+    is_rbc: bool = True
 ):
     # profit_coeff - value in ETH showing the minimum profit for which a transaction can be carried out
     """
@@ -387,7 +350,7 @@ def _check_profitability(
     else:
         is_rbc = int(is_rbc)
 
-    profitability = is_rbc * (eth_value - rbc_value * exchange_rate) * NET_DECIMALS.get("ETH") + (ORDER_FEE * BLOCKCHAIN_DECIMALS) - gas_fee - (PROFIT_RATIO * NET_DECIMALS.get("ETH"))
+    profitability = is_rbc * (eth_value - rbc_value * exchange_rate) * ETH_DECIMALS + (ORDER_FEE * ETH_DECIMALS) - gas_fee - (PROFIT_RATIO * ETH_DECIMALS)
 
     if profitability > 0:
         return True
@@ -402,27 +365,35 @@ def swap_token_on_uniswap(
     recipient: AddressLike = None
 ) -> HexBytes:
     """
-        Make a trade by defining the qty of the output token.
-        Input is address of swapped tokens and exact amount of output token.
+    Make a trade by defining the qty of the output token.
+    Input is address of swapped tokens and exact amount of output token.
     """
     # TODO: now it works only for ETH->TOKEN and TOKEN->ETH swaps
     #  needed to add TOKEN->TOKEN swap ability
-    if not is_approved(RUBIC_ADDRESS):
-        approve(RUBIC_ADDRESS)
+    # !--
+    # if not is_approved(RUBIC_ADDRESS):
+    #     approve(RUBIC_ADDRESS)
+    # ---
 
-    if input_token == Web3.toChecksumAddress(ETH_ADDRESS):
+    if input_token == w3.toChecksumAddress(ETH_ADDRESS):
+        # !---
+        print('if input')
+        # ---
         balance = get_eth_balance(WALLET_ADDRESS)
-        need = get_eth_token_output_price(token_address=output_token, quantity_in_wei=qty)
+        print('balance')
+        need = get_eth_token_output_price(
+            token_address=output_token, quantity_in_wei=qty)
         print("balance: ", balance, " need: ", need)
         if balance < need:
 
             # TODO: add logging "not enough eth token"
             pass
         else:
+            print('hui')
             return eth_to_token_swap_output(output_token, qty, recipient)
 
-    elif output_token == Web3.toChecksumAddress(ETH_ADDRESS):
-
+    elif output_token == w3.toChecksumAddress(ETH_ADDRESS):
+        print('hui_outpu_token')
         # balance = get_rbc_balance(WALLET_ADDRESS)
         # need = get_token_eth_output_price(output_token, qty)
         # if balance < need:
@@ -466,7 +437,7 @@ def _confirm_orders(
             swap_token_on_uniswap(
                 w3.toChecksumAddress(order.base_address),
                 w3.toChecksumAddress(order.quote_address),
-                qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
+                qty=int(order.quote_limit * NET_DECIMALS.get("ETH"))
             )
             _complete_order(order)
 
@@ -476,7 +447,7 @@ def _confirm_orders(
         eth_rbc_ratio = get_token_eth_output_price(
             int(order.quote_limit * NET_DECIMALS.get("ETH")),
             RUBIC_ADDRESS,
-        ) # Returns RBC token, not ETH.
+        )  # Returns RBC token, not ETH.
         # eth_rbc_ratio = eth_rbc_ratio * get_rbc_eth_ratio_uniswap()
         # ---
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
@@ -492,7 +463,7 @@ def _confirm_orders(
             swap_token_on_uniswap(
                 w3.toChecksumAddress(order.base_address),
                 w3.toChecksumAddress(order.quote_address),
-                qty=Wei(order.quote_limit * NET_DECIMALS.get("ETH"))
+                qty=int(order.quote_limit * NET_DECIMALS.get("ETH"))
             )
             _complete_order(order)
 
@@ -501,7 +472,7 @@ def main(
     base_token_address=ETH_ADDRESS,
     quote_token_address=RUBIC_ADDRESS,
     network_id=DEFAULT_NETWORK_ID,
-    contract_address=DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS,
+    contract_address=MAINNET_CONTRACT_ADDRESS,
 ):
     """
         Fill me.
@@ -522,12 +493,12 @@ def main(
 
     # TODO: добавить проверку зааппрувлен ли кошелек.
     # approve(
-    #     token=Web3.toChecksumAddress(
+    #     token=w3.toChecksumAddress(
     #         RUBIC_ADDRESS
     #     ),
     #     max_approval=int(f'0x{64 * "f"}', 16),
-    #     contract_address=Web3.toChecksumAddress(
-    #         DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS
+    #     contract_address=w3.toChecksumAddress(
+    #         MAINNET_CONTRACT_ADDRESS
     #     ),
     # )
 
@@ -540,10 +511,13 @@ def main(
     return 1
 
 
-def _complete_order(order:QuerySet=None):
+def _complete_order(order: QuerySet = None):
     """
         Sends tokens to contract address.
     """
+    # !---
+    print('_complete_order_func')
+    # ---
     # approve tokens (build tx, sign tx, send tx)
     # timeout
     # func call
@@ -556,14 +530,20 @@ def _complete_order(order:QuerySet=None):
 
     orderbook_contract = load_contract(
         ORDERBOOK_CONTRACT_ABI,
-        Web3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
+        w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
     )
+    # !---
+    print('depositing')
+    # ---
     # `deposit`: ['deposit(bytes32,address,uint256)']
     transaction = orderbook_contract.functions.deposit(
         order.memo_contract,
         w3.toChecksumAddress(order.quote_address),
         w3.toWei(float(order.quote_limit), unit='ether'),
     )
+    # !---
+    print('end depositing')
+    # ---
 
     # TODO: подключить кошелек?
     # ValueError: {'code': 3, 'data': '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002f53776170733a20416c6c6f77616e63652073686f756c64206265206e6f74206c65737320746 8616e20616d6f756e740000000000000000000000000000000000', 'message': 'execution reverted: Swaps: Allowance should be not less  than amount'}
@@ -577,27 +557,27 @@ def _complete_order(order:QuerySet=None):
 
     # tx_params = {
     #     "from": w3.toChecksumAddress(WALLET_ADDRESS),
-    #     # 'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
+    #     # 'to': w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
     #     "value": w3.toWei(float(order.quote_limit), unit='ether'),
     # }
 
     # gas = w3.eth.estimateGas(tx_params)
-
+    print('HUI1')
     tx_config = {
         "from": w3.toChecksumAddress(WALLET_ADDRESS),
-        # 'to': w3.toChecksumAddress(DEFAULT_ETH_MAINNET_CONTRACT_ADDRESS),
+        # 'to': w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
         "value": w3.toWei(float(order.quote_limit), unit='ether'),
         # "gas": int(gas + (gas * 0.15)),
         "gas": DEFAULT_GAS_LIMIT,
         'gasPrice': w3.eth.gasPrice,
         "nonce": w3.eth.getTransactionCount(WALLET_ADDRESS),
     }
+    print('HUI2')
 
     # tx_config = get_tx_params(w3.toWei(float(order.quote_limit), unit='ether'))
 
     print(tx_config)
     logging.info(tx_config)
-
 
     sended_transaction = build_and_send_tx(
         transaction,
