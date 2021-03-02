@@ -3,6 +3,10 @@ import time
 import json
 import os
 from typing import Union, Optional
+
+from gql import Client, gql
+from gql.transport.requests import RequestsHTTPTransport
+from web3 import contract
 from web3.contract import ContractFunction, Contract
 from web3 import Web3, HTTPProvider
 from web3.types import (
@@ -17,10 +21,11 @@ from web3.types import (
 from lastwill.settings_local import WALLET_ADDRESS, PRIVATE_KEY
 
 from .consts import (
-    RUBIC_ADDRESS,
-    UNISWAP_ROUTER02_ADDRESS,
     INFURA_URL,
     MAX_SLIPPAGE,
+    RUBIC_ADDRESS,
+    UNISWAP_API_URL,
+    UNISWAP_ROUTER02_ADDRESS,
 )
 
 
@@ -44,9 +49,9 @@ def get_abi_by_filename(filename):
         return json.load(contract)
 
 
-def get_erc20_contract(token_addr: AddressLike) -> Contract:
-    # TODO: rewrite rubic contract use to erc20 contract
-    return load_contract(abi_name="erc20.json", address=token_addr)
+# def get_erc20_contract(token_addr: AddressLike) -> Contract:
+#     # TODO: rewrite rubic contract use to erc20 contract
+#     return load_contract(abi_name="erc20.json", address=token_addr)
 
 
 def load_contract(abi_name: str, address: AddressLike) -> Contract:
@@ -132,7 +137,7 @@ def approve(
     )
     tx = build_and_send_tx(function)
 
-    logging.info('Txn body: '.join(tx))
+    logging.info('Txn body: {}'.format(tx))
     logging.info('yep')
 
     w3.eth.waitForTransactionReceipt(tx, timeout=600)
@@ -155,8 +160,13 @@ def is_approved(token: AddressLike) -> bool:
     validate_address(token)
 
     contract_addr = UNISWAP_ROUTER02_ADDRESS
+    # amount = (
+    #     get_erc20_contract(token).functions
+    #     .allowance(WALLET_ADDRESS, contract_addr)
+    #     .call()
+    # )
     amount = (
-        get_erc20_contract(token).functions
+        load_contract('erc20.json', token).functions
         .allowance(WALLET_ADDRESS, contract_addr)
         .call()
     )
@@ -187,6 +197,8 @@ def get_eth_token_output_price(
         ]
     ).call()[0]
 
+    logging.info('ETH token output price is: {}'.format(price))
+
     return price
 
 
@@ -215,6 +227,8 @@ def get_token_eth_output_price(
         ]
     ).call()[0]
 
+    logging.info('Token ETH output price is: {}'.format(price))
+
     return price
 
 
@@ -223,6 +237,8 @@ def get_tx_params(value: Wei = Wei(0), gas: Wei = Wei(250000)) -> TxParams:
     """
     Get generic transaction parameters.
     """
+
+    logging.info('get_tx_params function was called.')
 
     return {
         "from": addr_to_str(WALLET_ADDRESS),
@@ -244,7 +260,9 @@ def eth_to_token_swap_output(
         recipient = WALLET_ADDRESS
 
     eth_qty = get_eth_token_output_price(
-        quantity_in_wei=qty, token_address=output_token)
+        quantity_in_wei=qty,
+        token_address=output_token
+    )
 
     contract = load_contract(
         'uniswap_router02.json',
@@ -271,15 +289,16 @@ def token_to_eth_swap_output(
     """
     # !---
     cost = get_token_eth_output_price(
-        token_address=input_token, quantity_in_wei=qty)
+        token_address=input_token,
+        quantity_in_wei=qty
+    )
     # ---
     max_tokens = int((1 + MAX_SLIPPAGE) * cost)
-
-    router_abi = get_abi_by_filename("uniswap_router02.json")
-    router_contract = w3.eth.contract(
-        address=UNISWAP_ROUTER02_ADDRESS, abi=router_abi)
-
-    swap_func = router_contract.functions.swapTokensForExactETH
+    contract = load_contract(
+        'uniswap_router02.json',
+        UNISWAP_ROUTER02_ADDRESS,
+    )
+    swap_func = contract.functions.swapTokensForExactETH
 
     return build_and_send_tx(
         swap_func(
@@ -310,6 +329,7 @@ def build_and_send_tx(
 
     # !--- Commented for test.
     # return w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    return w3.eth.send_raw_transaction(signed_txn.rawTransaction)
     # ---
 
 
@@ -322,6 +342,42 @@ def get_weth_address() -> ChecksumAddress:
         'uniswap_router02.json',
         UNISWAP_ROUTER02_ADDRESS,
     )
-    address = router_contract.functions.WETH().call()
 
-    return address
+    return router_contract.functions.WETH().call()
+
+
+def _get_rbc_eth_ratio(token_address) -> float:
+    """
+    Parse exchange rate rbc to eth from UniSwap.
+    Return exchange rate: float.
+    """
+    transport = RequestsHTTPTransport(url=UNISWAP_API_URL)
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+    query = gql(
+        """
+        {
+            token(id: "%s"){
+               name
+               symbol
+               decimals
+               derivedETH
+               tradeVolumeUSD
+               totalLiquidity
+            }
+        }
+        """ % token_address.lower()
+    )
+
+    while 1:
+        # Execute the query on the transport
+        result = client.execute(query)
+
+
+        if result:
+            logging.info('UNISWAP GQL response: {}'.format(
+                float(result.get("token").get("derivedETH")))
+            )
+
+            break
+
+    return float(result.get("token").get("derivedETH"))
