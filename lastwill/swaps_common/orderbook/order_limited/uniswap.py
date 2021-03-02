@@ -6,7 +6,6 @@ from typing import Union, Optional
 
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
-from web3 import contract
 from web3.contract import ContractFunction, Contract
 from web3 import Web3, HTTPProvider
 from web3.types import (
@@ -67,7 +66,6 @@ def get_eth_balance(wallet_address) -> Wei:
     """
     Get the balance of ETH in a wallet.
     """
-
     return w3.eth.getBalance(wallet_address)
 
 
@@ -96,10 +94,12 @@ def addr_to_str(a: AddressLike) -> str:
     if isinstance(a, bytes):
         # Address or ChecksumAddress
         addr: str = Web3.toChecksumAddress("0x" + bytes(a).hex())
+
         return addr
     elif isinstance(a, str):
         if a.startswith("0x"):
             addr = Web3.toChecksumAddress(a)
+
             return addr
 
 
@@ -136,14 +136,12 @@ def approve(
         contract_address, max_approval
     )
     tx = build_and_send_tx(function)
-
     logging.info('Txn body: {}'.format(tx))
     logging.info('yep')
 
     w3.eth.waitForTransactionReceipt(tx, timeout=600)
 
     logging.info('success')
-
     # Add extra sleep to let tx propogate correctly
     time.sleep(1)
 
@@ -263,7 +261,6 @@ def eth_to_token_swap_output(
         quantity_in_wei=qty,
         token_address=output_token
     )
-
     contract = load_contract(
         'uniswap_router02.json',
         UNISWAP_ROUTER02_ADDRESS
@@ -285,7 +282,7 @@ def token_to_eth_swap_output(
     input_token: AddressLike, qty: Wei
 ) -> HexBytes:
     """
-        Convert tokens to ETH given an output amount.
+    Convert tokens to ETH given an output amount.
     """
     # !---
     cost = get_token_eth_output_price(
@@ -325,6 +322,7 @@ def build_and_send_tx(
     signed_txn = w3.eth.account.sign_transaction(
         transaction, private_key=PRIVATE_KEY
     )
+
     logging.info(signed_txn.rawTransaction)
 
     # !--- Commented for test.
@@ -371,7 +369,6 @@ def _get_rbc_eth_ratio(token_address) -> float:
     while 1:
         # Execute the query on the transport
         result = client.execute(query)
-
 
         if result:
             logging.info('UNISWAP GQL response: {}'.format(

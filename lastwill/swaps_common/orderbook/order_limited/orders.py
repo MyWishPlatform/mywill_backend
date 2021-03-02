@@ -27,13 +27,11 @@ from .uniswap import (
 
     approve,
     build_and_send_tx,
-    get_tx_params,
     is_approved,
     eth_to_token_swap_output,
     get_eth_balance,
     get_eth_token_output_price,
     _get_rbc_eth_ratio,
-    get_rbc_balance,
     get_token_eth_output_price,
     load_contract,
     token_to_eth_swap_output,
@@ -62,12 +60,10 @@ def _get_matching_orders(
     contract_address,
     max_eth_value,
     max_token_value,
-    # кол-во рубиков в эфире.
 ):
     """
     Returns orders filtered by the amount.
     """
-    # print(list(queryset.values()))
     logging.info(
         'Total public and active orders: {}'.format(
             queryset.count()
@@ -87,11 +83,9 @@ def _get_matching_orders(
             network=network,
             contract_address=contract_address,
             base_address=quote_token_address,
-            quote_address=base_token_address,
-            # quote_limit__lte=matching_value,
-            # quote_amount_contributed=F('quote_limit') * BLOCKCHAIN_DECIMALS,
             base_limit__lte=max_token_value,
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
+            quote_address=base_token_address,
         )
     )
 
@@ -123,21 +117,17 @@ def _get_profitability_order(
 
     # TODO: переименовать под более подхдящее имя, потому что в сделках могут
     # участвовать не только эфир и рубик.
-    # active_eth_rbc_orders = _get_matching_orders(
-    #     queryset=_get_active_orders(),
-    #     base_token_address=base_token_address.lower(),
-    #     quote_token_address=quote_token_address.lower(),
-    #     network=network_id,
-    #     contract_address=contract_address.lower(),
-    #     # TODO: передать предельную сумму в эфире (до 5 включительно)
-    #     # и обмениваемого токена эквивателнтного до 5 эфира по текущему курсу.
-    #     max_eth_value=max_eth_volume,
-    #     max_token_value=max_token_volume,
-    # )
-
-    # !---
-    active_eth_rbc_orders = OrderBookSwaps.objects.filter(unique_link='643l60')
-    # ---
+    active_eth_rbc_orders = _get_matching_orders(
+        queryset=_get_active_orders(),
+        base_token_address=base_token_address.lower(),
+        quote_token_address=quote_token_address.lower(),
+        network=network_id,
+        contract_address=contract_address.lower(),
+        # TODO: передать предельную сумму в эфире (до 5 включительно)
+        # и обмениваемого токена эквивателнтного до 5 эфира по текущему курсу.
+        max_eth_value=max_eth_volume,
+        max_token_value=max_token_volume,
+    )
 
     matching_order_count = active_eth_rbc_orders.count()
 
@@ -148,19 +138,13 @@ def _get_profitability_order(
     }
 
     if active_eth_rbc_orders.exists():
-        # print(
-        #     f'Matching orders have been found is: {matching_order_count}.'
-        # )
         logging.info(
             f'Matching orders have been found is: {matching_order_count}.'
         )
-
         rbc_eth_ratio = _get_rbc_eth_ratio(RUBIC_ADDRESS)
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
-        # for counter, order in enumerate(active_eth_rbc_orders):
         for _, order in enumerate(active_eth_rbc_orders):
-
             if (
                 order.base_address == base_token_address.lower() and
                 order.quote_address == quote_token_address.lower()
@@ -200,12 +184,10 @@ def _get_profitability_order(
             else:
                 continue
 
-        # print(result)
         logging.info(result)
 
         return active_eth_rbc_orders.filter(id__in=profitable_orders)
 
-    # print('No active "ETH <> RBC" or "RBC <> ETH" orders yet.')
     logging.info('No active "ETH <> RBC" or "RBC <> ETH" orders yet.')
 
     return 0
@@ -245,7 +227,9 @@ def _check_profitability_eth_to_token(
         is_rbc = int(is_rbc)
     # eth_value and rbc_value in RBC
     # (eth_value - rbc_value) is diff in RBC token
-    profitability = is_rbc * (eth_value - rbc_value) * exchange_rate * ETH_DECIMALS + (ORDER_FEE * ETH_DECIMALS) - gas_fee - (PROFIT_RATIO * ETH_DECIMALS)
+    profitability = is_rbc * (eth_value - rbc_value) * exchange_rate * \
+    ETH_DECIMALS + (ORDER_FEE * ETH_DECIMALS) - gas_fee - (PROFIT_RATIO * \
+    ETH_DECIMALS)
 
     if profitability > 0:
         return True
@@ -311,15 +295,12 @@ def swap_token_on_uniswap(
     """
     # TODO: now it works only for ETH->TOKEN and TOKEN->ETH swaps
     #  needed to add TOKEN->TOKEN swap ability
-    # !--
     if not is_approved(RUBIC_ADDRESS):
         approve(RUBIC_ADDRESS)
     # ---
 
     if input_token == w3.toChecksumAddress(ETH_ADDRESS):
-        # !---
         logging.info('if input token is native ETH')
-        # ---
         balance = get_eth_balance(WALLET_ADDRESS)
         logging.info('balance')
         need = get_eth_token_output_price(
@@ -327,6 +308,7 @@ def swap_token_on_uniswap(
             quantity_in_wei=qty
         )
         logging.info("balance: {}\nneed: {}".format(balance, need))
+
         if balance < need:
             logging.info('balance < need is TRUE')
             # TODO: add logging "not enough eth token"
@@ -345,6 +327,7 @@ def swap_token_on_uniswap(
         #     pass
         # else:
         qty = Wei(qty)
+
         return token_to_eth_swap_output(input_token, qty)
 
 
@@ -416,9 +399,7 @@ def _complete_order(order: QuerySet = None):
     """
     Sends tokens to contract address.
     """
-    # !---
-    print('_complete_order_func')
-    # ---
+    logging.info('_complete_order_func')
     # approve tokens (build tx, sign tx, send tx)
     # timeout
     # func call
@@ -433,9 +414,7 @@ def _complete_order(order: QuerySet = None):
         MAINNET_CONTRACT_ABI,
         w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
     )
-
     logging.info(orderbook_contract)
-
     # `deposit`: ['deposit(bytes32,address,uint256)']
     transaction = orderbook_contract.functions.deposit(
         order.memo_contract,
@@ -443,35 +422,28 @@ def _complete_order(order: QuerySet = None):
         # w3.toWei(float(order.quote_limit), unit='ether'),
         w3.toWei(Decimal(order.quote_limit), unit='ether'),
     )
-
     logging.info(
         order.memo_contract,
         w3.toChecksumAddress(order.quote_address),
         w3.toWei(float(order.quote_limit), unit='ether'),
         sep='\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
     )
-
     tx_config = {
         "from": w3.toChecksumAddress(WALLET_ADDRESS),
         "gas": DEFAULT_GAS_LIMIT,
         'gasPrice': w3.eth.gasPrice,
         "nonce": w3.eth.getTransactionCount(WALLET_ADDRESS),
     }
-
     logging.info(tx_config)
-
     sended_transaction = build_and_send_tx(
         transaction,
         tx_params=tx_config
     )
-
     logging.info(sended_transaction)
-
     result = w3.eth.waitForTransactionReceipt(
         sended_transaction,
         timeout=600
     )
-
     logging.info(result)
 
     if result:
