@@ -94,5 +94,5 @@ class ContractDetailsBinanceICO(AbstractContractDetailsICO):
 
     @blocking
     @postponable
-    def deploy(self):
-        return super().deploy(attempts=BSC_WEB3_ATTEMPTS)
+    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+        return super().deploy(eth_contract_attr_name, attempts=BSC_WEB3_ATTEMPTS)
