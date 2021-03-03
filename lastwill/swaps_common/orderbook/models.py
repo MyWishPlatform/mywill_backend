@@ -214,6 +214,7 @@ class OrderBookSwaps(models.Model):
     is_rubic_order = models.BooleanField(default=False)
     rubic_initialized = models.BooleanField(default=False)
     is_displayed = models.BooleanField(default=True)
+    is_closed_by_limiter = models.BooleanField(default=False)
     # !--- Managers
     objects = Manager()
     public_active_orders = PublicActiveOrdersManager(state=STATE_ACTIVE)

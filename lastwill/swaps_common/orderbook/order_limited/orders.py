@@ -1,4 +1,3 @@
-from decimal import Decimal
 import logging
 from typing import Union
 
@@ -7,7 +6,11 @@ from django.db.models import Q, F
 
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
-from lastwill.settings_local import WALLET_ADDRESS
+from lastwill.settings_local import (
+    WALLET_ADDRESS,
+    ORDER_FEE,
+    PROFIT_RATIO,
+)
 
 from .consts import (
     RUBIC_ADDRESS,
@@ -18,8 +21,6 @@ from .consts import (
     DEFAULT_GAS_LIMIT,
     DEFAULT_ETH_VOLUME,
     DEFAULT_TOKEN_VOLUME,
-    ORDER_FEE,
-    PROFIT_RATIO,
 )
 from .etherscan import get_gas_price
 from .uniswap import (
@@ -78,6 +79,7 @@ def _get_matching_orders(
             base_limit__lte=max_eth_value,
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
             quote_address=quote_token_address,
+            is_closed_by_limiter=False,
         ) |
         Q(
             network=network,
@@ -86,6 +88,7 @@ def _get_matching_orders(
             base_limit__lte=max_token_value,
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
             quote_address=base_token_address,
+            is_closed_by_limiter=False,
         )
     )
 
@@ -128,6 +131,8 @@ def _get_profitability_order(
         max_eth_value=max_eth_volume,
         max_token_value=max_token_volume,
     )
+
+    # active_eth_rbc_orders = OrderBookSwaps.objects.filter(unique_link='81dppt')
 
     matching_order_count = active_eth_rbc_orders.count()
 
@@ -206,8 +211,10 @@ def _hide_order(order: QuerySet):
 def _set_done_status_order(order: QuerySet):
     """
     Changes order visibility to True and state to 'done'.
+    # TODO: done by order limiter
     """
     order.state = OrderBookSwaps.STATE_DONE
+    order.is_closed_by_limiter = True
     order.is_displayed = True
     order.save()
 
@@ -419,14 +426,15 @@ def _complete_order(order: QuerySet = None):
     transaction = orderbook_contract.functions.deposit(
         order.memo_contract,
         w3.toChecksumAddress(order.quote_address),
-        # w3.toWei(float(order.quote_limit), unit='ether'),
-        w3.toWei(Decimal(order.quote_limit), unit='ether'),
+        w3.toWei(float(order.quote_limit), unit='ether'),
+        # int(float(order.quote_limit) * ETH_DECIMALS),
     )
     logging.info(
-        order.memo_contract,
-        w3.toChecksumAddress(order.quote_address),
-        w3.toWei(float(order.quote_limit), unit='ether'),
-        sep='\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
+        '\nOrder memo: {}\nOrder qoute address: {}\nOrder quote limit: {}'.format(
+            order.memo_contract,
+            w3.toChecksumAddress(order.quote_address),
+            w3.toWei(float(order.quote_limit), unit='ether'),
+        )
     )
     tx_config = {
         "from": w3.toChecksumAddress(WALLET_ADDRESS),
@@ -434,6 +442,12 @@ def _complete_order(order: QuerySet = None):
         'gasPrice': w3.eth.gasPrice,
         "nonce": w3.eth.getTransactionCount(WALLET_ADDRESS),
     }
+
+    if order.quote_address == ETH_ADDRESS:
+        tx_config.update(
+            {"value": w3.toWei(float(order.quote_limit), unit='ether'),}
+        )
+
     logging.info(tx_config)
     sended_transaction = build_and_send_tx(
         transaction,
