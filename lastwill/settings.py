@@ -299,8 +299,8 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
         'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
     },
-    # 'running_order_limiter': {
-    #     'task': 'lastwill.swaps_common.orderbook.tasks.order_limiter',
-    #     'schedule': crontab(minute='*'),
-    # },
+    'running_order_limiter': {
+        'task': 'lastwill.swaps_common.tasks.order_limiter',
+        'schedule': crontab(minute='*'),
+    },
 }
