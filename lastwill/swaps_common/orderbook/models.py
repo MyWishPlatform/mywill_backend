@@ -77,12 +77,12 @@ class OrderBookSwaps(models.Model):
 
     name = models.CharField(
         max_length=512,
-        # null=True,
+        null=True,
         default=''
     )
     memo_contract = models.CharField(
         max_length=70,
-        # null=True,
+        null=True,
         default=_get_memo
     )
     network = models.ForeignKey(
@@ -99,7 +99,7 @@ class OrderBookSwaps(models.Model):
     # base_coin_id = models.IntegerField(default=0)
     base_address = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         default=''
     )
     base_limit = models.DecimalField(
@@ -109,7 +109,7 @@ class OrderBookSwaps(models.Model):
     # quote_coin_id = models.IntegerField(default=0)
     quote_address = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         default=''
     )
     quote_limit = models.DecimalField(
@@ -123,36 +123,36 @@ class OrderBookSwaps(models.Model):
     )
     owner_address = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         default=''
     )
     exchange_user = models.CharField(
         max_length=512,
-        # null=True,
+        null=True,
         default=''
     )
     broker_fee = models.BooleanField(default=False)
     broker_fee_address = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         default=''
     )
     broker_fee_base = models.FloatField(
-        # null=True,
+        null=True,
         default=0
     )
     broker_fee_quote = models.FloatField(
-        # null=True,
+        null=True,
         default=0
     )
     min_base_wei = models.CharField(
         max_length=512,
-        # null=True,
+        null=True,
         default=''
     )
     min_quote_wei = models.CharField(
         max_length=512,
-        # null=True,
+        null=True,
         default=''
     )
     base_amount_contributed = models.DecimalField(
@@ -178,7 +178,7 @@ class OrderBookSwaps(models.Model):
     public = models.BooleanField(default=True)
     unique_link = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         unique=True,
         default=_get_unique_link
     )
@@ -193,7 +193,7 @@ class OrderBookSwaps(models.Model):
         max_length=63,
         choices=ORDER_STATES,
         default=STATE_CREATED,
-        )
+    )
     state_changed_at = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
     whitelist_address = models.CharField(max_length=50, null=True)
@@ -202,18 +202,22 @@ class OrderBookSwaps(models.Model):
     notification = models.BooleanField(default=False)
     notification_email = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         default=''
     )
     notification_telegram_name = models.CharField(
         max_length=50,
-        # null=True,
+        null=True,
         default=''
     )
     comment = models.TextField(default='')
     is_rubic_order = models.BooleanField(default=False)
     rubic_initialized = models.BooleanField(default=False)
     is_displayed = models.BooleanField(default=True)
+    is_closed_by_limiter = models.BooleanField(default=False)
+    # ! ---
+    swaped_on_uniswap = models.BooleanField(default=False)
+    # --
     # !--- Managers
     objects = Manager()
     public_active_orders = PublicActiveOrdersManager(state=STATE_ACTIVE)
@@ -222,7 +226,7 @@ class OrderBookSwaps(models.Model):
     class Meta:
         indexes = (
             models.Index(
-                fields=['id', 'unique_link',]
+                fields=['id', 'unique_link', ]
             ),
         )
 
