@@ -65,6 +65,9 @@ def _get_matching_orders(
     """
     Returns orders filtered by the amount.
     """
+
+    _set_base_amount_contributed(queryset)
+
     logging.info(
         'Total public and active orders: {}'.format(
             queryset.count()
@@ -120,6 +123,8 @@ def _get_profitability_order(
 
     # TODO: переименовать под более подхдящее имя, потому что в сделках могут
     # участвовать не только эфир и рубик.
+
+
     active_eth_rbc_orders = _get_matching_orders(
         queryset=_get_active_orders(),
         base_token_address=base_token_address.lower(),
@@ -567,6 +572,41 @@ def _check_base_amount_contribute(order:QuerySet):
         # order.save()
 
     return 0
+
+
+def _set_base_amount_contributed(orders:QuerySet):
+    """
+    Sets base amount contributed in orders.
+    """
+
+    logging.info(
+        'Total non-base-amount-contributed orders: {}'.format(orders.count())
+    )
+
+    try:
+        orderbook_contract = load_contract(
+            MAINNET_CONTRACT_ABI,
+            w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+        )
+
+        for counter, order in enumerate(orders):
+            order_hash = order.memo_contract
+            order_is_base_raised = orderbook_contract.functions.baseRaised(
+                order_hash
+            ).call()
+
+            order.base_amount_contributed = order_is_base_raised
+            order.save()
+
+            logging.info(
+                '{}. Order updated: {}'.format(counter, order.id)
+            )
+    except Exception as exception_error:
+        logging.error('Exception: {}'.format(exception_error))
+
+        return 0
+
+    return 1
 
 
 # def check_tx_success(self, tx):
