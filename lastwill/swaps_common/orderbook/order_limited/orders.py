@@ -352,6 +352,9 @@ def _confirm_orders(
     # TODO: Надо паралеллить?
     for _, order in enumerate(eth_to_rbc_orders):
         # RBC -> ETH
+        if not _check_base_amount_contribute(order):
+            continue
+
         rbc_eth_ratio = get_eth_token_output_price(
             int(order.quote_limit * ETH_DECIMALS),
             RUBIC_ADDRESS,
@@ -377,6 +380,9 @@ def _confirm_orders(
 
     for _, order in enumerate(rbc_to_eth_orders):
         # ETH -> RBC
+        if not _check_base_amount_contribute(order):
+            continue
+
         # !--- TODO: needs refactor.
         eth_rbc_ratio = get_token_eth_output_price(
             int(order.quote_limit * ETH_DECIMALS),
@@ -426,8 +432,8 @@ def _complete_order(order: QuerySet = None):
     transaction = orderbook_contract.functions.deposit(
         order.memo_contract,
         w3.toChecksumAddress(order.quote_address),
-        w3.toWei(float(order.quote_limit), unit='ether'),
-        # int(float(order.quote_limit) * ETH_DECIMALS),
+        # w3.toWei(float(order.quote_limit), unit='ether'),
+        _get_quote_limit(order),
     )
     logging.info(
         '\nOrder memo: {}\nOrder qoute address: {}\nOrder quote limit: {}'.format(
@@ -502,6 +508,65 @@ def main(
     )
 
     return 1
+
+
+def _get_quote_limit(order:QuerySet):
+    """
+    Returns order's qoute limit from contract.
+    """
+    order_hash = order.memo_contract
+    orderbook_contract = load_contract(
+        MAINNET_CONTRACT_ABI,
+        w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+    )
+    order_qoute_limit =  orderbook_contract.functions.quoteLimit(
+        order_hash
+    ).call()
+
+    logging.info('order_qoute_limit: {}'.format(order_qoute_limit))
+
+    return order_qoute_limit
+
+
+def _check_base_amount_contribute(order:QuerySet):
+    """
+    Проверяет заполненность левой стороны.
+
+    Если левая сторона в следке заполнена:
+     - в БД заполняется base_amout_contributed
+     - сделка допускается для complete_order, возвращается 1
+    Если не заполнена:
+     - возвращается 0
+    """
+    order_hash = order.memo_contract
+    orderbook_contract = load_contract(
+        MAINNET_CONTRACT_ABI,
+        w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+    )
+    order_is_swaped = orderbook_contract.functions.isSwapped(
+        order_hash
+    ).call()
+
+    logging.info('order_is_swaped: {}'.format(order_is_swaped))
+
+    if not order_is_swaped:
+        order_is_base_filled = orderbook_contract.functions.isBaseFilled(
+            order_hash
+        ).call()
+
+        logging.info('order_is_base_filled: {}'.format(order_is_base_filled))
+
+        if order_is_base_filled:
+            return 1
+
+        # order_is_base_raised = orderbook_contract.functions.baseRaised(
+        #     order_hash
+        # ).call()
+
+        # order.base_amount_contributed = order_is_base_raised
+        # order.save()
+
+    return 0
 
 
 # def check_tx_success(self, tx):
