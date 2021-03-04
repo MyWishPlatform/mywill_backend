@@ -215,6 +215,9 @@ class OrderBookSwaps(models.Model):
     rubic_initialized = models.BooleanField(default=False)
     is_displayed = models.BooleanField(default=True)
     is_closed_by_limiter = models.BooleanField(default=False)
+    # ! ---
+    swaped_on_uniswap = models.BooleanField(default=False)
+    # --
     # !--- Managers
     objects = Manager()
     public_active_orders = PublicActiveOrdersManager(state=STATE_ACTIVE)

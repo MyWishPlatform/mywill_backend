@@ -296,10 +296,11 @@ def _check_profitability(
 
 
 def swap_token_on_uniswap(
+    order: QuerySet,
     input_token: AddressLike,
     output_token: AddressLike,
     qty: Union[int, Wei],
-    recipient: AddressLike = None
+    recipient: AddressLike = None,
 ) -> HexBytes:
     """
     Make a trade by defining the qty of the output token.
@@ -328,7 +329,12 @@ def swap_token_on_uniswap(
         else:
             logging.info('balance < need is FALSE')
 
-            return eth_to_token_swap_output(output_token, qty, recipient)
+            eth_to_token_swap_output(output_token, qty, recipient)
+
+            order.swaped_on_uniswap = True
+            order.save()
+
+            return 1
 
     elif output_token == w3.toChecksumAddress(ETH_ADDRESS):
         logging.info('if output token is ETH token')
@@ -340,7 +346,14 @@ def swap_token_on_uniswap(
         # else:
         qty = Wei(qty)
 
-        return token_to_eth_swap_output(input_token, qty)
+        token_to_eth_swap_output(input_token, qty)
+
+        order.swaped_on_uniswap = True
+        order.save()
+
+        return 1
+
+    return 0
 
 
 def _confirm_orders(
@@ -376,11 +389,14 @@ def _confirm_orders(
             rbc_value=1,
             is_rbc=True
         ):
-            swap_token_on_uniswap(
-                input_token=w3.toChecksumAddress(order.base_address),
-                output_token=w3.toChecksumAddress(order.quote_address),
-                qty=int(order.quote_limit * ETH_DECIMALS)
-            )
+            if not order.swaped_on_uniswap:
+                swap_token_on_uniswap(
+                    order=order,
+                    input_token=w3.toChecksumAddress(order.base_address),
+                    output_token=w3.toChecksumAddress(order.quote_address),
+                    qty=int(order.quote_limit * ETH_DECIMALS),
+                )
+
             _complete_order(order)
 
     for _, order in enumerate(rbc_to_eth_orders):
@@ -405,11 +421,14 @@ def _confirm_orders(
             is_rbc=False
 
         ):
-            swap_token_on_uniswap(
-                input_token=w3.toChecksumAddress(order.base_address),
-                output_token=w3.toChecksumAddress(order.quote_address),
-                qty=int(order.quote_limit * ETH_DECIMALS)
-            )
+            if not order.swaped_on_uniswap:
+                swap_token_on_uniswap(
+                    order=order,
+                    input_token=w3.toChecksumAddress(order.base_address),
+                    output_token=w3.toChecksumAddress(order.quote_address),
+                    qty=int(order.quote_limit * ETH_DECIMALS),
+                )
+
             _complete_order(order)
 
 
