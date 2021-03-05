@@ -34,25 +34,43 @@ def _get_unique_link():
 
 
 class PublicActiveOrdersManager(Manager):
-    def __init__(self, state, public=True):
-        self.public = public
+    def __init__(
+        self,
+        state,
+        public=True,
+        is_rubic_order=True,
+        rubic_initialized=True,
+    ):
         self.state = state
+        self.public = public
+        self.stop_date = timezone.now()
+        self.is_rubic_order=is_rubic_order
+        self.rubic_initialized=rubic_initialized
         super().__init__()
 
     @property
     def get_state(self):
         return self.state
 
+    @property
+    def get_is_rubic_order(self):
+        return self.is_rubic_order
+
+    @property
+    def get_is_rubic_init(self):
+        return self.rubic_initialized
+
+    @property
+    def get_stop_date(self):
+        return self.stop_date
+
     def get_queryset(self):
         return super().get_queryset().filter(
-            # TODO: Посмотреть можно ли сделать регистронезависимый поиск
-            # для поля name.
-            # name__in=[
-            #     'RBC <> ETH',
-            #     'ETH <> RBC',
-            # ],
             public=self.public,
+            stop_date__gte=self.get_stop_date,
             state__iexact=self.get_state,
+            is_rubic_order=self.get_is_rubic_order,
+            rubic_initialized=self.get_is_rubic_init
         )
 
 
