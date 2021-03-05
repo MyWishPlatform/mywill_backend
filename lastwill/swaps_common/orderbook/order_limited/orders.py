@@ -191,6 +191,8 @@ def _get_profitability_order(
                 # print(f'{counter}. YEP!')
                 result['profitable_orders'] += 1
                 profitable_orders.append(order.id)
+
+                _hide_order(order)
             else:
                 continue
 
@@ -488,7 +490,7 @@ def _complete_order(order: QuerySet = None):
         sended_transaction,
         timeout=600
     )
-    logging.info(result)
+    # logging.info(result)
 
     if result:
         _set_done_status_order(order)
