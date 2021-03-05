@@ -289,7 +289,6 @@ def eth_to_token_swap_output(
     return 1
 
 
-
 def token_to_eth_swap_output(
     input_token: AddressLike, qty: Wei
 ) -> HexBytes:
