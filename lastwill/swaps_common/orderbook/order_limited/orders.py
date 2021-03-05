@@ -10,17 +10,17 @@ from lastwill.settings_local import (
     WALLET_ADDRESS,
     ORDER_FEE,
     PROFIT_RATIO,
+    DEFAULT_ETH_VOLUME,
+    DEFAULT_RBC_VOLUME,
 )
 
 from .consts import (
     RUBIC_ADDRESS,
-    MAINNET_CONTRACT_ADDRESS,
-    MAINNET_CONTRACT_ABI,
+    MAINNET_ORDERBOOK_ADDRESS,
+    MAINNET_ORDERBOOK_ABI,
 
     DEFAULT_NETWORK_ID,
     DEFAULT_GAS_LIMIT,
-    DEFAULT_ETH_VOLUME,
-    DEFAULT_TOKEN_VOLUME,
 )
 from .etherscan import get_gas_price
 from .uniswap import (
@@ -448,8 +448,8 @@ def _complete_order(order: QuerySet = None):
     # TEST_AMOUNT = float('1422.32415256')
 
     orderbook_contract = load_contract(
-        MAINNET_CONTRACT_ABI,
-        w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+        MAINNET_ORDERBOOK_ABI,
+        w3.toChecksumAddress(MAINNET_ORDERBOOK_ADDRESS),
     )
     logging.info(orderbook_contract)
     # `deposit`: ['deposit(bytes32,address,uint256)']
@@ -500,9 +500,9 @@ def main(
     base_token_address=ETH_ADDRESS,
     quote_token_address=RUBIC_ADDRESS,
     network_id=DEFAULT_NETWORK_ID,
-    contract_address=MAINNET_CONTRACT_ADDRESS,
+    contract_address=MAINNET_ORDERBOOK_ADDRESS,
     max_eth_volume=DEFAULT_ETH_VOLUME,
-    max_token_volume=DEFAULT_TOKEN_VOLUME
+    max_token_volume=DEFAULT_RBC_VOLUME
 ):
     """
     Fill me.
@@ -540,8 +540,8 @@ def _get_quote_limit(order:QuerySet):
     """
     order_hash = order.memo_contract
     orderbook_contract = load_contract(
-        MAINNET_CONTRACT_ABI,
-        w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+        MAINNET_ORDERBOOK_ABI,
+        w3.toChecksumAddress(MAINNET_ORDERBOOK_ADDRESS),
     )
     order_qoute_limit =  orderbook_contract.functions.quoteLimit(
         order_hash
@@ -564,8 +564,8 @@ def _check_base_amount_contribute(order:QuerySet):
     """
     order_hash = order.memo_contract
     orderbook_contract = load_contract(
-        MAINNET_CONTRACT_ABI,
-        w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+        MAINNET_ORDERBOOK_ABI,
+        w3.toChecksumAddress(MAINNET_ORDERBOOK_ADDRESS),
     )
     order_is_swaped = orderbook_contract.functions.isSwapped(
         order_hash
@@ -604,8 +604,8 @@ def _set_base_amount_contributed(orders:QuerySet):
 
     try:
         orderbook_contract = load_contract(
-            MAINNET_CONTRACT_ABI,
-            w3.toChecksumAddress(MAINNET_CONTRACT_ADDRESS),
+            MAINNET_ORDERBOOK_ABI,
+            w3.toChecksumAddress(MAINNET_ORDERBOOK_ADDRESS),
         )
 
         for counter, order in enumerate(orders):

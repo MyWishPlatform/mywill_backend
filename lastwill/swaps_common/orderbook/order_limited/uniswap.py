@@ -267,7 +267,7 @@ def eth_to_token_swap_output(
     )
     swap_func = contract.functions.swapETHForExactTokens
 
-    return build_and_send_tx(
+    sended_transaction = build_and_send_tx(
         swap_func(
             qty,
             [get_weth_address(), RUBIC_ADDRESS],
@@ -276,6 +276,18 @@ def eth_to_token_swap_output(
         ),
         get_tx_params(eth_qty),
     )
+
+    # ---
+    logging.info(sended_transaction)
+    result = w3.eth.waitForTransactionReceipt(
+        sended_transaction,
+        timeout=600
+    )
+    logging.info(result)
+    # ---
+
+    return 1
+
 
 
 def token_to_eth_swap_output(
@@ -297,7 +309,7 @@ def token_to_eth_swap_output(
     )
     swap_func = contract.functions.swapTokensForExactETH
 
-    return build_and_send_tx(
+    sended_transaction = build_and_send_tx(
         swap_func(
             qty,
             max_tokens,
@@ -306,6 +318,17 @@ def token_to_eth_swap_output(
             deadline(),
         ),
     )
+
+    # ---
+    logging.info(sended_transaction)
+    result = w3.eth.waitForTransactionReceipt(
+        sended_transaction,
+        timeout=600
+    )
+    logging.info(result)
+    # ---
+
+    return 1
 
 
 def build_and_send_tx(
