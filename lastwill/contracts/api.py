@@ -1548,20 +1548,3 @@ def get_verification_cost(request):
     btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
 
-
-def send_verification_mail(network, addresses, compiler, files):
-    mail = EmailMessage(
-        subject=verification_subject,
-        body=verification_message.format(
-            network=network,
-            addresses=', '.join(addresses),
-            compiler_version=compiler,
-            optimization='Yes',
-            runs='200',
-        ),
-        from_email=DEFAULT_FROM_EMAIL,
-        to=[SUPPORT_EMAIL]
-    )
-    for filename, code in files.items():
-        mail.attach(filename, code)
-    mail.send()

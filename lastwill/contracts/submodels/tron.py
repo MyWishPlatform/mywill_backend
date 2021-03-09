@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
-from lastwill.contracts.api import send_verification_mail
+from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
 
 from tronapi import Tron, HttpProvider
