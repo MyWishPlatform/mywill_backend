@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.contracts.api import send_verification_mail
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT
@@ -293,21 +294,15 @@ class AbstractContractDetailsICO(CommonDetails):
                 [self.contract.user.email]
             )
         if self.verification:
-            mail = EmailMessage(
-                subject=verification_subject,
-                body=verification_message.format(
-                    network=self.contract.network.name,
-                    addresses=self.eth_contract_token.address + ', ' + self.eth_contract_crowdsale.address,
-                    compiler_version=self.eth_contract_crowdsale.compiler_version,
-                    optimization='Yes',
-                    runs='200',
-                ),
-                from_email=DEFAULT_FROM_EMAIL,
-                to=[SUPPORT_EMAIL]
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(self.eth_contract_token.address, self.eth_contract_crowdsale.address,),
+                compiler=self.eth_contract_token.compiler_version,
+                files={
+                    'token.sol': self.eth_contract_token.source_code,
+                    'ico.sol': self.eth_contract_crowdsale.source_code,
+                },
             )
-            mail.attach('token.sol', self.eth_contract_token.source_code)
-            mail.attach('ico.sol', self.eth_contract_crowdsale.source_code)
-            mail.send()
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
@@ -471,20 +466,12 @@ class AbstractContractDetailsToken(CommonDetails):
                 [self.authio_email]
             )
         if self.verification:
-            mail = EmailMessage(
-                subject=verification_subject,
-                body=verification_message.format(
-                    network=self.contract.network.name,
-                    addresses=self.eth_contract_token.address,
-                    compiler_version=self.eth_contract_token.compiler_version,
-                    optimization='Yes',
-                    runs='200'
-                ),
-                from_email=DEFAULT_FROM_EMAIL,
-                to=[SUPPORT_EMAIL]
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(self.eth_contract_token.address,),
+                compiler=self.eth_contract_token.compiler_version,
+                files={'token.sol': self.eth_contract_token.source_code},
             )
-            mail.attach('code.sol', self.eth_contract_token.source_code)
-            mail.send()
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()

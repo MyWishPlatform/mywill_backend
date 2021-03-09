@@ -265,6 +265,18 @@ WEB3_ATTEMPT_COOLDOWN = 10
 
 BSC_WEB3_ATTEMPTS = 10
 
+VERIFICATION_CONTRACTS_IDS = (
+    4,  # common ICO
+    5,  # common Token
+    8,  # common AirDrop
+    27,  # binance ICO
+    28,  # binance Token
+    29,  # binance AirDrop
+    15,  # tron Token
+    16,  # tron GameAsset
+    17,  # tron AirDrop
+)
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:

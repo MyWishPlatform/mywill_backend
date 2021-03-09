@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL, VERIFICATION_CONTRACTS_IDS
 from lastwill.consts import NET_DECIMALS, VERIFICATION_PRICE_USDT
 from exchange_API import *
 from .models import *
@@ -56,7 +56,7 @@ def get_discount(request):
             if contract.contract_type == 5:
                 if contract_details.authio:
                     options_cost += 450 * NET_DECIMALS['USDT']
-            if contract.contract_type in (5, 4, 8, 27, 28):
+            if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
                 if contract_details.verification:
                     options_cost += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 

@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from collections import OrderedDict
 import cloudscraper
 
-from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
     RUBIC_FIN_URL
 from lastwill.permissions import IsOwner, IsStaff
@@ -252,7 +252,7 @@ def check_promocode(promo_str, user, cost, contract, details):
     if contract.contract_type == 5:
         if details.authio:
             options_price += 450 * NET_DECIMALS['USDT']
-    if contract.contract_type in (5, 4, 8, 27, 28, 29):
+    if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
         if details.verification:
             options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
@@ -1476,12 +1476,9 @@ def buy_verification(request):
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
 
-    if contract.contract_type not in (4, 5, 8, 27, 28, 29):
+    if contract.contract_type not in VERIFICATION_CONTRACTS_IDS:
         raise PermissionDenied
-    '''
-    if contract.network.name != 'ETHEREUM_MAINNET':
-        raise PermissionDenied
-    '''
+
     details = contract.get_details()
     cost = VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
     currency = 'USDT'
@@ -1495,51 +1492,50 @@ def buy_verification(request):
     details.save()
 
     if contract.contract_type in (5, 28):
-        mail = EmailMessage(
-            subject=verification_subject,
-            body=verification_message.format(
-                network=details.contract.network.name,
-                addresses=details.eth_contract_token.address,
-                compiler_version=details.eth_contract_token.compiler_version,
-                optimization='Yes',
-                runs='200',
-            ),
-            from_email=DEFAULT_FROM_EMAIL,
-            to=[SUPPORT_EMAIL]
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.eth_contract_token.address, ),
+            compiler=details.eth_contract_token.compiler_version,
+            files={'token.sol': details.eth_contract_token.source_code},
         )
-        mail.attach('code.sol', details.eth_contract_token.source_code)
-        mail.send()
     elif contract.contract_type in (4, 27):
-        mail = EmailMessage(
-            subject=verification_subject,
-            body=verification_message.format(
-                network=details.contract.network.name,
-                addresses=details.eth_contract_token.address + ', ' + details.eth_contract_crowdsale.address,
-                compiler_version=details.eth_contract_token.compiler_version,
-                optimization='Yes',
-                runs='200',
-            ),
-            from_email=DEFAULT_FROM_EMAIL,
-            to=[SUPPORT_EMAIL]
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address, ),
+            compiler=details.eth_contract_token.compiler_version,
+            files={
+                'token.sol': details.eth_contract_token.source_code,
+                'ico.sol': details.eth_contract_crowdsale.source_code,
+            },
         )
-        mail.attach('token.sol', details.eth_contract_token.source_code)
-        mail.attach('ico.sol', details.eth_contract_crowdsale.source_code)
-        mail.send()
     elif contract.contract_type in (8, 29):
-        mail = EmailMessage(
-            subject=verification_subject,
-            body=verification_message.format(
-                network=details.contract.network.name,
-                addresses=details.eth_contract.address,
-                compiler_version=details.eth_contract.compiler_version,
-                optimization='Yes',
-                runs='200',
-            ),
-            from_email=DEFAULT_FROM_EMAIL,
-            to=[SUPPORT_EMAIL]
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.eth_contract.address,),
+            compiler=details.eth_contract.compiler_version,
+            files={'airdrop.sol': details.eth_contract.source_code},
         )
-        mail.attach('code.sol', details.eth_contract.source_code)
-        mail.send()
+    elif contract.contract_type == 15:
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.tron_contract_token.address,),
+            compiler=details.tron_contract_token.compiler_version,
+            files={'token.sol': details.tron_contract_token.source_code},
+        )
+    elif contract.contract_type == 16:
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.tron_contract_token.address,),
+            compiler=details.tron_contract_token.compiler_version,
+            files={'gameAsset.sol': details.tron_contract_token.source_code},
+        )
+    elif contract.contract_type == 17:
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.tron_contract.address,),
+            compiler=details.tron_contract.compiler_version,
+            files={'airdrop.sol': details.tron_contract.source_code},
+        )
 
     return Response('ok')
 
@@ -1551,3 +1547,21 @@ def get_verification_cost(request):
     wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
     btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+
+
+def send_verification_mail(network, addresses, compiler, files):
+    mail = EmailMessage(
+        subject=verification_subject,
+        body=verification_message.format(
+            network=network,
+            addresses=', '.join(addresses),
+            compiler_version=compiler,
+            optimization='Yes',
+            runs='200',
+        ),
+        from_email=DEFAULT_FROM_EMAIL,
+        to=[SUPPORT_EMAIL]
+    )
+    for filename, code in files.items():
+        mail.attach(filename, code)
+    mail.send()
