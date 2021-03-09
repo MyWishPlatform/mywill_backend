@@ -14,6 +14,8 @@ from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
 
 from tronapi import Tron, HttpProvider
+from tron_wif.hex2wif import hex2tronwif
+
 
 
 def convert_address_to_hex(address):
@@ -229,7 +231,7 @@ class ContractDetailsTRONToken(CommonDetails):
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
-                addresses=(self.tron_contract_token.address,),
+                addresses=(hex2tronwif(self.tron_contract_token.address),),
                 compiler=self.tron_contract_token.compiler_version,
                 files={'token.sol': self.tron_contract_token.source_code},
             )
@@ -407,7 +409,7 @@ class ContractDetailsGameAssets(CommonDetails):
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
-                addresses=(self.tron_contract_token.address,),
+                addresses=(hex2tronwif(self.tron_contract_token.address),),
                 compiler=self.tron_contract_token.compiler_version,
                 files={'gameAsset.sol': self.tron_contract_token.source_code},
             )
@@ -628,7 +630,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
-                addresses=(self.tron_contract.address,),
+                addresses=(hex2tronwif(self.tron_contract.address),),
                 compiler=self.tron_contract.compiler_version,
                 files={'airdrop.sol': self.tron_contract.source_code},
             )

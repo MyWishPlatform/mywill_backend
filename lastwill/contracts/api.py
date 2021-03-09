@@ -31,6 +31,8 @@ from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
 from django.db.models import Q
+from tron_wif.hex2wif import hex2tronwif
+
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
@@ -1518,21 +1520,21 @@ def buy_verification(request):
     elif contract.contract_type == 15:
         send_verification_mail(
             network=details.contract.network.name,
-            addresses=(details.tron_contract_token.address,),
+            addresses=(hex2tronwif(details.tron_contract_token.address),),
             compiler=details.tron_contract_token.compiler_version,
             files={'token.sol': details.tron_contract_token.source_code},
         )
     elif contract.contract_type == 16:
         send_verification_mail(
             network=details.contract.network.name,
-            addresses=(details.tron_contract_token.address,),
+            addresses=(hex2tronwif(details.tron_contract_token.address),),
             compiler=details.tron_contract_token.compiler_version,
             files={'gameAsset.sol': details.tron_contract_token.source_code},
         )
     elif contract.contract_type == 17:
         send_verification_mail(
             network=details.contract.network.name,
-            addresses=(details.tron_contract.address,),
+            addresses=(hex2tronwif(details.tron_contract.address),),
             compiler=details.tron_contract.compiler_version,
             files={'airdrop.sol': details.tron_contract.source_code},
         )
