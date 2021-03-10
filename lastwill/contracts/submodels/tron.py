@@ -9,10 +9,13 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.airdrop import AirdropAddress
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
+from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
 
 from tronapi import Tron, HttpProvider
+from tron_wif.hex2wif import hex2tronwif
+
 
 
 def convert_address_to_hex(address):
@@ -67,6 +70,10 @@ class ContractDetailsTRONToken(CommonDetails):
     future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def predeploy_validate(self):
         now = timezone.now()
         token_holders = self.contract.tokenholder_set.all()
@@ -85,8 +92,10 @@ class ContractDetailsTRONToken(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_USDT['TRON_TOKEN'] * NET_DECIMALS['USDT'])
-        return result
+        price = CONTRACT_PRICE_USDT['TRON_TOKEN']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost_tron(cls):
@@ -219,6 +228,19 @@ class ContractDetailsTRONToken(CommonDetails):
         self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
 
+        if self.verification:
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(hex2tronwif(self.tron_contract_token.address),),
+                compiler=self.tron_contract_token.compiler_version,
+                files={'token.sol': self.tron_contract_token.source_code},
+            )
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
+
+
+
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
                 'UNDER_CROWDSALE', 'ENDED'
@@ -259,6 +281,10 @@ class ContractDetailsGameAssets(CommonDetails):
         on_delete=models.SET_NULL
     )
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def predeploy_validate(self):
         pass
 
@@ -272,8 +298,10 @@ class ContractDetailsGameAssets(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_USDT['TRON_GAME_ASSETS'] * NET_DECIMALS['USDT'])
-        return result
+        price = CONTRACT_PRICE_USDT['TRON_GAME_ASSETS']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost_tron(cls):
@@ -372,14 +400,22 @@ class ContractDetailsGameAssets(CommonDetails):
 
         raise ValidationError({'result': 1}, code=400)
 
-
-
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
         self.contract.save()
         self.tron_contract_token.address = message['address']
         self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
+        if self.verification:
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(hex2tronwif(self.tron_contract_token.address),),
+                compiler=self.tron_contract_token.compiler_version,
+                files={'gameAsset.sol': self.tron_contract_token.source_code},
+            )
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -419,6 +455,10 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         on_delete=models.SET_NULL
     )
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def get_arguments(self, *args, **kwargs):
         return [
             self.admin_address,
@@ -438,8 +478,10 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        result = int(CONTRACT_PRICE_USDT['TRON_AIRDROP'] * NET_DECIMALS['USDT'])
-        return result
+        price = CONTRACT_PRICE_USDT['TRON_AIRDROP']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost_tron(cls):
@@ -585,6 +627,16 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.tron_contract.save()
         take_off_blocking(self.contract.network.name)
 
+        if self.verification:
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(hex2tronwif(self.tron_contract.address),),
+                compiler=self.tron_contract.compiler_version,
+                files={'airdrop.sol': self.tron_contract.source_code},
+            )
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
