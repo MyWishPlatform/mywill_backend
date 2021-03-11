@@ -33,6 +33,7 @@ from lastwill.contracts.submodels.token_protector import ContractDetailsTokenPro
 from django.db.models import Q
 from tron_wif.hex2wif import hex2tronwif
 
+from lastwill.rates.api import rate
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
@@ -809,7 +810,7 @@ def get_cost_all_contracts(request):
             'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
             'WISH': str(int(
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
-            ) * convert('USDT', 'WISH')['WISH'])
+            ) * rate('USD', 'WISH'))
         }
     return JsonResponse(answer)
 
@@ -1549,4 +1550,3 @@ def get_verification_cost(request):
     wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
     btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
-
