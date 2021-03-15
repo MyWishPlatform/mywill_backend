@@ -474,7 +474,7 @@ def get_new_currency_statistics():
 
 
 def get_tron_balance(address, testnet=False):
-    url = TRON_BALANCE_API_URL['testnet' if testnet else 'mainnet'].format(address)
+    url = TRON_BALANCE_API_URL['testnet' if testnet else 'mainnet'].format(address=address)
     response = requests.get(url).json()
     balance = response['data'][0]['balance']
     return balance / NET_DECIMALS['TRON']
