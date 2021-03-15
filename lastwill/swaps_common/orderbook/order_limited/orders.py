@@ -10,8 +10,10 @@ from lastwill.settings_local import (
     WALLET_ADDRESS,
     ORDER_FEE,
     PROFIT_RATIO,
-    DEFAULT_ETH_VOLUME,
-    DEFAULT_RBC_VOLUME,
+    DEFAULT_MIN_ETH_VOLUME,
+    DEFAULT_MIN_RBC_VOLUME,
+    DEFAULT_MAX_ETH_VOLUME,
+    DEFAULT_MAX_RBC_VOLUME,
 )
 
 from .consts import (
@@ -59,11 +61,13 @@ def _get_matching_orders(
     quote_token_address,
     network,
     contract_address,
+    min_eth_volume,
+    min_token_volume,
     max_eth_value,
     max_token_value,
 ):
     """
-    Returns orders filtered by the amount.
+    Returns orders filtered by the min and max amounts.
     """
 
     _set_base_amount_contributed(queryset)
@@ -77,20 +81,22 @@ def _get_matching_orders(
     return queryset.filter(
         Q(
             network=network,
-            contract_address=contract_address,
-            base_address=base_token_address,
-            base_limit__lte=max_eth_value,
+            contract_address=contract_address.lower(),
+            base_address=base_token_address.lower(),
+            # base_limit__lte=max_eth_value,
+            base_limit__range=(min_eth_volume, max_eth_value),
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
-            quote_address=quote_token_address,
+            quote_address=quote_token_address.lower(),
             is_closed_by_limiter=False,
         ) |
         Q(
             network=network,
-            contract_address=contract_address,
-            base_address=quote_token_address,
-            base_limit__lte=max_token_value,
+            contract_address=contract_address.lower(),
+            base_address=quote_token_address.lower(),
+            # base_limit__lte=max_token_value,
+            base_limit__range=(min_token_volume, max_token_value),
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
-            quote_address=base_token_address,
+            quote_address=base_token_address.lower(),
             is_closed_by_limiter=False,
         )
     )
@@ -101,6 +107,8 @@ def _get_profitability_order(
     quote_token_address,
     network_id,
     contract_address,
+    min_eth_volume,
+    min_token_volume,
     max_eth_volume,
     max_token_volume,
 ):
@@ -131,8 +139,8 @@ def _get_profitability_order(
         quote_token_address=quote_token_address.lower(),
         network=network_id,
         contract_address=contract_address.lower(),
-        # TODO: передать предельную сумму в эфире (до 5 включительно)
-        # и обмениваемого токена эквивателнтного до 5 эфира по текущему курсу.
+        min_eth_volume=min_eth_volume,
+        min_token_volume=min_token_volume,
         max_eth_value=max_eth_volume,
         max_token_value=max_token_volume,
     )
@@ -503,8 +511,10 @@ def main(
     quote_token_address=RUBIC_ADDRESS,
     network_id=DEFAULT_NETWORK_ID,
     contract_address=MAINNET_ORDERBOOK_ADDRESS,
-    max_eth_volume=DEFAULT_ETH_VOLUME,
-    max_token_volume=DEFAULT_RBC_VOLUME
+    min_eth_volume=DEFAULT_MIN_ETH_VOLUME,
+    min_token_volume=DEFAULT_MIN_RBC_VOLUME,
+    max_eth_volume=DEFAULT_MAX_ETH_VOLUME,
+    max_token_volume=DEFAULT_MAX_RBC_VOLUME,
 ):
     """
     Fill me.
@@ -518,6 +528,8 @@ def main(
         quote_token_address=quote_token_address,
         network_id=network_id,
         contract_address=contract_address,
+        min_eth_volume=min_eth_volume,
+        min_token_volume=min_token_volume,
         max_eth_volume=max_eth_volume,
         max_token_volume=max_token_volume,
     )
