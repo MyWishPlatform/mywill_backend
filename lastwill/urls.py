@@ -59,7 +59,6 @@ from lastwill.contracts.api import (
     test_comp,
     get_verification_cost,
     buy_verification,
-    deploy_accounts_balances_view,
 )
 from lastwill.contracts.api_common import (
     get_available_contracts,
@@ -149,6 +148,10 @@ from lastwill.swaps_common.tokentable.api import (
     get_coingecko_tokens,
     get_coins_rate,
     get_standarts_tokens
+)
+from lastwill.dashboard.views import (
+    deploy_accounts_balances_view,
+    contract_statistic_by_ids_view,
 )
 
 router = DefaultRouter(trailing_slash=True)
@@ -287,6 +290,7 @@ urlpatterns = [
     url(r'^api/buy_verification/$', buy_verification),
     url(r'^api/get_verification_cost/$', get_verification_cost),
     url(r'^api/deploy_accounts_balances/$', deploy_accounts_balances_view),
+    url(r'^api/contract_statictic_by_ids/$', contract_statistic_by_ids_view),
 
     #panama_bridge
     url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
