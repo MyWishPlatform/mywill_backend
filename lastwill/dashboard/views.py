@@ -87,7 +87,7 @@ def contracts_common_statistic_view(request):
 
 
 @api_view()
-def users_statistic_view():
+def users_statistic_view(request):
     users = User.objects.all()
     now = datetime.now()
     midnight = datetime.combine(now.today(), time(0, 0))
