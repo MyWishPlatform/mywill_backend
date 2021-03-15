@@ -496,8 +496,8 @@ def get_balance_via_w3(network):
         return None
 
 
-@api_view
-def deploy_accounts_balances_view():
+@api_view()
+def deploy_accounts_balances_view(request):
     response = {
         'Ethereum': {
             'mainnet': get_balance_via_w3('ETHEREUM_MAINNET'),
