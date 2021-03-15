@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from collections import OrderedDict
 import cloudscraper
 
-from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS, \
+    TRON_BALANCE_API_URL, EOS_ACCOUNT_API_URL
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
     RUBIC_FIN_URL
 from lastwill.permissions import IsOwner, IsStaff
@@ -31,6 +32,7 @@ import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
 from django.db.models import Q
 from tron_wif.hex2wif import hex2tronwif
+from web3 import Web3, HTTPProvider
 
 from lastwill.rates.api import rate
 
@@ -469,6 +471,56 @@ def get_new_currency_statistics():
         answer[key] = result_value
 
     return answer
+
+
+def get_tron_balance(address, testnet=False):
+    url = TRON_BALANCE_API_URL['testnet' if testnet else 'mainnet'].format(address)
+    response = requests.get(url).json()
+    balance = response['data'][0]['balance']
+    return balance / NET_DECIMALS['TRON']
+
+
+def get_eos_balance(account, testnet=False):
+    url = EOS_ACCOUNT_API_URL['testnet' if testnet else 'mainnet']
+    payload = {'account_name': account}
+    response = requests.post(url, json=payload).json()
+    balance = response['core_liquid_balance']
+    return balance
+
+
+def get_balance_via_w3(network):
+    w3 = Web3(HTTPProvider(NETWORKS[network]['node_url']))
+    try:
+        return w3.eth.getBalance(NETWORKS[network]['address'])
+    except Exception:
+        return None
+
+
+@api_view
+def deploy_accounts_balances_view():
+    response = {
+        'Ethereum': {
+            'mainnet': get_balance_via_w3('ETHEREUM_MAINNET'),
+            'testnet': get_balance_via_w3('ETHEREUM_ROPSTEN'),
+        },
+        'Binance-Smart-Chain': {
+            'mainnet': get_balance_via_w3('BINANCE_SMART_MAINNET'),
+            'testnet': get_balance_via_w3('BINANCE_SMART_TESTNET'),
+        },
+        'Matic': {
+            'mainnet': get_balance_via_w3('MATIC_MAINNET'),
+            'testnet': get_balance_via_w3('MATIC_TESTNET'),
+        },
+        'Tron': {
+            'mainnet': get_tron_balance(NETWORKS['TRON_MAINNET']['address']),
+            'testnet': get_tron_balance(NETWORKS['TRON_TESTNET']['address'], testnet=True),
+        },
+        'Eosio': {
+            'mainnet': get_eos_balance(NETWORKS['EOS_MAINNET']['address']),
+            'testnet': get_eos_balance(NETWORKS['EOS_TESTNET']['address'], testnet=True),
+        }
+    }
+    return JsonResponse(response)
 
 
 def get_balances_statistics():
