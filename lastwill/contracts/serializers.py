@@ -1350,7 +1350,12 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
         fields = (
             'token_name', 'token_short_name', 'decimals',
             'admin_address', 'token_type', 'future_minting',
+            'verification', 'verification_status', 'verification_date_payment',
         )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         token_holders = contract_details.pop('token_holders')
@@ -1413,8 +1418,13 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsGameAssets
         fields = (
-            'token_name', 'token_short_name', 'admin_address', 'uri'
+            'token_name', 'token_short_name', 'admin_address', 'uri',
+            'verification', 'verification_status', 'verification_date_payment'
         )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
@@ -1448,7 +1458,14 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
 class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTRONAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = (
+            'admin_address', 'token_address',
+            'verification', 'verification_status', 'verification_date_payment'
+        )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

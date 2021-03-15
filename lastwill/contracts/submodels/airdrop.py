@@ -2,8 +2,7 @@ from django.db import models
 import datetime
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
-from lastwill.settings import SUPPORT_EMAIL
-from django.core.mail import EmailMessage
+from lastwill.emails_api import send_verification_mail
 
 
 class AirdropAddress(models.Model):
@@ -130,20 +129,12 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         super().msg_deployed(message, 'eth_contract')
         if self.verification:
-            mail = EmailMessage(
-                subject=verification_subject,
-                body=verification_message.format(
-                    network=self.contract.network.name,
-                    addresses=self.eth_contract.address,
-                    compiler_version=self.eth_contract.compiler_version,
-                    optimization='Yes',
-                    runs='200',
-                ),
-                from_email=DEFAULT_FROM_EMAIL,
-                to=[SUPPORT_EMAIL]
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(self.eth_contract.address,),
+                compiler=self.eth_contract.compiler_version,
+                files={'airdrop.sol': self.eth_contract.source_code},
             )
-            mail.attach('code.sol', self.eth_contract.source_code)
-            mail.send()
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
