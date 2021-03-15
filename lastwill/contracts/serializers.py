@@ -231,11 +231,11 @@ class ContractSerializer(serializers.ModelSerializer):
         usdt_cost = int(usdt_cost)
         res['cost'] = {
             'USDT': str(usdt_cost),
-            'ETH': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'ETH') * 10 ** 18)),
-            'WISH': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'WISH') * 10 ** 18)),
-            'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * rate('USDT', 'BTC') * 10 ** 8), 0))),
-            'EOS': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'EOS') * 10 ** 4)),
-            'TRON': str(int(round((int(usdt_cost) * rate('USDT', 'TRX')), 0))),
+            'ETH': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
+            'WISH': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
+            'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8), 0))),
+            'EOS': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'EOS').value * 10 ** 4)),
+            'TRON': str(int(round((int(usdt_cost) * rate('USDT', 'TRX').value), 0))),
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
@@ -243,7 +243,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost_eos(res['contract_details'], contract.network))
             res['cost']['EOSISH'] = str(float(
                 res['cost']['EOS']
-            ) * rate('EOS', 'EOSISH'))
+            ) * rate('EOS', 'EOSISH').value)
         if contract.network.name == 'EOS_TESTNET':
             res['cost']['EOS'] = 0
             res['cost']['EOSISH'] = 0
@@ -261,12 +261,12 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
-                'ETH': str(int(cost) * rate('USDT', 'ETH') * NET_DECIMALS['ETH']),
-                'WISH': str(int(cost) * rate('USDT', 'WISH') * NET_DECIMALS['WISH']),
-                'BTC': str(int(cost) * rate('USDT', 'BTC') * NET_DECIMALS['BTC']),
-                'BNB': str(int(cost) * rate('USDT', 'BNB') * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * rate('USDT', 'SWAP') * NET_DECIMALS['SWAP']),
-                'OKB': str(int(cost) * rate('USDT', 'OKB') * NET_DECIMALS['OKB'])
+                'ETH': str(int(cost) * rate('USDT', 'ETH').value * NET_DECIMALS['ETH']),
+                'WISH': str(int(cost) * rate('USDT', 'WISH').value * NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * rate('USDT', 'BTC').value * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * rate('USDT', 'BNB').value * NET_DECIMALS['BNB']),
+                'SWAP': str(int(cost) * rate('USDT', 'SWAP').value * NET_DECIMALS['SWAP']),
+                'OKB': str(int(cost) * rate('USDT', 'OKB').value * NET_DECIMALS['OKB'])
             }
         elif contract.contract_type == 23:
             cost = Contract.get_details_model(
@@ -274,12 +274,12 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
-                'ETH': str(int(cost) * rate('USDT', 'ETH') * NET_DECIMALS['ETH']),
-                'WISH': str(int(cost) * rate('USDT', 'WISH') * NET_DECIMALS['WISH']),
-                'BTC': str(int(cost) * rate('USDT', 'BTC') * NET_DECIMALS['BTC']),
-                'BNB': str(int(cost) * rate('USDT', 'BNB') * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * rate('USDT', 'SWAP') * NET_DECIMALS['SWAP']),
-                'OKB': str(int(cost) * rate('USDT', 'OKB') * NET_DECIMALS['OKB'])
+                'ETH': str(int(cost) * rate('USDT', 'ETH').value * NET_DECIMALS['ETH']),
+                'WISH': str(int(cost) * rate('USDT', 'WISH').value * NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * rate('USDT', 'BTC').value * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * rate('USDT', 'BNB').value * NET_DECIMALS['BNB']),
+                'SWAP': str(int(cost) * rate('USDT', 'SWAP').value * NET_DECIMALS['SWAP']),
+                'OKB': str(int(cost) * rate('USDT', 'OKB').value * NET_DECIMALS['OKB'])
             }
 
         return res

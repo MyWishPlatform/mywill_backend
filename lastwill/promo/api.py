@@ -49,7 +49,7 @@ def get_discount(request):
             cost = contract_details.calc_cost_eos(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'EOS': cost,
-                'EOSISH': str(float(cost) * rate('EOS', 'EOSISH'))
+                'EOSISH': str(float(cost) * rate('EOS', 'EOSISH').value)
             }
         elif host == MY_WISH_URL:
             options_cost = 0
@@ -63,11 +63,11 @@ def get_discount(request):
             cost = (contract.cost - options_cost) * (100 - discount) / 100 + options_cost
             answer['discount_price'] = {
                 'USDT': str(cost),
-                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH') * 10 ** 18)),
-                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH') * 10 ** 18)),
-                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC') * 10 ** 8)),
-                'TRX': str(int(int(cost) * rate('ETH', 'TRX'))),
-                'TRONISH': str(int(int(cost) * rate('ETH', 'TRX')))
+                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
+                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
+                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8)),
+                'TRX': str(int(int(cost) * rate('ETH', 'TRX').value)),
+                'TRONISH': str(int(int(cost) * rate('ETH', 'TRX').value))
             }
         elif host == TRON_URL:
             kwargs = ContractSerializer().get_details_serializer(
@@ -86,11 +86,11 @@ def get_discount(request):
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'USDT': str(cost),
-                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH') * 10 ** 18)),
-                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH') * 10 ** 18)),
-                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC') * 10 ** 8)),
-                'TRX': str(int(int(cost) * rate('ETH', 'TRX'))),
-                'TRONISH': str(int(int(cost) * rate('ETH', 'TRX')))
+                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
+                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
+                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8)),
+                'TRX': str(int(int(cost) * rate('ETH', 'TRX').value)),
+                'TRONISH': str(int(int(cost) * rate('ETH', 'TRX').value))
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(
@@ -99,10 +99,10 @@ def get_discount(request):
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'ETH': str(cost),
-                'WISH': str(int(cost * rate('ETH', 'WISH'))),
-                'BTC': str(int(cost * rate('ETH', 'BTC'))),
-                'TRX': str(int(cost) / 10 ** 18 * rate('ETH', 'TRX') * 10 ** 6),
-                'TRONISH': str(int(cost) / 10 ** 18 * rate('ETH', 'TRONISH') * 10 ** 6)
+                'WISH': str(int(cost * rate('ETH', 'WISH').value)),
+                'BTC': str(int(cost * rate('ETH', 'BTC').value)),
+                'TRX': str(int(cost) / 10 ** 18 * rate('ETH', 'TRX').value * 10 ** 6),
+                'TRONISH': str(int(cost) / 10 ** 18 * rate('ETH', 'TRONISH').value * 10 ** 6)
             }
 
     return Response(answer)

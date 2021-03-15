@@ -199,7 +199,7 @@ def profile_view(request):
             'eos_address': 'mywishcoming',
             'bnb_address': BINANCE_PAYMENT_ADDRESS,
             'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else '',
-            'usdt_balance': str(int(int(user_balance.balance) / 10 ** 18 * rate('WISH', 'USDT') * 10 ** 6)),
+            'usdt_balance': str(int(int(user_balance.balance) / 10 ** 18 * rate('WISH', 'USDT').value * 10 ** 6)),
             'is_swaps_admin': request.user.profile.is_swaps_admin,
             'swaps_notifications': swaps_notifications
     }

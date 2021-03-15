@@ -33,7 +33,7 @@ def login(request):
 
 @api_view()
 def eth2rub(request):
-    return Response({'RUB': rate('ETH', 'RUB')})
+    return Response({'RUB': rate('ETH', 'RUB').value})
 
 @api_view()
 def exc_rate(request):
@@ -41,7 +41,7 @@ def exc_rate(request):
     tsyms = request.query_params['tsyms'].split(',')
     response = {}
     for tsym in tsyms:
-        response[tsym] = rate(fsym, tsym)
+        response[tsym] = rate(fsym, tsym).value
     print(f'{fsym} -> {tsym} rate(s) is', response, flush=True)
     return Response(response)
 

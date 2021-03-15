@@ -216,7 +216,7 @@ class ContractDetailsEOSAccount(CommonDetails):
             return 0
         eos_cost_base = CONTRACT_PRICE_USDT['EOS_ACCOUNT'] * NET_DECIMALS['USDT']
         eos_cost = ContractDetailsEOSAccount.calc_cost_eos(kwargs, network) / NET_DECIMALS['EOS']
-        cost = eos_cost * rate('EOS', 'ETH')
+        cost = eos_cost * rate('EOS', 'ETH').value
         print('convert eos cost', cost, flush=True)
         converted_cost = round(cost, 2) * NET_DECIMALS['USDT']
         if converted_cost < eos_cost_base:

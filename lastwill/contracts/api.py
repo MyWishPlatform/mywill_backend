@@ -40,7 +40,7 @@ BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
-    wish_cost = int(cost) * rate('ETH', 'WISH')
+    wish_cost = int(cost) * rate('ETH', 'WISH').value
     if promo_str:
         try:
             discount = check_and_get_discount(
@@ -811,7 +811,7 @@ def get_cost_all_contracts(request):
             'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
             'WISH': str(int(
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
-            ) * rate('USD', 'WISH'))
+            ) * rate('USD', 'WISH').value)
         }
     return JsonResponse(answer)
 
@@ -1042,10 +1042,10 @@ def get_eos_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH')),
-        'ETH': str(eos_cost * rate('EOS', 'ETH')),
-        'WISH': str(eos_cost * rate('EOS', 'WISH')),
-        'BTC': str(eos_cost * rate('EOS', 'BTC')),
+        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH').value),
+        'ETH': str(eos_cost * rate('EOS', 'ETH').value),
+        'WISH': str(eos_cost * rate('EOS', 'WISH').value),
+        'BTC': str(eos_cost * rate('EOS', 'BTC').value),
     })
 
 
@@ -1067,10 +1067,10 @@ def get_eos_airdrop_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH')),
-        'ETH': str(eos_cost * rate('EOS', 'ETH')),
-        'WISH': str(eos_cost * rate('EOS', 'WISH')),
-        'BTC': str(eos_cost * rate('EOS', 'BTC')),
+        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH').value),
+        'ETH': str(eos_cost * rate('EOS', 'ETH').value),
+        'WISH': str(eos_cost * rate('EOS', 'WISH').value),
+        'BTC': str(eos_cost * rate('EOS', 'BTC').value),
     })
 
 
@@ -1154,9 +1154,9 @@ def buy_brand_report(request):
 def get_authio_cost(request):
     raw_usdt = CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO']
     usdt = str(raw_usdt * NET_DECIMALS['USDT'])
-    eth = str(raw_usdt * rate('USDT', 'ETH') * NET_DECIMALS['ETH'])
-    wish = str(raw_usdt * rate('USDT', 'WISH') * NET_DECIMALS['WISH'])
-    btc = str(raw_usdt * rate('USDT', 'BTC') * NET_DECIMALS['BTC'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
 
 
@@ -1549,7 +1549,7 @@ def buy_verification(request):
 def get_verification_cost(request):
     raw_usdt = VERIFICATION_PRICE_USDT
     usdt = str(raw_usdt * NET_DECIMALS['USDT'])
-    eth = str(raw_usdt * rate('USDT', 'ETH') * NET_DECIMALS['ETH'])
-    wish = str(raw_usdt * rate('USDT', 'WISH') * NET_DECIMALS['WISH'])
-    btc = str(raw_usdt * rate('USDT', 'BTC') * NET_DECIMALS['BTC'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})

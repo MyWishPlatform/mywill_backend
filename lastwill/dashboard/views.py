@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lastwill.contracts.submodels.common import Contract
 from lastwill.deploy.models import Network
+from lastwill.rates.api import rate
 from lastwill.settings import NETWORKS
 from lastwill.dashboard.api import get_eos_balance, get_tron_balance, get_balance_via_w3, contracts_today_filter
 
@@ -95,4 +96,18 @@ def users_statistic_view(request):
         'all': users.count(),
         'new': users.filter(date_joined__lte=midnight, date_joined__gte=now).count()
     }
+    return JsonResponse(response)
+
+
+@api_view()
+def advanced_rate_view(request):
+    fsym = request.query_params['fsym']
+    tsyms = request.query_params['tsyms'].split(',')
+    response = {}
+    for tsym in tsyms:
+        rate_obj = rate(fsym, tsym)
+        response[tsym] = {
+            'rate': rate_obj.value,
+            'is_24h_up': rate_obj.is_up_24h,
+        }
     return JsonResponse(response)
