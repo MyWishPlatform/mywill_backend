@@ -343,13 +343,3 @@ TEMP_SYMBOLS = {
     'TRONISH': 'TRX',
     'USD': 'USDT',
 }
-
-TRON_BALANCE_API_URL = {
-    'testnet': 'https://api.shasta.trongrid.io/v1/accounts/{address}',
-    'mainnet': 'https://api.trongrid.io/v1/accounts/{address}',
-}
-
-EOS_ACCOUNT_API_URL = {
-    'testnet': 'https://jungle2.cryptolions.io/v1/chain/get_account',
-    'mainnet': 'https://eos.greymass.com/v1/chain/get_account',
-}
