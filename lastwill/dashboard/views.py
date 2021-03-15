@@ -1,3 +1,5 @@
+from django.contrib.auth.models import User
+from datetime import datetime, time
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lastwill.contracts.submodels.common import Contract
@@ -81,4 +83,16 @@ def contracts_common_statistic_view(request):
             },
         }
 
+    return JsonResponse(response)
+
+
+@api_view()
+def users_statistic_view():
+    users = User.objects.all()
+    now = datetime.now()
+    midnight = datetime.combine(now.today(), time(0, 0))
+    response = {
+        'all': users.count(),
+        'new': users.filter(date_joined__lte=midnight, date_joined__gte=now).count()
+    }
     return JsonResponse(response)
