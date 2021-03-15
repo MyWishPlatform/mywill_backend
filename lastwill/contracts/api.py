@@ -491,7 +491,9 @@ def get_eos_balance(account, testnet=False):
 def get_balance_via_w3(network):
     w3 = Web3(HTTPProvider(NETWORKS[network]['node_url']))
     try:
-        return w3.eth.getBalance(NETWORKS[network]['address'])
+        checksum_address = w3.toChecksumAddress(NETWORKS[network]['address'])
+        raw_balance = w3.eth.getBalance(checksum_address)
+        return raw_balance / NET_DECIMALS['ETH']
     except Exception:
         return None
 
