@@ -151,7 +151,8 @@ from lastwill.swaps_common.tokentable.api import (
 )
 from lastwill.dashboard.views import (
     deploy_accounts_balances_view,
-    contract_statistic_by_ids_view,
+    contracts_statistic_by_ids_view,
+    contracts_common_statistic_view,
 )
 
 router = DefaultRouter(trailing_slash=True)
@@ -289,8 +290,11 @@ urlpatterns = [
     url(r'^api/get_all_promos/$', get_all_promos_api),
     url(r'^api/buy_verification/$', buy_verification),
     url(r'^api/get_verification_cost/$', get_verification_cost),
+
+    # dashboard
     url(r'^api/deploy_accounts_balances/$', deploy_accounts_balances_view),
-    url(r'^api/contract_statictic_by_ids/$', contract_statistic_by_ids_view),
+    url(r'^api/contracts_statictic_by_id/$', contracts_statistic_by_ids_view),
+    url(r'^api/contracts_common_statistic/$', contracts_common_statistic_view),
 
     #panama_bridge
     url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
