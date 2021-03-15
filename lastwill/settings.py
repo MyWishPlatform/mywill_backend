@@ -345,8 +345,8 @@ TEMP_SYMBOLS = {
 }
 
 TRON_BALANCE_API_URL = {
-    'testnet': 'https://api.trongrid.io/v1/accounts/{address}',
-    'mainnet': 'https://api.shasta.trongrid.io/v1/accounts/{address}',
+    'testnet': 'https://api.shasta.trongrid.io/v1/accounts/{address}',
+    'mainnet': 'https://api.trongrid.io/v1/accounts/{address}',
 }
 
 EOS_ACCOUNT_API_URL = {
