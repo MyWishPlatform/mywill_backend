@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from datetime import datetime, time
 from lastwill.consts import NET_DECIMALS
 from lastwill.settings import TRON_BALANCE_API_URL, EOS_ACCOUNT_API_URL, NETWORKS
 from web3 import Web3, HTTPProvider
