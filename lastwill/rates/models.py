@@ -11,18 +11,20 @@ class Rate(models.Model):
     fsym = models.CharField(max_length=50)
     tsym = models.CharField(max_length=50)
     value = models.FloatField()
+    is_up_24h = models.BooleanField()
     last_update_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = (('fsym', 'tsym'),)
 
-    @staticmethod
-    def _get_coingecko_rate(fsym, tsym):
-        response = requests.get(COINGECKO_API_URL.format(fsym=fsym, tsym=tsym))
+    @classmethod
+    def _get_coin_info(cls, sym):
+        coin_id = cls._get_coingecko_sym(sym)
+        response = requests.get(COINGECKO_API_URL.format(coin_id=coin_id))
         if response.status_code != 200:
-            raise RateException('Cannot get rate from coingecko.com')
+            raise RateException('Cannot get token info from coingecko.com')
 
-        return response.json()[fsym][tsym]
+        return response.json()
 
     @staticmethod
     def _get_coingecko_sym(sym):
@@ -32,27 +34,25 @@ class Rate(models.Model):
             raise RateException(f'Unknown symbol: {sym}')
 
     @classmethod
-    def _get_rate(cls, fsym, tsym):
+    def _process_rate(cls, fsym, tsym):
         if fsym == tsym:
-            value = 1.0
-        elif fsym == 'USD':
-            coingecko_tsym = cls._get_coingecko_sym(tsym)
-            value = 1 / cls._get_coingecko_rate(coingecko_tsym, 'usd')
-        elif tsym == 'USD':
-            coingecko_fsym = cls._get_coingecko_sym(fsym)
-            value = cls._get_coingecko_rate(coingecko_fsym, tsym.lower())
-        else:
-            coingecko_fsym = cls._get_coingecko_sym(fsym)
-            coingecko_tsym = cls._get_coingecko_sym(tsym)
+            return 1.0, False
 
-            try:
-                value = cls._get_coingecko_rate(coingecko_fsym, tsym.lower())
-            except KeyError:  # if coingecko returns {} or {tsym: {}}
-                fsym_usd_rate = cls._get_coingecko_rate(coingecko_fsym, 'usd')
-                tsym_usd_rate = cls._get_coingecko_rate(coingecko_tsym, 'usd')
-                value = fsym_usd_rate / tsym_usd_rate
+        fsym_info = cls._get_coin_info(fsym)
 
-        return value
+        try:
+            value = fsym_info['market_data']['current_price'][tsym.lower()]
+            is_up_24h = fsym_info['price_change_24h_in_currency'][tsym.lower()] > 0
+
+        except KeyError:
+            tsym_info = cls._get_coin_info(tsym)
+
+            fsym_usd_rate = fsym_info['market_data']['current_price']['usd']
+            tsym_usd_rate = tsym_info['market_data']['current_price']['usd']
+            value = fsym_usd_rate / tsym_usd_rate
+            is_up_24h = fsym_info['price_change_24h_in_currency']['usd'] > 0
+
+        return value, is_up_24h
 
     def _get_result_value(self, value):
         if self.fsym == 'TRONISH':
@@ -67,6 +67,7 @@ class Rate(models.Model):
         fsym = self.fsym if self.fsym not in TEMP_SYMBOLS else TEMP_SYMBOLS[self.fsym]
         tsym = self.tsym if self.tsym not in TEMP_SYMBOLS else TEMP_SYMBOLS[self.tsym]
 
-        raw_value = self._get_rate(fsym, tsym)
+        raw_value, is_up_24h = self._process_rate(fsym, tsym)
 
         self.value = self._get_result_value(raw_value)  # apply additional logic if required
+        self.is_up_24h = is_up_24h

@@ -322,7 +322,7 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 
-COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids={fsym}&vs_currencies={tsym}'
+COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'
 
 COINGECKO_SYMBOLS = {
     'ETH': 'ethereum',
@@ -340,5 +340,6 @@ COINGECKO_SYMBOLS = {
 }
 
 TEMP_SYMBOLS = {
-    'TRONISH': 'TRX'
+    'TRONISH': 'TRX',
+    'USD': 'USDT',
 }
