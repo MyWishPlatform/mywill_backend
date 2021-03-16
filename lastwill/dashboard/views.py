@@ -3,9 +3,8 @@ from datetime import datetime, time
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lastwill.contracts.submodels.common import Contract
-from lastwill.deploy.models import Network
 from lastwill.rates.api import rate
-from lastwill.settings import NETWORKS
+from lastwill.settings import NETWORKS, DASHBOARD_NETWORKS
 from lastwill.dashboard.api import get_eos_balance, get_tron_balance, get_balance_via_w3, contracts_today_filter
 
 
@@ -36,52 +35,54 @@ def deploy_accounts_balances_view(request):
     return JsonResponse(response)
 
 
-@api_view()
-def contracts_statistic_by_ids_view(request):
-    contracts = Contract.objects.all()
-    contract_types = Contract.get_all_details_model()
-    result = {}
-    for i, contract_type in enumerate(contract_types):
-        contracts = contracts.filter(contract_type=contract_type)
-        result[i] = {
+def generate_contracts_statistic(network, types):
+    contracts = Contract.objects.filter(network__name=network)
+    created = contracts.filter(state='CREATED')
+    deployed = contracts.filter(state__in=('ACTIVE', 'WAITING', 'WAITING_ACTIVATION'))
+    postponed = contracts.filter(state='POSTPONED')
+    in_process = contracts.filter(state='WAITING_FOR_DEPLOYMENT')
+
+    contracts_by_types = {}
+    for name, type in types.items():
+        contracts = contracts.filter(contract_type=type)
+        contracts_by_types[name] = {
             'all': contracts.count(),
             'new': contracts_today_filter(contracts).count()
         }
-    return JsonResponse(result)
+
+    result = {
+        'total': {
+            'all': contracts.count(),
+            'new': contracts_today_filter(contracts).count(),
+        },
+        'created': {
+            'all': created.count(),
+            'new': contracts_today_filter(created).count(),
+        },
+        'deployed': {
+            'all': deployed.count(),
+            'new': contracts_today_filter(deployed).count(),
+        },
+        'postponed': {
+            'all': postponed.count(),
+            'new': contracts_today_filter(deployed).count(),
+        },
+        'in_process': {
+            'all': in_process.count(),
+            'new': contracts_today_filter(in_process).count(),
+        },
+        'types': contracts_by_types
+    }
+    return result
 
 
 @api_view()
-def contracts_common_statistic_view(request):
-    networks = Network.objects.all()
+def contracts_statistic_view(request):
     response = {}
-    for network in networks:
-        contracts = Contract.objects.filter(network=network)
-        created = contracts.filter(state='CREATED')
-        deployed = contracts.filter(state__in=('ACTIVE', 'WAITING', 'WAITING_ACTIVATION'))
-        postponed = contracts.filter(state='POSTPONED')
-        in_process = contracts.filter(state='WAITING_FOR_DEPLOYMENT')
-
-        response[network.name] = {
-            'total': {
-                'all': contracts.count(),
-                'new': contracts_today_filter(contracts).count(),
-            },
-            'created': {
-                'all': created.count(),
-                'new': contracts_today_filter(created).count(),
-            },
-            'deployed': {
-                'all': deployed.count(),
-                'new': contracts_today_filter(deployed).count(),
-            },
-            'postponed': {
-                'all': postponed.count(),
-                'new': contracts_today_filter(deployed).count(),
-            },
-            'in_process': {
-                'all': in_process.count(),
-                'new': contracts_today_filter(in_process).count(),
-            },
+    for network, info in DASHBOARD_NETWORKS.items():
+        response[network] = {
+            'mainnet': generate_contracts_statistic(info['original_name']['mainnet'], info['contracts']),
+            'testnet': generate_contracts_statistic(info['original_name']['testnet'], info['contracts']),
         }
 
     return JsonResponse(response)

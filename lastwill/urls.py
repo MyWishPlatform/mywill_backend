@@ -151,8 +151,7 @@ from lastwill.swaps_common.tokentable.api import (
 )
 from lastwill.dashboard.views import (
     deploy_accounts_balances_view,
-    contracts_statistic_by_ids_view,
-    contracts_common_statistic_view,
+    contracts_statistic_view,
     users_statistic_view,
     advanced_rate_view,
 )
@@ -295,8 +294,7 @@ urlpatterns = [
 
     # dashboard
     url(r'^api/deploy_accounts_balances/$', deploy_accounts_balances_view),
-    url(r'^api/contracts_statictic_by_id/$', contracts_statistic_by_ids_view),
-    url(r'^api/contracts_common_statistic/$', contracts_common_statistic_view),
+    url(r'^api/contracts_statistic/$', contracts_statistic_view),
     url(r'^api/users_statistic/$', users_statistic_view),
     url(r'^api/advanced_rate/$', advanced_rate_view),
 

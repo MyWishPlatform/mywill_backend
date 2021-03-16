@@ -343,3 +343,65 @@ TEMP_SYMBOLS = {
     'TRONISH': 'TRX',
     'USD': 'USDT',
 }
+
+DASHBOARD_NETWORKS = {
+    'Ethereum': {
+        'original_name': {
+            'mainnet': 'ETHEREUM_MAINNET',
+            'testnet': 'ETHEREUM_ROPSTEN',
+        },
+        'contracts': {
+            'ico': 4,
+            'token': 5,
+            'airdrop': 8,
+            'investment_poll': 9,
+            'token_protector': 23,
+        }
+    },
+    'Binance-Smart-Chain': {
+        'original_name': {
+            'mainnet': 'BINANCE_SMART_MAINNET',
+            'testnet': 'BINANCE_SMART_TESTNET',
+        },
+        'contracts': {
+            'ico': 27,
+            'token': 28,
+            'airdrop': 29,
+        }
+    },
+    'Matic': {
+        'original_name': {
+            'mainnet': 'MATIC_MAINNET',
+            'testnet': 'MATIC_TESTNET',
+        },
+         'contracts': {
+            'ico': 32,
+            'token': 33,
+            'airdrop': 34,
+        }
+    },
+    'Tron': {
+        'original_name': {
+            'mainnet': 'TRON_MAINNET',
+            'testnet': 'TRON_TESTNET',
+        },
+         'contracts': {
+            'token': 15,
+            'game_asset': 16,
+            'airdrop': 17,
+        }
+    },
+    'Eosio': {
+        'original_name': {
+            'mainnet': 'EOS_MAINNET',
+            'testnet': 'EOS_TESTNET',
+        },
+         'contracts': {
+            'token': 10,
+            'account': 11,
+            'ico': 12,
+            'airdrop': 13,
+            'token_standalone': 14,
+        }
+    },
+}
