@@ -65,7 +65,7 @@ def generate_contracts_statistic(network, types):
         },
         'postponed': {
             'all': postponed.count(),
-            'new': contracts_today_filter(deployed).count(),
+            'new': contracts_today_filter(postponed).count(),
         },
         'in_process': {
             'all': in_process.count(),
