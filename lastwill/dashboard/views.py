@@ -36,15 +36,15 @@ def deploy_accounts_balances_view(request):
 
 
 def generate_contracts_statistic(network, types):
-    contracts = Contract.objects.filter(network__name=network)
-    created = contracts.filter(state='CREATED')
-    deployed = contracts.filter(state__in=('ACTIVE', 'WAITING', 'WAITING_ACTIVATION'))
-    postponed = contracts.filter(state='POSTPONED')
-    in_process = contracts.filter(state='WAITING_FOR_DEPLOYMENT')
+    total = Contract.objects.filter(network__name=network)
+    created = total.filter(state='CREATED')
+    deployed = total.filter(state__in=('ACTIVE', 'WAITING', 'WAITING_ACTIVATION'))
+    postponed = total.filter(state='POSTPONED')
+    in_process = total.filter(state='WAITING_FOR_DEPLOYMENT')
 
     contracts_by_types = {}
     for name, type in types.items():
-        contracts = contracts.filter(contract_type=type)
+        contracts = total.filter(contract_type=type)
         contracts_by_types[name] = {
             'all': contracts.count(),
             'new': contracts_today_filter(contracts).count()
@@ -52,8 +52,8 @@ def generate_contracts_statistic(network, types):
 
     result = {
         'total': {
-            'all': contracts.count(),
-            'new': contracts_today_filter(contracts).count(),
+            'all': total.count(),
+            'new': contracts_today_filter(total).count(),
         },
         'created': {
             'all': created.count(),
