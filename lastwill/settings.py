@@ -345,7 +345,7 @@ TEMP_SYMBOLS = {
 }
 
 DASHBOARD_NETWORKS = {
-    'Ethereum': {
+    'ETHEREUM': {
         'original_name': {
             'mainnet': 'ETHEREUM_MAINNET',
             'testnet': 'ETHEREUM_ROPSTEN',
@@ -358,7 +358,7 @@ DASHBOARD_NETWORKS = {
             'token_protector': 23,
         }
     },
-    'Binance-Smart-Chain': {
+    'BINANCE_SMART_CHAIN': {
         'original_name': {
             'mainnet': 'BINANCE_SMART_MAINNET',
             'testnet': 'BINANCE_SMART_TESTNET',
@@ -369,7 +369,7 @@ DASHBOARD_NETWORKS = {
             'airdrop': 29,
         }
     },
-    'Matic': {
+    'MATIC': {
         'original_name': {
             'mainnet': 'MATIC_MAINNET',
             'testnet': 'MATIC_TESTNET',
@@ -380,7 +380,7 @@ DASHBOARD_NETWORKS = {
             'airdrop': 34,
         }
     },
-    'Tron': {
+    'TRON': {
         'original_name': {
             'mainnet': 'TRON_MAINNET',
             'testnet': 'TRON_TESTNET',
@@ -391,7 +391,7 @@ DASHBOARD_NETWORKS = {
             'airdrop': 17,
         }
     },
-    'Eosio': {
+    'EOSIO': {
         'original_name': {
             'mainnet': 'EOS_MAINNET',
             'testnet': 'EOS_TESTNET',
