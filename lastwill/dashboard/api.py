@@ -1,20 +1,22 @@
 import requests
 from datetime import datetime, time
 from lastwill.consts import NET_DECIMALS
-from lastwill.settings import TRON_BALANCE_API_URL, EOS_ACCOUNT_API_URL, NETWORKS
+from lastwill.settings import NETWORKS
 from web3 import Web3, HTTPProvider
 
 
-def get_tron_balance(address, testnet=False):
-    url = TRON_BALANCE_API_URL['testnet' if testnet else 'mainnet'].format(address=address)
+def get_tron_balance(network):
+    network_info = NETWORKS[network]
+    url = f'{network_info["host"]}/v1/accounts/{network_info["address"]}'
     response = requests.get(url).json()
     balance = response['data'][0]['balance']
     return balance / NET_DECIMALS['TRON']
 
 
-def get_eos_balance(account, testnet=False):
-    url = EOS_ACCOUNT_API_URL['testnet' if testnet else 'mainnet']
-    payload = {'account_name': account}
+def get_eos_balance(network):
+    network_info = NETWORKS[network]
+    url = f'https://{network_info["host"]}/v1/chain/get_account'
+    payload = {'account_name': network_info['address']}
     response = requests.post(url, json=payload).json()
     balance = response['core_liquid_balance']
     return balance

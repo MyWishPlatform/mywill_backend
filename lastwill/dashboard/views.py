@@ -10,28 +10,23 @@ from lastwill.dashboard.api import get_eos_balance, get_tron_balance, get_balanc
 
 @api_view()
 def deploy_accounts_balances_view(request):
-    response = {
-        'Ethereum': {
-            'mainnet': get_balance_via_w3('ETHEREUM_MAINNET'),
-            'testnet': get_balance_via_w3('ETHEREUM_ROPSTEN'),
-        },
-        'Binance-Smart-Chain': {
-            'mainnet': get_balance_via_w3('BINANCE_SMART_MAINNET'),
-            'testnet': get_balance_via_w3('BINANCE_SMART_TESTNET'),
-        },
-        'Matic': {
-            'mainnet': get_balance_via_w3('MATIC_MAINNET'),
-            'testnet': get_balance_via_w3('MATIC_TESTNET'),
-        },
-        'Tron': {
-            'mainnet': get_tron_balance(NETWORKS['TRON_MAINNET']['address']),
-            'testnet': get_tron_balance(NETWORKS['TRON_TESTNET']['address'], testnet=True),
-        },
-        'Eosio': {
-            'mainnet': get_eos_balance(NETWORKS['EOS_MAINNET']['address']),
-            'testnet': get_eos_balance(NETWORKS['EOS_TESTNET']['address'], testnet=True),
-        }
-    }
+    response = {}
+    for network, info in DASHBOARD_NETWORKS.items():
+        if network in ('ETHEREUM', 'BINANCE_SMART_CHAIN', 'MATIC'):
+            response[network] = {
+                'mainnet': get_balance_via_w3(info['original_name']['mainnet']),
+                'testnet': get_balance_via_w3(info['original_name']['testnet']),
+            }
+        elif network == 'TRON':
+            response[network] = {
+                'mainnet': get_tron_balance(info['original_name']['mainnet']),
+                'testnet': get_tron_balance(info['original_name']['testnet']),
+            }
+        elif network == 'EOSIO':
+            response[network] = {
+                'mainnet': get_eos_balance(info['original_name']['mainnet']),
+                'testnet': get_eos_balance(info['original_name']['testnet']),
+            }
     return JsonResponse(response)
 
 
