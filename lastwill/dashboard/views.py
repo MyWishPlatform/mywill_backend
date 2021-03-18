@@ -102,13 +102,16 @@ def users_statistic_view(request):
 
 @api_view()
 def advanced_rate_view(request):
-    fsym = request.query_params['fsym']
+    fsyms = request.query_params['fsyms'].split(',')
     tsyms = request.query_params['tsyms'].split(',')
     response = {}
-    for tsym in tsyms:
-        rate_obj = rate(fsym, tsym)
-        response[tsym] = {
-            'rate': rate_obj.value,
-            'is_24h_up': rate_obj.is_up_24h,
-        }
+    for fsym in fsyms:
+        rates = {}
+        for tsym in tsyms:
+            rate_obj = rate(fsym, tsym)
+            rates[tsym] = {
+                'rate': rate_obj.value,
+                'is_24h_up': rate_obj.is_up_24h,
+            }
+        response[fsym] = rates
     return JsonResponse(response)
