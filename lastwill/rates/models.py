@@ -38,17 +38,17 @@ class Rate(models.Model):
         if fsym == tsym:
             return 1.0, False
 
-        fsym_info = cls._get_coin_info(fsym)
+        fsym_info = cls._get_coin_info(fsym)['market_data']
 
         try:
-            value = fsym_info['market_data']['current_price'][tsym.lower()]
+            value = fsym_info['current_price'][tsym.lower()]
             is_up_24h = fsym_info['price_change_24h_in_currency'][tsym.lower()] > 0
 
         except KeyError:
             tsym_info = cls._get_coin_info(tsym)
 
-            fsym_usd_rate = fsym_info['market_data']['current_price']['usd']
-            tsym_usd_rate = tsym_info['market_data']['current_price']['usd']
+            fsym_usd_rate = fsym_info['current_price']['usd']
+            tsym_usd_rate = tsym_info['current_price']['usd']
             value = fsym_usd_rate / tsym_usd_rate
             is_up_24h = fsym_info['price_change_24h_in_currency']['usd'] > 0
 
