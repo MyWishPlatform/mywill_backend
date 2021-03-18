@@ -18,7 +18,7 @@ def get_eos_balance(network):
     url = f'https://{network_info["host"]}/v1/chain/get_account'
     payload = {'account_name': network_info['address']}
     response = requests.post(url, json=payload).json()
-    balance = response['core_liquid_balance']
+    balance = float(response['core_liquid_balance'].split(' ')[0])
     return balance
 
 
