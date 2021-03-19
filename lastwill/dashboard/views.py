@@ -1,5 +1,5 @@
 import json
-from sys import path
+from os import path
 from django.contrib.auth.models import User
 from datetime import datetime, time
 from django.http import JsonResponse
