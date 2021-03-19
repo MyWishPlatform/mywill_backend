@@ -316,10 +316,6 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'lastwill.swaps_common.tasks.order_limiter',
         'schedule': crontab(minute='*'),
     },
-    'update_rates': {
-        'task': 'lastwill.rates.api.update_rates',
-        'schedule': crontab(minute='*/10'),
-    }
 }
 
 COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'
