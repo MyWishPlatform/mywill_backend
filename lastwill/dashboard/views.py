@@ -13,7 +13,7 @@ from lastwill.dashboard.api import *
 def deploy_accounts_balances_view(request):
     response = {}
     for network, info in DASHBOARD_NETWORKS.items():
-        if network in ('ETHEREUM', 'BINANCE_SMART_CHAIN', 'MATIC'):
+        if network in ('BINANCE_SMART_CHAIN', 'MATIC'):
             response[network] = {
                 'mainnet': get_balance_via_w3(info['original_name']['mainnet']),
                 'testnet': get_balance_via_w3(info['original_name']['testnet']),
