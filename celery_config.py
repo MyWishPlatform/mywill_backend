@@ -11,5 +11,5 @@ app.conf.update(result_expires=3600, enable_utc=True, timezone='Europe/Moscow')
 
 app.conf.beat_schedule['update_rates'] = {
     'task': 'lastwill.rates.api.update_rates',
-    'schedule': crontab(minute=f'*/5'),
+    'schedule': crontab(minute=f'*/10'),
 }
