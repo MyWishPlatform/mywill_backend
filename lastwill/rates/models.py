@@ -59,6 +59,15 @@ class Rate(models.Model):
             return value * 0.02
         elif self.tsym == 'TRONISH':
             return value / 0.02
+        elif 'EOSISH' in (self.fsym, self.tsym):
+            markets = requests.get('https://alcor.exchange/api/markets').json()
+            for market in markets:
+                if market['quote_token']['symbol']['name'] == 'EOSISH':
+                    if self.fsym == 'EOSISH':
+                        return value * market['last_price']
+                    else:
+                        return value / market['last_price']
+            raise Exception('Cannot get EOSISH rate')
         else:
             return value
 
