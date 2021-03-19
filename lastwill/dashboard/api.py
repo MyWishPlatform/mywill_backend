@@ -6,20 +6,23 @@ from web3 import Web3, HTTPProvider
 
 
 def get_tron_balance(network):
-    network_info = NETWORKS[network]
-    url = f'{network_info["host"]}/v1/accounts/{network_info["address"]}'
-    response = requests.get(url).json()
-    balance = response['data'][0]['balance']
-    return balance / NET_DECIMALS['TRON']
+    url = f'{NETWORKS[network]["host"]}/v1/accounts/{NETWORKS[network]["address"]}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        balance = response.json()['data'][0]['balance']
+        return balance / NET_DECIMALS['TRON']
+    return None
 
 
 def get_eos_balance(network):
-    network_info = NETWORKS[network]
-    url = f'https://{network_info["host"]}/v1/chain/get_account'
-    payload = {'account_name': network_info['address']}
-    response = requests.post(url, json=payload).json()
-    balance = float(response['core_liquid_balance'].split(' ')[0])
-    return balance
+    url = f'https://{NETWORKS[network]["host"]}/v1/chain/get_account'
+    payload = {'account_name': NETWORKS[network]['address']}
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        balance = data['core_liquid_balance']
+        return float(balance.split(' ')[0])  # API returns "123.45 EOS"
+    return None
 
 
 def get_balance_via_w3(network):
