@@ -810,7 +810,7 @@ def get_cost_all_contracts(request):
             'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
             'WISH': str(int(
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
-            ) * rate('USD', 'WISH').value)
+            ) * rate('USDT', 'WISH').value)
         }
     return JsonResponse(answer)
 
