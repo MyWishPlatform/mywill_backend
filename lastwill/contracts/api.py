@@ -23,7 +23,6 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
     ContractDetailsBinanceInvestmentPool
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
     EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
@@ -32,13 +31,15 @@ import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
 from django.db.models import Q
 from tron_wif.hex2wif import hex2tronwif
+from web3 import Web3, HTTPProvider
 
+from lastwill.rates.api import rate
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
-    wish_cost = to_wish('ETH', int(cost))
+    wish_cost = int(cost) * rate('ETH', 'WISH').value
     if promo_str:
         try:
             discount = check_and_get_discount(
@@ -809,7 +810,7 @@ def get_cost_all_contracts(request):
             'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
             'WISH': str(int(
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
-            ) * convert('USDT', 'WISH')['WISH'])
+            ) * rate('USDT', 'WISH').value)
         }
     return JsonResponse(answer)
 
@@ -1040,10 +1041,10 @@ def get_eos_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
-        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
-        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
-        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH').value),
+        'ETH': str(eos_cost * rate('EOS', 'ETH').value),
+        'WISH': str(eos_cost * rate('EOS', 'WISH').value),
+        'BTC': str(eos_cost * rate('EOS', 'BTC').value),
     })
 
 
@@ -1065,10 +1066,10 @@ def get_eos_airdrop_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
-        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
-        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
-        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH').value),
+        'ETH': str(eos_cost * rate('EOS', 'ETH').value),
+        'WISH': str(eos_cost * rate('EOS', 'WISH').value),
+        'BTC': str(eos_cost * rate('EOS', 'BTC').value),
     })
 
 
@@ -1150,11 +1151,12 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    usdt_cost = str(450 * NET_DECIMALS['USDT'])
-    eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
-    wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
-    btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
-    return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+    raw_usdt = CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO']
+    usdt = str(raw_usdt * NET_DECIMALS['USDT'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
 
 
 @api_view(http_method_names=['GET'])
@@ -1544,9 +1546,9 @@ def buy_verification(request):
 
 @api_view(http_method_names=['GET'])
 def get_verification_cost(request):
-    usdt_cost = str(VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT'])
-    eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
-    wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
-    btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
-    return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
-
+    raw_usdt = VERIFICATION_PRICE_USDT
+    usdt = str(raw_usdt * NET_DECIMALS['USDT'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
