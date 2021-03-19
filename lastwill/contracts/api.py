@@ -11,8 +11,7 @@ from rest_framework.response import Response
 from collections import OrderedDict
 import cloudscraper
 
-from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS, \
-    TRON_BALANCE_API_URL, EOS_ACCOUNT_API_URL
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
     RUBIC_FIN_URL
 from lastwill.permissions import IsOwner, IsStaff
