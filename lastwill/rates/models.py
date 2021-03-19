@@ -72,6 +72,11 @@ class Rate(models.Model):
             return value
 
     def update(self):
+        if self.fsym == self.tsym:
+            self.value = 1.0
+            self.is_up_24h = False
+            return
+
         # check if we need replace symbol for additional rate logic
         fsym = self.fsym if self.fsym not in TEMP_SYMBOLS else TEMP_SYMBOLS[self.fsym]
         tsym = self.tsym if self.tsym not in TEMP_SYMBOLS else TEMP_SYMBOLS[self.tsym]
