@@ -41,7 +41,7 @@ def get_users():
 
     users = User.objects.all().exclude(
         email__in=test_emails).exclude(
-        mail='', password='', last_name='', first_name='').exclude(
+        email='', password='', last_name='', first_name='').exclude(
         email__startswith='testermc')
 
     return users
