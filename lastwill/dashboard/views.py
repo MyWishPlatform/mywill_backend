@@ -1,10 +1,12 @@
+import json
+from sys import path
 from django.contrib.auth.models import User
 from datetime import datetime, time
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lastwill.contracts.submodels.common import Contract
 from lastwill.rates.api import rate
-from lastwill.settings import NETWORKS, DASHBOARD_NETWORKS
+from lastwill.settings import DASHBOARD_NETWORKS, BASE_DIR
 from lastwill.dashboard.api import get_eos_balance, get_tron_balance, get_balance_via_w3, contracts_today_filter
 
 
@@ -30,8 +32,23 @@ def deploy_accounts_balances_view(request):
     return JsonResponse(response)
 
 
+def get_users():
+    try:
+        filename = path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')
+        test_emails = json.load(open(filename))['addresses']
+    except(FileNotFoundError, IOError):
+        test_emails = []
+
+    users = User.objects.all().exclude(
+        email__in=test_emails).exclude(
+        mail='', password='', last_name='', first_name='').exclude(
+        email__startswith='testermc')
+
+    return users
+
+
 def generate_contracts_statistic(network, types):
-    total = Contract.objects.filter(network__name=network)
+    total = Contract.objects.filter(network__name=network, user__in=get_users())
     created = total.filter(state='CREATED')
     deployed = total.filter(state__in=('ACTIVE', 'WAITING', 'WAITING_ACTIVATION'))
     postponed = total.filter(state='POSTPONED')
@@ -85,7 +102,7 @@ def contracts_statistic_view(request):
 
 @api_view()
 def users_statistic_view(request):
-    users = User.objects.all()
+    users = get_users()
     now = datetime.now()
     midnight = datetime.combine(now.today(), time(0, 0))
     response = {
