@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, time
 from lastwill.consts import NET_DECIMALS
+from lastwill.parint import EthereumProvider
 from lastwill.settings import NETWORKS
 from web3 import Web3, HTTPProvider
 
@@ -33,6 +34,18 @@ def get_balance_via_w3(network):
         return raw_balance / NET_DECIMALS['ETH']
     except Exception:
         return None
+
+
+def get_eth_balance(network):
+    provider = EthereumProvider().get_provider(network=network)
+    w3 = Web3(HTTPProvider(provider.url))
+    try:
+        checksum_address = w3.toChecksumAddress(NETWORKS[network]['address'])
+        raw_balance = w3.eth.getBalance(checksum_address)
+        return raw_balance / NET_DECIMALS['ETH']
+    except Exception:
+        return None
+
 
 
 def contracts_today_filter(contracts):

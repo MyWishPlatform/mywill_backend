@@ -1,13 +1,12 @@
 import json
 from os import path
 from django.contrib.auth.models import User
-from datetime import datetime, time
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lastwill.contracts.submodels.common import Contract
 from lastwill.rates.api import rate
 from lastwill.settings import DASHBOARD_NETWORKS, BASE_DIR
-from lastwill.dashboard.api import get_eos_balance, get_tron_balance, get_balance_via_w3, contracts_today_filter
+from lastwill.dashboard.api import *
 
 
 @api_view()
@@ -18,6 +17,11 @@ def deploy_accounts_balances_view(request):
             response[network] = {
                 'mainnet': get_balance_via_w3(info['original_name']['mainnet']),
                 'testnet': get_balance_via_w3(info['original_name']['testnet']),
+            }
+        elif network == 'ETHEREUM':
+            response[network] = {
+                'mainnet': get_eth_balance(info['original_name']['mainnet']),
+                'testnet': get_eth_balance(info['original_name']['testnet']),
             }
         elif network == 'TRON':
             response[network] = {
