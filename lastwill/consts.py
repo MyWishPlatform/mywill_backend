@@ -144,6 +144,7 @@ NET_DECIMALS = {
     'EOSISH': 10 ** 4,
     'BNB': 10 ** 18,
     'BWISH': 10 ** 18,
+    'WWISH': 10 ** 18,
     'BTC': 10 ** 8,
     'TRON': 10 ** 6,
     'TRONISH': 10 ** 6,
