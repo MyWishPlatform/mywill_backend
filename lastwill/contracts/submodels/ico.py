@@ -12,7 +12,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
-    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, BRAND_REPORT_PRICE, AUTHIO_PRICE_USDT
+    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
 from email_messages import *
 
 
