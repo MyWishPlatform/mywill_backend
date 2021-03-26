@@ -254,7 +254,7 @@ def check_promocode(promo_str, user, cost, contract, details):
     options_price = 0
     if contract.contract_type == 5:
         if details.authio:
-            options_price += 450 * NET_DECIMALS['USDT']
+            options_price += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
     if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
         if details.verification:
             options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
@@ -1134,7 +1134,7 @@ def buy_brand_report(request):
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
     details = contract.get_details()
-    cost = 450 * NET_DECIMALS['USDT']
+    cost = AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
     net = contract.network.name
@@ -1151,7 +1151,7 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    raw_usdt = CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO']
+    raw_usdt = AUTHIO_PRICE_USDT
     usdt = str(raw_usdt * NET_DECIMALS['USDT'])
     eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
     wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
