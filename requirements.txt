@@ -48,6 +48,7 @@ django-celery-beat==2.2.0
 django-celery-email==1.1.5
 django-cors-headers==3.0.0
 django-extensions==2.2.6
+django-filter==2.4.0
 django-rest-auth==0.9.1
 django-timezone-field==4.1.1
 djangorestframework==3.6.4
@@ -119,7 +120,7 @@ pbkdf2==1.3
 pbr==5.1.1
 peewee==3.8.1
 pexpect==4.6.0
-pika==0.11.0
+pika==1.1.0
 Pillow==8.0.1
 pluggy==0.8.1
 plyvel==1.0.5
@@ -180,6 +181,7 @@ txaio==20.4.1
 typing==3.7.4.3
 typing-extensions==3.7.4.3
 tzlocal==2.1
+unicode==2.8
 uritemplate==3.0.1
 urllib3==1.24.1
 varint==1.0.2

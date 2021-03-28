@@ -20,7 +20,6 @@ ROOT = os.path.dirname(os.path.realpath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -48,6 +47,7 @@ INSTALLED_APPS = [
     'rest_auth.registration',
     'djcelery_email',
     'django_celery_beat',
+    'django_filters',
 
     'lastwill.main',
     'lastwill.contracts',
@@ -80,7 +80,10 @@ ROOT_URLCONF = 'lastwill.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'lastwill-frontend/dist'), os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'lastwill-frontend/dist'),
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -169,7 +172,10 @@ ACCOUNT_ADAPTER = 'lastwill.profile.adapter.SubSiteRegistrationAdapter'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 100,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -275,5 +281,13 @@ CELERY_BEAT_SCHEDULE = {
     'update_binance_bridge_transaction_status_every_minute': {
         'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
         'schedule': crontab(minute='*'),
+    },
+    'updating_coingecko_tokens_once_at_day': {
+        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
+        'schedule': crontab(hour='*', minute=0),
+    },
+    'updating_coingecko_icons_once_at_week': {
+        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
+        'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
     },
 }
