@@ -37,11 +37,11 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
+from lastwill.rates.api import rate
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS
 from lastwill.profile.models import *
 from lastwill.payments.api import create_payment
-from exchange_API import convert, bnb_to_wish
 from lastwill.consts import MAIL_NETWORK
 import email_messages
 from neocore.Cryptography.Crypto import Crypto
@@ -231,11 +231,11 @@ class ContractSerializer(serializers.ModelSerializer):
         usdt_cost = int(usdt_cost)
         res['cost'] = {
             'USDT': str(usdt_cost),
-            'ETH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
-            'WISH': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
-            'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8), 0))),
-            'EOS': str(int(int(usdt_cost) / 10 ** 6 * convert('USDT', 'EOS')['EOS'] * 10 ** 4)),
-            'TRON': str(int(round((int(usdt_cost) * convert('USDT', 'TRX')['TRX']), 0))),
+            'ETH': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
+            'WISH': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
+            'BTC': str(int(round((int(usdt_cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8), 0))),
+            'EOS': str(int(int(usdt_cost) / 10 ** 6 * rate('USDT', 'EOS').value * 10 ** 4)),
+            'TRON': str(int(round((int(usdt_cost) * rate('USDT', 'TRX').value), 0))),
         }
         if contract.network.name == 'EOS_MAINNET':
             res['cost']['EOS'] = str(Contract.get_details_model(
@@ -243,7 +243,7 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost_eos(res['contract_details'], contract.network))
             res['cost']['EOSISH'] = str(float(
                 res['cost']['EOS']
-            ) * convert('EOS', 'EOSISH')['EOSISH'])
+            ) * rate('EOS', 'EOSISH').value)
         if contract.network.name == 'EOS_TESTNET':
             res['cost']['EOS'] = 0
             res['cost']['EOSISH'] = 0
@@ -261,12 +261,12 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
-                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
-                'WISH': str(int(cost) * convert('USDT', 'WISH')['WISH'] * NET_DECIMALS['WISH']),
-                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
-                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP']),
-                'OKB': str(int(cost) * convert('USDT', 'OKB')['OKB'] * NET_DECIMALS['OKB'])
+                'ETH': str(int(cost) * rate('USDT', 'ETH').value * NET_DECIMALS['ETH']),
+                'WISH': str(int(cost) * rate('USDT', 'WISH').value * NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * rate('USDT', 'BTC').value * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * rate('USDT', 'BNB').value * NET_DECIMALS['BNB']),
+                'SWAP': str(int(cost) * rate('USDT', 'SWAP').value * NET_DECIMALS['SWAP']),
+                'OKB': str(int(cost) * rate('USDT', 'OKB').value * NET_DECIMALS['OKB'])
             }
         elif contract.contract_type == 23:
             cost = Contract.get_details_model(
@@ -274,12 +274,12 @@ class ContractSerializer(serializers.ModelSerializer):
             ).calc_cost_usdt(res['contract_details'], contract.network) / NET_DECIMALS['USDT']
             res['cost'] = {
                 'USDT': str(int(cost * NET_DECIMALS['USDT'])),
-                'ETH': str(int(cost) * convert('USDT', 'ETH')['ETH'] * NET_DECIMALS['ETH']),
-                'WISH': str(int(cost) * convert('USDT', 'BNB')['BNB'] * bnb_to_wish() * NET_DECIMALS['WISH']),
-                'BTC': str(int(cost) * convert('USDT', 'BTC')['BTC'] * NET_DECIMALS['BTC']),
-                'BNB': str(int(cost) * convert('USDT', 'BNB')['BNB'] * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * convert('USDT', 'SWAP')['SWAP'] * NET_DECIMALS['SWAP']),
-                'OKB': str(int(cost) * convert('USDT', 'OKB')['OKB'] * NET_DECIMALS['OKB'])
+                'ETH': str(int(cost) * rate('USDT', 'ETH').value * NET_DECIMALS['ETH']),
+                'WISH': str(int(cost) * rate('USDT', 'WISH').value * NET_DECIMALS['WISH']),
+                'BTC': str(int(cost) * rate('USDT', 'BTC').value * NET_DECIMALS['BTC']),
+                'BNB': str(int(cost) * rate('USDT', 'BNB').value * NET_DECIMALS['BNB']),
+                'SWAP': str(int(cost) * rate('USDT', 'SWAP').value * NET_DECIMALS['SWAP']),
+                'OKB': str(int(cost) * rate('USDT', 'OKB').value * NET_DECIMALS['OKB'])
             }
 
         return res
@@ -575,8 +575,13 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             'time_bonuses', 'amount_bonuses', 'continue_minting',
             'cold_wallet_address', 'reused_token',
             'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
-            'whitelist'
+            'whitelist',
+            'verification', 'verification_status', 'verification_date_payment'
         )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         token_id = contract_details.pop('token_id', None)
@@ -719,12 +724,14 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         fields = (
             'token_name', 'token_short_name', 'decimals',
             'admin_address', 'token_type', 'future_minting',
-            'authio', 'authio_email', 'authio_date_payment',
-            'authio_date_getting'
+            'authio', 'authio_email', 'authio_date_payment', 'authio_date_getting',
+            'verification', 'verification_status', 'verification_date_payment'
         )
         extra_kwargs = {
             'authio_date_payment': {'read_only': True},
             'authio_date_getting': {'read_only': True},
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
         }
 
     def create(self, contract, contract_details):
@@ -941,7 +948,11 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = ('admin_address', 'token_address', 'verification', 'verification_status', 'verification_date_payment')
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
@@ -1339,7 +1350,12 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
         fields = (
             'token_name', 'token_short_name', 'decimals',
             'admin_address', 'token_type', 'future_minting',
+            'verification', 'verification_status', 'verification_date_payment',
         )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         token_holders = contract_details.pop('token_holders')
@@ -1402,8 +1418,13 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsGameAssets
         fields = (
-            'token_name', 'token_short_name', 'admin_address', 'uri'
+            'token_name', 'token_short_name', 'admin_address', 'uri',
+            'verification', 'verification_status', 'verification_date_payment'
         )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def create(self, contract, contract_details):
         kwargs = contract_details.copy()
@@ -1437,7 +1458,14 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
 class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTRONAirdrop
-        fields = ('admin_address', 'token_address')
+        fields = (
+            'admin_address', 'token_address',
+            'verification', 'verification_status', 'verification_date_payment'
+        )
+        extra_kwargs = {
+            'verification_status': {'read_only': True},
+            'verification_date_payment': {'read_only': True},
+        }
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)

@@ -6,10 +6,10 @@ from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL
-from lastwill.consts import NET_DECIMALS
-from exchange_API import *
+from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL, VERIFICATION_CONTRACTS_IDS
+from lastwill.consts import NET_DECIMALS, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
 from .models import *
+from lastwill.rates.api import rate
 
 
 def check_and_get_discount(promo_str, contract_type, user):
@@ -49,23 +49,25 @@ def get_discount(request):
             cost = contract_details.calc_cost_eos(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'EOS': cost,
-                'EOSISH': str(float(cost) * convert('EOS', 'EOSISH')['EOSISH'])
+                'EOSISH': str(float(cost) * rate('EOS', 'EOSISH').value)
             }
         elif host == MY_WISH_URL:
-            cost = contract.cost * (100 - discount) / 100
+            options_cost = 0
             if contract.contract_type == 5:
-                print('token token', flush=True)
                 if contract_details.authio:
-                    print('token with authio', flush=True)
-                    cost = (contract.cost - 450 * NET_DECIMALS['USDT']) * (100 - discount) / 100 + 450 * NET_DECIMALS[
-                        'USDT']
+                    options_cost += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
+            if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
+                if contract_details.verification:
+                    options_cost += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+
+            cost = (contract.cost - options_cost) * (100 - discount) / 100 + options_cost
             answer['discount_price'] = {
                 'USDT': str(cost),
-                'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
-                'WISH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
-                'BTC': str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
-                'TRX': str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
-                'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
+                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
+                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
+                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8)),
+                'TRX': str(int(int(cost) * rate('ETH', 'TRX').value)),
+                'TRONISH': str(int(int(cost) * rate('ETH', 'TRX').value))
             }
         elif host == TRON_URL:
             kwargs = ContractSerializer().get_details_serializer(
@@ -84,11 +86,11 @@ def get_discount(request):
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'USDT': str(cost),
-                'ETH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'ETH')['ETH'] * 10 ** 18)),
-                'WISH': str(int(int(cost) / 10 ** 6 * convert('USDT', 'WISH')['WISH'] * 10 ** 18)),
-                'BTC': str(int(int(cost) / 10 ** 6 * convert('USDT', 'BTC')['BTC'] * 10 ** 8)),
-                'TRX': str(int(int(cost) * convert('ETH', 'TRX')['TRX'])),
-                'TRONISH': str(int(int(cost) * convert('ETH', 'TRX')['TRX']))
+                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
+                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
+                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8)),
+                'TRX': str(int(int(cost) * rate('ETH', 'TRX').value)),
+                'TRONISH': str(int(int(cost) * rate('ETH', 'TRX').value))
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(
@@ -97,12 +99,10 @@ def get_discount(request):
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'ETH': str(cost),
-                'WISH': str(int(to_wish('ETH', int(cost)))),
-                'BTC': str(int(cost) * convert('ETH', 'BTC')['BTC']),
-                'TRX': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
-                    'TRX'] * 10 ** 6),
-                'TRONISH': str(int(cost) / 10 ** 18 * convert('ETH', 'TRX')[
-                    'TRX'] * 10 ** 6)
+                'WISH': str(int(cost * rate('ETH', 'WISH').value)),
+                'BTC': str(int(cost * rate('ETH', 'BTC').value)),
+                'TRX': str(int(cost) / 10 ** 18 * rate('ETH', 'TRX').value * 10 ** 6),
+                'TRONISH': str(int(cost) / 10 ** 18 * rate('ETH', 'TRONISH').value * 10 ** 6)
             }
 
     return Response(answer)

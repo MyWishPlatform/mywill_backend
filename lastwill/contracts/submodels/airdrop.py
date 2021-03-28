@@ -1,7 +1,8 @@
 from django.db import models
-
+import datetime
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
+from lastwill.emails_api import send_verification_mail
 
 
 class AirdropAddress(models.Model):
@@ -25,6 +26,10 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
     airdrop_in_progress = models.BooleanField(default=False)
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def get_arguments(self, *args, **kwargs):
         return [
             self.admin_address,
@@ -45,15 +50,17 @@ class AbstractContractDetailsAirdrop(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self):
-        return super().deploy()
+    def deploy(self, attempts=1):
+        return super().deploy(attempts=attempts)
 
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        # return 0.5 * 10**18
-        return CONTRACT_PRICE_USDT['ETH_AIRDROP'] * NET_DECIMALS['USDT']
+        price = CONTRACT_PRICE_USDT['ETH_AIRDROP']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @classmethod
     def min_cost(cls):
@@ -117,6 +124,20 @@ class AbstractContractDetailsAirdrop(CommonDetails):
             self.airdrop_in_progress = True
             self.save()
 
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
+        super().msg_deployed(message, 'eth_contract')
+        if self.verification:
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(self.eth_contract.address,),
+                compiler=self.eth_contract.compiler_version,
+                files={'airdrop.sol': self.eth_contract.source_code},
+            )
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
 
 
 @contract_details('Airdrop')

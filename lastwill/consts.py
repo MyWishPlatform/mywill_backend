@@ -65,23 +65,24 @@ CONTRACT_PRICE_USDT = {
     'ETH_SWAPS': 10,
     'ETH_TOKEN_PROTECTOR': 500,
 
-    'EOS_ICO': 195,
-    'EOS_TOKEN': 99,
-    'EOS_TOKEN_SA': 195,
+    'EOS_ACCOUNT': 55,
+    'EOS_ICO': 345,
+    'EOS_TOKEN': 199,
+    'EOS_TOKEN_SA': 295,
 
-    'TRON_TOKEN': 199,
-    'TRON_GAME_ASSETS': 45,
-    'TRON_AIRDROP': 99,
-    'TRON_LOSTKEY': 30,
+    'TRON_TOKEN': 299,
+    'TRON_GAME_ASSETS': 99,
+    'TRON_AIRDROP': 199,
+    'TRON_LOSTKEY': 49,
 
     'WAVES_STO': 99,
 
     'BINANCE_LASTWILL': 99,
     'BINANCE_DEFFERED': 99,
-    'BINANCE_ICO': 299,
-    'BINANCE_TOKEN': 199,
+    'BINANCE_ICO': 599,
+    'BINANCE_TOKEN': 499,
     'BINANCE_TOKEN_AUTHIO': 99,
-    'BINANCE_AIRDROP': 199,
+    'BINANCE_AIRDROP': 399,
     'BINANCE_INVPOOL': 99,
     'BINANCE_LOSTKEY': 99,
     'BINANCE_LOSTKEY_TOKENS': 99,
@@ -122,8 +123,6 @@ CONTRACT_PRICE_TRON = {
     'TRON_AIRDROP': 0.5,
 }
 
-BRAND_REPORT_PRICE = 450
-
 CONTRACT_GAS_LIMIT = {
     'AIRDROP': 3000000,
     'DEFFERED': 1700000,
@@ -143,6 +142,8 @@ NET_DECIMALS = {
     'EOSISH': 10 ** 4,
     'BNB': 10 ** 18,
     'BWISH': 10 ** 18,
+    'WWISH': 10 ** 18,
+    'BSCWISH': 10 ** 18,
     'BTC': 10 ** 8,
     'TRON': 10 ** 6,
     'TRONISH': 10 ** 6,
@@ -287,3 +288,21 @@ ETH_COMMON_GAS_PRICES = {
     'MATIC_MAINNET': 1,
     'MATIC_TESTNET': 20,
 }
+
+
+EOS_TOKEN_SA_DEPLOY_PARAMS = {
+    'EOS_MAINNET': {
+        'CPU': 15,
+        'NET': 3,
+        'RAM': 300
+    },
+    'EOS_TESTNET': {
+        'CPU': 15,
+        'NET': 15,
+        'RAM': 300
+    }
+}
+
+VERIFICATION_PRICE_USDT = 150
+
+AUTHIO_PRICE_USDT = 890

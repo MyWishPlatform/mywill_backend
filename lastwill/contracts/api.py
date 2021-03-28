@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from collections import OrderedDict
 import cloudscraper
 
-from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS
+from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
     RUBIC_FIN_URL
 from lastwill.permissions import IsOwner, IsStaff
@@ -23,7 +23,6 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
     ContractDetailsBinanceInvestmentPool
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
-from exchange_API import to_wish, convert
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
     EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
@@ -31,12 +30,16 @@ from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
 from django.db.models import Q
+from tron_wif.hex2wif import hex2tronwif
+from web3 import Web3, HTTPProvider
+
+from lastwill.rates.api import rate
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
-    wish_cost = to_wish('ETH', int(cost))
+    wish_cost = int(cost) * rate('ETH', 'WISH').value
     if promo_str:
         try:
             discount = check_and_get_discount(
@@ -248,19 +251,18 @@ def check_error_promocode(promo_str, contract_type):
 
 
 def check_promocode(promo_str, user, cost, contract, details):
-    # check token with authio
-    if contract.contract_type == 5 and details.authio:
-        price_without_brand_report = contract.cost - 450 * NET_DECIMALS['USDT']
-        cost = check_and_apply_promocode(
-            promo_str, user, price_without_brand_report, contract.contract_type, contract.id
-        )
-        total_cost = cost + 450 * NET_DECIMALS['USDT']
-    else:
-        # count discount
-        total_cost = check_and_apply_promocode(
-            promo_str, user, cost, contract.contract_type, contract.id
-        )
-    return total_cost
+    options_price = 0
+    if contract.contract_type == 5:
+        if details.authio:
+            options_price += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
+    if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
+        if details.verification:
+            options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+
+    cost = check_and_apply_promocode(
+        promo_str, user, contract.cost - options_price, contract.contract_type, contract.id
+    )
+    return cost + options_price
 
 
 @api_view(http_method_names=['POST'])
@@ -808,7 +810,7 @@ def get_cost_all_contracts(request):
             'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
             'WISH': str(int(
                 contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
-            ) * convert('USDT', 'WISH')['WISH'])
+            ) * rate('USDT', 'WISH').value)
         }
     return JsonResponse(answer)
 
@@ -1039,10 +1041,10 @@ def get_eos_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
-        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
-        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
-        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH').value),
+        'ETH': str(eos_cost * rate('EOS', 'ETH').value),
+        'WISH': str(eos_cost * rate('EOS', 'WISH').value),
+        'BTC': str(eos_cost * rate('EOS', 'BTC').value),
     })
 
 
@@ -1064,10 +1066,10 @@ def get_eos_airdrop_cost(request):
 
     return JsonResponse({
         'EOS': str(eos_cost),
-        'EOSISH': str(int(eos_cost) * convert('EOS', 'EOSISH')['EOSISH']),
-        'ETH': str(round(int(eos_cost) * convert('EOS', 'ETH')['ETH'], 2)),
-        'WISH': str(int(eos_cost) * convert('EOS', 'WISH')['WISH']),
-        'BTC': str(int(eos_cost) * convert('EOS', 'BTC')['BTC'])
+        'EOSISH': str(eos_cost * rate('EOS', 'EOSISH').value),
+        'ETH': str(eos_cost * rate('EOS', 'ETH').value),
+        'WISH': str(eos_cost * rate('EOS', 'WISH').value),
+        'BTC': str(eos_cost * rate('EOS', 'BTC').value),
     })
 
 
@@ -1132,7 +1134,7 @@ def buy_brand_report(request):
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
     details = contract.get_details()
-    cost = 450 * NET_DECIMALS['USDT']
+    cost = AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
     currency = 'USDT'
     site_id = 1
     net = contract.network.name
@@ -1149,11 +1151,12 @@ def buy_brand_report(request):
 
 @api_view(http_method_names=['GET'])
 def get_authio_cost(request):
-    usdt_cost = str(450 * NET_DECIMALS['USDT'])
-    eth_cost = str(int(usdt_cost) * convert('USDT', 'ETH')['ETH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['ETH'])
-    wish_cost = str(int(usdt_cost) * convert('USDT', 'WISH')['WISH'] / NET_DECIMALS['USDT'] * NET_DECIMALS['WISH'])
-    btc_cost = str(int(usdt_cost) * convert('USDT', 'BTC')['BTC'] / NET_DECIMALS['USDT'] * NET_DECIMALS['BTC'])
-    return JsonResponse({'USDT': usdt_cost, 'ETH': eth_cost, 'WISH': wish_cost, 'BTC': btc_cost})
+    raw_usdt = AUTHIO_PRICE_USDT
+    usdt = str(raw_usdt * NET_DECIMALS['USDT'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
 
 
 @api_view(http_method_names=['GET'])
@@ -1383,6 +1386,9 @@ def get_test_tokens(request):
         token.pop('token_holders')
         token['address'] = token['eth_contract_token']['address']
         token.pop('eth_contract_token')
+        token.pop('verification')
+        token.pop('verification_status')
+        token.pop('verification_date_payment')
 
     token_list = tokens_serializer.data
     # print('type', type(token_list), flush=True)
@@ -1465,3 +1471,84 @@ def send_message_author_swap(request):
         [SWAPS_SUPPORT_MAIL]
     )
     return Response('ok')
+
+
+@api_view(http_method_names=['POST'])
+def buy_verification(request):
+    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    contract = Contract.objects.get(id=request.data.get('contract_id'))
+    if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
+        raise PermissionDenied
+
+    if contract.contract_type not in VERIFICATION_CONTRACTS_IDS:
+        raise PermissionDenied
+
+    details = contract.get_details()
+    cost = VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+    currency = 'USDT'
+    site_id = 1
+    network = contract.network.name
+    create_payment(request.user.id, '', currency, -cost, site_id, network)
+
+    details.verification = True
+    details.verification_status = 'IN_PROCESS'
+    details.verification_date_payment = datetime.datetime.now().date()
+    details.save()
+
+    if contract.contract_type in (5, 28):
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.eth_contract_token.address, ),
+            compiler=details.eth_contract_token.compiler_version,
+            files={'token.sol': details.eth_contract_token.source_code},
+        )
+    elif contract.contract_type in (4, 27):
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address, ),
+            compiler=details.eth_contract_token.compiler_version,
+            files={
+                'token.sol': details.eth_contract_token.source_code,
+                'ico.sol': details.eth_contract_crowdsale.source_code,
+            },
+        )
+    elif contract.contract_type in (8, 29):
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(details.eth_contract.address,),
+            compiler=details.eth_contract.compiler_version,
+            files={'airdrop.sol': details.eth_contract.source_code},
+        )
+    elif contract.contract_type == 15:
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(hex2tronwif(details.tron_contract_token.address),),
+            compiler=details.tron_contract_token.compiler_version,
+            files={'token.sol': details.tron_contract_token.source_code},
+        )
+    elif contract.contract_type == 16:
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(hex2tronwif(details.tron_contract_token.address),),
+            compiler=details.tron_contract_token.compiler_version,
+            files={'gameAsset.sol': details.tron_contract_token.source_code},
+        )
+    elif contract.contract_type == 17:
+        send_verification_mail(
+            network=details.contract.network.name,
+            addresses=(hex2tronwif(details.tron_contract.address),),
+            compiler=details.tron_contract.compiler_version,
+            files={'airdrop.sol': details.tron_contract.source_code},
+        )
+
+    return Response('ok')
+
+
+@api_view(http_method_names=['GET'])
+def get_verification_cost(request):
+    raw_usdt = VERIFICATION_PRICE_USDT
+    usdt = str(raw_usdt * NET_DECIMALS['USDT'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})

@@ -1,6 +1,7 @@
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
+from lastwill.settings import BSC_WEB3_ATTEMPTS
 
 
 @contract_details('Binance Token contract')
@@ -24,10 +25,9 @@ class ContractDetailsBinanceToken(AbstractContractDetailsToken):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['BINANCE_TOKEN']
-        result = int(price * NET_DECIMALS['USDT'])
-        # if 'authio' in kwargs and kwargs['authio']:
-        #     result = int(price + CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO'] * NET_DECIMALS['USDT'])
-        return result
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('standalone token contract compile')
@@ -57,3 +57,8 @@ class ContractDetailsBinanceToken(AbstractContractDetailsToken):
             token_json['compiler']['version'], self.contract, source_code
         )
         self.save()
+
+    @blocking
+    @postponable
+    def deploy(self):
+        return super().deploy(attempts=BSC_WEB3_ATTEMPTS)

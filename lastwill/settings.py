@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'lastwill.swaps_common',
     'lastwill.swaps_common.tokentable',
     'lastwill.panama_bridge',
+    'lastwill.rates',
 ]
 
 MIDDLEWARE = [
@@ -238,6 +239,11 @@ LOGGING = {
           'propagate': True,
       },
   },
+  'lastwill.swaps_common': {
+    'level': 'DEBUG',
+    'handlers': ['console', 'file'],
+    'propagate': False
+  },
 }
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
@@ -255,6 +261,22 @@ CLEOS_TIME_LIMIT = 4
 SESSION_COOKIE_DOMAIN = '.mywish.io'
 
 UNBLOCKING_EMAIL = 'hello@rocknblock.io'
+
+WEB3_ATTEMPT_COOLDOWN = 10
+
+BSC_WEB3_ATTEMPTS = 10
+
+VERIFICATION_CONTRACTS_IDS = (
+    4,  # common ICO
+    5,  # common Token
+    8,  # common AirDrop
+    27,  # binance ICO
+    28,  # binance Token
+    29,  # binance AirDrop
+    15,  # tron Token
+    16,  # tron GameAsset
+    17,  # tron AirDrop
+)
 
 try:
     from lastwill.settings_local import *
@@ -289,5 +311,94 @@ CELERY_BEAT_SCHEDULE = {
     'updating_coingecko_icons_once_at_week': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
         'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
+    },
+    'running_order_limiter': {
+        'task': 'lastwill.swaps_common.tasks.order_limiter',
+        'schedule': crontab(minute='*'),
+    },
+}
+
+COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'
+
+COINGECKO_SYMBOLS = {
+    'ETH': 'ethereum',
+    'WISH': 'mywish',
+    'BTC': 'bitcoin',
+    'OKB': 'okb',
+    'RBC': 'rubic',
+    'EOS': 'eos',
+    'TRX': 'tron',
+    'BNB': 'binancecoin',
+    'USDT': 'tether',
+    'EOSISH': 'eosish',
+    'NEO': 'neo',
+    'SWAP': 'swaps-network',
+}
+
+TEMP_SYMBOLS = {
+    'TRONISH': 'TRX',
+    'EOSISH': 'EOS',
+    'USD': 'USDT',
+}
+
+DASHBOARD_NETWORKS = {
+    'ETHEREUM': {
+        'original_name': {
+            'mainnet': 'ETHEREUM_MAINNET',
+            'testnet': 'ETHEREUM_ROPSTEN',
+        },
+        'contracts': {
+            'ico': 4,
+            'token': 5,
+            'airdrop': 8,
+            'investment_poll': 9,
+            'token_protector': 23,
+        }
+    },
+    'BINANCE_SMART_CHAIN': {
+        'original_name': {
+            'mainnet': 'BINANCE_SMART_MAINNET',
+            'testnet': 'BINANCE_SMART_TESTNET',
+        },
+        'contracts': {
+            'ico': 27,
+            'token': 28,
+            'airdrop': 29,
+        }
+    },
+    'MATIC': {
+        'original_name': {
+            'mainnet': 'MATIC_MAINNET',
+            'testnet': 'MATIC_TESTNET',
+        },
+         'contracts': {
+            'ico': 32,
+            'token': 33,
+            'airdrop': 34,
+        }
+    },
+    'TRON': {
+        'original_name': {
+            'mainnet': 'TRON_MAINNET',
+            'testnet': 'TRON_TESTNET',
+        },
+         'contracts': {
+            'token': 15,
+            'game_asset': 16,
+            'airdrop': 17,
+        }
+    },
+    'EOSIO': {
+        'original_name': {
+            'mainnet': 'EOS_MAINNET',
+            'testnet': 'EOS_TESTNET',
+        },
+         'contracts': {
+            'token': 10,
+            'account': 11,
+            'ico': 12,
+            'airdrop': 13,
+            'token_standalone': 14,
+        }
     },
 }

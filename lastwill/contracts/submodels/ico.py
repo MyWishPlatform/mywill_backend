@@ -9,8 +9,10 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
+from lastwill.emails_api import send_verification_mail
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
+    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
 from email_messages import *
 
 
@@ -44,6 +46,10 @@ class AbstractContractDetailsICO(CommonDetails):
     cold_wallet_address = models.CharField(max_length=50, default='')
     allow_change_dates = models.BooleanField(default=False)
     whitelist = models.BooleanField(default=False)
+
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
 
     eth_contract_token = models.ForeignKey(
         EthContract,
@@ -90,7 +96,10 @@ class AbstractContractDetailsICO(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['ETH_ICO'] * NET_DECIMALS['USDT'])
+        price = CONTRACT_PRICE_USDT['ETH_ICO']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):
         print('ico_contract compile')
@@ -200,10 +209,10 @@ class AbstractContractDetailsICO(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
+    def deploy(self, eth_contract_attr_name='eth_contract_token', attempts=1):
         if self.reused_token:
             eth_contract_attr_name = 'eth_contract_crowdsale'
-        return super().deploy(eth_contract_attr_name)
+        return super().deploy(eth_contract_attr_name, attempts=attempts)
 
     def get_arguments(self, eth_contract_attr_name):
         return {
@@ -284,6 +293,19 @@ class AbstractContractDetailsICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        if self.verification:
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(self.eth_contract_token.address, self.eth_contract_crowdsale.address,),
+                compiler=self.eth_contract_token.compiler_version,
+                files={
+                    'token.sol': self.eth_contract_token.source_code,
+                    'ico.sol': self.eth_contract_crowdsale.source_code,
+                },
+            )
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
 
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
@@ -333,6 +355,10 @@ class AbstractContractDetailsToken(CommonDetails):
     authio_date_payment = models.DateField(null=True, default=None)
     authio_date_getting = models.DateField(null=True, default=None)
 
+    verification = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
+    verification_date_payment = models.DateField(null=True, default=None)
+
     def predeploy_validate(self):
         now = timezone.now()
         token_holders = self.contract.tokenholder_set.all()
@@ -352,10 +378,11 @@ class AbstractContractDetailsToken(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['ETH_TOKEN']
-        result = int(price * NET_DECIMALS['USDT'])
         if 'authio' in kwargs and kwargs['authio']:
-            result = int(result + CONTRACT_PRICE_USDT['ETH_TOKEN_AUTHIO'] * NET_DECIMALS['USDT'])
-        return result
+            price += AUTHIO_PRICE_USDT
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     def get_arguments(self, eth_contract_attr_name):
         return []
@@ -391,8 +418,8 @@ class AbstractContractDetailsToken(CommonDetails):
 
     @blocking
     @postponable
-    def deploy(self, eth_contract_attr_name='eth_contract_token'):
-        return super().deploy(eth_contract_attr_name)
+    def deploy(self, eth_contract_attr_name='eth_contract_token', attempts=1):
+        return super().deploy(eth_contract_attr_name, attempts=attempts)
 
     def get_gaslimit(self):
         return CONTRACT_GAS_LIMIT['TOKEN']
@@ -438,6 +465,16 @@ class AbstractContractDetailsToken(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.authio_email]
             )
+        if self.verification:
+            send_verification_mail(
+                network=self.contract.network.name,
+                addresses=(self.eth_contract_token.address,),
+                compiler=self.eth_contract_token.compiler_version,
+                files={'token.sol': self.eth_contract_token.source_code},
+            )
+            self.verification_date_payment = datetime.datetime.now().date()
+            self.verification_status = 'IN_PROCESS'
+            self.save()
         return res
 
     def ownershipTransferred(self, message):
