@@ -155,7 +155,6 @@ from lastwill.dashboard.views import (
     users_statistic_view,
     advanced_rate_view,
 )
-from lastwill.swap_bridges.views import SwapListCreateAPIView
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -301,10 +300,6 @@ urlpatterns = [
 
     # panama_bridge
     url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
-    # ---
-
-    # swap bridge
-    url(r'^api/bridge/swaps/', SwapListCreateAPIView.as_view()),
     # ---
 ]
 
