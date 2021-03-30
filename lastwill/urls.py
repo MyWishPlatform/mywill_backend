@@ -140,8 +140,8 @@ from lastwill.swaps_common.orderbook.api_exchange import (
     get_cmc_tokens_for_api,
     get_user_orders_for_api
 )
-from lastwill.swaps_common.orderbook.views import \
-     OrderBookSwapsModelViewSet
+# from lastwill.swaps_common.orderbook.views import \
+#      OrderBookSwapsModelViewSet
 from lastwill.swaps_common.tokentable.api import (
     get_all_coinmarketcap_tokens,
     get_all_tokens,
@@ -155,6 +155,7 @@ from lastwill.dashboard.views import (
     users_statistic_view,
     advanced_rate_view,
 )
+from lastwill.swap_bridges.views import SwapListCreateAPIView
 
 router = DefaultRouter(trailing_slash=True)
 router.register(r'contracts', ContractViewSet)
@@ -298,8 +299,12 @@ urlpatterns = [
     url(r'^api/users_statistic/$', users_statistic_view),
     url(r'^api/advanced_rate/$', advanced_rate_view),
 
-    #panama_bridge
+    # panama_bridge
     url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
+    # ---
+
+    # swap bridge
+    url(r'^api/bridge/swaps/', SwapListCreateAPIView.as_view()),
     # ---
 ]
 
