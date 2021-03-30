@@ -21,7 +21,7 @@ def check_and_get_discount(promo_str, contract_type, user):
         raise PermissionDenied(2003)
     if promo.use_count_max and promo.use_count >= promo.use_count_max:
         raise PermissionDenied(2004)
-    if promo.user2promo_set.filter(user=user).exists():
+    if not promo.reusable and promo.user2promo_set.filter(user=user).exists():
         raise PermissionDenied(2001)
     p2ct = promo.promo2contracttype_set.filter(contract_type=contract_type).first()
     if not p2ct:
@@ -109,7 +109,7 @@ def get_discount(request):
 
 
 def create_promocode(
-        promo_str, contract_types, discount, start=None,
+        promo_str, contract_types, discount, reusable=False, start=None,
         stop=None, use_count=0, use_count_max=None
 ):
     promo = Promo.objects.filter(promo_str=promo_str.upper()).first()
@@ -122,7 +122,7 @@ def create_promocode(
             stop = datetime.datetime(start.year + 1, start.month, start.day).date()
         promo = Promo(
             promo_str=promo_str, start=start, stop=stop,
-            use_count=use_count, use_count_max=use_count_max
+            use_count=use_count, use_count_max=use_count_max, reusable=reusable,
         )
         promo.save()
         for ct in contract_types:
