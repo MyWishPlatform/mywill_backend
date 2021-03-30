@@ -21,7 +21,7 @@ def check_and_get_discount(promo_str, contract_type, user):
         raise PermissionDenied(2003)
     if promo.use_count_max and promo.use_count >= promo.use_count_max:
         raise PermissionDenied(2004)
-    if promo.user2promo_set.filter(user=user).exists():
+    if not promo.reusable and promo.user2promo_set.filter(user=user).exists():
         raise PermissionDenied(2001)
     p2ct = promo.promo2contracttype_set.filter(contract_type=contract_type).first()
     if not p2ct:
