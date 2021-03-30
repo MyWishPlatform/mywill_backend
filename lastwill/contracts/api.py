@@ -280,6 +280,7 @@ def deploy(request):
         promo = Promo.objects.get(promo_str=promo_str.upper())
         User2Promo(user=request.user, promo=promo, contract_id=contract.id).save()
         promo.referral_bonus_usd += original_cost // NET_DECIMALS['USDT']
+        promo.use_count += 1
         promo.save()
 
     contract.state = 'WAITING_FOR_DEPLOYMENT'
