@@ -12,6 +12,7 @@ class Promo(models.Model):
     promo_str = models.CharField(max_length=32, unique=True)
     user = models.ForeignKey(User, null=True, default=None)
     referral_bonus_usd = models.IntegerField(default=0)
+    reusable = models.BooleanField(default=False)
 
 
 class User2Promo(models.Model):
