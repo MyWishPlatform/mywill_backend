@@ -131,7 +131,7 @@ def update_swap_status(
 
         # if status == 'FAIL':
         #     swap.status = swap.FAIL
-        if status == 'IN PROCESS':
+        if status == 'IN_PROCESS':
             swap.updateTime=timezone.now()
             swap.status = 'DepositInProgress'
         elif status == 'SUCCESS':
