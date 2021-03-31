@@ -12,7 +12,7 @@ class PanamaTransactionModelAdmin(ModelAdmin):
     Настройки панели администратора модели PanamaTransaction.
     """
     actions = [export_as_csv_action("CSV Export",
-                                    fields=['fromNetwork', 'toNetwork',
+                                    fields=['type', 'fromNetwork', 'toNetwork',
                                             'actualFromAmount', 'actualToAmount',
                                             'ethSymbol', 'bscSymbol', 'updateTime',
                                             'status', 'transaction_id',
@@ -22,6 +22,7 @@ class PanamaTransactionModelAdmin(ModelAdmin):
                                     )]
 
     fields = (
+        'type',
         'fromNetwork',
         'toNetwork',
         'actualFromAmount',
@@ -37,6 +38,7 @@ class PanamaTransactionModelAdmin(ModelAdmin):
     )
     list_display = (
         'id',
+        'type',
         'transaction_id',
         'fromNetwork',
         'toNetwork',
@@ -46,11 +48,13 @@ class PanamaTransactionModelAdmin(ModelAdmin):
         'status',
     )
     list_filter = (
+        'type',
         'status',
     )
     search_fields = (
         'id',
         'transaction_id',
+        'type',
     )
     ordering = (
         'id',

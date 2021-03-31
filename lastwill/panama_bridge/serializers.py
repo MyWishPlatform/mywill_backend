@@ -1,6 +1,6 @@
 from rest_framework.serializers import (
-    ModelSerializer,
     DateTimeField,
+    ModelSerializer,
 )
 
 from .models import PanamaTransaction

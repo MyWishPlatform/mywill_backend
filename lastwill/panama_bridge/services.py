@@ -1,7 +1,8 @@
-from django.utils import timezone
+import logging
 from requests import get
 
 from django.db.models.query import QuerySet
+from django.utils import timezone
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from web3 import Web3, HTTPProvider
 from web3.exceptions import TransactionNotFound
@@ -57,7 +58,7 @@ def create_swap(network:int, tx_hash:str):
         print(event)
 
         target_address = event.blockchain
-        token = contract.functions.tokenAddress().call()
+        # token = contract.functions.tokenAddress().call()
         tx_hash=Web3.toHex(receipt[0]['transactionHash'])
         fee_address = contract.functions.feeAddress().call()
         fee_amount = contract.functions.feeAmountOfBlockchain(target_address).call()
@@ -71,14 +72,15 @@ def create_swap(network:int, tx_hash:str):
             )
 
         new_swap = PanamaTransaction(
-            fromNetwork=network,
-            toNetwork=target_address,
+            type=PanamaTransaction.SWAP_RBC,
+            fromNetwork='ETH' if network == 2 else 'BSC',
+            toNetwork='ETH' if network == 2 else 'BSC',
             ethSymbol='RBC',
             bscSymbol='BRBC',
             walletFromAddress=event.user.lower(),
             walletToAddress=event.newAddress.lower(),
-            actualFromAmount=event.amount,
-            actualToAmount=str(int(event.amount) - int(fee_amount)),
+            actualFromAmount=str(int(event.amount) / 10 ** 18),
+            actualToAmount=str((int(event.amount) - int(fee_amount)) / 10 ** 18),
             transaction_id=tx_hash,
             walletDepositAddress=receipt[0]['address'].lower(),
             updateTime=timezone.now(),
@@ -89,13 +91,17 @@ def create_swap(network:int, tx_hash:str):
 
         new_swap.save()
 
-        print({'network': network,
-            'source_address': event.user,
-            'target_address': event.newAddress,
-            'amount': event.amount,
-            'tx_hash': tx_hash,
-            'fee_address': fee_address,
-            'fee_amount': fee_amount,})
+        logging.info(
+            {
+                'network': network,
+                'source_address': event.user,
+                'target_address': event.newAddress,
+                'amount': event.amount,
+                'tx_hash': tx_hash,
+                'fee_address': fee_address,
+                'fee_amount': fee_amount,
+            }
+        )
 
         return (
             'Swap was successfully added.',
@@ -114,18 +120,20 @@ def check_swap_status(swap_tx_hash:str, backend_url:str=SWAP_BACKEND_URL):
 
 
 def update_swap_status(
-    swaps:QuerySet=PanamaTransaction.objects.exclude(status='Completed')
+    swaps:QuerySet=PanamaTransaction.objects \
+                   .filter(type='swap_rbc') \
+                   .exclude(status='Completed')
 ):
     for swap in swaps:
-        status = check_swap_status(swap.tx_hash)
+        status = check_swap_status(swap.transaction_id)
 
         # if status == 'FAIL':
         #     swap.status = swap.FAIL
         if status == 'IN PROCESS':
-            swap.updateTime=timezone.now(),
+            swap.updateTime=timezone.now()
             swap.status = 'DepositInProgress'
         elif status == 'SUCCESS':
-            swap.updateTime=timezone.now(),
+            swap.updateTime=timezone.now()
             swap.status = 'Completed'
         swap.save()
 
