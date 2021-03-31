@@ -226,13 +226,13 @@ class AbstractContractDetailsICO(CommonDetails):
     #    @check_transaction
     def ownershipTransferred(self, message):
         address = NETWORKS[self.contract.network.name]['address']
+        if self.contract.state in ('ACTIVE', 'ENDED'):
+            take_off_blocking(self.contract.network.name)
+            return
         if message['contractId'] != self.eth_contract_token.id:
             if self.contract.state == 'WAITING_FOR_DEPLOYMENT':
                 take_off_blocking(self.contract.network.name)
             print('ignored', flush=True)
-            return
-        if self.contract.state in ('ACTIVE', 'ENDED'):
-            take_off_blocking(self.contract.network.name)
             return
         if self.contract.state == 'WAITING_ACTIVATION':
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
