@@ -300,7 +300,7 @@ urlpatterns = [
     url(r'^api/advanced_rate/$', advanced_rate_view),
 
     # panama_bridge
-    url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
+    url(r'^api/bridge/transactions$', UserTransactionsView.as_view()),
     # ---
 ]
 
