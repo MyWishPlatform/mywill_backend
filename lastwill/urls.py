@@ -127,7 +127,7 @@ from lastwill.swaps_common.orderbook.api import (
     edit_contract_swaps_backend,
     get_non_active_orders,
     get_swap_v3_for_unique_link,
-    get_swap_v3_public,
+    get_swap_v3_public, health_check,
     set_swaps_expired,
     show_contract_swaps_backend,
     show_user_contract_swaps_backend
