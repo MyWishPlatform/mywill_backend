@@ -291,6 +291,7 @@ urlpatterns = [
     url(r'^api/get_all_promos/$', get_all_promos_api),
     url(r'^api/buy_verification/$', buy_verification),
     url(r'^api/get_verification_cost/$', get_verification_cost),
+    url(r'^api/healthcheck', health_check),
 
     # dashboard
     url(r'^api/deploy_accounts_balances/$', deploy_accounts_balances_view),

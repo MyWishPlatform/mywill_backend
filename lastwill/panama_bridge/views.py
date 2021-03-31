@@ -102,7 +102,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                 token["image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
             else:
                 token["image_link"] = request.build_absolute_uri(
-                    tokenInfo.image.url
+                    tokenInfo.image_file.url
                 )
             # token["actualFromAmount"] = str(
             #     Decimal(token.get("actualFromAmount")).normalize()
