@@ -127,7 +127,7 @@ from lastwill.swaps_common.orderbook.api import (
     edit_contract_swaps_backend,
     get_non_active_orders,
     get_swap_v3_for_unique_link,
-    get_swap_v3_public,
+    get_swap_v3_public, health_check,
     set_swaps_expired,
     show_contract_swaps_backend,
     show_user_contract_swaps_backend
@@ -140,8 +140,8 @@ from lastwill.swaps_common.orderbook.api_exchange import (
     get_cmc_tokens_for_api,
     get_user_orders_for_api
 )
-from lastwill.swaps_common.orderbook.views import \
-     OrderBookSwapsModelViewSet
+# from lastwill.swaps_common.orderbook.views import \
+#      OrderBookSwapsModelViewSet
 from lastwill.swaps_common.tokentable.api import (
     get_all_coinmarketcap_tokens,
     get_all_tokens,
@@ -291,6 +291,7 @@ urlpatterns = [
     url(r'^api/get_all_promos/$', get_all_promos_api),
     url(r'^api/buy_verification/$', buy_verification),
     url(r'^api/get_verification_cost/$', get_verification_cost),
+    url(r'^api/healthcheck', health_check),
 
     # dashboard
     url(r'^api/deploy_accounts_balances/$', deploy_accounts_balances_view),
@@ -298,8 +299,8 @@ urlpatterns = [
     url(r'^api/users_statistic/$', users_statistic_view),
     url(r'^api/advanced_rate/$', advanced_rate_view),
 
-    #panama_bridge
-    url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
+    # panama_bridge
+    url(r'^api/bridge/transactions$', UserTransactionsView.as_view()),
     # ---
 ]
 

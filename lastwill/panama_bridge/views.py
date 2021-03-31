@@ -5,9 +5,10 @@ from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from .services import create_swap
 from .status_request import get_status_by_id
 from .models import PanamaTransaction
-from lastwill.swaps_common.tokentable.models import TokensCoinMarketCap
+from lastwill.swaps_common.tokentable.models import CoinGeckoToken
 from .serializers import UserTransactionSerializer
 
 
@@ -21,34 +22,46 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
     # get data from request and create new entry in db
     def post(self, request, *args, **kwargs):
-        try:
-            transaction_id = request.data.get("transaction_id")
-        except KeyError:
-            return Response(
-                data='No wallet address from Cookie.',
-                status=HTTP_400_BAD_REQUEST
-            )
+        # panama, rbc_swap
+        swap_type = request.data['swap_type']
 
-        if PanamaTransaction.objects.filter(transaction_id=transaction_id).exists():
-            return Response(
-                data='This transaction has been exists in database.',
-                status=HTTP_400_BAD_REQUEST
-            )
+        if swap_type == PanamaTransaction.SWAP_RBC:
+            network = int(request.data['source_network'])
+            tx_hash = request.data['tx_hash']
+            response = create_swap(network, tx_hash)
 
-        transactionFullInfo = get_status_by_id(transaction_id)
+            return Response(*response)
 
-        if transactionFullInfo:
-            request.data["updateTime"] = transactionFullInfo.get("updateTime")
-            request.data["fromNetwork"] = transactionFullInfo.get("fromNetwork")
-            request.data["toNetwork"] = transactionFullInfo.get("toNetwork")
-            request.data["actualFromAmount"] = transactionFullInfo.get("actualFromAmount")
-            request.data["actualToAmount"] = transactionFullInfo.get("actualToAmount")
-            request.data["status"] = transactionFullInfo.get("status")
-            request.data["walletFromAddress"] = transactionFullInfo.get("walletFromAddress").lower()
-            request.data["walletToAddress"] = transactionFullInfo.get("walletToAddress").lower()
-            request.data["walletDepositAddress"] = transactionFullInfo.get("walletDepositAddress").lower()
+        if swap_type == PanamaTransaction.SWAP_PANAMA:
+            try:
+                transaction_id = request.data.get("transaction_id")
+            except KeyError:
+                return Response(
+                    data='No wallet address has been passed.',
+                    status=HTTP_400_BAD_REQUEST
+                )
 
-        return self.create(request, *args, **kwargs)
+            if PanamaTransaction.objects.filter(transaction_id=transaction_id).exists():
+                return Response(
+                    data='This transaction has been exists in database.',
+                    status=HTTP_400_BAD_REQUEST
+                )
+
+            transactionFullInfo = get_status_by_id(transaction_id)
+
+            if transactionFullInfo:
+                request.data["updateTime"] = transactionFullInfo.get("updateTime")
+                request.data["type"] = PanamaTransaction.SWAP_PANAMA
+                request.data["fromNetwork"] = transactionFullInfo.get("fromNetwork")
+                request.data["toNetwork"] = transactionFullInfo.get("toNetwork")
+                request.data["actualFromAmount"] = transactionFullInfo.get("actualFromAmount")
+                request.data["actualToAmount"] = transactionFullInfo.get("actualToAmount")
+                request.data["status"] = transactionFullInfo.get("status")
+                request.data["walletFromAddress"] = transactionFullInfo.get("walletFromAddress").lower()
+                request.data["walletToAddress"] = transactionFullInfo.get("walletToAddress").lower()
+                request.data["walletDepositAddress"] = transactionFullInfo.get("walletDepositAddress").lower()
+
+            return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
         walletAddress = self.request.query_params.get("walletAddress").lower()
@@ -60,9 +73,9 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
         for _, token in enumerate(serializer.data):
             # add token image link to response
-            tokenInfo = TokensCoinMarketCap.objects \
+            tokenInfo = CoinGeckoToken.objects \
                         .filter(
-                            token_short_name=token.get("ethSymbol")
+                            short_title__iexact=token.get("ethSymbol")
                         ) \
                         .last()
 
@@ -80,23 +93,25 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             ).capitalize()
 
             if tokenInfo is None:
-                tokenInfo=TokensCoinMarketCap.objects \
+                tokenInfo=CoinGeckoToken.objects \
                           .filter(
-                              token_short_name = token.get("bscSymbol")
+                              short_title__iexact=token.get("bscSymbol")
                           ) \
                           .last()
             if tokenInfo is None:
                 token["image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
             else:
                 token["image_link"] = request.build_absolute_uri(
-                    tokenInfo.image.url
+                    tokenInfo.image_file.url
                 )
-            token["actualFromAmount"] = str(
-                Decimal(token.get("actualFromAmount")).normalize()
-            )
-            token["actualToAmount"] = str(
-                Decimal(token.get("actualToAmount")).normalize()
-            )
+            # token["actualFromAmount"] = str(
+            #     Decimal(token.get("actualFromAmount")).normalize()
+            # )
+            # token["actualToAmount"] = str(
+            #     Decimal(token.get("actualToAmount")).normalize()
+            # )
+            token["actualFromAmount"] = str(float(token["actualFromAmount"]))
+            token["actualToAmount"] = str(float(token["actualToAmount"]))
             # magic_code - finish
 
 

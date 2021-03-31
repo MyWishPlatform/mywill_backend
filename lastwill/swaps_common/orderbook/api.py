@@ -566,3 +566,8 @@ def get_non_active_orders(request):
         'pages': paginator.num_pages,
         'list': res
     })
+
+
+@api_view(http_method_names=['GET', ])
+def health_check(request):
+    return Response(data='I\'m alive!', status=200)

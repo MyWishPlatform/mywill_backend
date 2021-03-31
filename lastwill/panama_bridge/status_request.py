@@ -59,8 +59,9 @@ def update_or_create_transaction_status(data):
 # this is base method to autoupdate transaction status in db
 def update_transactions_status():
     # find all database entry with status != completed
-    transactions = PanamaTransaction.objects.filter(
-        ~Q(status="Completed"), ~Q(status="Cancelled"))
+    transactions = PanamaTransaction.objects \
+        .filter(type='panama') \
+        .exclude(status__in=["Completed", "Cancelled"])
 
     for trans in transactions:
         # get updating data from binance api
