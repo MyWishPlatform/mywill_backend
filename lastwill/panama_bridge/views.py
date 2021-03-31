@@ -75,7 +75,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             # add token image link to response
             tokenInfo = CoinGeckoToken.objects \
                         .filter(
-                            short_title=token.get("ethSymbol")
+                            short_title__iexact=token.get("ethSymbol")
                         ) \
                         .last()
 
@@ -95,7 +95,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             if tokenInfo is None:
                 tokenInfo=CoinGeckoToken.objects \
                           .filter(
-                              short_title=token.get("bscSymbol")
+                              short_title__iexact=token.get("bscSymbol")
                           ) \
                           .last()
             if tokenInfo is None:

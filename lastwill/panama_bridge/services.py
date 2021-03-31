@@ -74,7 +74,7 @@ def create_swap(network:int, tx_hash:str):
         new_swap = PanamaTransaction(
             type=PanamaTransaction.SWAP_RBC,
             fromNetwork='ETH' if network == 2 else 'BSC',
-            toNetwork='ETH' if network == 2 else 'BSC',
+            toNetwork='BSC' if event.blockchain == 1 else 'ETH',
             ethSymbol='RBC',
             bscSymbol='BRBC',
             walletFromAddress=event.user.lower(),
@@ -126,6 +126,8 @@ def update_swap_status(
 ):
     for swap in swaps:
         status = check_swap_status(swap.transaction_id)
+
+        logging.info(status)
 
         # if status == 'FAIL':
         #     swap.status = swap.FAIL
