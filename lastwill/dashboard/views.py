@@ -93,7 +93,7 @@ def generate_contracts_statistic(network, types):
         },
         'in_process': {
             'all': in_process.count(),
-            'new': contracts_today_filter(postponed, 'deploy_started_at').count(),
+            'new': contracts_today_filter(in_process, 'deploy_started_at').count(),
         },
         'types': contracts_by_types
     }
