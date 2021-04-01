@@ -1,7 +1,6 @@
 import json
 from os import path
 from django.contrib.auth.models import User
-from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lastwill.contracts.submodels.common import Contract
@@ -55,8 +54,16 @@ def get_users():
 def generate_contracts_statistic(network, types):
     total = Contract.objects.filter(network__name=network, user__in=get_users())
     created = total.filter(state='CREATED')
-    deployed = total.filter(Q(deployed_at__isnull=False) | Q(state='POSTPONED'))
-    postponed = total.filter(postponed_at__isnull=False)
+    deployed = total.exclude(state__in=(
+        'CREATED',
+        'WAITING_FOR_PAYMENT',
+        'TIME_IS_UP',
+        'WAITING_FOR_DEPLOYMENT',
+        'WAITING_ACTIVATION',
+        'WAITING_FOR_ACTIVATION',
+        'POSTPONED',
+    ))
+    postponed = total.filter(state='POSTPONED')
     in_process = total.filter(state='WAITING_FOR_DEPLOYMENT')
 
     contracts_by_types = {}
