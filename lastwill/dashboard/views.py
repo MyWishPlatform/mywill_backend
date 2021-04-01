@@ -71,7 +71,7 @@ def generate_contracts_statistic(network, types):
         contracts = total.filter(contract_type=type)
         contracts_by_types[name] = {
             'all': contracts.count(),
-            'new': contracts_today_filter(contracts, 'deployed_at').count()
+            'new': contracts_today_filter(contracts, 'created_date').count()
         }
 
     result = {
