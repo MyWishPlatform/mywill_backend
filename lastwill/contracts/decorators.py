@@ -1,6 +1,6 @@
 import sys, traceback
 import time
-from datetime import datetime
+import datetime
 
 from django.db.models import Q
 from django.core.mail import send_mail
@@ -61,7 +61,7 @@ def postponable(f):
             return f(*args, **kwargs)
         except Exception as e:
             contract.state = 'POSTPONED'
-            contract.postponed_at = datetime.now()
+            contract.postponed_at = datetime.datetime.now()
             contract.save()
             send_mail(
                 postponed_subject,
