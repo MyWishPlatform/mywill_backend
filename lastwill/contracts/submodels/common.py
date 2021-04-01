@@ -292,6 +292,7 @@ class Contract(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     deployed_at = models.DateTimeField(null=True, default=None)
     postponed_at = models.DateTimeField(null=True, default=None)
+    deploy_started_at = models.DateTimeField(null=True, default=None)
 
     check_interval = models.IntegerField(null=True, default=None)
     active_to = models.DateTimeField(null=True, default=None)

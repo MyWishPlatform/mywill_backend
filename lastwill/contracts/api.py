@@ -284,6 +284,7 @@ def deploy(request):
         promo.save()
 
     contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.deploy_started_at = datetime.datetime.now()
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
@@ -1324,6 +1325,7 @@ def confirm_protector_info(request):
         autodeploing(contract.user.id, 5)
     elif contract.network.name == 'ETHEREUM_ROPSTEN':
         contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.deploy_started_at = datetime.datetime.now()
         contract.save()
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
