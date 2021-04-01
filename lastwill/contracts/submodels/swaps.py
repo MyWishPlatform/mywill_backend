@@ -151,6 +151,7 @@ class ContractDetailsSWAPS(CommonDetails):
         self.eth_contract.address = message['address']
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.now()
         self.contract.save()
         if self.contract.user.email:
             swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
@@ -251,6 +252,7 @@ class ContractDetailsSWAPS2(CommonDetails):
         self.eth_contract.tx_hash = message['transactionHash']
         self.eth_contract.save()
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.now()
         self.contract.save()
         if self.contract.user.email:
             swaps_link = '{protocol}://{url}/public/{unique_link}'.format(

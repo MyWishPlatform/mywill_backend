@@ -364,6 +364,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
                 contract_details.approving_time = None
                 contract_details.save()
                 contract_details.contract.state = 'POSTPONED'
+                contract_details.contract.postponed_at = datetime.datetime.now()
                 contract_details.contract.save()
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)

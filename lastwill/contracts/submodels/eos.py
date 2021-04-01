@@ -547,6 +547,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.eos_contract_token = eos_contract_token
         self.save()
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.now()
         self.contract.save()
         if self.contract.user.email:
             network_name = MAIL_NETWORK[self.contract.network.name]
@@ -736,6 +737,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
 
         if message.get('errorAddresses'):
             self.contract.state = 'POSTPONED'
+            self.contract.postponed_at = datetime.now()
             self.contract.save()
             ids = []
             for js in message['errorAddresses']:
@@ -762,6 +764,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.now()
         self.contract.save()
         if self.contract.user.email:
             send_mail(

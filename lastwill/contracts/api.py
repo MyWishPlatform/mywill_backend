@@ -1357,6 +1357,7 @@ def skip_protector_approve(request):
                                        contract_type=23, state='WAITING_FOR_APPROVE').first()
     if contract:
         contract.state = 'ACTIVE'
+        contract.deployed_at = datetime.now()
         contract.save()
 
         return JsonResponse(ContractSerializer().to_representation(contract))
