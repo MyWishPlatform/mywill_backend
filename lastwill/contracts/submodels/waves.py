@@ -356,6 +356,7 @@ class ContractDetailsWavesSTO(CommonDetails):
         self.ride_contract.bytecode = script_trx['script']
         self.ride_contract.save()
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         take_off_blocking(self.contract.network.name)
 
@@ -369,6 +370,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             return
         if self.ride_contract.id == message['contractId']:
             self.contract.state = 'ACTIVE'
+            self.contract.deployed_at = datetime.datetime.now()
             self.ride_contract.address = message['address']
             self.ride_contract.save()
             self.contract.save()

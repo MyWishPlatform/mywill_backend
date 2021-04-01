@@ -290,6 +290,10 @@ class Contract(models.Model):
     )
 
     created_date = models.DateTimeField(auto_now_add=True)
+    deployed_at = models.DateTimeField(null=True, default=None)
+    postponed_at = models.DateTimeField(null=True, default=None)
+    deploy_started_at = models.DateTimeField(null=True, default=None)
+
     check_interval = models.IntegerField(null=True, default=None)
     active_to = models.DateTimeField(null=True, default=None)
     last_check = models.DateTimeField(null=True, default=None)
@@ -533,6 +537,7 @@ class CommonDetails(models.Model):
         eth_contract.address = message['address']
         eth_contract.save()
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
             if self.contract.contract_type ==11:
@@ -574,6 +579,7 @@ class CommonDetails(models.Model):
 
     def tx_failed(self, message):
         self.contract.state = 'POSTPONED'
+        self.contract.postponed_at = datetime.datetime.now()
         self.contract.save()
         send_mail(
             postponed_subject,

@@ -272,6 +272,7 @@ class AbstractContractDetailsICO(CommonDetails):
             print('ignored', flush=True)
             return
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.eth_contract_token.original_contract.contract_type == 5:
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'

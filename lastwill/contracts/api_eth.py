@@ -301,6 +301,7 @@ def deploy_eth_token(request):
         ).update(balance=F('balance') - wish_cost):
             raise ValidationError({'result': 'You have not money'}, code=400)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.deploy_started_at = datetime.datetime.now()
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)

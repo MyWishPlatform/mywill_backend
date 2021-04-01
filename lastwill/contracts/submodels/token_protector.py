@@ -38,6 +38,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.eth_contract.address = message['address']
         self.eth_contract.save()
         self.contract.state = 'WAITING_FOR_APPROVE'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         email = self.email if self.email else self.contract.user.email
         print('email', email, flush=True)
