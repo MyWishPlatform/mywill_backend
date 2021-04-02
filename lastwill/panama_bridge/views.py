@@ -33,13 +33,13 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
         if swap_type == PanamaTransaction.SWAP_RBC:
             network = int(request.data['fromNetwork'])
-            tx_hash = request.data['transaction_id']
+            tx_id = request.data['transaction_id']
             from_amount = request.data['fromAmount']
             wallet_from_address = request.data['walletFromAddress']
             # response = create_swap(network, tx_hash)
             response = create_swap(
                 from_network=network,
-                transaction_id=tx_hash,
+                tx_id=tx_id,
                 from_amount=from_amount,
                 wallet_address=wallet_from_address
             )

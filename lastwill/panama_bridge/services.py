@@ -11,6 +11,7 @@ from rest_framework.status import (
 from web3 import Web3, HTTPProvider
 # from web3.exceptions import TransactionNotFound
 
+from lastwill.consts import NET_DECIMALS
 from lastwill.swaps_common.orderbook.order_limited.uniswap import load_contract
 from lastwill.settings_local import (
     # ETH_PROVIDER_URL,
@@ -22,11 +23,13 @@ from lastwill.settings_local import (
 
 from .models import PanamaTransaction
 
+RBC_DECIMALS = NET_DECIMALS.get('RBC')
+
 
 # def create_swap(network:int, tx_hash:str):
 def create_swap(
     from_network:int,
-    transaction_id:str,
+    tx_id:str,
     from_amount:str,
     wallet_address:str
 ):
@@ -37,11 +40,18 @@ def create_swap(
     #    "fromAmount": str,
     #    "walletFromAddress": str
     # }
-    if not from_network or not transaction_id or not from_amount:
+    if not from_network or not tx_id or not from_amount:
         return (
             'Network or tx_hash or from_amount is required.',
             HTTP_400_BAD_REQUEST,
         )
+
+    if PanamaTransaction.objects.filter(transaction_id=tx_id).exists():
+        return (
+            'Swap with hash {} already exist.'.format(tx_id),
+            HTTP_400_BAD_REQUEST,
+        )
+
 
     networks = {
         'BSC': {
@@ -55,7 +65,6 @@ def create_swap(
             'title': 'ETH',
             'contract_address': ETH_SWAP_CONTRACT_ADDRESS,
             'contract_abi': 'rubic_eth_swap_contract.json',
-
         }
     }
 
@@ -70,17 +79,9 @@ def create_swap(
         to_network = 1 if from_network == network.get('blockchain_id') else 2
         fee_address = contract.functions.feeAddress().call()
         fee_amount = contract.functions.feeAmountOfBlockchain(to_network).call()
-        actual_from_amount = int(from_amount) * 10 ** 18
-        actual_to_amount=int((actual_from_amount - int(fee_amount)) / 10 ** 18)
+        actual_from_amount = int(float(from_amount) * RBC_DECIMALS)
+        actual_to_amount=(actual_from_amount - int(fee_amount)) / RBC_DECIMALS
         wallet_deposit_address = ETH_SWAP_CONTRACT_ADDRESS if network == 2 else BSC_SWAP_CONTRACT_ADDRESS
-
-        if PanamaTransaction.objects.filter(transaction_id=transaction_id).exists():
-            return (
-                'Swap with hash {} already exist.'.format(
-                    transaction_id,
-                ),
-                HTTP_400_BAD_REQUEST,
-            )
 
         new_swap = PanamaTransaction(
             type=PanamaTransaction.SWAP_RBC,
@@ -90,9 +91,9 @@ def create_swap(
             bsc_symbol='BRBC',
             wallet_from_address=wallet_address.lower(),
             wallet_to_address=wallet_address.lower(),
-            actual_from_amount=str(actual_from_amount / 10 ** 18),
+            actual_from_amount=str(actual_from_amount / RBC_DECIMALS),
             actual_to_amount=str(actual_to_amount),
-            transaction_id=transaction_id,
+            transaction_id=tx_id,
             wallet_deposit_address=wallet_deposit_address,
             update_time=timezone.now(),
             status='DepositInProgress',
@@ -106,14 +107,14 @@ def create_swap(
                 'source_address': wallet_address,
                 'target_address': wallet_address,
                 'amount': actual_from_amount,
-                'tx_hash': transaction_id,
+                'tx_hash': tx_id,
                 'fee_address': fee_address,
                 'fee_amount': fee_amount,
             }
         )
 
         return (
-            'Swap with hash {} was successfully added.'.format(transaction_id),
+            'Swap with hash {} was successfully added.'.format(tx_id),
             HTTP_201_CREATED,
         )
 
@@ -178,8 +179,8 @@ def create_swap(
     #         bsc_symbol='BRBC',
     #         wallet_from_address=event.user.lower(),
     #         wallet_to_address=event.newAddress.lower(),
-    #         actual_from_amount=str(int(event.amount) / 10 ** 18),
-    #         actual_to_amount=str((int(event.amount) - int(fee_amount)) / 10 ** 18),
+    #         actual_from_amount=str(int(event.amount) / RBC_DECIMALS),
+    #         actual_to_amount=str((int(event.amount) - int(fee_amount)) / RBC_DECIMALS),
     #         transaction_id=tx_hash,
     #         # wallet_deposit_address=receipt[0]['address'].lower(),
     #         # TODO: fix call to BSC contract.
