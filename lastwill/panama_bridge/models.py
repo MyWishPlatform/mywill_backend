@@ -46,7 +46,8 @@ class PanamaTransaction(models.Model):
     )
     bsc_symbol = models.CharField(
         max_length=6,
-        verbose_name='BSC symbol')
+        verbose_name='BSC symbol',
+    )
     update_time = models.DateTimeField(
         verbose_name='Update time',
     )

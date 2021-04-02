@@ -52,7 +52,7 @@ def update_or_create_transaction_status(data):
         ) \
         .update(
             status=data.get("status"),
-            updateTime=data.get("updateTime")
+            update_time=data.get("updateTime")
         )
 
 
