@@ -48,7 +48,7 @@ def create_swap(network:int, tx_hash:str):
             contract_abi,
             Web3.toChecksumAddress(contract_address)
         )
-        tx_receipt = web3_provider.eth.getTransactionReceipt(tx_hash)
+        tx_receipt = web3_provider.eth.waitForTransactionReceipt(tx_hash)
         receipt = contract.events.TransferToOtherBlockchain().processReceipt(tx_receipt)
 
         if not receipt:
