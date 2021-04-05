@@ -102,7 +102,7 @@ class ContractViewSet(ModelViewSet):
             result = result.filter(contract_type__in=[23])
         if self.request.user.is_staff:
             return result
-        return result.filter(user=self.request.user)
+        return result.filter(user=self.request.user).exclude(state='ARCHIVED')
 
 
 @api_view()
