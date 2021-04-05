@@ -11,40 +11,52 @@ class PanamaTransactionModelAdmin(ModelAdmin):
     """
     Настройки панели администратора модели PanamaTransaction.
     """
-    actions = [export_as_csv_action("CSV Export",
-                                    fields=['type', 'fromNetwork', 'toNetwork',
-                                            'actualFromAmount', 'actualToAmount',
-                                            'ethSymbol', 'bscSymbol', 'updateTime',
-                                            'status', 'transaction_id',
-                                            'walletFromAddress', 'walletToAddress',
-                                            'walletDepositAddress'
-                                            ]
-                                    )]
+    actions = [
+        export_as_csv_action(
+            "CSV Export",
+            fields=[
+                'type',
+                'from_network',
+                'to_network',
+                'actual_from_amount',
+                'actual_to_amount',
+                'eth_symbol',
+                'bsc_symbol',
+                'update_time',
+                'status',
+                'transaction_id',
+                'wallet_from_address',
+                'wallet_to_address',
+                'wallet_deposit_address',
+            ]
+        ),
+    ]
 
     fields = (
         'type',
-        'fromNetwork',
-        'toNetwork',
-        'actualFromAmount',
-        'actualToAmount',
-        'ethSymbol',
-        'bscSymbol',
-        'updateTime',
+        'from_network',
+        'to_network',
+        'actual_from_amount',
+        'actual_to_amount',
+        'eth_symbol',
+        'bsc_symbol',
+        'update_time',
+
         'status',
         'transaction_id',
-        'walletFromAddress',
-        'walletToAddress',
-        'walletDepositAddress',
+        'wallet_from_address',
+        'wallet_to_address',
+        'wallet_deposit_address',
     )
     list_display = (
         'id',
         'type',
         'transaction_id',
-        'fromNetwork',
-        'toNetwork',
-        'ethSymbol',
-        'bscSymbol',
-        'updateTime',
+        'from_network',
+        'to_network',
+        'eth_symbol',
+        'bsc_symbol',
+        'update_time',
         'status',
     )
     list_filter = (

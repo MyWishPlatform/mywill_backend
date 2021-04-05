@@ -22,17 +22,30 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
     # get data from request and create new entry in db
     def post(self, request, *args, **kwargs):
-        # panama, rbc_swap
-        swap_type = request.data['swap_type']
+        # types: panama, rbc_swap
+        swap_type = request.data.get('type')
+
+        if not swap_type:
+            return Response(
+                'Swap \'type\' field is required.',
+                HTTP_400_BAD_REQUEST,
+            )
 
         if swap_type == PanamaTransaction.SWAP_RBC:
-            network = int(request.data['source_network'])
-            tx_hash = request.data['tx_hash']
-            response = create_swap(network, tx_hash)
+            network = int(request.data['fromNetwork'])
+            tx_id = request.data['transaction_id']
+            from_amount = request.data['fromAmount']
+            wallet_from_address = request.data['walletFromAddress']
+            # response = create_swap(network, tx_hash)
+            response = create_swap(
+                from_network=network,
+                tx_id=tx_id,
+                from_amount=from_amount,
+                wallet_address=wallet_from_address
+            )
 
             return Response(*response)
-
-        if swap_type == PanamaTransaction.SWAP_PANAMA:
+        elif swap_type == PanamaTransaction.SWAP_PANAMA:
             try:
                 transaction_id = request.data.get("transaction_id")
             except KeyError:
@@ -63,9 +76,17 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
             return self.create(request, *args, **kwargs)
 
+        return Response(
+            'Invalid swap type',
+            HTTP_400_BAD_REQUEST,
+        )
     def get_queryset(self):
-        walletAddress = self.request.query_params.get("walletAddress").lower()
-        return list(PanamaTransaction.objects.filter(walletFromAddress=walletAddress))
+        wallet_address = self.request.query_params.get("walletAddress")
+
+        if not wallet_address:
+            return []
+
+        return list(PanamaTransaction.objects.filter(wallet_from_address=wallet_address.lower()))
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -113,6 +134,5 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             token["actualFromAmount"] = str(float(token["actualFromAmount"]))
             token["actualToAmount"] = str(float(token["actualToAmount"]))
             # magic_code - finish
-
 
         return Response(serializer.data)
