@@ -59,12 +59,10 @@ def generate_contracts_statistic(network, types):
         'WAITING_FOR_PAYMENT',
         'TIME_IS_UP',
         'WAITING_FOR_DEPLOYMENT',
-        'WAITING_ACTIVATION',
-        'WAITING_FOR_ACTIVATION',
         'POSTPONED',
     ))
     postponed = total.filter(state='POSTPONED')
-    in_process = total.filter(state__in=('WAITING_FOR_DEPLOYMENT', 'WAITING_ACTIVATION'))
+    in_process = total.filter(state='WAITING_FOR_DEPLOYMENT')
 
     contracts_by_types = {}
     for name, type in types.items():
