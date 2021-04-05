@@ -210,6 +210,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
 
     def tokenCreated(self, message):
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
             network_name = MAIL_NETWORK[self.contract.network.name]

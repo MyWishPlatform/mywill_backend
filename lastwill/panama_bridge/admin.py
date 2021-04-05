@@ -41,6 +41,7 @@ class PanamaTransactionModelAdmin(ModelAdmin):
         'eth_symbol',
         'bsc_symbol',
         'update_time',
+
         'status',
         'transaction_id',
         'wallet_from_address',

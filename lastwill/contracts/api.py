@@ -39,23 +39,15 @@ BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
-    wish_cost = int(cost) * rate('ETH', 'WISH').value
     if promo_str:
         try:
             discount = check_and_get_discount(
                 promo_str, contract_type, user
             )
         except PermissionDenied:
-            promo_str = None
+            pass
         else:
             cost = cost - cost * discount / 100
-        if promo_str:
-            Promo.objects.select_for_update().filter(
-                promo_str=promo_str.upper()
-            ).update(
-                use_count=F('use_count') + 1,
-                referral_bonus=F('referral_bonus') + wish_cost
-            )
     return cost
 
 
@@ -110,7 +102,7 @@ class ContractViewSet(ModelViewSet):
             result = result.filter(contract_type__in=[23])
         if self.request.user.is_staff:
             return result
-        return result.filter(user=self.request.user)
+        return result.filter(user=self.request.user).exclude(state='ARCHIVED')
 
 
 @api_view()
@@ -274,7 +266,7 @@ def deploy(request):
     if contract.user != request.user or contract.state not in ('CREATED', 'WAITING_FOR_PAYMENT'):
         raise PermissionDenied
 
-    cost = contract.cost
+    original_cost = contract.cost
     currency = 'USDT'
     site_id = 1
     network = contract.network.name
@@ -282,13 +274,17 @@ def deploy(request):
     if promo_str:
         promo_str = promo_str.upper()
     promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
-    cost = check_promocode(promo_str, request.user, cost, contract, contract_details)
+    cost = check_promocode(promo_str, request.user, original_cost, contract, contract_details)
     create_payment(request.user.id, '', currency, -cost, site_id, network)
     if promo_str:
-        promo_object = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=request.user, promo=promo_object,
-                   contract_id=contract.id).save()
+        promo = Promo.objects.get(promo_str=promo_str.upper())
+        User2Promo(user=request.user, promo=promo, contract_id=contract.id).save()
+        promo.referral_bonus_usd += original_cost // NET_DECIMALS['USDT']
+        promo.use_count += 1
+        promo.save()
+
     contract.state = 'WAITING_FOR_DEPLOYMENT'
+    contract.deploy_started_at = datetime.datetime.now()
     contract.save()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'launch', queue)
@@ -1329,6 +1325,7 @@ def confirm_protector_info(request):
         autodeploing(contract.user.id, 5)
     elif contract.network.name == 'ETHEREUM_ROPSTEN':
         contract.state = 'WAITING_FOR_DEPLOYMENT'
+        contract.deploy_started_at = datetime.datetime.now()
         contract.save()
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
@@ -1362,6 +1359,7 @@ def skip_protector_approve(request):
                                        contract_type=23, state='WAITING_FOR_APPROVE').first()
     if contract:
         contract.state = 'ACTIVE'
+        contract.deployed_at = datetime.datetime.now()
         contract.save()
 
         return JsonResponse(ContractSerializer().to_representation(contract))

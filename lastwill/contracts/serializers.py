@@ -93,6 +93,7 @@ def deploy_swaps(contract_id):
         if user_info.balance >= cost or int(user_info.balance) >= cost * 0.95:
             create_payment(contract.user.id, '', currency, -cost, site_id, 'ETHEREUM_MAINNET')
             contract.state = 'WAITING_FOR_DEPLOYMENT'
+            contract.deploy_started_at = datetime.datetime.now()
             contract.save()
             queue = NETWORKS[contract.network.name]['queue']
             send_in_queue(contract.id, 'launch', queue)
@@ -114,6 +115,7 @@ def deploy_protector(contract_id):
         if user_info.balance >= cost or int(user_info.balance) >= cost * 0.95:
             create_payment(contract.user.id, '', currency, -cost, site_id, 'ETHEREUM_MAINNET')
             contract.state = 'WAITING_FOR_DEPLOYMENT'
+            contract.deploy_started_at = datetime.datetime.now()
             contract.save()
             queue = NETWORKS[contract.network.name]['queue']
             print('check1', flush=True)
@@ -364,6 +366,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
                 contract_details.approving_time = None
                 contract_details.save()
                 contract_details.contract.state = 'POSTPONED'
+                contract_details.contract.postponed_at = datetime.datetime.now()
                 contract_details.contract.save()
         res = super().to_representation(contract_details)
         res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)

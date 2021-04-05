@@ -222,6 +222,7 @@ def create_swap(
             HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+      
 def check_swap_status(swap_tx_hash:str, backend_url:str=SWAP_BACKEND_URL):
     response = get(backend_url.format(swap_tx_hash))
 

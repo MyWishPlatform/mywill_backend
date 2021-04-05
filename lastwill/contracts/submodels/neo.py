@@ -214,6 +214,7 @@ class ContractDetailsNeo(CommonDetails):
         take_off_blocking(self.contract.network.name)
 
         self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
 
         if self.contract.user.email:
@@ -444,6 +445,7 @@ class ContractDetailsNeoICO(CommonDetails):
         take_off_blocking(self.contract.network.name)
 
         self.contract.state = 'ACTIVE'
+        self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
 
         if self.contract.user.email:

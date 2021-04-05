@@ -54,7 +54,13 @@ def get_users():
 def generate_contracts_statistic(network, types):
     total = Contract.objects.filter(network__name=network, user__in=get_users())
     created = total.filter(state='CREATED')
-    deployed = total.filter(state__in=('ACTIVE', 'WAITING', 'WAITING_ACTIVATION'))
+    deployed = total.exclude(state__in=(
+        'CREATED',
+        'WAITING_FOR_PAYMENT',
+        'TIME_IS_UP',
+        'WAITING_FOR_DEPLOYMENT',
+        'POSTPONED',
+    ))
     postponed = total.filter(state='POSTPONED')
     in_process = total.filter(state='WAITING_FOR_DEPLOYMENT')
 
@@ -63,29 +69,29 @@ def generate_contracts_statistic(network, types):
         contracts = total.filter(contract_type=type)
         contracts_by_types[name] = {
             'all': contracts.count(),
-            'new': contracts_today_filter(contracts).count()
+            'new': contracts_today_filter(contracts, 'created_date').count()
         }
 
     result = {
         'total': {
             'all': total.count(),
-            'new': contracts_today_filter(total).count(),
+            'new': contracts_today_filter(total, 'created_date').count(),
         },
         'created': {
             'all': created.count(),
-            'new': contracts_today_filter(created).count(),
+            'new': contracts_today_filter(created, 'created_date').count(),
         },
         'deployed': {
             'all': deployed.count(),
-            'new': contracts_today_filter(deployed).count(),
+            'new': contracts_today_filter(deployed, 'deployed_at').count(),
         },
         'postponed': {
             'all': postponed.count(),
-            'new': contracts_today_filter(postponed).count(),
+            'new': contracts_today_filter(postponed, 'postponed_at').count(),
         },
         'in_process': {
             'all': in_process.count(),
-            'new': contracts_today_filter(in_process).count(),
+            'new': contracts_today_filter(in_process, 'deploy_started_at').count(),
         },
         'types': contracts_by_types
     }

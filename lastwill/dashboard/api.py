@@ -47,8 +47,7 @@ def get_eth_balance(network):
         return None
 
 
-
-def contracts_today_filter(contracts):
+def contracts_today_filter(contracts, field_name):
     now = datetime.now()
     midnight = datetime.combine(now.today(), time(0, 0))
-    return contracts.filter(created_date__gte=midnight, created_date__lte=now)
+    return contracts.filter(**{f'{field_name}__gte': midnight, f'{field_name}__lte': now})
