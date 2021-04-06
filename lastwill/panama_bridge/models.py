@@ -1,5 +1,3 @@
-from re import A
-from sys import version
 from django.db import models
 
 
