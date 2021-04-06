@@ -73,14 +73,15 @@ def create_swap(
     try:
         contract = load_contract(
             network.get('contract_abi'),
-            Web3.toChecksumAddress(network.get('contract_address'))
+            # Web3.toChecksumAddress(network.get('contract_address'))
+            Web3.toChecksumAddress(ETH_SWAP_CONTRACT_ADDRESS)
         )
         from_network = network.get('blockchain_id')
-        to_network = 1 if from_network == network.get('blockchain_id') else 2
+        to_network = 1 if network.get('blockchain_id') == 'BSC' else 2
         fee_address = contract.functions.feeAddress().call()
         fee_amount = contract.functions.feeAmountOfBlockchain(to_network).call()
         actual_from_amount = int(float(from_amount) * RBC_DECIMALS)
-        actual_to_amount=(actual_from_amount - int(fee_amount)) / RBC_DECIMALS
+        actual_to_amount = (actual_from_amount - int(fee_amount)) / RBC_DECIMALS
         wallet_deposit_address = ETH_SWAP_CONTRACT_ADDRESS if network == 2 else BSC_SWAP_CONTRACT_ADDRESS
 
         new_swap = PanamaTransaction(
@@ -222,7 +223,7 @@ def create_swap(
             HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-      
+
 def check_swap_status(swap_tx_hash:str, backend_url:str=SWAP_BACKEND_URL):
     response = get(backend_url.format(swap_tx_hash))
 
@@ -231,13 +232,13 @@ def check_swap_status(swap_tx_hash:str, backend_url:str=SWAP_BACKEND_URL):
 
 def update_swap_status(
     swaps:QuerySet=PanamaTransaction.objects \
-                   .filter(type='swap_rbc') \
+                   .filter(type=PanamaTransaction.SWAP_RBC) \
                    .exclude(status='Completed')
 ):
     for swap in swaps:
         status = check_swap_status(swap.transaction_id)
 
-        logging.info(status)
+        # logging.info(status)
 
         # if status == 'FAIL':
         #     swap.status = swap.FAIL
@@ -247,6 +248,15 @@ def update_swap_status(
         elif status == 'SUCCESS':
             swap.update_time=timezone.now()
             swap.status = 'Completed'
+
         swap.save()
+
+        logging.info(
+            'Swap with hash {} was updated status to {} at {}.'.format(
+                swap.transaction_id,
+                swap.status,
+                swap.update_time,
+            )
+        )
 
     return 1

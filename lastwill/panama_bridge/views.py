@@ -77,7 +77,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             return self.create(request, *args, **kwargs)
 
         return Response(
-            'Invalid swap type',
+            'Invalid swap type.',
             HTTP_400_BAD_REQUEST,
         )
     def get_queryset(self):
