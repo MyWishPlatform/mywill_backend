@@ -1,7 +1,8 @@
 import logging
+from decimal import Decimal
 from requests import get
 
-from django.db.models.query import QuerySet
+# from django.db.models.query import QuerySet
 from django.utils import timezone
 from rest_framework.status import (
     HTTP_201_CREATED,
@@ -23,7 +24,7 @@ from lastwill.settings_local import (
 
 from .models import PanamaTransaction
 
-RBC_DECIMALS = NET_DECIMALS.get('RBC')
+RBC_DECIMALS = NET_DECIMALS.get('RBC', 10 ** 18)
 
 
 # def create_swap(network:int, tx_hash:str):
@@ -77,10 +78,16 @@ def create_swap(
             Web3.toChecksumAddress(ETH_SWAP_CONTRACT_ADDRESS)
         )
         from_network = network.get('blockchain_id')
-        to_network = 1 if network.get('blockchain_id') == 'BSC' else 2
-        fee_address = contract.functions.feeAddress().call()
+
+        if from_network == 1:
+            to_network = 2
+        elif from_network == 2:
+            to_network = 1
+
+        # to_network = 1 if network.get('blockchain_id') == 1 else 2
+        # fee_address = contract.functions.feeAddress().call()
         fee_amount = contract.functions.feeAmountOfBlockchain(to_network).call()
-        actual_from_amount = int(float(from_amount) * RBC_DECIMALS)
+        actual_from_amount = int(Decimal(from_amount) * RBC_DECIMALS)
         actual_to_amount = (actual_from_amount - int(fee_amount)) / RBC_DECIMALS
         wallet_deposit_address = ETH_SWAP_CONTRACT_ADDRESS if network == 2 else BSC_SWAP_CONTRACT_ADDRESS
 
@@ -92,8 +99,8 @@ def create_swap(
             bsc_symbol='BRBC',
             wallet_from_address=wallet_address.lower(),
             wallet_to_address=wallet_address.lower(),
-            actual_from_amount=str(actual_from_amount / RBC_DECIMALS),
-            actual_to_amount=str(actual_to_amount),
+            actual_from_amount=Decimal(actual_from_amount / RBC_DECIMALS),
+            actual_to_amount=Decimal(actual_to_amount),
             transaction_id=tx_id,
             wallet_deposit_address=wallet_deposit_address,
             update_time=timezone.now(),
@@ -103,15 +110,36 @@ def create_swap(
         new_swap.save()
 
         logging.info(
-            {
-                'network': network,
-                'source_address': wallet_address,
-                'target_address': wallet_address,
-                'amount': actual_from_amount,
-                'tx_hash': tx_id,
-                'fee_address': fee_address,
-                'fee_amount': fee_amount,
-            }
+            """Swap with hash {transaction_id} was successfully added.
+               The swap body:
+               Type: {type},
+               Transaction id: {transaction_id},
+               From network: {from_network},
+               To network: {to_network},
+               ETH symbol: {eth_symbol},
+               BSC symbol: {bsc_symbol},
+               From wallet address: {wallet_from_address},
+               To wallet address: {wallet_to_address},
+               From actual amount: {actual_from_amount},
+               To actual amount: {actual_to_amount},
+               Deposit wallet address: {wallet_deposit_address},
+               Updated at: {update_time},
+               Status: {status}
+            """.format(
+                type=new_swap.type,
+                transaction_id=new_swap.transaction_id,
+                from_network=new_swap.from_network,
+                to_network=new_swap.to_network,
+                eth_symbol=new_swap.eth_symbol,
+                bsc_symbol=new_swap.bsc_symbol,
+                wallet_from_address=new_swap.wallet_from_address,
+                wallet_to_address=new_swap.wallet_to_address,
+                actual_from_amount=new_swap.actual_from_amount,
+                actual_to_amount=new_swap.actual_to_amount,
+                wallet_deposit_address=new_swap.wallet_deposit_address,
+                update_time=new_swap.update_time,
+                status=new_swap.status,
+            )
         )
 
         return (
@@ -230,11 +258,11 @@ def check_swap_status(swap_tx_hash:str, backend_url:str=SWAP_BACKEND_URL):
     return response.json()['status']
 
 
-def update_swap_status(
-    swaps:QuerySet=PanamaTransaction.objects \
-                   .filter(type=PanamaTransaction.SWAP_RBC) \
-                   .exclude(status='Completed')
-):
+def update_swap_status():
+    swaps = PanamaTransaction.objects \
+            .filter(type=PanamaTransaction.SWAP_RBC) \
+            .exclude(status='Completed')
+
     for swap in swaps:
         status = check_swap_status(swap.transaction_id)
 
