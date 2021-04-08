@@ -94,6 +94,7 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         'usd_price',
         'is_native',
         'is_displayed',
+        'used_in_iframe',
     )
     list_display = (
         'id',
@@ -105,12 +106,14 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         'updated_at',
         'is_native',
         'is_displayed',
+        'used_in_iframe',
     )
     list_filter = (
         'created_at',
         'updated_at',
         'is_native',
         'is_displayed',
+        'used_in_iframe',
     )
     search_fields = (
         'title',

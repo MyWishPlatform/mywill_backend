@@ -87,6 +87,7 @@ class CoinGeckoToken(models.Model):
     updated_at=models.DateTimeField(auto_now=True)
     is_native=models.BooleanField(default=False)
     is_displayed=models.BooleanField(default=True)
+    used_in_iframe=models.BooleanField(default=False)
 
     class Meta:
         db_table = 'coingecko_tokens'

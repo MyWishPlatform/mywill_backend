@@ -256,6 +256,7 @@ def get_actual_coingecko_tokens(request):
                            platform__in=[
                                'ethereum',
                                'binance-smart-chain',
+                               'polygon',
                            ],
                            is_displayed=True,
                         ) \
@@ -276,6 +277,7 @@ def get_actual_coingecko_tokens(request):
                 ),
                 'coingecko_rank': token.rank,
                 'usd_price': token.usd_price,
+                'used_in_iframe': token.used_in_iframe,
             })
 
     return token_list
