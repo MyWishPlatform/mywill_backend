@@ -9,10 +9,12 @@ class PanamaTransaction(models.Model):
     """
     SWAP_RBC = 'swap_rbc'
     SWAP_PANAMA = 'panama'
+    SWAP_POLYGON = 'polygon'
 
     SWAP_TYPES = (
         (SWAP_RBC, SWAP_RBC.capitalize()),
         (SWAP_PANAMA, SWAP_PANAMA.capitalize()),
+        (SWAP_POLYGON, SWAP_POLYGON.capitalize()),
     )
 
     type = models.CharField(

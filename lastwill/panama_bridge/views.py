@@ -3,7 +3,11 @@ from decimal import Decimal
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_200_OK,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
 
 from .services import create_swap
 from .status_request import get_status_by_id
@@ -19,10 +23,11 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
     method GET need to request walletAddress to response all user's transaction list
     """
     serializer_class = UserTransactionSerializer
+    lookup_field = 'transaction_id'
 
     # get data from request and create new entry in db
     def post(self, request, *args, **kwargs):
-        # types: panama, rbc_swap
+        # types: panama, rbc_swap, polygon
         swap_type = request.data.get('type')
 
         if not swap_type:
@@ -75,6 +80,31 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                 request.data["walletDepositAddress"] = transactionFullInfo.get("walletDepositAddress").lower()
 
             return self.create(request, *args, **kwargs)
+
+        elif swap_type == PanamaTransaction.SWAP_POLYGON:
+            data = dict(
+                type=request.data.get('type'),
+                fromNetwork=request.data.get('fromNetwork'),
+                toNetwork=request.data.get('toNetwork'),
+                actualFromAmount=request.data.get('actualFromAmount'),
+                actualToAmount=request.data.get('actualToAmount'),
+                ethSymbol=request.data.get('ethSymbol'),
+                bscSymbol=request.data.get('bscSymbol'),
+                updateTime=request.data.get('updateTime'),
+                status=request.data.get('status'),
+                transaction_id=request.data.get('transaction_id'),
+                walletFromAddress=request.data.get('walletFromAddress'),
+                walletToAddress=request.data.get('walletToAddress'),
+                walletDepositAddress=request.data.get('walletDepositAddress'),
+            )
+            for key in data:
+                if not data[key]:
+                    return Response(
+                        f'Field {key} is required.',
+                        HTTP_400_BAD_REQUEST,
+                    )
+            return self.create(request, *args, **kwargs)
+
 
         return Response(
             'Invalid swap type.',
@@ -136,3 +166,31 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             # magic_code - finish
 
         return Response(serializer.data)
+
+    def partial_update(self, request, transaction_id):
+
+        transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
+
+        if not request.data.get('status'):
+            return Response(
+                'Field status required.',
+                HTTP_400_BAD_REQUEST,
+            )
+
+        data = dict(
+            status=request.get('status')
+        )
+
+        serializer = self.get_serializer(transaction_object, data=data, partial=True)
+        if not serializer.is_valid():
+            return (
+                'Validation Error when try to update Transaction object',
+                HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        serializer.save()
+
+        return Response(
+            serializer.data,
+            HTTP_200_OK
+        )
+

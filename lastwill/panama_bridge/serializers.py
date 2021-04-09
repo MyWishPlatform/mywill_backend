@@ -45,3 +45,4 @@ class UserTransactionSerializer(ModelSerializer):
             'walletToAddress',
             'walletDepositAddress',
         )
+        lookup_field = 'transaction_id'
