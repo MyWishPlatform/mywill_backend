@@ -178,19 +178,18 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
             )
 
         data = dict(
-            status=request.get('status')
+            status=request.get('status'),
         )
 
         serializer = self.get_serializer(transaction_object, data=data, partial=True)
         if not serializer.is_valid():
-            return (
+            return Response(
                 'Validation Error when try to update Transaction object',
-                HTTP_500_INTERNAL_SERVER_ERROR
+                HTTP_500_INTERNAL_SERVER_ERROR,
             )
         serializer.save()
 
         return Response(
             serializer.data,
-            HTTP_200_OK
+            HTTP_200_OK,
         )
-
