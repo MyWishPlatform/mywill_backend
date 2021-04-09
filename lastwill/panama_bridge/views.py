@@ -105,11 +105,11 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
                     )
             return self.create(request, *args, **kwargs)
 
-
         return Response(
             'Invalid swap type.',
             HTTP_400_BAD_REQUEST,
         )
+
     def get_queryset(self):
         wallet_address = self.request.query_params.get("walletAddress")
 
@@ -169,7 +169,13 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
 
     def partial_update(self, request, transaction_id):
 
-        transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
+        try:
+            transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
+        except PanamaTransaction.DoesNotExist:
+            return Response(
+                f"Transaction object with transaction_id: {transaction_id} doesn't exist.",
+                HTTP_400_BAD_REQUEST,
+            )
 
         if not request.data.get('status'):
             return Response(
@@ -182,11 +188,13 @@ class UserTransactionsView(ListAPIView, CreateAPIView):
         )
 
         serializer = self.get_serializer(transaction_object, data=data, partial=True)
+
         if not serializer.is_valid():
             return Response(
-                'Validation Error when try to update Transaction object',
+                'Validation Error: Failed when try to update Transaction object.',
                 HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
         serializer.save()
 
         return Response(
