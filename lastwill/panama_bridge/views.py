@@ -1,7 +1,7 @@
 import re
 from decimal import Decimal
 
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
@@ -16,7 +16,7 @@ from lastwill.swaps_common.tokentable.models import CoinGeckoToken
 from .serializers import UserTransactionSerializer
 
 
-class UserTransactionsView(ListAPIView, CreateAPIView):
+class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
     """
     Basic view to create db entry about transaction and send list of user's transaction.
     method POST need to request transaction_id field(gives on frontend by binance API)
