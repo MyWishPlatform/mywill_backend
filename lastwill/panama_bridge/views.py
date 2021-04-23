@@ -177,14 +177,16 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
                 HTTP_400_BAD_REQUEST,
             )
 
-        if not request.data.get('status'):
-            return Response(
-                'Field status required.',
-                HTTP_400_BAD_REQUEST,
-            )
+        for field in ['status', 'second_transaction_id']:
+            if not request.data.get(field):
+                return Response(
+                    f'{field} required.',
+                    HTTP_400_BAD_REQUEST,
+                )
 
         data = dict(
             status=request.get('status'),
+            second_transaction_id=request.get('second_transaction_id'),
         )
 
         serializer = self.get_serializer(transaction_object, data=data, partial=True)

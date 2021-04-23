@@ -72,3 +72,9 @@ class PanamaTransaction(models.Model):
         max_length=42,
         verbose_name='Wallet deposit address',
     )
+    second_transaction_id = models.CharField(
+        max_length=255,
+        verbose_name='Second transaction id',
+        default='',
+        blank=True,
+    )
