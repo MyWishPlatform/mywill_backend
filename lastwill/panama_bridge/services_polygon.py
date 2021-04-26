@@ -30,6 +30,7 @@ SOME_ADDRESS = '0x0000000000000000000000000000000000001001'
 WAITING_FOR_DEPOSIT_STATUS = 'WaitingForDeposit'
 WITHDRAW_IN_PROGRESS = 'WithdrawInProgress'
 INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
+INFURA_URL_GOERLI_TESTNET = 'https://goerli.infura.io/v3/519bcee159504883ad8af59830dec2bb'
 
 
 def get_infura_provider(provider_url):
@@ -57,6 +58,7 @@ def update_pol_eth_status():
     #     return 0
     try:
         pol_provider = get_infura_provider(provider_url=POL_PR_URL)
+        # pol_provider = get_infura_provider(provider_url=POL_TEST_PR_URL)
     except Exception:
         return 0
 
@@ -70,6 +72,7 @@ def update_pol_eth_status():
             # else:
             #     url = POLYGON_API_URL + str(receipt.blockNumber)
             url = POLYGON_API_URL + str(receipt.blockNumber)
+            # url = POLYGON_API_URL_TESTNET + str(receipt.blockNumber)
 
             response = requests.get(url)
 
@@ -104,6 +107,7 @@ def second_get_pol_eth_status():
     #     return 0
 
     w3 = get_infura_provider(provider_url=INFURA_URL)
+    # w3 = get_infura_provider(provider_url=INFURA_URL_GOERLI_TESTNET)
 
     # check updating for active transaction
     for transaction in polygon_transactions:
@@ -152,6 +156,7 @@ def update_eth_pol_status():
     #     logging.error(f'Ethereum->polygon error on provider connection')
     #     return 0
     w3 = get_infura_provider(provider_url=INFURA_URL)
+    # w3 = get_infura_provider(provider_url=INFURA_URL_GOERLI_TESTNET)
 
     # network = Network.displayed_objects.get(
     #     title=POLYGON_NETWORK,
@@ -162,6 +167,7 @@ def update_eth_pol_status():
     # except Exception:
     #     return 0
     pol_provider = get_infura_provider(provider_url=POL_PR_URL)
+    # pol_provider = get_infura_provider(provider_url=POL_TEST_PR_URL)
 
     # check status for active transaction on blockchain
     for transaction in polygon_transactions:

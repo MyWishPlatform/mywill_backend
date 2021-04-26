@@ -22,6 +22,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
     method POST need to request transaction_id field(gives on frontend by binance API)
     method GET need to request walletAddress to response all user's transaction list
     """
+    queryset = PanamaTransaction.objects.all()
     serializer_class = UserTransactionSerializer
     lookup_field = 'transaction_id'
 
@@ -80,7 +81,6 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
                 request.data["walletDepositAddress"] = transactionFullInfo.get("walletDepositAddress").lower()
 
             return self.create(request, *args, **kwargs)
-
         elif swap_type == PanamaTransaction.SWAP_POLYGON:
             data = dict(
                 type=request.data.get('type'),
@@ -110,16 +110,32 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
             HTTP_400_BAD_REQUEST,
         )
 
-    def get_queryset(self):
-        wallet_address = self.request.query_params.get("walletAddress")
+    # def get_queryset(self):
+    #     wallet_address = self.request.query_params.get("walletAddress")
 
-        if not wallet_address:
-            return []
+    #     if not wallet_address:
+    #         return []
 
-        return list(PanamaTransaction.objects.filter(wallet_from_address=wallet_address.lower()))
+    #     return list(PanamaTransaction.objects.filter(wallet_from_address=wallet_address.lower()))
 
     def get(self, request, *args, **kwargs):
+        ### FOR TESTS
+        # from .services import update_swap_status
+        # update_swap_status()
+
+        from .services_polygon import update_eth_pol_status
+        update_eth_pol_status()
+        ###
+
+        wallet_address = self.request.query_params.get("walletAddress")
+
         queryset = self.filter_queryset(self.get_queryset())
+
+        if wallet_address:
+            queryset = queryset.filter(
+                wallet_from_address = wallet_address.lower()
+            )
+
         serializer = self.get_serializer(queryset, many=True)
 
         for _, token in enumerate(serializer.data):
@@ -167,15 +183,59 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
 
         return Response(serializer.data)
 
-    def partial_update(self, request, transaction_id):
+    # @csrf_exempt
+    # def partial_update(self, request, transaction_id, *args, **kwargs):
 
-        try:
-            transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
-        except PanamaTransaction.DoesNotExist:
+    #     try:
+    #         transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
+    #     except PanamaTransaction.DoesNotExist:
+    #         return Response(
+    #             f"Transaction object with transaction_id: {transaction_id} doesn't exist.",
+    #             HTTP_400_BAD_REQUEST,
+    #         )
+
+    #     for field in ['status', 'second_transaction_id']:
+    #         if not request.data.get(field):
+    #             return Response(
+    #                 f'{field} required.',
+    #                 HTTP_400_BAD_REQUEST,
+    #             )
+
+    #     data = dict(
+    #         status=request.get('status'),
+    #         second_transaction_id=request.get('second_transaction_id'),
+    #     )
+
+    #     serializer = self.get_serializer(transaction_object, data=data, partial=True)
+
+    #     if not serializer.is_valid():
+    #         return Response(
+    #             'Validation Error: Failed when try to update Transaction object.',
+    #             HTTP_500_INTERNAL_SERVER_ERROR,
+    #         )
+
+    #     serializer.save()
+
+    #     return Response(
+    #         serializer.data,
+    #         HTTP_200_OK,
+    #     )
+
+    def partial_update(self, request, *args, **kwargs):
+        transaction_id = request.query_params.get('transaction_id')
+
+        if not transaction_id:
             return Response(
-                f"Transaction object with transaction_id: {transaction_id} doesn't exist.",
+                'URL param transaction id is required.',
                 HTTP_400_BAD_REQUEST,
             )
+        # try:
+        #     transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
+        # except PanamaTransaction.DoesNotExist:
+        #     return Response(
+        #         f"Transaction object with transaction_id: {transaction_id} doesn't exist.",
+        #         HTTP_400_BAD_REQUEST,
+        #     )
 
         for field in ['status', 'second_transaction_id']:
             if not request.data.get(field):
@@ -184,22 +244,32 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
                     HTTP_400_BAD_REQUEST,
                 )
 
-        data = dict(
-            status=request.get('status'),
-            second_transaction_id=request.get('second_transaction_id'),
-        )
 
-        serializer = self.get_serializer(transaction_object, data=data, partial=True)
+        PanamaTransaction.objects \
+            .filter(transaction_id=transaction_id) \
+            .update(**request.data)
 
-        if not serializer.is_valid():
-            return Response(
-                'Validation Error: Failed when try to update Transaction object.',
-                HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        # data = dict(
+        #     status=request.get('status'),
+        #     second_transaction_id=request.get('second_transaction_id'),
+        # )
 
-        serializer.save()
+        # serializer = self.get_serializer(transaction_object, data=data, partial=True)
+
+        # if not serializer.is_valid():
+        #     return Response(
+        #         'Validation Error: Failed when try to update Transaction object.',
+        #         HTTP_500_INTERNAL_SERVER_ERROR,
+        #     )
+
+        # serializer.save()
+
+        # return Response(
+        #     serializer.data,
+        #     HTTP_200_OK,
+        # )
 
         return Response(
-            serializer.data,
+            'OK.',
             HTTP_200_OK,
         )
