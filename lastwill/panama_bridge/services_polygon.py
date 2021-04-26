@@ -15,7 +15,7 @@ from lastwill.swaps_common.orderbook.order_limited.uniswap import (
 
 
 # Consts - now there, because panama_bridge app need to refactor
-ETH_POL_STATUS = 'Deposit in progress'
+ETH_POL_STATUS = 'DepositInProgress'
 ETH_POL_STATUS_COMPLETED = 'Completed'
 ETHEREUM_NETWORK = 'ETH'
 POLYGON_NETWORK = 'POL'
@@ -27,8 +27,8 @@ RESPONSE_MSG = 'success'
 SOME_ABI_NAME = 'some_polygon_abi.json'
 SOME_ADDRESS = '0x0000000000000000000000000000000000001001'
 # TESTNET = True
-WAITING_FOR_DEPOSIT_STATUS = 'Waiting for deposit'
-WITHDRAW_IN_PROGRESS = 'Withdraw in progress'
+WAITING_FOR_DEPOSIT_STATUS = 'WaitingForDeposit'
+WITHDRAW_IN_PROGRESS = 'WithdrawInProgress'
 INFURA_URL = 'https://mainnet.infura.io/v3/519bcee159504883ad8af59830dec2bb'
 
 
