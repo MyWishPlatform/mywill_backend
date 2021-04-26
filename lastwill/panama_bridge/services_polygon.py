@@ -85,7 +85,7 @@ def update_pol_eth_status():
 
 def second_get_pol_eth_status():
     # get second part of active POL->ETH transaction
-    polygon_transactions = PanamaTransaction.displayed_objects.filter(
+    polygon_transactions = PanamaTransaction.objects.filter(
         type=PanamaTransaction.SWAP_POLYGON,
         from_network=POLYGON_NETWORK,
         to_network=ETHEREUM_NETWORK,
@@ -121,7 +121,7 @@ def second_get_pol_eth_status():
 
 def update_eth_pol_status():
     # get active ETH->POL transaction
-    if not PanamaTransaction.displayed_objects.filter(
+    if not PanamaTransaction.objects.filter(
             type=PanamaTransaction.SWAP_POLYGON,
             from_network=ETHEREUM_NETWORK,
             to_network=POLYGON_NETWORK,
@@ -129,7 +129,7 @@ def update_eth_pol_status():
     ).exists():
         return 0
 
-    polygon_transactions = PanamaTransaction.displayed_objects.filter(
+    polygon_transactions = PanamaTransaction.objects.filter(
         type=PanamaTransaction.SWAP_POLYGON,
         from_network=ETHEREUM_NETWORK,
         to_network=POLYGON_NETWORK,
