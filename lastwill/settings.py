@@ -322,15 +322,15 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute='*'),
     },
     'update_polygon_eth_pol_status': {
-        'task': 'panama_bridge.tasks.update_polygon_eth_pol_status',
+        'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
         'schedule': crontab(minute='*'),
     },
     'update_polygon_pol_eth_status': {
-        'task': 'panama_bridge.tasks.update_polygon_pol_eth_status',
+        'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
         'schedule': crontab(minute='*'),
     },
     'update_polygon_second_pol_eth_status': {
-        'task': 'panama_bridge.tasks.update_polygon_second_pol_eth_status',
+        'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
         'schedule': crontab(minute='*'),
     },
 }
