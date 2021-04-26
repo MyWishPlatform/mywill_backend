@@ -109,6 +109,7 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         'used_in_iframe',
     )
     list_filter = (
+        'platform',
         'created_at',
         'updated_at',
         'is_native',

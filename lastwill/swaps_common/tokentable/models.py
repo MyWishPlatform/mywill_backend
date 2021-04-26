@@ -96,7 +96,7 @@ class CoinGeckoToken(models.Model):
                 fields=['id', ]
             ),
         )
-        unique_together = ['title', 'short_title']
+        unique_together = ['short_title', 'address', 'platform']
 
     def save(self, *args, **kwargs):
         self.short_title = self.short_title.lower()
