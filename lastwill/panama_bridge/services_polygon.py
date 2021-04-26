@@ -38,7 +38,7 @@ def get_infura_provider(provider_url):
 
 def update_pol_eth_status():
     # get active POL->ETH transaction
-    polygon_transactions = PanamaTransaction.filter(
+    polygon_transactions = PanamaTransaction.objects.filter(
         type=PanamaTransaction.SWAP_POLYGON,
         from_network=POLYGON_NETWORK,
         to_network=ETHEREUM_NETWORK,
