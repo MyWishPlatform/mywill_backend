@@ -101,8 +101,8 @@ class CoinGeckoToken(models.Model):
     def save(self, *args, **kwargs):
         self.short_title = self.short_title.lower()
 
-        if self.platform and not self.address:
-            self.address = ETH_ADDRESS
+        # if self.platform and not self.address:
+        #     self.address = ETH_ADDRESS
 
         if self.title == 'Rubic' and self.short_title == 'rbc':
             self.rank = -1
