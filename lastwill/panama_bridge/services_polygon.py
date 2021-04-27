@@ -92,7 +92,7 @@ def second_get_pol_eth_status():
         type=PanamaTransaction.SWAP_POLYGON,
         from_network=POLYGON_NETWORK,
         to_network=ETHEREUM_NETWORK,
-        status__iexact=WAITING_FOR_DEPOSIT_STATUS,
+        status__iexact=WITHDRAW_IN_PROGRESS,
     )
 
     # connect to providers
