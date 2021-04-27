@@ -1,7 +1,14 @@
 import re
 from decimal import Decimal
 
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
+from django.db.models import Q
+from rest_framework.generics import (
+    ListAPIView,
+    CreateAPIView,
+    UpdateAPIView,
+    get_object_or_404,
+)
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
@@ -135,17 +142,19 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
             queryset = queryset.filter(
                 wallet_from_address = wallet_address.lower()
             )
+        else:
+            return Response([])
 
         serializer = self.get_serializer(queryset, many=True)
 
         for _, token in enumerate(serializer.data):
             # add token image link to response
             tokenInfo = CoinGeckoToken.objects \
-                        .filter(
-                            short_title__iexact=token.get("ethSymbol")
-                        ) \
-                        .last()
-
+                .filter(
+                    Q(short_title__iexact=token.get("ethSymbol")) | \
+                    Q(address__iexact=token.get("ethSymbol"))
+                ) \
+                .last()
             # magic_code - start
             if token.get("status") == "Cancelled":
                 token['code'] = 0  # red
@@ -161,10 +170,11 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
 
             if tokenInfo is None:
                 tokenInfo=CoinGeckoToken.objects \
-                          .filter(
-                              short_title__iexact=token.get("bscSymbol")
-                          ) \
-                          .last()
+                    .filter(
+                        Q(short_title__iexact=token.get("bscSymbol")) | \
+                        Q(address__iexact=token.get("bscSymbol"))
+                    ) \
+                    .last()
             if tokenInfo is None:
                 token["image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
             else:
@@ -183,7 +193,6 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
 
         return Response(serializer.data)
 
-    # @csrf_exempt
     # def partial_update(self, request, transaction_id, *args, **kwargs):
 
     #     try:
@@ -229,13 +238,6 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
                 'URL param transaction id is required.',
                 HTTP_400_BAD_REQUEST,
             )
-        # try:
-        #     transaction_object = PanamaTransaction.objects.get(transaction_id=transaction_id)
-        # except PanamaTransaction.DoesNotExist:
-        #     return Response(
-        #         f"Transaction object with transaction_id: {transaction_id} doesn't exist.",
-        #         HTTP_400_BAD_REQUEST,
-        #     )
 
         for field in ['status', 'second_transaction_id']:
             if not request.data.get(field):
@@ -244,30 +246,9 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
                     HTTP_400_BAD_REQUEST,
                 )
 
-
         PanamaTransaction.objects \
             .filter(transaction_id=transaction_id) \
             .update(**request.data)
-
-        # data = dict(
-        #     status=request.get('status'),
-        #     second_transaction_id=request.get('second_transaction_id'),
-        # )
-
-        # serializer = self.get_serializer(transaction_object, data=data, partial=True)
-
-        # if not serializer.is_valid():
-        #     return Response(
-        #         'Validation Error: Failed when try to update Transaction object.',
-        #         HTTP_500_INTERNAL_SERVER_ERROR,
-        #     )
-
-        # serializer.save()
-
-        # return Response(
-        #     serializer.data,
-        #     HTTP_200_OK,
-        # )
 
         return Response(
             'OK.',
