@@ -47,6 +47,7 @@ class PanamaTransactionModelAdmin(ModelAdmin):
         'wallet_from_address',
         'wallet_to_address',
         'wallet_deposit_address',
+        'second_transaction_id',
     )
     list_display = (
         'id',

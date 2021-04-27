@@ -87,6 +87,7 @@ class CoinGeckoToken(models.Model):
     updated_at=models.DateTimeField(auto_now=True)
     is_native=models.BooleanField(default=False)
     is_displayed=models.BooleanField(default=True)
+    used_in_iframe=models.BooleanField(default=False)
 
     class Meta:
         db_table = 'coingecko_tokens'
@@ -95,13 +96,13 @@ class CoinGeckoToken(models.Model):
                 fields=['id', ]
             ),
         )
-        unique_together = ['title', 'short_title']
+        unique_together = ['short_title', 'address', 'platform']
 
     def save(self, *args, **kwargs):
         self.short_title = self.short_title.lower()
 
-        if self.platform and not self.address:
-            self.address = ETH_ADDRESS
+        # if self.platform and not self.address:
+        #     self.address = ETH_ADDRESS
 
         if self.title == 'Rubic' and self.short_title == 'rbc':
             self.rank = -1

@@ -321,6 +321,18 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
         'schedule': crontab(minute='*'),
     },
+    'update_polygon_eth_pol_status': {
+        'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
+        'schedule': crontab(minute='*'),
+    },
+    'update_polygon_pol_eth_status': {
+        'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
+        'schedule': crontab(minute='*'),
+    },
+    'update_polygon_second_pol_eth_status': {
+        'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
+        'schedule': crontab(minute='*'),
+    },
 }
 
 COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'

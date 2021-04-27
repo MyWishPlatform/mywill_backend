@@ -1,5 +1,7 @@
 from django.db import models
 
+ETH_TOKEN_ADDRESS_LENGTH = 42
+
 
 class PanamaTransaction(models.Model):
     """
@@ -9,10 +11,12 @@ class PanamaTransaction(models.Model):
     """
     SWAP_RBC = 'swap_rbc'
     SWAP_PANAMA = 'panama'
+    SWAP_POLYGON = 'polygon'
 
     SWAP_TYPES = (
         (SWAP_RBC, SWAP_RBC.capitalize()),
         (SWAP_PANAMA, SWAP_PANAMA.capitalize()),
+        (SWAP_POLYGON, SWAP_POLYGON.capitalize()),
     )
 
     type = models.CharField(
@@ -39,11 +43,11 @@ class PanamaTransaction(models.Model):
         verbose_name='Actual to amount',
     )
     eth_symbol = models.CharField(
-        max_length=6,
+        max_length=ETH_TOKEN_ADDRESS_LENGTH,
         verbose_name='ETH symbol',
     )
     bsc_symbol = models.CharField(
-        max_length=6,
+        max_length=ETH_TOKEN_ADDRESS_LENGTH,
         verbose_name='BSC symbol',
     )
     update_time = models.DateTimeField(
@@ -59,14 +63,20 @@ class PanamaTransaction(models.Model):
         verbose_name='Transaction id',
     )
     wallet_from_address = models.CharField(
-        max_length=42,
+        max_length=ETH_TOKEN_ADDRESS_LENGTH,
         verbose_name='Wallet from address',
     )
     wallet_to_address = models.CharField(
-        max_length=42,
+        max_length=ETH_TOKEN_ADDRESS_LENGTH,
         verbose_name='Wallet to address',
     )
     wallet_deposit_address = models.CharField(
-        max_length=42,
+        max_length=ETH_TOKEN_ADDRESS_LENGTH,
         verbose_name='Wallet deposit address',
+    )
+    second_transaction_id = models.CharField(
+        max_length=255,
+        verbose_name='Second transaction id',
+        default='',
+        blank=True,
     )
