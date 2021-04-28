@@ -475,6 +475,7 @@ class CommonDetails(models.Model):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+                gas_price_current = int(eth_int.eth_gasPrice())
                 break
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
@@ -498,7 +499,8 @@ class CommonDetails(models.Model):
 
         print('DATA', data, flush=True)
 
-        gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
+        gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
+        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
             self.contract.network.name, value=self.get_value(),
