@@ -187,7 +187,7 @@ class AbstractContractDetailsICO(CommonDetails):
             tr = abi.ContractTranslator(self.eth_contract_token.abi)
             eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
             nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
-            gas_price_current = int(eth_int.eth_gasPrice())
+            gas_price_current = int(eth_int.eth_gasPrice(), 16)
             gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
             gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
             print('nonce', nonce)
