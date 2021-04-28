@@ -475,7 +475,7 @@ class CommonDetails(models.Model):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
-                gas_price_current = int(eth_int.eth_gasPrice(), 16)
+                gas_price_current = int(eth_int.eth_gasPrice() * 1.1, 16)
                 break
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
