@@ -244,12 +244,10 @@ def check_error_promocode(promo_str, contract_type):
 
 def check_promocode(promo_str, user, cost, contract, details):
     options_price = 0
-    if contract.contract_type == 5:
-        if details.authio:
-            options_price += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
-    if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
-        if details.verification:
-            options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+    if contract.contract_type in (5, 28) and details.authio:
+        options_price += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
+    if contract.contract_type in VERIFICATION_CONTRACTS_IDS and details.verification:
+        options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
     cost = check_and_apply_promocode(
         promo_str, user, contract.cost - options_price, contract.contract_type, contract.id
@@ -1125,10 +1123,9 @@ def buy_brand_report(request):
     host = request.META['HTTP_HOST']
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
-    if contract.contract_type != 5:
+    if contract.contract_type not in (5, 28):
         raise PermissionDenied
-    if contract.network.name != 'ETHEREUM_MAINNET':
-        raise PermissionDenied
+
     details = contract.get_details()
     cost = AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
     currency = 'USDT'
