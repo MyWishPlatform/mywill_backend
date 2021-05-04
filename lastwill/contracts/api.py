@@ -1102,7 +1102,8 @@ def send_authio_info(contract, details, authio_email):
             token_type=details.token_type,
             decimals=details.decimals,
             mint_info=mint_info if mint_info else 'No',
-            admin_address=details.admin_address
+            admin_address=details.admin_address,
+            network=details.contract.network.name,
         ),
         from_email=DEFAULT_FROM_EMAIL,
         to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
