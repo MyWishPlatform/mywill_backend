@@ -53,12 +53,11 @@ def get_discount(request):
             }
         elif host == MY_WISH_URL:
             options_cost = 0
-            if contract.contract_type == 5:
-                if contract_details.authio:
-                    options_cost += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
-            if contract.contract_type in VERIFICATION_CONTRACTS_IDS:
-                if contract_details.verification:
-                    options_cost += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
+            if contract.contract_type in (5, 28) and contract_details.authio:
+                options_cost += AUTHIO_PRICE_USDT * NET_DECIMALS['USDT']
+
+            if contract.contract_type in VERIFICATION_CONTRACTS_IDS and contract_details.verification:
+                options_cost += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
             cost = (contract.cost - options_cost) * (100 - discount) / 100 + options_cost
             answer['discount_price'] = {
