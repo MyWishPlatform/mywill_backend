@@ -90,6 +90,11 @@ CONTRACT_PRICE_USDT = {
     'MATIC_TOKEN': 99,
     'MATIC_ICO': 99,
     'MATIC_AIRDROP': 99,
+
+    'XINFIN_TOKEN': 99,
+    'XINFIN_ICO': 99,
+    'XINFIN_AIRDROP': 99,
+
 }
 
 CONTRACT_PRICE_ETH = {
@@ -152,6 +157,7 @@ NET_DECIMALS = {
     'SWAP': 10 ** 18,
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
+    'XIN': 10 ** 18
 }
 
 TRON_REPLENISH_THRESHOLD = {

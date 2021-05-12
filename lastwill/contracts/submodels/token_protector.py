@@ -1,3 +1,5 @@
+from django.conf.global_settings import DEFAULT_FROM_EMAIL
+
 from lastwill.contracts.submodels.common import *
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
