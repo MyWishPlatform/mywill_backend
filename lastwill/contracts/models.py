@@ -25,6 +25,7 @@ from .submodels.binance.token import *
 from .submodels.matic.token import *
 from .submodels.matic.ico import *
 from .submodels.matic.airdrop import *
+from .submodels.xinfin.token import *
 
 
 class CurrencyStatisticsCache(models.Model):
