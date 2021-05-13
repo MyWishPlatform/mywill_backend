@@ -17,6 +17,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
+from lastwill.contracts.submodels.heco_chain.token import ContractDetailsHecoChainToken
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -36,7 +37,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
-    ContractDetailsXinFinToken, ContractDetailsHecoChainToken,
+    ContractDetailsXinFinToken,
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
