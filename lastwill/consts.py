@@ -140,6 +140,7 @@ NET_DECIMALS = {
     'EOS': 10 ** 4,
     'WISH': 10 ** 18,
     'EOSISH': 10 ** 4,
+    'BSCBNB': 10 ** 18,
     'BNB': 10 ** 18,
     'BWISH': 10 ** 18,
     'WWISH': 10 ** 18,
