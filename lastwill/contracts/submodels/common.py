@@ -357,6 +357,7 @@ class Contract(models.Model):
         matic_token = apps.get_model('contracts', 'ContractDetailsMaticToken')
         matic_airdrop = apps.get_model('contracts', 'ContractDetailsMaticAirdrop')
         xinfin_token = apps.get_model('contracts', 'ContractDetailsXinFinToken')
+        hecochain_token = apps.get_model('contracts', 'ContractDetailsHecoChainToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -395,6 +396,7 @@ class Contract(models.Model):
         contract_details_types[33] = {'name': 'Matic Token contract', 'model': matic_token}
         contract_details_types[34] = {'name': 'Matic Airdrop', 'model': matic_airdrop}
         contract_details_types[35] = {'name': 'XinFin Token contract', 'model': xinfin_token}
+        contract_details_types[35] = {'name': 'HecoChain Token contract', 'model': hecochain_token}
 
         return contract_details_types
 

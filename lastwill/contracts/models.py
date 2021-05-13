@@ -49,3 +49,5 @@ class CurrencyStatisticsCache(models.Model):
     usd_price_rub = models.FloatField(default=0, null=True)
     usd_percent_change_24h = models.FloatField(default=0, null=True)
     updated_at = models.DateTimeField(auto_now_add=True)
+
+

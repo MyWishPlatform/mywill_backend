@@ -348,6 +348,8 @@ class ContractSerializer(serializers.ModelSerializer):
             32: ContractDetailsMaticICOSerializer,
             33: ContractDetailsMaticTokenSerializer,
             34: ContractDetailsMaticAirdropSerializer,
+            35: ContractDetailsXinFinTokenSerializer,
+            36: ContractDetailsHecoChainTokenSerializer,
         }[contract_type]
 
 
