@@ -1,4 +1,4 @@
-MAX_WEI_DIGITS = len(str(2**256))
+MAX_WEI_DIGITS = len(str(2 ** 256))
 MAIL_NETWORK = {
     'ETHEREUM_MAINNET': 'Ethereum',
     'ETHEREUM_ROPSTEN': 'Ropsten (Ethereum Testnet)',
@@ -37,6 +37,8 @@ API_NETWORK = {
     'MATIC_TESTNET': 'MATIC_TESTNET',
     'XINFIN_MAINNET': 'XINFIN_MAINNET',
     'XINFIN_TESTNET': 'XINFIN_TESTNET',
+    'HECOCHAIN_MAINNET': 'HECOCHAIN_MAINNET',
+    'HECOCHAIN_TESTNET': 'HECOCHAIN_TESTNET',
 }
 
 NETWORK_SUBSITE = {
@@ -56,6 +58,9 @@ NETWORK_SUBSITE = {
     'MATIC_TESTNET': 1,
     'XINFIN_MAINNET': 1,
     'XINFIN_TESTNET': 1,
+    'HECOCHAIN_MAINNET': 1,
+    'HECOCHAIN_TESTNET': 1,
+
 }
 
 CONTRACT_PRICE_USDT = {
@@ -98,6 +103,8 @@ CONTRACT_PRICE_USDT = {
     'MATIC_AIRDROP': 99,
 
     'XINFIN_TOKEN': 99,
+
+    'HECOCHAIN_TOKEN': 35,
 
 }
 
@@ -161,7 +168,8 @@ NET_DECIMALS = {
     'SWAP': 10 ** 18,
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
-    'XIN': 10 ** 18
+    'XIN': 10 ** 18,
+    'USDTHECO': 10 ** 18,  # HecoChain
 }
 
 TRON_REPLENISH_THRESHOLD = {
@@ -271,18 +279,30 @@ API_CONTRACT_PRICES = [
     {'contract_type': 0, 'contract_name': 'LastWill', 'price': 0.257 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
     {'contract_type': 1, 'contract_name': 'LostKey', 'price': 0.2 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
     {'contract_type': 2, 'contract_name': 'DefferedPayment', 'price': 0.025 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 4, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 5, 'contract_name': 'Token', 'price': CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 8, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 9, 'contract_name': 'InvestmentPool', 'price': CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 10, 'contract_name': 'Token', 'price': CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 11, 'contract_name': 'Account', 'price': CONTRACT_PRICE_EOS['EOS_ACCOUNT'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 12, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 13, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_EOS['EOS_AIRDROP'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 14, 'contract_name': 'TokenStandAlone', 'price': CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 15, 'contract_name': 'Token', 'price': CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
-    {'contract_type': 16, 'contract_name': 'GameAsset', 'price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
-    {'contract_type': 17, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
+    {'contract_type': 4, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'],
+     'currency': 'ETH'},
+    {'contract_type': 5, 'contract_name': 'Token', 'price': CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'],
+     'currency': 'ETH'},
+    {'contract_type': 8, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH'],
+     'currency': 'ETH'},
+    {'contract_type': 9, 'contract_name': 'InvestmentPool',
+     'price': CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
+    {'contract_type': 10, 'contract_name': 'Token', 'price': CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'],
+     'currency': 'EOS'},
+    {'contract_type': 11, 'contract_name': 'Account', 'price': CONTRACT_PRICE_EOS['EOS_ACCOUNT'] * NET_DECIMALS['EOS'],
+     'currency': 'EOS'},
+    {'contract_type': 12, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'],
+     'currency': 'EOS'},
+    {'contract_type': 13, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_EOS['EOS_AIRDROP'] * NET_DECIMALS['EOS'],
+     'currency': 'EOS'},
+    {'contract_type': 14, 'contract_name': 'TokenStandAlone',
+     'price': CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
+    {'contract_type': 15, 'contract_name': 'Token', 'price': CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['TRX'],
+     'currency': 'TRX'},
+    {'contract_type': 16, 'contract_name': 'GameAsset',
+     'price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
+    {'contract_type': 17, 'contract_name': 'AirDrop',
+     'price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
 ]
 
 ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
@@ -298,7 +318,6 @@ ETH_COMMON_GAS_PRICES = {
     'MATIC_MAINNET': 1,
     'MATIC_TESTNET': 20,
 }
-
 
 EOS_TOKEN_SA_DEPLOY_PARAMS = {
     'EOS_MAINNET': {

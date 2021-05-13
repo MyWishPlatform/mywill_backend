@@ -25,5 +25,5 @@ class ContractDetailsXinFinToken(AbstractContractDetailsToken):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['XINFIN_TOKEN']
-        result = int(price * NET_DECIMALS['USDT'])  # поменять децималы
+        result = int(price * NET_DECIMALS['XIN'])  # поменять децималы
         return result
