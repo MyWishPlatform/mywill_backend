@@ -1,5 +1,6 @@
 import datetime
 import bitcoin
+from django.conf.global_settings import DEFAULT_FROM_EMAIL
 from ethereum import abi
 
 from django.db import models

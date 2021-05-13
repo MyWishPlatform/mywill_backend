@@ -36,6 +36,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
+    ContractDetailsXinFinToken,
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -1972,7 +1973,7 @@ class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
 
 class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsMaticToken
+        model = ContractDetailsXinFinToken
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
