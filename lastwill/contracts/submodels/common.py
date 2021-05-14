@@ -396,7 +396,7 @@ class Contract(models.Model):
         contract_details_types[33] = {'name': 'Matic Token contract', 'model': matic_token}
         contract_details_types[34] = {'name': 'Matic Airdrop', 'model': matic_airdrop}
         contract_details_types[35] = {'name': 'XinFin Token contract', 'model': xinfin_token}
-        contract_details_types[35] = {'name': 'HecoChain Token contract', 'model': hecochain_token}
+        contract_details_types[36] = {'name': 'HecoChain Token contract', 'model': hecochain_token}
 
         return contract_details_types
 
