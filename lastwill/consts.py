@@ -168,7 +168,7 @@ NET_DECIMALS = {
     'SWAP': 10 ** 18,
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
-    'XIN': 10 ** 18,
+    'XIN': 10 ** 24,
     'USDTHECO': 10 ** 18,  # HecoChain
 }
 
@@ -317,6 +317,10 @@ ETH_COMMON_GAS_PRICES = {
     'BINANCE_SMART_MAINNET': 20,
     'MATIC_MAINNET': 1,
     'MATIC_TESTNET': 20,
+    'XINFIN_MAINNET': 3,
+    'XINFIN_TESTNET': 3,
+    'HECOCHAIN_MAINNET': 6,
+    'HECOCHAIN_TESTNET': 6,
 }
 
 EOS_TOKEN_SA_DEPLOY_PARAMS = {
