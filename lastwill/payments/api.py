@@ -164,6 +164,7 @@ def get_payment_statistics(start, stop=None):
         'BTC': 0.0,
         'BNB': 0.0,
         'EOS': 0.0,
+        'BSCBNB': 0.0,
         'EOSISH': 0.0,
         'TRX': 0.0,
         'TRONISH': 0.0,
