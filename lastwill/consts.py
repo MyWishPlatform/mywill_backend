@@ -17,7 +17,9 @@ MAIL_NETWORK = {
     'MATIC_MAINNET': 'Matic',
     'MATIC_TESTNET': 'Mumbai (Matic Testnet)',
     'XINFIN_MAINNET': 'XinFin',
-    'XINFIN_TESTNET': 'XinFinTest'
+    'XINFIN_TESTNET': 'XinFinTest',
+    'HECOCHAIN_MAINNET': 'HecoChain',
+    'HECOCHAIN_TESTNET': 'HecoChainTest',
 }
 
 API_NETWORK = {
