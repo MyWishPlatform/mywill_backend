@@ -16,7 +16,7 @@ class ContractDetailsHecoChainToken(AbstractContractDetailsToken):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='HECOCHAIN_MAINNET')
+        network = Network.objects.get(name='HECOCHAIN_TESTNET')
         cost = cls.calc_cost({}, network)
         return cost
 
