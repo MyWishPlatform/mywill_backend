@@ -17,6 +17,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
+from lastwill.contracts.submodels.heco_chain.ico import ContractDetailsHecoChainICO
 from lastwill.contracts.submodels.heco_chain.token import ContractDetailsHecoChainToken
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
@@ -351,6 +352,7 @@ class ContractSerializer(serializers.ModelSerializer):
             34: ContractDetailsMaticAirdropSerializer,
             35: ContractDetailsXinFinTokenSerializer,
             36: ContractDetailsHecoChainTokenSerializer,
+            37: ContractDetailsHecoChainICOSerializer,
         }[contract_type]
 
 
@@ -1955,6 +1957,18 @@ class ContractDetailsMaticICOSerializer(ContractDetailsICOSerializer):
         return res
 
 
+class ContractDetailsHecoChainICOSerializer(ContractDetailsICOSerializer):
+    class Meta(ContractDetailsICOSerializer.Meta):
+        model = ContractDetailsHecoChainICO
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        if contract_details.contract.network.name in ['HECOCHAIN_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+            res['eth_contract_crowdsale']['source_code'] = ''
+        return res
+
+
 class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
         model = ContractDetailsMaticToken
@@ -1991,7 +2005,7 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsHecoChainToken
+        model = ContractDetailsMaticToken
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
@@ -1999,6 +2013,10 @@ class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
                                 contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
+        if contract_details.eth_contract_token and contract_details.eth_contract_token.hecochain_ico_details_token.filter(
+                contract__state='ACTIVE'):
+            res['crowdsale'] = contract_details.eth_contract_token.hecochain_ico_details_token.filter(
+                contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
         if contract_details.contract.network.name in ['HECOCHAIN_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res

@@ -107,6 +107,7 @@ CONTRACT_PRICE_USDT = {
     'XINFIN_TOKEN': 99,
 
     'HECOCHAIN_TOKEN': 35,
+    'HECOCHAIN_ICO': 35,
 
 }
 
@@ -171,7 +172,7 @@ NET_DECIMALS = {
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
     'XIN': 10 ** 24,
-    'USDTHECO': 10 ** 18,  # HecoChain
+    'HT': 10 ** 18,  # HecoChain
 }
 
 TRON_REPLENISH_THRESHOLD = {
