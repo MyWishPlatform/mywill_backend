@@ -27,6 +27,7 @@ from .submodels.matic.ico import *
 from .submodels.matic.airdrop import *
 from .submodels.xinfin.token import *
 from .submodels.heco_chain.token import *
+from .submodels.heco_chain.ico import *
 
 
 class CurrencyStatisticsCache(models.Model):
