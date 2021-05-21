@@ -19,7 +19,7 @@ class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
         EthContract,
         null=True,
         default=None,
-        related_name='matic_ico_details_crowdsale',
+        related_name='hecochain_ico_details_crowdsale',
         on_delete=models.SET_NULL
     )
 
