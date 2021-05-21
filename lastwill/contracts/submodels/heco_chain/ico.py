@@ -33,4 +33,4 @@ class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['HECOCHAIN_ICO'] * NET_DECIMALS['USDT'])
+        return int(CONTRACT_PRICE_USDT['HECOCHAIN_ICO'] * NET_DECIMALS['HT'])
