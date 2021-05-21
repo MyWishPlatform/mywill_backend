@@ -6,13 +6,13 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsICO
 from lastwill.deploy.models import Network
 
 
-@contract_details('Matic MyWish ICO')
+@contract_details('HecoChain MyWish ICO')
 class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
     eth_contract_token = models.ForeignKey(
         EthContract,
         null=True,
         default=None,
-        related_name='matic_ico_details_token',
+        related_name='hecochain_ico_details_token',
         on_delete=models.SET_NULL
     )
     eth_contract_crowdsale = models.ForeignKey(
@@ -25,7 +25,7 @@ class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='MATIC_MAINNET')
+        network = Network.objects.get(name='HECOCHAIN_TESTNET')
         cost = cls.calc_cost({}, network)
         return cost
 
