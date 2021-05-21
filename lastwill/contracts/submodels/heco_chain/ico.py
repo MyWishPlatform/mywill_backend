@@ -1,10 +1,6 @@
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
-from lastwill.contracts import models
-from lastwill.contracts.decorators import contract_details
-from lastwill.contracts.submodels.common import EthContract
 from lastwill.contracts.submodels.ico import AbstractContractDetailsICO
-from lastwill.deploy.models import Network
-
+from lastwill.contracts.submodels.common import *
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 
 @contract_details('HecoChain MyWish ICO')
 class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
