@@ -292,7 +292,7 @@ ETH_COMMON_GAS_PRICES = {
 
 EOS_TOKEN_SA_DEPLOY_PARAMS = {
     'EOS_MAINNET': {
-        'CPU': 15,
+        'CPU': 1,
         'NET': 3,
         'RAM': 300
     },
@@ -303,8 +303,6 @@ EOS_TOKEN_SA_DEPLOY_PARAMS = {
     }
 }
 
-
 VERIFICATION_PRICE_USDT = 450
-
 
 AUTHIO_PRICE_USDT = 1500
