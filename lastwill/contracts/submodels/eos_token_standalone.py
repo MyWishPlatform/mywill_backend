@@ -138,7 +138,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 'days': 1,
                 'cpu_frac': cpu_frac,
                 'net_frac': net_frac,
-                'max_payment': '0.010 EOS'
+                'max_payment': '0.0050 EOS'
             }),
             '-p', creator_account
         ]
