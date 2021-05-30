@@ -140,7 +140,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 'net_frac': net_frac,
                 'max_payment': '0.0050 EOS'
             }),
-            '-p', creator_account
+            '-j', '-p', creator_account
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
