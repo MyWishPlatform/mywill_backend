@@ -151,6 +151,8 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
             our_public_key,
+            '--stake-net', '0 EOS',
+            '--stake-cpu', '0 EOS',
             '--buy-ram-kbytes', str(ram_amount),
             '--transfer', '-j'
         ]
