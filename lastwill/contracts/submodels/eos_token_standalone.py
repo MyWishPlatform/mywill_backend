@@ -1,3 +1,4 @@
+import json
 from django.core.mail import send_mail
 
 from lastwill.contracts.submodels.eos import *
@@ -131,7 +132,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
 
         command = [
             'cleos', '-u', eos_url, 'push', 'action','eosio', 'powerup',
-            str({
+            json.dumps({
                 'payer': creator_account,
                 'receiver': creator_account,
                 'days': 1,
