@@ -7,6 +7,15 @@ from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CO
     EOS_TOKEN_SA_DEPLOY_PARAMS
 
 
+def get_frac(resource, system_state, account_state, value):
+    account_resource_max = account_state[f'{resource}_limit']['max']
+    account_resource_weight = account_state[f'{resource}_weight']
+    system_resource_weight = int(system_state['rows'][0][resource]['weight'])
+
+    frac = 10 ** 18 * account_resource_weight / (system_resource_weight * account_resource_max)
+    return int(round(value * frac, 0))
+
+
 class ContractDetailsEOSTokenSA(CommonDetails):
     token_short_name = models.CharField(max_length=64)
     token_account = models.CharField(max_length=12)
@@ -102,27 +111,44 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     @postponable
     def deploy(self):
         self.compile()
-        wallet_name = NETWORKS[self.contract.network.name]['wallet']
-        password = NETWORKS[self.contract.network.name]['eos_password']
+        network = NETWORKS[self.contract.network.name]
+        wallet_name = network['wallet']
+        password = network['eos_password']
         unlock_eos_account(wallet_name, password)
-        creator_account = NETWORKS[self.contract.network.name]['address']
-        our_public_key = NETWORKS[self.contract.network.name]['pub']
+        creator_account = network['address']
+        our_public_key = network['pub']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
-            str(NETWORKS[self.contract.network.name]['host']))
+            eos_url = 'https://%s' % (str(network['host']))
         else:
-            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'http://%s:%s' % (str(network['host']), str(network['port']))
 
-        stake_params = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]
-        cpu_amount = stake_params['CPU']
-        net_amount = stake_params['NET']
-        ram_amount = stake_params['RAM']
+        system_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'table', 'eosio', '0', 'powup.state'])
+        account_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'account', creator_account, '--json'])
+
+        cpu_frac = get_frac('cpu', system_state, account_state, network['cpu_powerup_amount'])
+        net_frac = get_frac('net', system_state, account_state, network['net_powerup_amount'])
+        ram_amount = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]['RAM']
+
+        command = [
+            'cleos', '-u', eos_url, 'push', 'action','eosio', 'powerup',
+            str({
+                'payer': creator_account,
+                'receiver': creator_account,
+                'days': 1,
+                'cpu_frac': cpu_frac,
+                'net_frac': net_frac,
+                'max_payment': '0.010 EOS'
+            }),
+        ]
+        print('command:', command, flush=True)
+        tx_hash = implement_cleos_command(command)['transaction_id']
+        print(f'powerup success: {tx_hash}, wait 2 minutes for confirmation...')
+        time.sleep(2 * 60)
 
         command = [
             'cleos', '-u', eos_url, 'system', 'newaccount',
             creator_account, self.token_account, our_public_key,
-            our_public_key, '--stake-net', str(net_amount) + ' EOS',
-            '--stake-cpu', str(cpu_amount) + ' EOS',
+            our_public_key,
             '--buy-ram-kbytes', str(ram_amount),
             '--transfer', '-j'
         ]
