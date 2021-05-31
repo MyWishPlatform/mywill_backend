@@ -350,7 +350,7 @@ COINGECKO_SYMBOLS = {
     'EOSISH': 'eosish',
     'NEO': 'neo',
     'SWAP': 'swaps-network',
-    'MATIC': 'polygon'
+    'MATIC': 'matic-network'
 }
 
 TEMP_SYMBOLS = {
