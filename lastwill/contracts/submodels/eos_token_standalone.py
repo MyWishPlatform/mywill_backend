@@ -128,7 +128,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
 
         cpu_frac = get_frac('cpu', system_state, account_state, network['cpu_powerup_amount'])
         net_frac = get_frac('net', system_state, account_state, network['net_powerup_amount'])
-        ram_amount = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]['RAM']
+        ram_kbytes = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]['RAM']
 
         '''
         command = [
@@ -166,7 +166,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             new_account_owner_pub=our_public_key,
             new_account_cpu_frac=cpu_frac,
             new_account_net_frac=net_frac,
-            ram_bytes=ram_amount,
+            ram_bytes=ram_kbytes * 1024,
         )
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
