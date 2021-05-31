@@ -2,7 +2,7 @@ import json
 from django.core.mail import send_mail
 
 from lastwill.contracts.submodels.eos import *
-from lastwill.json_templates import create_eos_token_sa_json
+from lastwill.json_templates import create_eos_token_sa_json, token_standalone_init_tx
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
 from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT, \
     EOS_TOKEN_SA_DEPLOY_PARAMS
@@ -130,6 +130,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         net_frac = get_frac('net', system_state, account_state, network['net_powerup_amount'])
         ram_amount = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]['RAM']
 
+        '''
         command = [
             'cleos', '-u', eos_url, 'push', 'action','eosio', 'powerup',
             json.dumps({
@@ -155,6 +156,22 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             '--stake-cpu', '0 EOS',
             '--buy-ram-kbytes', str(ram_amount),
             '--transfer', '-j'
+        ]
+        '''
+        tx = token_standalone_init_tx(
+            actor_account=creator_account,
+            actor_cpu_frac=cpu_frac,
+            actor_net_frac=net_frac,
+            new_account=self.token_account,
+            new_account_owner_pub=our_public_key,
+            new_account_cpu_frac=cpu_frac,
+            new_account_net_frac=net_frac,
+            ram_bytes=ram_amount,
+        )
+        command = [
+            'cleos', '-u', eos_url, 'push', 'transaction',
+            json.dumps(tx), '-j',
+            '-p', creator_account
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
