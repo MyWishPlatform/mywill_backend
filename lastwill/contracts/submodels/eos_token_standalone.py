@@ -5,7 +5,7 @@ from lastwill.contracts.submodels.eos import *
 from lastwill.json_templates import create_eos_token_sa_json, token_standalone_init_tx
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
 from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT, \
-    EOS_TOKEN_SA_DEPLOY_PARAMS
+    EOS_TOKEN_SA_DEPLOY_PARAMS, EOS_NEW_TOKEN_DEPLOY_PARAMS, EOS_NEW_TOKEN_ACCOUNT_PARAMS
 
 
 def get_frac(resource, system_state, account_state, value):
@@ -112,7 +112,8 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     @postponable
     def deploy(self):
         self.compile()
-        network = NETWORKS[self.contract.network.name]
+        network_name = self.contract.network.name
+        network = NETWORKS[network_name]
         wallet_name = network['wallet']
         password = network['eos_password']
         unlock_eos_account(wallet_name, password)
@@ -123,12 +124,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         else:
             eos_url = 'http://%s:%s' % (str(network['host']), str(network['port']))
 
-        system_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'table', 'eosio', '0', 'powup.state'])
-        account_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'account', creator_account, '--json'])
-
-        cpu_frac = get_frac('cpu', system_state, account_state, network['cpu_powerup_amount'])
-        net_frac = get_frac('net', system_state, account_state, network['net_powerup_amount'])
-        ram_kbytes = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]['RAM']
 
         '''
         command = [
@@ -158,20 +153,26 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             '--transfer', '-j'
         ]
         '''
+        system_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'table', 'eosio', '0', 'powup.state'])
+        account_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'account', creator_account, '--json'])
+        actor_cpu = EOS_NEW_TOKEN_DEPLOY_PARAMS[network_name]['CPU']
+        actor_net = EOS_NEW_TOKEN_DEPLOY_PARAMS[network_name]['NET']
+        new_account_cpu = EOS_NEW_TOKEN_ACCOUNT_PARAMS[network_name]['CPU']
+        new_account_net = EOS_NEW_TOKEN_ACCOUNT_PARAMS[network_name]['NET']
+        ram_kbytes = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]['RAM']
+
         tx = token_standalone_init_tx(
             actor_account=creator_account,
-            actor_cpu_frac=cpu_frac,
-            actor_net_frac=net_frac,
+            actor_cpu_frac=get_frac('cpu', system_state, account_state, actor_cpu),
+            actor_net_frac=get_frac('net', system_state, account_state, actor_net),
             new_account=self.token_account,
             new_account_owner_pub=our_public_key,
-            new_account_cpu_frac=cpu_frac,
-            new_account_net_frac=net_frac,
+            new_account_cpu_frac=get_frac('cpu', system_state, account_state, new_account_cpu),
+            new_account_net_frac=get_frac('net', system_state, account_state, new_account_net),
             ram_bytes=ram_kbytes * 1024,
         )
         command = [
-            'cleos', '-u', eos_url, 'push', 'transaction',
-            json.dumps(tx), '-j',
-            '-p', creator_account
+            'cleos', '-u', eos_url, 'push', 'transaction', json.dumps(tx), '-j', '-p', creator_account
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
