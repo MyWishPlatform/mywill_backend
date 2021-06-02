@@ -289,19 +289,30 @@ ETH_COMMON_GAS_PRICES = {
     'MATIC_TESTNET': 20,
 }
 
-
-EOS_TOKEN_SA_DEPLOY_PARAMS = {
+EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS = {
     'EOS_MAINNET': {
-        'CPU': 1,
-        'NET': 3,
-        'RAM': 300
+        'CPU': 2,
+        'NET': 5,
     },
     'EOS_TESTNET': {
-        'CPU': 15,
-        'NET': 15,
-        'RAM': 300
+        'CPU': 2,
+        'NET': 5,
     }
 }
+
+EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS = {
+    'EOS_MAINNET': {
+        'CPU': 2,
+        'NET': 30,
+        'RAM': 300,
+    },
+    'EOS_TESTNET': {
+        'CPU': 2,
+        'NET': 30,
+        'RAM': 300,
+    },
+}
+
 
 VERIFICATION_PRICE_USDT = 450
 
