@@ -124,35 +124,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         else:
             eos_url = 'http://%s:%s' % (str(network['host']), str(network['port']))
 
-
-        '''
-        command = [
-            'cleos', '-u', eos_url, 'push', 'action','eosio', 'powerup',
-            json.dumps({
-                'payer': creator_account,
-                'receiver': creator_account,
-                'days': 1,
-                'cpu_frac': cpu_frac,
-                'net_frac': net_frac,
-                'max_payment': '0.0050 EOS'
-            }),
-            '-j', '-p', creator_account
-        ]
-        print('command:', command, flush=True)
-        tx_hash = implement_cleos_command(command)['transaction_id']
-        print(f'powerup success: {tx_hash}, wait 2 minutes for confirmation...')
-        time.sleep(2 * 60)
-
-        command = [
-            'cleos', '-u', eos_url, 'system', 'newaccount',
-            creator_account, self.token_account, our_public_key,
-            our_public_key,
-            '--stake-net', '0 EOS',
-            '--stake-cpu', '0 EOS',
-            '--buy-ram-kbytes', str(ram_amount),
-            '--transfer', '-j'
-        ]
-        '''
         system_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'table', 'eosio', '0', 'powup.state'])
         account_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'account', creator_account, '--json'])
         actor_cpu = EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS[network_name]['CPU']
