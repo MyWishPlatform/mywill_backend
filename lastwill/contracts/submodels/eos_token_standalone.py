@@ -114,16 +114,14 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.compile()
         network_name = self.contract.network.name
         network = NETWORKS[network_name]
-        wallet_name = network['wallet']
-        password = network['eos_password']
-        unlock_eos_account(wallet_name, password)
-        creator_account = network['address']
-        our_public_key = network['pub']
+        unlock_eos_account(network['wallet'], network['eos_password'])
+
         if self.contract.network.name == 'EOS_MAINNET':
             eos_url = 'https://%s' % (str(network['host']))
         else:
             eos_url = 'http://%s:%s' % (str(network['host']), str(network['port']))
 
+        creator_account = network['address']
         system_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'table', 'eosio', '0', 'powup.state'])
         account_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'account', creator_account, '--json'])
         actor_cpu = EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS[network_name]['CPU']
@@ -137,7 +135,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             actor_cpu_frac=get_frac('cpu', system_state, account_state, actor_cpu),
             actor_net_frac=get_frac('net', system_state, account_state, actor_net),
             new_account=self.token_account,
-            new_account_owner_pub=our_public_key,
+            new_account_owner_pub=network['pub'],
             new_account_cpu_frac=get_frac('cpu', system_state, account_state, new_account_cpu),
             new_account_net_frac=get_frac('net', system_state, account_state, new_account_net),
             ram_bytes=ram_kbytes * 1024,
