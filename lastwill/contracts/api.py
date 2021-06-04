@@ -127,25 +127,25 @@ def get_token_contracts(request):
         return Response([])
     res = []
     network_id = int(request.query_params['network'])
-    if network_id not in [22, 23, 24, 25]:
-        if network_id in [4, 5]:
-            eth_contracts = EthContract.objects.filter(
-                contract__contract_type__in=(4, 5),
-                contract__user=request.user,
-                address__isnull=False,
-                contract__network=network_id,
-            )
-            get_eth_token_contracts(eth_contracts, res)
-        if network_id in [34, 35]:
-            xin_contracts = EthContract.objects.filter(
-                contract__contract_type__in=(34, 35),
-                contract__user=request.user,
-                address__isnull=False,
-                contract__network=network_id,
-            )
-            get_xinfin_token_contracts(xin_contracts, res)
+    # if network_id not in [22, 23, 24, 25]:
+    if network_id in [4, 5]:
+        eth_contracts = EthContract.objects.filter(
+            contract__contract_type__in=(4, 5),
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
+        )
+        get_eth_token_contracts(eth_contracts, res)
+    if network_id in [35]:
+        xin_contracts = EthContract.objects.filter(
+            contract__contract_type__in=35,
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
+        )
+        get_xinfin_token_contracts(xin_contracts, res)
 
-    elif network_id in [22, 23]:
+    if network_id in [22, 23]:
         binance_contracts = EthContract.objects.filter(
             contract__contract_type__in=(27, 28),
             contract__user=request.user,
@@ -245,7 +245,7 @@ def get_xinfin_token_contracts(xin_contracts, res):
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
             if any([x.contract.contract_type == 35 and x.contract.state == 'ENDED' for x in
-                      ec.xinfin_token_details_token.all()]):
+                    ec.xinfin_token_details_token.all()]):
                 state = 'closed'
             else:
                 state = 'ok'

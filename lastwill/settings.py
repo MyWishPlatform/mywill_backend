@@ -389,6 +389,17 @@ DASHBOARD_NETWORKS = {
             'airdrop': 34,
         }
     },
+    'XINFIN': {
+        'original_name': {
+            'mainnet': 'MATIC_MAINNET',
+            'testnet': 'MATIC_TESTNET',
+        },
+        'contracts': {
+
+            'token': 35,
+
+        }
+    },
     'TRON': {
         'original_name': {
             'mainnet': 'TRON_MAINNET',
