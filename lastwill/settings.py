@@ -414,16 +414,3 @@ DASHBOARD_NETWORKS = {
         }
     },
 }
-slovar = {'contract_id': 8393, 'soft_cap': Decimal('1000000000000000000000'),
-          'hard_cap': Decimal('500000000000000000000000'),
-          'token_name': 'MyCrowdSale5', 'token_short_name': 'zxzx',
-          'admin_address': '0x67E7fd91d1a2cC465e153064d4A5dF835E173b7a',
-          'is_transferable_at_once': True, 'start_date': 1602249300, 'stop_date': 1605010163, 'rate': Decimal('1000'),
-          'decimals': 8, 'platform_as_admin': False, 'temp_directory': '',
-          'time_bonuses': [], 'amount_bonuses': [], 'continue_minting': False,
-          'cold_wallet_address': '0xce85a63F5093b28F15aa7C2C1f1b4b0037011cbE', 'allow_change_dates': True,
-          'whitelist': True,
-          'verification': False, 'verification_status': 'NOT_VERIFIED', 'verification_date_payment': None,
-          'reused_token': True, 'token_type': 'ERC20', 'min_wei': Decimal('1000000000000000000'),
-          'max_wei': Decimal('200000000000000000000'),
-          }
