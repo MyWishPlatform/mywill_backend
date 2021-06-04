@@ -280,7 +280,7 @@ class Contract(models.Model):
     state = models.CharField(max_length=63, default='CREATED')
     contract_type = models.IntegerField(default=0)
 
-    source_code =Í models.TextField()
+    source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
     compiler_version = models.CharField(
