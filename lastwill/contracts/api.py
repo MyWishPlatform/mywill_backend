@@ -128,13 +128,23 @@ def get_token_contracts(request):
     res = []
     network_id = int(request.query_params['network'])
     if network_id not in [22, 23, 24, 25]:
-        eth_contracts = EthContract.objects.filter(
-            contract__contract_type__in=(4, 5),
-            contract__user=request.user,
-            address__isnull=False,
-            contract__network=network_id,
-        )
-        get_eth_token_contracts(eth_contracts, res)
+        if network_id in [4, 5]:
+            eth_contracts = EthContract.objects.filter(
+                contract__contract_type__in=(4, 5),
+                contract__user=request.user,
+                address__isnull=False,
+                contract__network=network_id,
+            )
+            get_eth_token_contracts(eth_contracts, res)
+        if network_id in [34, 35]:
+            xin_contracts = EthContract.objects.filter(
+                contract__contract_type__in=(4, 5),
+                contract__user=request.user,
+                address__isnull=False,
+                contract__network=network_id,
+            )
+            get_xinfin_token_contracts(xin_contracts, res)
+
     elif network_id in [22, 23]:
         binance_contracts = EthContract.objects.filter(
             contract__contract_type__in=(27, 28),
@@ -143,6 +153,7 @@ def get_token_contracts(request):
             contract__network=network_id,
         )
         get_binance_token_contracts(binance_contracts, res)
+
     else:
         matic_contracts = EthContract.objects.filter(
             contract__contract_type__in=(32, 33),
@@ -229,30 +240,30 @@ def get_matic_token_contracts(matic_contracts, res):
             })
 
 
-# def get_xinfin_token_contracts(xin_contracts, res): если что-то упало
-#     for ec in xin_contracts:
-#         details = ec.contract.get_details()
-#         if details.eth_contract_token == ec:
-#             if any([x.contract.contract_type == 32 and x.contract.state not in ('CREATED', 'ENDED') for x in
-#                     ec.matic_ico_details_token.all()]):
-#                 state = 'running'
-#             elif any([x.contract.contract_type == 32 and not x.continue_minting and x.contract.state == 'ENDED' for x in
-#                       ec.matic_ico_details_token.all()]):
-#                 state = 'closed'
-#             elif any([x.contract.contract_type == 33 and x.contract.state == 'ENDED' for x in
-#                       ec.matic_token_details_token.all()]):
-#                 state = 'closed'
-#             else:
-#                 state = 'ok'
-#             res.append({
-#                 'id': ec.id,
-#                 'address': ec.address,
-#                 'token_name': details.token_name,
-#                 'token_short_name': details.token_short_name,
-#                 'decimals': details.decimals,
-#                 'state': state
-#             })
-#
+def get_xinfin_token_contracts(xin_contracts, res):
+    for ec in xin_contracts:
+        details = ec.contract.get_details()
+        if details.eth_contract_token == ec:
+            if any([x.contract.contract_type == 32 and x.contract.state not in ('CREATED', 'ENDED') for x in
+                    ec.matic_ico_details_token.all()]):
+                state = 'running'
+            elif any([x.contract.contract_type == 32 and not x.continue_minting and x.contract.state == 'ENDED' for x in
+                      ec.matic_ico_details_token.all()]):
+                state = 'closed'
+            elif any([x.contract.contract_type == 33 and x.contract.state == 'ENDED' for x in
+                      ec.matic_token_details_token.all()]):
+                state = 'closed'
+            else:
+                state = 'ok'
+            res.append({
+                'id': ec.id,
+                'address': ec.address,
+                'token_name': details.token_name,
+                'token_short_name': details.token_short_name,
+                'decimals': details.decimals,
+                'state': state
+            })
+
 
 def check_error_promocode(promo_str, contract_type):
     promo = Promo.objects.filter(promo_str=promo_str).first()
