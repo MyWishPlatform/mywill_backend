@@ -224,12 +224,14 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
-def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
+def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None,
+                     network_id=None):
     data = {
         'source': address,
         'nonce': nonce,
         'gaslimit': gaslimit,
         'network': network,
+        'chainID': network_id
     }
     if value:
         data['value'] = value
@@ -239,6 +241,8 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         data['data'] = contract_data
     if gas_price:
         data['gas_price'] = gas_price
+    if network_id:
+        data['chainID'] = network_id
 
     signed_data = json.loads(requests.post(
         'http://{}/sign/'.format(SIGNER), json=data
@@ -490,8 +494,8 @@ class CommonDetails(models.Model):
             raise Exception(f'cannot get nonce with {attempts} attempts')
 
         print('nonce', nonce, flush=True)
-        # print('BYTECODE', eth_contract.bytecode, flush=True)
-        # print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
+        # print('BYTECODE', eth_contract.bytecode, flush=True) print('CONTRACT CODE', eth_contract.bytecode +
+        # binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')
