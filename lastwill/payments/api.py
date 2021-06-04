@@ -7,7 +7,8 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS, RUBIC_EXC_URL, RUBIC_FIN_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS, RUBIC_EXC_URL, \
+    RUBIC_FIN_URL
 from lastwill.consts import NET_DECIMALS
 from lastwill.rates.api import rate
 
@@ -71,9 +72,10 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         site=site
     ).save()
     print('PAYMENT: Created', flush=True)
-    print('PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-          .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
-          flush=True)
+    print(
+        'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
+        .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
+        flush=True)
 
 
 def calculate_decimals(currency, amount):
@@ -100,16 +102,16 @@ def add_decimals(currency, amount):
 
 def freeze_payments(amount, network):
     if network == 'EOS_MAINNET':
-    #if currency in ('EOS', 'EOSISH'):
+        # if currency in ('EOS', 'EOSISH'):
         value = amount * 0.15 * NET_DECIMALS['EOSISH'] / NET_DECIMALS['ETH']
         value *= rate('WISH', 'EOSISH').value
-        #value = float(':.4f'.format(value)
+        # value = float(':.4f'.format(value)
         FreezeBalance.objects.select_for_update().filter(id=1).update(
             eosish=F('eosish') + value
         )
         print('FREEZE', value, 'EOSISH', flush=True)
     elif network == 'TRON_MAINNET':
-    #elif currency in ('TRON', 'TRONISH'):
+        # elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10 * NET_DECIMALS['TRX'] / NET_DECIMALS['ETH']
         value *= rate('WISH', 'TRONISH').value
         FreezeBalance.objects.select_for_update().filter(id=1).update(
@@ -120,8 +122,8 @@ def freeze_payments(amount, network):
             wish=F('wish') + wish_value
         )
         print('FREEZE', int(value), 'TRONISH', flush=True)
-        #print('FREEZE', wish_value, 'WISH', flush=True)
-    #elif currency in ('BNB', 'BWISH'):
+        # print('FREEZE', wish_value, 'WISH', flush=True)
+    # elif currency in ('BNB', 'BWISH'):
     else:
         value = amount * 0.10
         FreezeBalance.objects.select_for_update().filter(id=1).update(
@@ -139,7 +141,7 @@ def freeze_payments(amount, network):
 def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
-            balance=F('balance') + value)
+        balance=F('balance') + value)
 
 
 def negative_payment(user, value, site_id, network):
@@ -172,7 +174,9 @@ def get_payment_statistics(start, stop=None):
         'OKB': 0.0,
         'RBC': 0.0,
         'BSCWISH': 0.0,
-        'WWISH': 0.0
+        'WWISH': 0.0,
+        'XIN': 0.0,
+        'HT': 0.0
     }
 
     user_ids = []
@@ -180,12 +184,12 @@ def get_payment_statistics(start, stop=None):
         print(
             pay.datetime.date(),
             pay.user.id, pay.user.email,
-            float(pay.original_delta)/NET_DECIMALS[pay.original_currency],
+            float(pay.original_delta) / NET_DECIMALS[pay.original_currency],
             pay.original_currency,
             'site id', pay.site.id,
             flush=True
         )
-        total_payments[pay.original_currency] += float(pay.original_delta)/NET_DECIMALS[pay.original_currency]
+        total_payments[pay.original_currency] += float(pay.original_delta) / NET_DECIMALS[pay.original_currency]
         user_ids.append(pay.user.id)
 
     print('total_payments', total_payments, flush=True)

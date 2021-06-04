@@ -343,9 +343,3 @@ VERIFICATION_PRICE_USDT = 150
 
 AUTHIO_PRICE_USDT = 890
 
-slovar = {'contract_id': 8393, 'token_name': 'fefefe', 'token_short_name': 'fefefe',
-          'admin_address': '0x67E7fd91d1a2cC465e153064d4A5dF835E173b7a', 'decimals': 8, 'token_type': 'ERC20',
-          'future_minting': True, 'temp_directory': '', 'authio': False, 'authio_email': None,
-          'authio_date_payment': None, 'authio_date_getting': None, 'verification': False,
-          'verification_status': 'NOT_VERIFIED', 'verification_date_payment': None, 'eth_contract_token_id': 3839
-          }
