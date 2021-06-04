@@ -138,7 +138,7 @@ def get_token_contracts(request):
             get_eth_token_contracts(eth_contracts, res)
         if network_id in [34, 35]:
             xin_contracts = EthContract.objects.filter(
-                contract__contract_type__in=(4, 5),
+                contract__contract_type__in=(34, 35),
                 contract__user=request.user,
                 address__isnull=False,
                 contract__network=network_id,
