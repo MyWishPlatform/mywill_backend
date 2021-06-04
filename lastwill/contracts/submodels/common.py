@@ -280,7 +280,7 @@ class Contract(models.Model):
     state = models.CharField(max_length=63, default='CREATED')
     contract_type = models.IntegerField(default=0)
 
-    source_code = models.TextField()
+    source_code =Í models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
     compiler_version = models.CharField(
@@ -482,6 +482,7 @@ class CommonDetails(models.Model):
                 nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
                 gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
+
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
             time.sleep(WEB3_ATTEMPT_COOLDOWN)

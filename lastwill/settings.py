@@ -132,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -182,7 +181,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SIGNER='127.0.0.1:5000'
+SIGNER = '127.0.0.1:5000'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
@@ -200,10 +199,10 @@ CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 # MESSAGE_QUEUE = 'notification'
 
 REST_AUTH_SERIALIZERS = {
-        'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
-        'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
-        'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
-        'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
+    'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
+    'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
+    'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
+    'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
 }
 
 OLD_PASSWORD_FIELD_ENABLED = True
@@ -217,34 +216,31 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-
-
-
 LOGGING = {
-  'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-  'handlers': {
-      'logstash': {
-          'level': 'DEBUG',
-          'class': 'logstash.LogstashHandler',
-          'host': 'kibana.mywish.io',
-          'port': 5045,
-          'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-          'fqdn': False, # Fully qualified domain name. Default value: false.
-          'tags': ['tag1', 'tag2'], # list of tags. Default: None.
-      },
-  },
-  'loggers': {
-      'django.request': {
-          'handlers': ['logstash'],
-          'level': 'DEBUG',
-          'propagate': True,
-      },
-  },
-  'lastwill.swaps_common': {
-    'level': 'DEBUG',
-    'handlers': ['console', 'file'],
-    'propagate': False
-  },
+    'version': 1,  # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+    'handlers': {
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.LogstashHandler',
+            'host': 'kibana.mywish.io',
+            'port': 5045,
+            'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
+            'fqdn': False,  # Fully qualified domain name. Default value: false.
+            'tags': ['tag1', 'tag2'],  # list of tags. Default: None.
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['logstash'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+    'lastwill.swaps_common': {
+        'level': 'DEBUG',
+        'handlers': ['console', 'file'],
+        'propagate': False
+    },
 }
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
@@ -283,7 +279,6 @@ try:
     from lastwill.settings_local import *
 except ImportError as exc:
     print("Can't load local settings")
-
 
 # REDIS settings
 REDIS_HOST = '127.0.0.1'
@@ -388,7 +383,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'MATIC_MAINNET',
             'testnet': 'MATIC_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'ico': 32,
             'token': 33,
             'airdrop': 34,
@@ -399,7 +394,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'TRON_MAINNET',
             'testnet': 'TRON_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'token': 15,
             'game_asset': 16,
             'airdrop': 17,
@@ -410,7 +405,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'EOS_MAINNET',
             'testnet': 'EOS_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'token': 10,
             'account': 11,
             'ico': 12,
@@ -419,4 +414,16 @@ DASHBOARD_NETWORKS = {
         }
     },
 }
-slovar = { 'contract_id': 8393, 'token_name': 'zxzx', 'token_short_name': 'zxzx', 'admin_address': '0x67E7fd91d1a2cC465e153064d4A5dF835E173b7a', 'decimals': 8, 'token_type': 'ERC20', 'future_minting': True, 'temp_directory': '', 'authio': False, 'authio_email': None, 'authio_date_payment': None, 'authio_date_getting': None, 'verification': False, 'verification_status': 'NOT_VERIFIED', 'verification_date_payment': None, 'eth_contract_token_id': 3839}
+slovar = {'contract_id': 8393, 'soft_cap': Decimal('1000000000000000000000'),
+          'hard_cap': Decimal('500000000000000000000000'),
+          'token_name': 'MyCrowdSale5', 'token_short_name': 'zxzx',
+          'admin_address': '0x67E7fd91d1a2cC465e153064d4A5dF835E173b7a',
+          'is_transferable_at_once': True, 'start_date': 1602249300, 'stop_date': 1605010163, 'rate': Decimal('1000'),
+          'decimals': 8, 'platform_as_admin': False, 'temp_directory': '',
+          'time_bonuses': [], 'amount_bonuses': [], 'continue_minting': False,
+          'cold_wallet_address': '0xce85a63F5093b28F15aa7C2C1f1b4b0037011cbE', 'allow_change_dates': True,
+          'whitelist': True,
+          'verification': False, 'verification_status': 'NOT_VERIFIED', 'verification_date_payment': None,
+          'reused_token': True, 'token_type': 'ERC20', 'min_wei': Decimal('1000000000000000000'),
+          'max_wei': Decimal('200000000000000000000'),
+          }
