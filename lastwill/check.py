@@ -2,12 +2,17 @@ import re
 from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
 
+
 def die(message):
     raise ValidationError(code=400, detail=message)
 
 
 def is_address(string):
     re.match('^0[xX][a-fA-F\d]{40}$', string) or die('{} is not a valid ethereum address'.format(string))
+
+
+def is_xin_address(string):
+    re.match('^x(dc|DC)[a-fA-F\d]{40}$', string) or die('{} is not a valid xinfin address'.format(string))
 
 
 def is_email(string):
@@ -33,6 +38,7 @@ def is_sum_eq_100(iterable):
 
 def is_eos_address(string):
     re.match('^[1-5a-z\.]{1,12}$', string) or die('{} is not a valid eos address'.format(string))
+
 
 def is_eos_public(string):
     all(x in ascii_letters + digits for x in string) or die('{} is not a valid public key'.format(string))

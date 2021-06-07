@@ -770,7 +770,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['token_name'] == '' or details['token_short_name'] == '':
             raise ValidationError
-        check.is_address(details['admin_address'])
+        try:
+            check.is_address(details['admin_address'])
+        except ValidationError:
+            check.is_xin_address(details['admin_address'])
         for th in details['token_holders']:
             check.is_address(th['address'])
             if th['amount'] <= 0:
