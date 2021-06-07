@@ -139,10 +139,6 @@ class AbstractContractDetailsLostKey(CommonDetails):
                               datetime.date.today() - active_to).total_seconds() / check_interval),
                   1)
         O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
-        # return 2 * int(
-        #     Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (
-        #                 Gp * Cc + O) * DxC
-        # ) + 80000
         return CONTRACT_PRICE_USDT['ETH_LOSTKEY'] * NET_DECIMALS['USDT']
 
     @postponable
@@ -289,7 +285,6 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
         triggerPrice = gasPrice * (
                 triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
 
-        # return constructPrice + checkPrice + triggerPrice
         return int(CONTRACT_PRICE_USDT['ETH_LOSTKEY_TOKENS'] * NET_DECIMALS['USDT'])
 
     @postponable

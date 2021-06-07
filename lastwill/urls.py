@@ -17,7 +17,6 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
-# from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
 from lastwill.contracts.api import (
@@ -140,8 +139,7 @@ from lastwill.swaps_common.orderbook.api_exchange import (
     get_cmc_tokens_for_api,
     get_user_orders_for_api
 )
-# from lastwill.swaps_common.orderbook.views import \
-#      OrderBookSwapsModelViewSet
+
 from lastwill.swaps_common.tokentable.api import (
     get_all_coinmarketcap_tokens,
     get_all_tokens,
@@ -162,7 +160,7 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
-# router.register('orders', OrderBookSwapsModelViewSet)
+
 
 
 urlpatterns = [

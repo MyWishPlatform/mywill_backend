@@ -42,7 +42,6 @@ def implement_cleos_command(command_list):
         try:
             timer.start()
             stdout, stderr = proc.communicate()
-            # if attempt == EOS_ATTEMPTS_COUNT - 1:
             print('stdout', stdout.decode(), flush=True)
             print('stderr', stderr.decode(), flush=True)
         finally:
@@ -390,7 +389,6 @@ class ContractDetailsEOSICO(CommonDetails):
             " {mint} > {dest}/config.h' ").format(
                 acc_name=token_address,
                 dest=dest,
-                # address=self.crowdsale_address,
                 symbol=self.token_short_name,
                 decimals=self.decimals,
                 whitelist="true" if self.whitelist else "false",
@@ -504,7 +502,6 @@ class ContractDetailsEOSICO(CommonDetails):
             contract_addr = 'dubravaleriy'
         else:
             contract_addr = 'mywishtest15'
-            # acc_name = token_address
         command = [
             'cleos', '-u', eos_url, 'convert', 'pack_action_data',
             contract_addr, 'init', str(dates)
@@ -525,7 +522,7 @@ class ContractDetailsEOSICO(CommonDetails):
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
             path.join(dest, 'deploy_params.json'), '-j',
-            '-p', acc_name, '-p', self.crowdsale_address # do we need -p token_addres if address diff from token_address?
+            '-p', acc_name, '-p', self.crowdsale_address
         ]
         print('command:', command, flush=True)
         print('lenght of command', len(str(command)))

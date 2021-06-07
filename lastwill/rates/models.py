@@ -74,7 +74,6 @@ class Rate(models.Model):
             return value
 
     def update(self):
-        # check if we need replace symbol for additional rate logic
         fsym = self.fsym if self.fsym not in TEMP_SYMBOLS else TEMP_SYMBOLS[self.fsym]
         tsym = self.tsym if self.tsym not in TEMP_SYMBOLS else TEMP_SYMBOLS[self.tsym]
 

@@ -22,7 +22,7 @@ def get_eos_balance(network):
     if response.status_code == 200:
         data = response.json()
         balance = data['core_liquid_balance']
-        return float(balance.split(' ')[0])  # API returns "123.45 EOS"
+        return float(balance.split(' ')[0])
     return None
 
 

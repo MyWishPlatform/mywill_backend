@@ -19,7 +19,6 @@ from tron_wif.hex2wif import hex2tronwif
 
 
 def convert_address_to_hex(address):
-    # short_addresss = address[1:]
     decode_address = base58.b58decode(address)[1:21]
     hex_address = binascii.hexlify(decode_address)
     hex_address = '0x' + hex_address.decode("utf-8")
@@ -168,7 +167,6 @@ class ContractDetailsTRONToken(CommonDetails):
         self.compile()
         print('deploy tron token')
         
-        # temporary fix
         write_flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL)
         write_blocking = write_flags & os.O_NONBLOCK
         if write_blocking != 0:
@@ -197,7 +195,6 @@ class ContractDetailsTRONToken(CommonDetails):
             owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
             origin_energy_limit=100000000
         )
-        # fcntl.fcntl(1, fcntl.F_SETFL, 0)
 
         print('deployed contract. address: {}, tx: {}'.format(res['txID'], res['contract_address']), flush=True)
 

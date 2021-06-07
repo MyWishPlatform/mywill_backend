@@ -27,9 +27,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     last_account_nonce = models.IntegerField()
     last_active_time = models.DateTimeField(null=True, default=None)
 
-
     def predeploy_validate(self):
-        # now = timezone.now().timestamp()
         if self.end_timestamp < timezone.now().timestamp() + 30 * 60:
             raise ValidationError({'result': 1}, code=400)
 
@@ -147,7 +145,6 @@ class ContractDetailsTokenProtector(CommonDetails):
                 self.save()
                 self.confirm_tokens()
 
-
     @check_transaction
     def TokenProtectorApprove(self, message):
         token_address = message['tokenAddress'].lower()
@@ -168,7 +165,6 @@ class ContractDetailsTokenProtector(CommonDetails):
                 disapproved_token.delete()
 
         self.try_confirm_execute()
-
 
     def approve_from_front(self, tokens):
         for token in tokens:
@@ -191,7 +187,6 @@ class ContractDetailsTokenProtector(CommonDetails):
             self.contract.save()
 
         self.try_confirm_execute()
-
 
     def confirm_tokens(self):
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
@@ -221,8 +216,6 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         print('hash', tx_hash, flush=True)
 
-
-
     def TokenProtectorTokensToSave(self, message):
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
             approved_token.is_confirmed = True
@@ -230,7 +223,6 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         self.contract.state = 'ACTIVE'
         self.contract.save()
-
 
     def execute_contract(self):
 
@@ -250,20 +242,16 @@ class ContractDetailsTokenProtector(CommonDetails):
         tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
         print('hash', tx_hash, flush=True)
 
-        # except:
         self.contract.state = 'WAITING_FOR_EXECUTION'
         self.contract.save()
-
 
     def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
 
-
     def SelfdestructionEvent(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
-
 
     def execution_before_mail(self, days):
         email = self.email if self.email else self.contract.user.email

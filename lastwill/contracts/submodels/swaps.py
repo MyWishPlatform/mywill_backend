@@ -7,7 +7,6 @@ from lastwill.contracts.submodels.common import *
 from lastwill.settings import SITE_PROTOCOL, SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
-#from lastwill.swaps_common.models import UnifiedSwapsTable
 from email_messages import *
 
 
@@ -25,12 +24,6 @@ def sendEMail(sub, text, mail):
     ])
     server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
     server.quit()
-
-
-# def save_to_common_list(contract_id):
-#     row = UnifiedSwapsTable(swap_id=contract_id, swap_type=2)
-#     row.save()
-#     return row
 
 
 class InvestAddresses(models.Model):
@@ -285,7 +278,6 @@ class ContractDetailsSWAPS2(CommonDetails):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        #result = int(0.5 * NET_DECIMALS['ETH'])
         result = int(CONTRACT_PRICE_USDT['ETH_SWAPS'] * NET_DECIMALS['USDT'])
         return result
 

@@ -82,13 +82,6 @@ class Receiver(threading.Thread):
 
     def orderCreated(self, message):
         print('deployed message received', flush=True)
-        # commenting because of upgrade to orderboook
-        #
-        #details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-        #if details.contract.state == 'ACTIVE':
-        #    print('ignored because already active', flush=True)
-        #    return
-        #details.msg_deployed(message)
         order = OrderBookSwaps.objects.get(memo_contract=message['id'])
         if order.contract_state == 'ACTIVE':
             print('ignored because already active', flush=True)
@@ -161,7 +154,7 @@ class Receiver(threading.Thread):
             contract_details = Contract.objects.get(id=message['contractId']).get_details()
             contract_details.deploy()
         except ObjectDoesNotExist:
-            # only when contract removed manually
+
             print('no contract, ignoging')
             return
         try:
@@ -186,8 +179,7 @@ class Receiver(threading.Thread):
     def finish(self, message):
         print('finish message')
         if 'id' in message:
-            # contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-            # contract.finalized(message)
+
             order = OrderBookSwaps.objects.get(memo_contract=message['id'])
             order.finalized(message)
         else:
@@ -198,9 +190,6 @@ class Receiver(threading.Thread):
     def finalized(self, message):
         print('finalized message')
         if 'id' in message:
-            # contract = ContractDetailsSWAPS2.objects.get(
-            #     memo_contract=message['id'])
-            # contract.finalized(message)
             order = OrderBookSwaps.objects.get(
                  memo_contract=message['id'])
             order.finalized(message)
@@ -336,8 +325,6 @@ class Receiver(threading.Thread):
 
     def cancelled(self, message):
         if 'id' in message:
-            # contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-            # contract.cancelled(message)
             order = OrderBookSwaps.objects.get(memo_contract=message['id'])
             order.cancelled(message)
         else:

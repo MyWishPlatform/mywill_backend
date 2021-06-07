@@ -12,7 +12,6 @@ from rest_framework.exceptions import PermissionDenied, ParseError, NotFound, Va
 from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import send_in_queue
-#from lastwill.contracts.api_eos import get_user_for_token
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.orderbook.api import get_swap_from_orderbook
 from lastwill.swaps_common.tokentable.api import get_cmc_tokens
@@ -51,7 +50,6 @@ def decode_payload(domain_name, payload_token, error_headers):
         return Response(data={'error': {'code': 3, 'message': 'Invalid token'}}, status=403, headers=error_headers)
 
     original_domain_name = data['exchange_domain']
-    #exchange_account = User.objects.get(username=data['exchange_profile'])
     current_domain_name = domain_name
 
     if original_domain_name != current_domain_name:
@@ -318,7 +316,6 @@ def create_token_for_session_mywish(request):
 
     session_token = encode_session_token(
             urlparse(request.data['origin']).netloc,
-            #SWAPS_WIDGET_HOST,
             mywish_username,
             request.user.id,
             SWAPS_WIDGET_TOKEN

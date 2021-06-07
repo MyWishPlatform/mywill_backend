@@ -94,7 +94,6 @@ class AbstractContractDetailsAirdrop(CommonDetails):
                 active=True,
                 state=old_state,
             ).exclude(id__in=ids).first()
-            # in case 'pending' msg was lost or dropped, but 'commited' is there
             if addr is None and message['status'] == 'COMMITTED':
                 old_state = 'added'
                 addr = AirdropAddress.objects.filter(

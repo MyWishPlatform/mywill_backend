@@ -392,8 +392,6 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
                 'is_confirmed': token.is_confirmed
             })
 
-        # print('protector representation', res, flush=True)
-
         return res
 
     def create(self, contract, contract_details):
@@ -843,7 +841,6 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
         ]
         if not contract_details:
             print('*' * 50, contract_details.id, flush=True)
-        # res['eth_contract'] = EthContractSerializer().to_representation(contract_details.eth_contract)
         return res
 
     def create(self, contract, contract_details):

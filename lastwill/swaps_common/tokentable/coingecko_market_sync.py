@@ -110,10 +110,7 @@ def get_token_market_data(
     result = []
 
     while 1:
-        # Здесь происходит "магия", не обращайте внимания.
-        #
-        # Запросы отправляются несколько раз по 300 идентификаторов,
-        # ответ записывается в результирующий список.
+
         if stop_slice < len(actual_token_id):
             params.update({
                 'ids': ','.join(actual_token_id[start:stop_slice]),
@@ -144,68 +141,6 @@ def get_token_market_data(
 
 
 def format_marketdata():
-    """
-    Фильтрует и форматирует данные для сохранения в базу данных.
-
-    ---
-
-    Возвращаемое значение - dict.
-
-    Формат возвращаемого значения:
-    {
-        <token_ticker>:
-        {
-            <token_title> as string,
-            <token_short_title> as string,
-            <token_image_link> as string,
-            <token_rank> as integer,
-            <token_usd_price> as float
-        },
-        ...
-    }
-    """
-    # Пример данных:
-    # [
-    #     {
-    #         "id": "1337", -
-    #         "symbol": "1337", as short name
-    #         "name": "Elite", as repr name
-    #         "image": "https://assets.coingecko.com/coins/images/686/large/EliteLogo256.png?1559143523", as image link
-    #         "current_price": 0.00001408, as token price
-    #         "market_cap": 415426, -
-    #         "market_cap_rank": 1247, as token rank
-    #         "fully_diluted_valuation": null, -
-    #         "total_volume": 5.26, -
-    #         "high_24h": 0.0000185, -
-    #         "low_24h": 0.00001542, -
-    #         "price_change_24h": -0.00000274, -
-    #         "price_change_percentage_24h": -16.31284, -
-    #         "market_cap_change_24h": -80975.61992168, -
-    #         "market_cap_change_percentage_24h": -16.31252, -
-    #         "circulating_supply": 29515041222.0315, -
-    #         "total_supply": null, -
-    #         "max_supply": null, -
-    #         "ath": 0.00108002, -
-    #         "ath_change_percentage": -98.69678, -
-    #         "ath_date": "2018-01-09T00:00:00.000Z", -
-    #         "atl": 2.2e-7, -
-    #         "atl_change_percentage": 6281.09, -
-    #         "atl_date": "2020-06-26T11:53:55.843Z", -
-    #         "roi": null, -
-    #         "last_updated": "2020-12-04T14:12:07.411Z" -
-    #     },
-    # ]
-
-    # [
-    #     {
-    #         "id":"e1337",
-    #         "symbol":"1337",
-    #         "name":"1337",
-    #         "platforms":{
-    #             "ethereum":"0x35872fea6a4843facbcdbce99e3b69596a3680b8"
-    #         }
-    #     }
-    # ]
     actual_tokens = get_actual_tokens()
     actual_token_market_data = get_token_market_data(actual_tokens, timeout=0)
     result = {}
@@ -341,7 +276,7 @@ def refresh_token_visibility(actual_coingecko_token_list: list):
             token.title,
             token.short_title
         ) in actual_coingecko_token_list:
-            # token.update(is_displayed=False)
+
             current_tokens.filter(
                 title=token.title,
                 short_title=token.short_title

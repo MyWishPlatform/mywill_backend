@@ -12,7 +12,7 @@ def is_address(string):
 
 
 def is_xin_address(string):
-    re.match('^x(dc|DC)[a-fA-F\d]{40}$', string) or die('{} is not a valid xinfin address'.format(string))
+    re.match('^(x|X)(dc|DC)[a-fA-F\d]{40}$', string) or die('{} is not a valid xinfin address'.format(string))
 
 
 def is_email(string):
