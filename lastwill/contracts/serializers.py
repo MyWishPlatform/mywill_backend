@@ -1995,7 +1995,9 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
         model = ContractDetailsXinFinToken
 
-    def to_representation(self, contract_details):
+    def to_representation(self, contract_details):  # в рес вместо токен адреса с 0x на xdc
+        if contract_details['admin_address'][0: 3] is not 'xdc':
+            contract_details['admin_address'].replays('x0', 'xdc')
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
@@ -2004,6 +2006,35 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
         if contract_details.contract.network.name in ['XINFIN_MAINNET']:
             res['eth_contract_token']['source_code'] = ''
         return res
+
+    def validate(self, details):
+        now = timezone.now().timestamp() + 600
+        if '"' in details['token_name'] or '\n' in details['token_name']:
+            raise ValidationError
+        if '"' in details['token_short_name'] or '\n' in details['token_short_name']:
+            raise ValidationError
+        if not (0 <= details['decimals'] <= 50):
+            raise ValidationError
+        for th in details['token_holders']:
+            th['amount'] = int(th['amount'])
+        if 'admin_address' not in details or 'token_holders' not in details:
+            raise ValidationError
+        if details['token_name'] == '' or details['token_short_name'] == '':
+            raise ValidationError
+        try:
+            check.is_address(details['admin_address'])
+        except ValidationError:
+            check.is_xin_address(details['admin_address'])
+        for th in details['token_holders']:
+            check.is_address(th['address'])
+            if th['amount'] <= 0:
+                raise ValidationError
+            if th['freeze_date'] is not None and th['freeze_date'] < now:
+                raise ValidationError({'result': 2}, code=400)
+        if 'authio' in details:
+            if details['authio']:
+                if not details['authio_email']:
+                    raise ValidationError
 
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
