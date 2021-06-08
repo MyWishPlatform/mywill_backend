@@ -391,8 +391,8 @@ DASHBOARD_NETWORKS = {
     },
     'XINFIN': {
         'original_name': {
-            'mainnet': 'MATIC_MAINNET',
-            'testnet': 'MATIC_TESTNET',
+            'mainnet': 'XINFIN_MAINNET',
+            'testnet': 'XINDIN_TESTNET',
         },
         'contracts': {
 
