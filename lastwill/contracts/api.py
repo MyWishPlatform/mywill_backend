@@ -237,10 +237,16 @@ def get_matic_token_contracts(matic_contracts, res):
             })
 
 
-def get_xinfin_token_contracts(xin_contracts, res):
-    for ec in xin_contracts:
+def get_xinfin_token_contracts(xinfin_contracts, res):
+    for ec in xinfin_contracts:
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
+            if any([x.contract.contract_type == 38 and x.contract.state not in ('CREATED', 'ENDED') for x in
+                    ec.xinfin_ico_details_token.all()]):
+                state = 'running'
+            elif any([x.contract.contract_type == 38 and not x.continue_minting and x.contract.state == 'ENDED' for x in
+                      ec.xinfin_ico_details_token.all()]):
+                state = 'closed'
             if any([x.contract.contract_type == 35 and x.contract.state == 'ENDED' for x in
                     ec.xinfin_token_details_token.all()]):
                 state = 'closed'
