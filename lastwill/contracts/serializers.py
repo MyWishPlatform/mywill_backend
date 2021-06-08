@@ -19,6 +19,7 @@ from rest_framework.exceptions import ValidationError
 import lastwill.check as check
 from lastwill.contracts.submodels.heco_chain.ico import ContractDetailsHecoChainICO
 from lastwill.contracts.submodels.heco_chain.token import ContractDetailsHecoChainToken
+from lastwill.contracts.submodels.xinfin.ico import ContractDetailsXinFinICO
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -353,6 +354,7 @@ class ContractSerializer(serializers.ModelSerializer):
             35: ContractDetailsXinFinTokenSerializer,
             36: ContractDetailsHecoChainTokenSerializer,
             37: ContractDetailsHecoChainICOSerializer,
+            38: ContractDetailsXinFinICOSerializer,
         }[contract_type]
 
 
@@ -2035,6 +2037,18 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
             if details['authio']:
                 if not details['authio_email']:
                     raise ValidationError
+
+
+class ContractDetailsXinFinICOSerializer(ContractDetailsICOSerializer):
+    class Meta(ContractDetailsICOSerializer.Meta):
+        model = ContractDetailsXinFinICO
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        if contract_details.contract.network.name in ['MATIC_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+            res['eth_contract_crowdsale']['source_code'] = ''
+        return res
 
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
