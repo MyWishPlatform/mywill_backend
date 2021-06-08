@@ -28,6 +28,7 @@ from .submodels.matic.airdrop import *
 from .submodels.xinfin.token import *
 from .submodels.heco_chain.token import *
 from .submodels.heco_chain.ico import *
+from .submodels.xinfin.token.ico import *
 
 
 class CurrencyStatisticsCache(models.Model):
@@ -51,5 +52,3 @@ class CurrencyStatisticsCache(models.Model):
     usd_price_rub = models.FloatField(default=0, null=True)
     usd_percent_change_24h = models.FloatField(default=0, null=True)
     updated_at = models.DateTimeField(auto_now_add=True)
-
-
