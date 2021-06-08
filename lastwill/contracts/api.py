@@ -127,8 +127,7 @@ def get_token_contracts(request):
         return Response([])
     res = []
     network_id = int(request.query_params['network'])
-    # if network_id not in [22, 23, 24, 25]:
-    if network_id in [4, 5]:
+    if network_id not in [22, 23, 24, 25]:
         eth_contracts = EthContract.objects.filter(
             contract__contract_type__in=(4, 5),
             contract__user=request.user,
@@ -136,16 +135,7 @@ def get_token_contracts(request):
             contract__network=network_id,
         )
         get_eth_token_contracts(eth_contracts, res)
-    if network_id in [35]:
-        xin_contracts = EthContract.objects.filter(
-            contract__contract_type__in=35,
-            contract__user=request.user,
-            address__isnull=False,
-            contract__network=network_id,
-        )
-        get_xinfin_token_contracts(xin_contracts, res)
-
-    if network_id in [22, 23]:
+    elif network_id in [22, 23]:
         binance_contracts = EthContract.objects.filter(
             contract__contract_type__in=(27, 28),
             contract__user=request.user,
@@ -153,7 +143,14 @@ def get_token_contracts(request):
             contract__network=network_id,
         )
         get_binance_token_contracts(binance_contracts, res)
-
+    elif network_id in [35]:
+        xinfin_contracts = EthContract.objects.filter(
+            contract__contract_type__in=35,
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
+        )
+        get_xinfin_token_contracts(xinfin_contracts, res)
     else:
         matic_contracts = EthContract.objects.filter(
             contract__contract_type__in=(32, 33),
