@@ -755,7 +755,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         if kwargs['admin_address'][0:3] is 'xdc':
-            kwargs['admin_address'].replace('xdc', '0x').lower()
+            address = kwargs['admin_address'].replace('xdc', '0x').lower()
+            kwargs['admin_address'] = address
         kwargs['contract'] = contract
         return super().create(kwargs)
 
@@ -1999,8 +2000,6 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
         model = ContractDetailsXinFinToken
 
     def to_representation(self, contract_details):  # в рес вместо токен адреса с 0x на xdc
-        if contract_details.admin_address[0: 3] is 'xdc':
-            contract_details.admin_address.replace('xdc', '0x').lower()
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
