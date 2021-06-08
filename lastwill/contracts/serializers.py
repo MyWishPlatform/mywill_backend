@@ -2001,7 +2001,7 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
         model = ContractDetailsXinFinToken
 
     def to_representation(self, contract_details):
-        if contract_details.admin_address[0: 3] == 'xdc':
+        if contract_details.admin_address[0: 3] != 'xdc':
             contract_details.admin_address.replace('x0', 'xdc')
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
