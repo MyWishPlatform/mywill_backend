@@ -746,8 +746,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         }
 
     def create(self, contract, contract_details):
-        if contract_details['admin_address'][0:3] is not 'xdc':
-            contract_details['admin_address'].replace('xdc', 'x0')
+        if contract_details.admin_address[0:3] is not 'xdc':
+            contract_details.admin_address.replace('xdc', 'x0')
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
