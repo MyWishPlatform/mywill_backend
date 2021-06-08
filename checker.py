@@ -27,8 +27,6 @@ def check_all():
         details = contract.get_details()
         print('details_id=', details.id, flush=True)
         if contract.contract_type == 2:
-            # if details.date < timezone.now():
-            #     send_in_pika(contract)
             pass
         elif contract.contract_type == 23:
             user_active = None
