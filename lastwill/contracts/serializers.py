@@ -749,7 +749,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
             if th_json['address'][:3] == 'xdc':
-                th_json['address'][:3].replace('xdc', '0x')
+                th_json['address'].replace('xdc', '0x')
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
@@ -784,7 +784,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             except ValidationError:
                 check.is_xin_address(th['address'])
             if th['address'][:3] == 'xdc':
-                th['address'][:3].replace('xdc', '0x')
+                th['address'].replace('xdc', '0x')
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
@@ -813,6 +813,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
+            if th_json['address'][:3] == 'xdc':
+                th_json['address'].replace('xdc', '0x')
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
