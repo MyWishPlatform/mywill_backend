@@ -791,7 +791,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                     raise ValidationError
 
     def to_representation(self, contract_details):
-        if contract_details.network_id == 35:
+        if contract_details.admin_address == 'xdc':
             contract_details.admin_address.replace('0x', 'xdc').lower()
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
