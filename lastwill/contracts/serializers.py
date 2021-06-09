@@ -756,8 +756,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         kwargs = contract_details.copy()
         print(kwargs['admin_address'])
         if kwargs['admin_address'][0:3] == 'xdc':
-            address = kwargs['admin_address'].replace('xdc', '0x').lower()
-            kwargs['admin_address'] = address
+            address = kwargs['admin_address'].replace('xdc', '0x')
+            kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
         return super().create(kwargs)
 
