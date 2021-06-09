@@ -2,6 +2,7 @@ from lastwill.consts import CONTRACT_PRICE_USDT
 from lastwill.contracts.submodels.common import EthContract
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
+from lastwill.settings import XIN_ATTEMPTS
 
 
 @contract_details('XinFin Token contract')
@@ -27,3 +28,7 @@ class ContractDetailsXinFinToken(AbstractContractDetailsToken):
         price = CONTRACT_PRICE_USDT['XINFIN_TOKEN']
         result = int(price * NET_DECIMALS['USDT'])
         return result
+    @blocking
+    @postponable
+    def deploy(self):
+        return super().deploy(attempts=XIN_ATTEMPTS)
