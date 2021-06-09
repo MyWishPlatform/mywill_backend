@@ -779,9 +779,12 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         except ValidationError:
             check.is_xin_address(details['admin_address'])
         for th in details['token_holders']:
-            check.is_address(details['address'])
-            if details['token_holders'][:3] == 'xdc':
-                details['token_holders'][:3].replace('xdc', '0x')
+            try:
+                check.is_address(th['address'])
+            except ValidationError:
+                check.is_xin_address(th['address'])
+            if th['token_holders'][:3] == 'xdc':
+                th['token_holders'][:3].replace('xdc', '0x')
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
