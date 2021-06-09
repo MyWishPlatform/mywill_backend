@@ -21,7 +21,7 @@ class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='HECOCHAIN_TESTNET')
+        network = Network.objects.get(name='HECOCHAIN_MAINNET')
         cost = cls.calc_cost({}, network)
         return cost
 
@@ -29,4 +29,4 @@ class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['HECOCHAIN_ICO'] * NET_DECIMALS['HT'])
+        return int(CONTRACT_PRICE_USDT['HECOCHAIN_ICO'] * NET_DECIMALS['USDT'])

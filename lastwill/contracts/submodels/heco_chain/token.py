@@ -16,7 +16,7 @@ class ContractDetailsHecoChainToken(AbstractContractDetailsToken):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='HECOCHAIN_TESTNET')
+        network = Network.objects.get(name='HECOCHAIN_MAINNET')
         cost = cls.calc_cost({}, network)
         return cost
 
@@ -25,5 +25,5 @@ class ContractDetailsHecoChainToken(AbstractContractDetailsToken):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['HECOCHAIN_TOKEN']
-        result = int(price * NET_DECIMALS['HT'])  # поменять децималы
+        result = int(price * NET_DECIMALS['USDT'])  # поменять децималы
         return result

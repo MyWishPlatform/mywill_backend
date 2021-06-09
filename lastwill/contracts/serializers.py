@@ -5,7 +5,7 @@ import string
 import random
 import uuid
 
-from django.conf.global_settings import DEFAULT_FROM_EMAIL
+
 from ethereum.abi import method_id as m_id
 from eth_utils import int_to_big_endian
 
@@ -17,8 +17,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.contracts.submodels.heco_chain.ico import ContractDetailsHecoChainICO
-from lastwill.contracts.submodels.heco_chain.token import ContractDetailsHecoChainToken
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -38,7 +36,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
-    ContractDetailsXinFinToken,
+    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
