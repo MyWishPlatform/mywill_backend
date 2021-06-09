@@ -38,6 +38,7 @@ def get_contracts(request):
     user = get_user_for_token(token)
     contracts = Contract.objects.filter(user=user, invisible=False)
     if 'admin_address' in requests.data:
+        'admin_address'.replace('0x', 'xdc')
         if request.data['admin_address'] != 'xdc':
             request.data['admin_address'].replace('0x', 'xdc')
     if 'network_id' in request.data:
