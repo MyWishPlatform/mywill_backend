@@ -754,10 +754,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
-        # print(kwargs['admin_address'])
-        # if kwargs['admin_address'][0:3] == 'xdc':
-        #     address = kwargs['admin_address'].replace('xdc', '0x')
-        #     kwargs['admin_address'] = address.lower()
+        print(kwargs['admin_address'])
+        if kwargs['admin_address'][0:3] == 'xdc':
+            address = kwargs['admin_address'].replace('xdc', '0x')
+            kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
         return super().create(kwargs)
 
@@ -2017,36 +2017,6 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
             res['eth_contract_token']['source_code'] = ''
         return res
 
-    def create(self, contract, contract_details):
-        token_holders = contract_details.pop('token_holders')
-        for th_json in token_holders:
-            th_json['address'] = th_json['address'].lower()
-            kwargs = th_json.copy()
-            kwargs['contract'] = contract
-            TokenHolder(**kwargs).save()
-        kwargs = contract_details.copy()
-        print(kwargs['admin_address'])
-        if kwargs['admin_address'][0: 3] == 'xdc':
-            address = kwargs['admin_address'].replace('xdc', '0x')
-            kwargs['admin_address'] = address.lower()
-        kwargs['contract'] = contract
-        return super().create(kwargs)
-
-    def update(self, contract, details, contract_details):
-        contract.tokenholder_set.all().delete()
-        token_holders = contract_details.pop('token_holders')
-        for th_json in token_holders:
-            th_json['address'] = th_json['address'].lower()
-            kwargs = th_json.copy()
-            kwargs['contract'] = contract
-            TokenHolder(**kwargs).save()
-        kwargs = contract_details.copy()
-        if kwargs['admin_address'][0:3] == 'xdc':
-            address = kwargs['admin_address'].replace('xdc', '0x')
-            kwargs['admin_address'] = address.lower()
-        kwargs['contract'] = contract
-        kwargs.pop('eth_contract_token', None)
-        return super().update(details, kwargs)
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
