@@ -231,7 +231,6 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         'nonce': nonce,
         'gaslimit': gaslimit,
         'network': network,
-        'chainID': network_id
     }
     if value:
         data['value'] = value
