@@ -749,8 +749,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
             if th_json['address'][:3] == 'xdc':
-                address = th_json['address'].replace('xdc', '0x')
-                th_json = address.lower()
+                th_json['address'].replace('xdc', '0x')
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
@@ -815,8 +814,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
             if th_json['address'][:3] == 'xdc':
-                address = th_json['address'].replace('xdc', '0x')
-                th_json = address.lower()
+                th_json['address'].replace('xdc', '0x')
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
