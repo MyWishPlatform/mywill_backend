@@ -752,7 +752,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
-        if kwargs['admin_address'][:3] == 'xdc':
+        if kwargs['admin_address'][:3] == 'xdc' and contract.network == 'XINFIN_MAINNET':
             address = kwargs['admin_address'].replace('xdc', '0x')
             kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
@@ -810,7 +810,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
-        if kwargs['admin_address'][0:3] == 'xdc':
+        if kwargs['admin_address'][0:3] == 'xdc' and contract.network == 'XINFIN_MAINNET':
             address = kwargs['admin_address'].replace('xdc', '0x')
             kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
@@ -1999,17 +1999,6 @@ class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
 class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
         model = ContractDetailsXinFinToken
-
-    def to_representation(self, contract_details):
-
-        res = super().to_representation(contract_details)
-        token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
-                                contract_details.contract.tokenholder_set.order_by('id').all()]
-        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        if contract_details.contract.network.name in ['XINFIN_MAINNET']:
-            res['eth_contract_token']['source_code'] = ''
-        return res
 
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
