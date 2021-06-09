@@ -145,7 +145,7 @@ def get_token_contracts(request):
         get_binance_token_contracts(binance_contracts, res)
     elif network_id in [35]:
         xin_contracts = EthContract.objects.filter(
-            contract__contract_type__in=35,
+            contract__contract_type=35,
             contract__user=request.user,
             address__isnull=False,
             contract__network=network_id,
@@ -160,9 +160,6 @@ def get_token_contracts(request):
         )
         get_matic_token_contracts(matic_contracts, res)
     return Response(res)
-
-
-
 
 
 def get_eth_token_contracts(eth_contracts, res):
