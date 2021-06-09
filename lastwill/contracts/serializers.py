@@ -755,7 +755,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         print(kwargs['admin_address'])
-        if kwargs['admin_address'][0:3] == 'xdc':
+        if kwargs['admin_address'][0: 3] == 'xdc':
             address = kwargs['admin_address'].replace('xdc', '0x')
             kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
@@ -791,7 +791,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                     raise ValidationError
 
     def to_representation(self, contract_details):
-        if contract_details.admin_address[0: 3] == 'xdc':
+        if contract_details.network_id == 35:
             contract_details.admin_address.replace('0x', 'xdc').lower()
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
