@@ -37,6 +37,9 @@ def get_contracts(request):
         raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contracts = Contract.objects.filter(user=user, invisible=False)
+    if 'admin_address' in requests.data:
+        if request.data['admin_address'] != 'xdc':
+            request.data['admin_address'].replace('0x', 'xdc')
     if 'network_id' in request.data:
         if int(request.data['network_id']) not in (1, 2, 5, 6, 10, 11, 14, 15):
             raise ValidationError({'result': 'Wrong network id'}, code=404)
