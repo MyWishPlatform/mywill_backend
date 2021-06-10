@@ -246,6 +246,7 @@ def get_xinfin_token_contracts(xin_contracts, res):
                 state = 'closed'
             else:
                 state = 'ok'
+
             res.append({
                 'id': ec.id,
                 'address': ec.address,
