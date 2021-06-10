@@ -2006,27 +2006,3 @@ class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
         if contract_details.contract.network.name in ['MATIC_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res
-
-
-class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
-    class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsXinFinToken
-
-
-class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
-    class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsMaticToken
-
-    def to_representation(self, contract_details):
-        res = super().to_representation(contract_details)
-        token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
-                                contract_details.contract.tokenholder_set.order_by('id').all()]
-        res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
-        if contract_details.eth_contract_token and contract_details.eth_contract_token.hecochain_ico_details_token.filter(
-                contract__state='ACTIVE'):
-            res['crowdsale'] = contract_details.eth_contract_token.hecochain_ico_details_token.filter(
-                contract__state__in=('ACTIVE', 'ENDED')).order_by('id')[0].contract.id
-        if contract_details.contract.network.name in ['HECOCHAIN_TESTNET']:
-            res['eth_contract_token']['source_code'] = ''
-        return res
