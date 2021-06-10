@@ -812,12 +812,6 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
-            if th_json['address'][:3] == 'xdc':
-
-                th_json['address'].replace('xdc', '0x')
-
-                th_json['address'] = th_json['address'].replace('xdc', '0x')
-
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
