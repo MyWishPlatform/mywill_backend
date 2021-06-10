@@ -471,3 +471,102 @@ def create_eos_token_sa_json(token_address, bytecode, abi, admin_address, data):
             }
         ]
     }
+
+
+def token_standalone_init_tx(
+        actor_account,
+        actor_cpu_frac,
+        actor_net_frac,
+        new_account,
+        new_account_owner_pub,
+        new_account_cpu_frac,
+        new_account_net_frac,
+        ram_bytes,
+    ):
+    return {
+        "actions": [
+            {
+                "account": "eosio",
+                "name": "powerup",
+                "authorization": [
+                    {
+                        "actor": actor_account,
+                        "permission": "active"
+                    }
+                ],
+                "data": {
+                    "payer": actor_account,
+                    "receiver": actor_account,
+                    "days": 1,
+                    "cpu_frac": actor_cpu_frac,
+                    "net_frac": actor_net_frac,
+                    "max_payment": "0.0050 EOS"
+                }
+            },
+            {
+                "account": "eosio",
+                "name": "newaccount",
+                "authorization": [
+                    {
+                        "actor": actor_account,
+                        "permission": "active"
+                    }
+                ],
+                "data": {
+                    "creator": actor_account,
+                    "name": new_account,
+                    "owner": {
+                        "threshold": 1,
+                        "keys": [{
+                            "key": new_account_owner_pub,
+                            "weight": 1
+                        }],
+                        "accounts": [],
+                        "waits": []
+                    },
+                    "active": {
+                        "threshold": 1,
+                        "keys": [{
+                            "key": new_account_owner_pub,
+                            "weight": 1
+                        }],
+                        "accounts": [],
+                        "waits": []
+                    },
+                }
+            },
+            {
+                "account": "eosio",
+                "name": "buyrambytes",
+                "authorization": [
+                    {
+                        "actor": actor_account,
+                        "permission": "active"
+                    }
+                ],
+                "data": {
+                    "payer": actor_account,
+                    "receiver": new_account,
+                    "bytes": ram_bytes,
+                }
+            },
+            {
+                "account": "eosio",
+                "name": "powerup",
+                "authorization": [
+                    {
+                        "actor": actor_account,
+                        "permission": "active"
+                    }
+                ],
+                "data": {
+                    "payer": actor_account,
+                    "receiver": new_account,
+                    "days": 1,
+                    "cpu_frac": new_account_cpu_frac,
+                    "net_frac": new_account_net_frac,
+                    "max_payment": "0.0050 EOS"
+                }
+            },
+        ]
+    }

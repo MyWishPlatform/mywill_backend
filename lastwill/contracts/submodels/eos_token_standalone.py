@@ -1,10 +1,20 @@
+import json
 from django.core.mail import send_mail
 
 from lastwill.contracts.submodels.eos import *
-from lastwill.json_templates import create_eos_token_sa_json
+from lastwill.json_templates import create_eos_token_sa_json, token_standalone_init_tx
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
 from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT, \
-    EOS_TOKEN_SA_DEPLOY_PARAMS
+    EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS, EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS
+
+
+def get_frac(resource, system_state, account_state, value):
+    account_resource_max = account_state[f'{resource}_limit']['max']
+    account_resource_weight = account_state[f'{resource}_weight']
+    system_resource_weight = int(system_state['rows'][0][resource]['weight'])
+
+    frac = 10 ** 18 * account_resource_weight / (system_resource_weight * account_resource_max)
+    return int(round(value * frac, 0))
 
 
 class ContractDetailsEOSTokenSA(CommonDetails):
@@ -102,29 +112,36 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     @postponable
     def deploy(self):
         self.compile()
-        wallet_name = NETWORKS[self.contract.network.name]['wallet']
-        password = NETWORKS[self.contract.network.name]['eos_password']
-        unlock_eos_account(wallet_name, password)
-        creator_account = NETWORKS[self.contract.network.name]['address']
-        our_public_key = NETWORKS[self.contract.network.name]['pub']
+        network_name = self.contract.network.name
+        network = NETWORKS[network_name]
+        unlock_eos_account(network['wallet'], network['eos_password'])
+
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
-            str(NETWORKS[self.contract.network.name]['host']))
+            eos_url = 'https://%s' % (str(network['host']))
         else:
-            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'http://%s:%s' % (str(network['host']), str(network['port']))
 
-        stake_params = EOS_TOKEN_SA_DEPLOY_PARAMS[self.contract.network.name]
-        cpu_amount = stake_params['CPU']
-        net_amount = stake_params['NET']
-        ram_amount = stake_params['RAM']
+        creator_account = network['address']
+        system_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'table', 'eosio', '0', 'powup.state'])
+        account_state = implement_cleos_command(['cleos', '-u', eos_url, 'get', 'account', creator_account, '--json'])
+        actor_cpu = EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS[network_name]['CPU']
+        actor_net = EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS[network_name]['NET']
+        new_account_cpu = EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS[network_name]['CPU']
+        new_account_net = EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS[network_name]['NET']
+        ram_kbytes = EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS[self.contract.network.name]['RAM']
 
+        tx = token_standalone_init_tx(
+            actor_account=creator_account,
+            actor_cpu_frac=get_frac('cpu', system_state, account_state, actor_cpu),
+            actor_net_frac=get_frac('net', system_state, account_state, actor_net),
+            new_account=self.token_account,
+            new_account_owner_pub=network['pub'],
+            new_account_cpu_frac=get_frac('cpu', system_state, account_state, new_account_cpu),
+            new_account_net_frac=get_frac('net', system_state, account_state, new_account_net),
+            ram_bytes=ram_kbytes * 1024,
+        )
         command = [
-            'cleos', '-u', eos_url, 'system', 'newaccount',
-            creator_account, self.token_account, our_public_key,
-            our_public_key, '--stake-net', str(net_amount) + ' EOS',
-            '--stake-cpu', str(cpu_amount) + ' EOS',
-            '--buy-ram-kbytes', str(ram_amount),
-            '--transfer', '-j'
+            'cleos', '-u', eos_url, 'push', 'transaction', json.dumps(tx), '-j', '-p', creator_account
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
