@@ -5,7 +5,6 @@ import string
 import random
 import uuid
 
-
 from ethereum.abi import method_id as m_id
 from eth_utils import int_to_big_endian
 
@@ -2000,3 +1999,13 @@ class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
         if contract_details.contract.network.name in ['MATIC_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res
+
+
+class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsXinFinToken
+
+
+class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsXinFinToken
