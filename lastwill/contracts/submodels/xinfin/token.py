@@ -28,6 +28,7 @@ class ContractDetailsXinFinToken(AbstractContractDetailsToken):
         price = CONTRACT_PRICE_USDT['XINFIN_TOKEN']
         result = int(price * NET_DECIMALS['USDT'])
         return result
+
     @blocking
     @postponable
     def deploy(self):
