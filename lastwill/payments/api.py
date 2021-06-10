@@ -19,10 +19,6 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         return
     print('create payment')
 
-    if InternalPayment.objects.filter(tx_hash=tx).count() > 0:
-        print(f'tx hash {tx} already processed')
-        return
-
     if (SubSite.objects.get(id=site_id).site_name == MY_WISH_URL
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):
         if currency in ['BWISH', 'BBNB', 'BSCWISH', 'WWISH']:
