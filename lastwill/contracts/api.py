@@ -249,8 +249,8 @@ def get_xinfin_token_contracts(xin_contracts, res):
         elif any([x.contract.contract_type == 35 and x.contract.state == 'ENDED' for x in
                   ec.xinfin_token_details_token.all()]):
                 state = 'closed'
-            else:
-                state = 'ok'
+        else:
+            state = 'ok'
 
             res.append({
                 'id': ec.id,
