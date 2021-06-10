@@ -482,7 +482,7 @@ class CommonDetails(models.Model):
         for attempt in range(attempts):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
-                nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+                nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
                 gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
