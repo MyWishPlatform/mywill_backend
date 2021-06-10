@@ -784,8 +784,6 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                 check.is_address(th['address'])
             except ValidationError:
                 check.is_xin_address(th['address'])
-            if th['address'][:3] == 'xdc':
-                th['address'] = th['address'].replace('xdc', '0x')
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
