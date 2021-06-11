@@ -198,4 +198,5 @@ def get_payment_statistics(start, stop=None):
         user_ids.append(pay.user.id)
 
     print('total_payments', total_payments, flush=True)
+    
     return user_ids

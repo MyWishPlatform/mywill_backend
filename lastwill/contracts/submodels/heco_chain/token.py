@@ -25,5 +25,7 @@ class ContractDetailsHecoChainToken(AbstractContractDetailsToken):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['HECOCHAIN_TOKEN']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
         result = int(price * NET_DECIMALS['USDT'])
         return result
