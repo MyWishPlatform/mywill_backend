@@ -3,6 +3,7 @@ from lastwill.contracts.submodels.common import EthContract
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import XIN_ATTEMPTS
+from lastwill.consts import VERIFICATION_PRICE_USDT
 
 
 @contract_details('XinFin Token contract')

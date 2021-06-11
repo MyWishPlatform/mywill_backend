@@ -2,6 +2,7 @@ from lastwill.consts import CONTRACT_PRICE_USDT
 from lastwill.contracts.submodels.common import EthContract
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
+from lastwill.consts import VERIFICATION_PRICE_USDT
 
 
 @contract_details('HecoChain Token contract')
