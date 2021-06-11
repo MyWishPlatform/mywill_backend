@@ -279,6 +279,7 @@ VERIFICATION_CONTRACTS_IDS = (
     15,  # tron Token
     16,  # tron GameAsset
     17,  # tron AirDrop
+    35,  # xin Token
 )
 
 try:
