@@ -571,6 +571,18 @@ class CommonDetails(models.Model):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
+            elif self.network_name == 'XINFIN_MAINNET':
+                network_link = network_link.replace('xdc', '0x')
+                send_mail(
+                    common_subject,
+                    common_text.format(
+                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
+                        link=network_link.format(address=eth_contract.address),
+                        network_name=network_name
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
+                )
             elif self.contract.contract_type == 20:
                 pass
             else:
