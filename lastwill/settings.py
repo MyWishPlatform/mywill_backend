@@ -182,7 +182,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SIGNER='127.0.0.1:5000'
+SIGNER='127.0.0.1:27277'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 

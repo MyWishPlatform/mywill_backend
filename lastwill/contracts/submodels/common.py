@@ -6,6 +6,8 @@ import pika
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
+from requests_http_signature import HTTPSignatureAuth
+
 
 from django.db import models
 from django.apps import apps
@@ -242,8 +244,9 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     if gas_price:
         data['gas_price'] = gas_price
 
+    auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=SECRET_KEY_ID)
     signed_data = json.loads(requests.post(
-        'http://{}/sign/'.format(SIGNER), json=data
+        'http://{}/sign/'.format(SIGNER), auth=auth, json=data
     ).content.decode())
     return signed_data['result']
 
