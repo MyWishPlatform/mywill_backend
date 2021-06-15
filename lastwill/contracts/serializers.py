@@ -793,10 +793,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                     raise ValidationError
 
     def to_representation(self, contract_details):
-
         res = super().to_representation(contract_details)
-        print('2')
-        print(res)
         token_holder_serializer = TokenHolderSerializer()
 
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
