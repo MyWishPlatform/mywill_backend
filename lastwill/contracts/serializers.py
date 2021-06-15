@@ -795,6 +795,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
+
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
                                 contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
@@ -2010,4 +2011,4 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsXinFinToken
+        model = ContractDetailsHecoChainToken
