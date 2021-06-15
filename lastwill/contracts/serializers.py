@@ -793,8 +793,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
                     raise ValidationError
 
     def to_representation(self, contract_details):
-        print('1')
-        print(contract_details)
+
         res = super().to_representation(contract_details)
         print('2')
         print(res)
@@ -2015,4 +2014,4 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsXinFinToken
+        model = ContractDetailsHecoChainToken
