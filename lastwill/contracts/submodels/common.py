@@ -8,7 +8,6 @@ from base58 import b58decode
 from ethereum import abi
 from requests_http_signature import HTTPSignatureAuth
 
-
 from django.db import models
 from django.apps import apps
 from django.core.mail import send_mail
@@ -20,8 +19,8 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
+from lastwill.settings import HTTP_AUTH_SECRET_KEY, HTTP_AUTH_KEY_ID
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
 from lastwill.deploy.models import Network
@@ -30,7 +29,6 @@ from email_messages import *
 
 
 def address_to_scripthash(address):
-
     data = b58decode(address)
     if len(data) != 25:
         raise ValueError('Not correct Address, wrong length.')
@@ -168,7 +166,7 @@ def test_investment_pool_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
     if os.system("/bin/bash -c 'cd {dest} && yarn compile'".format(
-                dest=dest)):
+            dest=dest)):
         raise Exception('compiler error while testing')
     if os.system("/bin/bash -c 'cd {dest} &&  yarn test'".format(
             dest=dest)):
@@ -179,7 +177,7 @@ def test_crowdsale_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
     if os.system("/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
-                dest=dest)):
+            dest=dest)):
         raise Exception('compiler error while testing')
     if os.system("/bin/bash -c 'cd {dest} &&  yarn test-crowdsale'".format(
             dest=dest)):
@@ -244,7 +242,7 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     if gas_price:
         data['gas_price'] = gas_price
 
-    auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=SECRET_KEY_ID)
+    auth = HTTPSignatureAuth(key=HTTP_AUTH_SECRET_KEY, key_id=HTTP_AUTH_KEY_ID)
     signed_data = json.loads(requests.post(
         'http://{}/sign/'.format(SIGNER), auth=auth, json=data
     ).content.decode())
@@ -310,16 +308,16 @@ class Contract(models.Model):
         str_args = ','.join([str(x) for x in args])
         if self.id:
             kwargs['update_fields'] = list(
-                    {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
-                    &
-                    set(kwargs.get('update_fields', [f.name for f in Contract._meta.fields]))
+                {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
+                &
+                set(kwargs.get('update_fields', [f.name for f in Contract._meta.fields]))
             )
         return super().save(*args, **kwargs)
 
     def get_details(self):
         return getattr(self, self.get_details_model(
             self.contract_type
-        ).__name__.lower()+'_set').first()
+        ).__name__.lower() + '_set').first()
 
     @classmethod
     def get_all_details_model(cls):
@@ -409,6 +407,7 @@ class BtcKey4RSK(models.Model):
     btc_address = models.CharField(max_length=100, null=True, default=None)
     private_key = models.CharField(max_length=100, null=True, default=None)
 
+
 '''
 real contract to deploy to ethereum
 '''
@@ -434,6 +433,7 @@ class EthContract(models.Model):
 class CommonDetails(models.Model):
     class Meta:
         abstract = True
+
     contract = models.ForeignKey(Contract)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
@@ -446,7 +446,7 @@ class CommonDetails(models.Model):
             source = f.read().decode('utf-8-sig')
         result_name = path.join(sol_path, self.result_filename)
         with open(result_name, 'rb') as f:
-            result =json.loads(f.read().decode('utf-8-sig'))
+            result = json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
         eth_contract.source_code = source
         eth_contract.compiler_version = result['compiler']['version']
@@ -545,7 +545,7 @@ class CommonDetails(models.Model):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            if self.contract.contract_type ==11:
+            if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,
                     eos_account_message.format(
@@ -555,7 +555,7 @@ class CommonDetails(models.Model):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
-            elif self.contract.contract_type ==10:
+            elif self.contract.contract_type == 10:
                 send_mail(
                     eos_contract_subject,
                     eos_contract_message.format(
@@ -569,14 +569,14 @@ class CommonDetails(models.Model):
                 pass
             else:
                 send_mail(
-                        common_subject,
-                        common_text.format(
-                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
-                            link=network_link.format(address=eth_contract.address),
-                            network_name=network_name
-                        ),
-                        DEFAULT_FROM_EMAIL,
-                        [self.contract.user.email]
+                    common_subject,
+                    common_text.format(
+                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
+                        link=network_link.format(address=eth_contract.address),
+                        network_name=network_name
+                    ),
+                    DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email]
                 )
 
     def get_value(self):
@@ -628,10 +628,10 @@ class ContractDetailsPizza(CommonDetails):
     pizzeria_address = models.CharField(
         max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a'
     )
-    timeout = models.IntegerField(default=60*60)
+    timeout = models.IntegerField(default=60 * 60)
     code = models.IntegerField()
-    salt = models.CharField(max_length=len(str(2**256)))
-    pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0) # weis
+    salt = models.CharField(max_length=len(str(2 ** 256)))
+    pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)  # weis
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None)
 
