@@ -228,7 +228,7 @@ def send_in_queue(contract_id, type, queue):
 
 def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
     data = {
-        'source': address,
+        'from': address,
         'nonce': nonce,
         'gaslimit': gaslimit,
         'network': network,
@@ -246,7 +246,7 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     signed_data = json.loads(requests.post(
         'http://{}/sign/'.format(SIGNER), auth=auth, json=data
     ).content.decode())
-    return signed_data['result']
+    return signed_data['signed_tx']
 
 
 def sign_neo_transaction(tx, binary_tx, address):
