@@ -69,7 +69,11 @@ def sendEMail(sub, text, mail):
 
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
+    print('1')
+    print(queryset)
     serializer_class = ContractSerializer
+    print('2')
+    print(serializer_class)
     permission_classes = (IsAuthenticated, IsStaff | IsOwner)
 
     def destroy(self, request, *args, **kwargs):
