@@ -2010,4 +2010,4 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
 
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
-        model = ContractDetailsXinFinToken
+        model = ContractDetailsHecoChainToken
