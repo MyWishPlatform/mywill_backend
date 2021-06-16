@@ -3,6 +3,7 @@ import os
 import uuid
 import binascii
 import pika
+import requests
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
@@ -18,7 +19,7 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
+from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN, GAS_URL, API_TOK, SPDLVL
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
 from lastwill.deploy.models import Network
@@ -483,7 +484,11 @@ class CommonDetails(models.Model):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
-                gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
+                try:
+                    response = requests.get(f'{GAS_URL}{API_TOK}').json()
+                    gas_price_current = response[SPDLVL]
+                except requests.RequestException:
+                    gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
             except Exception:
