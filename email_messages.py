@@ -11,7 +11,6 @@ To confirm the registration, click on the link below:
 Best regards!
 {subsite_name} Team."""
 
-
 password_reset_subject = """Password reset on {subsite_name} """
 password_reset_text = """
 You're receiving this email because you requested a password reset for your user account at {subsite_name}.
@@ -75,7 +74,7 @@ We are happy to inform you that your contract was successfully created and deplo
 Token contract: {link1}
 Crowdsale contract: {link2}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -137,7 +136,7 @@ eos_account_message = """Hello,
 We are happy to inform you that your account was successfully created in {network_name}.
 EOS Account: {link}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -178,7 +177,7 @@ eos_ico_message = """Hello,
 
 We are happy to inform you that your ICO was successfully created in {network_name}.
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -220,7 +219,7 @@ eos_contract_message = """Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name}.
 EOS Token: {token_name}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -309,7 +308,7 @@ eos_airdrop_message = """Hello,
 We are happy to inform you that your contract was successfully created and deployed on {network_name}.
 Tx hash: {hash}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -420,7 +419,8 @@ tron_deploy_text = """Hello,
 
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract 
+creation. To apply the discount you will need to put the code: {promocode} to the contract form. 
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -474,7 +474,7 @@ swaps_deploed_message = """Congratulations!
 We are happy to inform you that your contract was successfully deployed to Ethereum.
 You can use your SWAP now: {swaps_link}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
@@ -523,7 +523,6 @@ contract's link {link}
 Best wishes,
 Swaps Team."""
 
-
 waves_sto_subject = """Your contract is ready"""
 waves_sto_text = """Hello,
 
@@ -531,7 +530,7 @@ We are happy to inform you that your Waves STO smart account was successfully cr
 Asset:  {link1}
 STO contract: {link2}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
