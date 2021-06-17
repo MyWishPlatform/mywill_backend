@@ -485,11 +485,14 @@ class CommonDetails(models.Model):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
-                try:
-                    response = requests.get(f'{GAS_STATION_URL}{GAS_STATION_TOK}').json()
-                    gas_price_current = response[SPEEDLVL]
-                except requests.RequestException:
-                    gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
+                if self.contract.network == 'ETHEREUM_MAINNET':
+                    try:
+                        response = requests.get(f'{GAS_STATION_URL}{GAS_STATION_TOK}').json()
+                        gas_price_current = response[SPEEDLVL]
+                        break
+                    except (requests.RequestException, KeyError):
+                        print('gas station api is unavailable', flush=True)
+                gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
             except Exception:
