@@ -32,7 +32,7 @@ common_text = """Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 {contract_type_name}: {link}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: SUPKBYOL to the contract form.
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
