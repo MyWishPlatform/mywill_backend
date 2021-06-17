@@ -169,7 +169,7 @@ NET_DECIMALS = {
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
     'XIN': 10 ** 18,
-    'HT': 10 ** 18,  # HecoChain
+    'HT': 10 ** 18,
 }
 
 TRON_REPLENISH_THRESHOLD = {
