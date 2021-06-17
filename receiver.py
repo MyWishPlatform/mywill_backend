@@ -11,6 +11,7 @@ import fcntl
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
+
 django.setup()
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -48,14 +49,14 @@ class Receiver(threading.Thread):
         channel = connection.channel()
 
         channel.queue_declare(
-                queue=NETWORKS[self.network]['queue'],
-                durable=True,
-                auto_delete=False,
-                exclusive=False
+            queue=NETWORKS[self.network]['queue'],
+            durable=True,
+            auto_delete=False,
+            exclusive=False
         )
         channel.basic_consume(
-                self.callback,
-                queue=NETWORKS[self.network]['queue']
+            self.callback,
+            queue=NETWORKS[self.network]['queue']
         )
 
         print('receiver start ', self.network, flush=True)
@@ -66,10 +67,10 @@ class Receiver(threading.Thread):
         print('message["amount"]', message['amount'])
         print('payment ok', flush=True)
 
-        create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'], message['siteId'])
+        create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'],
+                       message['siteId'])
         if message['siteId'] in [4, 5]:
             autodeploing(message['userId'], message['siteId'])
-
 
     def deployed(self, message):
         print('deployed message received', flush=True)
@@ -84,18 +85,17 @@ class Receiver(threading.Thread):
         print('deployed message received', flush=True)
         # commenting because of upgrade to orderboook
         #
-        #details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-        #if details.contract.state == 'ACTIVE':
+        # details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
+        # if details.contract.state == 'ACTIVE':
         #    print('ignored because already active', flush=True)
         #    return
-        #details.msg_deployed(message)
+        # details.msg_deployed(message)
         order = OrderBookSwaps.objects.get(memo_contract=message['id'])
         if order.contract_state == 'ACTIVE':
             print('ignored because already active', flush=True)
             return
         order.msg_deployed(message)
         print('deployed ok!', flush=True)
-
 
     def killed(self, message):
         print('killed message', flush=True)
@@ -119,7 +119,7 @@ class Receiver(threading.Thread):
         print('repeat check ok', flush=True)
 
     def check_contract(self, message):
-        print('ignored',flush=True)
+        print('ignored', flush=True)
         print('check contract message', flush=True)
         contract = Contract.objects.get(id=message['contractId'])
         contract.get_details().check_contract()
@@ -202,7 +202,7 @@ class Receiver(threading.Thread):
             #     memo_contract=message['id'])
             # contract.finalized(message)
             order = OrderBookSwaps.objects.get(
-                 memo_contract=message['id'])
+                memo_contract=message['id'])
             order.finalized(message)
         else:
             contract = EthContract.objects.get(
@@ -391,6 +391,7 @@ class Receiver(threading.Thread):
         details = contract.get_details()
         details.deposit_swaps(message)
 
+
 def methods(cls):
     return [x for x, y in cls.__dict__.items() if type(y) == FunctionType and not x.startswith('_')]
 
@@ -405,11 +406,11 @@ class WSInterface(threading.Thread):
 
     def run(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-                '127.0.0.1',
-                5672,
-                'mywill',
-                pika.PlainCredentials('java', 'java'),
-                heartbeat_interval=0,
+            '127.0.0.1',
+            5672,
+            'mywill',
+            pika.PlainCredentials('java', 'java'),
+            heartbeat_interval=0,
         ))
         self.channel = connection.channel()
         self.channel.queue_declare(queue='websockets', durable=True, auto_delete=False, exclusive=False)
@@ -417,12 +418,11 @@ class WSInterface(threading.Thread):
             message = self.interthread_queue.get()
             user = message.pop('user')
             self.channel.basic_publish(
-                    exchange='',
-                    routing_key='websockets',
-                    body=json.dumps(message),
-                    properties=pika.BasicProperties(expiration='30000', type=str(user)),
+                exchange='',
+                routing_key='websockets',
+                body=json.dumps(message),
+                properties=pika.BasicProperties(expiration='30000', type=str(user)),
             )
-
 
 
 """
@@ -431,12 +431,13 @@ rabbitmqctl add_vhost mywill
 rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
 """
 
+
 def save_profile(sender, instance, **kwargs):
     try:
         ws_interface.send(
-                instance.user.id,
-                'update_user',
-                {'balance': str(instance.balance)},
+            instance.user.id,
+            'update_user',
+            {'balance': str(instance.balance)},
         )
     except Exception as e:
         print('in save profile callback:', e)
@@ -446,9 +447,9 @@ def save_contract(sender, instance, **kwargs):
     try:
         contract_data = ContractSerializer().to_representation(instance)
         ws_interface.send(
-                instance.user.id,
-                'update_contract',
-                contract_data,
+            instance.user.id,
+            'update_contract',
+            contract_data,
         )
     except Exception as e:
         print('in save contract callback:', e)
@@ -465,6 +466,3 @@ ws_interface.start()
 for net in nets:
     rec = Receiver(net)
     rec.start()
-
-
-
