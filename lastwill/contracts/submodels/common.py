@@ -550,6 +550,7 @@ class CommonDetails(models.Model):
             stop=None, use_count=0, use_count_max=None
     ):
         promo = Promo.objects.filter(promo_str=promo_str.id_generator().upper()).first()
+        print('1' + promo_str, flush=True)
         if promo is not None:
             print('this promocode already exists')
             return
