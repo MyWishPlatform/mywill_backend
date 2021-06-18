@@ -542,11 +542,11 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    def id_generator(size=10, chars=string.ascii_uppercase + string.digits):
+    def id_generator(self, size=10, chars=string.ascii_uppercase + string.digits):
         return ''.join(random.choice(chars) for i in range(size))
 
     def generate_promocode(
-            promo_str, contract_types, discount, reusable=False, start=None,
+            self, promo_str, contract_types, discount, reusable=False, start=None,
             stop=None, use_count=0, use_count_max=None
     ):
         promo = Promo.objects.filter(promo_str=promo_str.id_generator().upper()).first()
@@ -573,7 +573,7 @@ class CommonDetails(models.Model):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
-        promocode = self.generate_promocode(range(40), 15)
+        promocode = self.generate_promocode(self, range(40), 15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
