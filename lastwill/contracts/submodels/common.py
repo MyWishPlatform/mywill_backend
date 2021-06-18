@@ -20,7 +20,7 @@ from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import HTTP_AUTH_SECRET_KEY, HTTP_AUTH_KEY_ID
+from lastwill.settings import SECRET_KEY, KEY_ID
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
 from lastwill.deploy.models import Network
@@ -242,7 +242,7 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
     if gas_price:
         data['gas_price'] = gas_price
 
-    auth = HTTPSignatureAuth(key=HTTP_AUTH_SECRET_KEY, key_id=HTTP_AUTH_KEY_ID)
+    auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
     signed_data = json.loads(requests.post(
         'http://{}/sign/'.format(SIGNER), auth=auth, json=data
     ).content.decode())
