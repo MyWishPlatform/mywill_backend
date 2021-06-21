@@ -31,37 +31,6 @@ common_text = """Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 {contract_type_name}: {link}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
 Please contact support@mywish.io if you need if you have any questions.
 
 Best wishes,
@@ -72,43 +41,7 @@ ico_text = """Hello,
 
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 Token contract: {link1}
-Crowdsale contract: {link2}
-
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
-Please contact support@mywish.io if you have any questions.
-
-Best wishes,
-MyWish Team."""
+Crowdsale contract: {link2}"""
 
 create_subject = """Your contract is ready for deployment"""
 create_message = """Congratulations!
@@ -136,37 +69,6 @@ eos_account_message = """Hello,
 We are happy to inform you that your account was successfully created in {network_name}.
 EOS Account: {link}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
 Please contact support@mywish.io if you need if you have any questions.
 
 Best wishes,
@@ -176,37 +78,6 @@ eos_ico_subject = """Your account is ready"""
 eos_ico_message = """Hello,
 
 We are happy to inform you that your ICO was successfully created in {network_name}.
-
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 
 Please contact support@mywish.io if you need if you have any questions.
 
@@ -219,43 +90,7 @@ eos_contract_message = """Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name}.
 EOS Token: {token_name}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
-You can MINT your token now.
-
-Please contact support@mywish.io if you need if you have any questions.
-
-Best wishes,
-MyWish Team."""
+You can MINT your token now."""
 
 heir_subject = """MyWish notification"""
 heir_message = """Hello!
@@ -294,50 +129,13 @@ MyWish Team
 neo_token_text = '''Hello,
 
 We are happy to inform you that your contract was successfully created and deployed to NEO Test network.
-Token contract address: {addr}
-
-Please contact support@mywish.io if you have any questions.
-
-Best wishes,
-MyWish Team.
-'''
+Token contract address: {addr}'''
 
 eos_airdrop_subject = """Your contract is ready"""
 eos_airdrop_message = """Hello,
 
 We are happy to inform you that your contract was successfully created and deployed on {network_name}.
 Tx hash: {hash}
-
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 
 Please contact support@mywish.io if you have any questions.
 
@@ -417,44 +215,7 @@ MyWish Team.
 tron_deploy_subject = """Your contract is ready"""
 tron_deploy_text = """Hello,
 
-We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
-
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract 
-creation. To apply the discount you will need to put the code: {promocode} to the contract form. 
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
-Please contact support@mywish.io if you need if you have any questions.
-
-Best wishes,
-MyWish Team."""
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network."""
 
 swaps_subject = """Your SWAP is ready for deployment"""
 swaps_message = """Hello,
@@ -473,42 +234,6 @@ swaps_deploed_message = """Congratulations!
 
 We are happy to inform you that your contract was successfully deployed to Ethereum.
 You can use your SWAP now: {swaps_link}
-
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
-Please contact support@swaps.network if you have any questions.
-
-Best wishes,
-SWAPS.NETWORK Team.
 """
 
 swaps_support_subject = """ Swaps user notification"""
@@ -528,43 +253,7 @@ waves_sto_text = """Hello,
 
 We are happy to inform you that your Waves STO smart account was successfully created and deployed to {network_name} network.
 Asset:  {link1}
-STO contract: {link2}
-
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
-Additionally, We have prepared a little guide for you on what to do after a token is created. 
-
-Airdrop
-Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
-
-CrowdSale Contract
-Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
-
-Cross-Chain Bridge Service
-Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
-https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
-
-Contract verification
-Source code verification provides transparency for users interacting with smart contracts. 
-
-
-Brand Report
-The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
-
-How to list a token on PancakeSwap/Uniswap/JustSwap?
-
-Here you can find some guidelines of how to list your token on the mentioned above exchanges:
-PancakeSwap (available for BEP20 token only)
-https://docs.pancakeswap.finance/exchange/pancakeswap-pools
-Uniswap (available for ERC20 tokens only)
-https://defiprime.com/uniswap-liquidity-pools
-JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
-
-Please contact support@mywish.io if you have any questions.
-
-Best wishes,
-MyWish Team."""
+STO contract: {link2}"""
 
 protector_deployed_subject = """Your Protector is on"""
 protector_deployed_text = """Congratulations!
@@ -597,3 +286,42 @@ You can cancel it in your profile on protector.mywish.io
 
 Best Wishes,
 MyWish Team"""
+
+sale_message = """We hope our cooperation will last long and would like to grant you a 15% discount promo code for 
+further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
+
+Additionally, We have prepared a little guide for you on what to do after a token is created. 
+
+Airdrop
+Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
+
+CrowdSale Contract
+Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
+
+Cross-Chain Bridge Service
+Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
+https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
+
+Contract verification
+Source code verification provides transparency for users interacting with smart contracts. 
+
+
+Brand Report
+The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
+
+How to list a token on PancakeSwap/Uniswap/JustSwap?
+
+Here you can find some guidelines of how to list your token on the mentioned above exchanges:
+PancakeSwap (available for BEP20 token only)
+https://docs.pancakeswap.finance/exchange/pancakeswap-pools
+Uniswap (available for ERC20 tokens only)
+https://defiprime.com/uniswap-liquidity-pools
+JustSwap (available for TRC20 tokens only)
+https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide"""
+
+common_text += sale_message
+eos_contract_message += sale_message
+swaps_deploed_message += sale_message
+waves_sto_text += sale_message
+neo_token_text += sale_message
+tron_deploy_text += sale_message
