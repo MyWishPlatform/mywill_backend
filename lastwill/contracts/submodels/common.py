@@ -7,8 +7,10 @@ from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
 
+from django.db import models
 from django.apps import apps
-
+from django.core.mail import send_mail
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 
 from neo.Settings import settings
@@ -16,11 +18,9 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-from lastwill.promo.models import Promo, Promo2ContractType
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.parint import *
-from lastwill.promo.api import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
