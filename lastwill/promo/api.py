@@ -8,12 +8,12 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from lastwill.contracts.submodels.common import Contract
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL, VERIFICATION_CONTRACTS_IDS
 from lastwill.consts import NET_DECIMALS, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
 from .models import *
 from lastwill.rates.api import rate
+from ..contracts.submodels.common import Contract
 
 
 def check_and_get_discount(promo_str, contract_type, user):
