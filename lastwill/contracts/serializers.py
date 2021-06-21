@@ -37,7 +37,6 @@ from lastwill.contracts.models import (
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
     ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO
 )
-from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
 from lastwill.rates.api import rate
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
