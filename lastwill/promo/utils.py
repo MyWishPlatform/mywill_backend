@@ -14,9 +14,7 @@ def create_promocode(
         stop=None, use_count=0, use_count_max=None, promo_str=id_generator()
 ):
 
-    print(promo_str.__dict__)
     promo = Promo.objects.filter(promo_str=promo_str).first()
-    print(promo.__dict__)
     if promo is not None:
         print('this promocode already exists')
         return
