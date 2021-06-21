@@ -9,11 +9,11 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from lastwill.contracts.serializers import ContractSerializer
+from lastwill.contracts.submodels.common import Contract
+from lastwill.promo.models import Promo2ContractType, Promo
 from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL, VERIFICATION_CONTRACTS_IDS
 from lastwill.consts import NET_DECIMALS, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
-from .models import *
 from lastwill.rates.api import rate
-from ..contracts.submodels.common import Contract
 
 
 def check_and_get_discount(promo_str, contract_type, user):
@@ -111,15 +111,14 @@ def get_discount(request):
     return Response(answer)
 
 
-def id_generator(size):
+def id_generator(size=10):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
 
 
 def create_promocode(
-        self, contract_types, discount, reusable=False, start=None,
-        stop=None, use_count=0, use_count_max=None
+        contract_types, discount, reusable=False, start=None,
+        stop=None, use_count=0, use_count_max=None, promo_str=id_generator
 ):
-    promo_str = self.id_generator(size=10)
     promo = Promo.objects.filter(promo_str=promo_str).first()
     if promo is not None:
         print('this promocode already exists')
