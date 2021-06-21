@@ -10,8 +10,8 @@ def id_generator(size=10):
 
 
 def create_promocode(
-        discount, reusable=False, start=None,
-        stop=None, use_count=0, use_count_max=None, contract_types=range(40), promo_str=id_generator()
+        contract_types, discount, reusable=False, start=None,
+        stop=None, use_count=0, use_count_max=None, promo_str=id_generator()
 ):
 
     promo = Promo.objects.filter(promo_str=promo_str).first()
