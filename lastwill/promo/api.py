@@ -1,4 +1,8 @@
 import datetime
+import random
+import string
+
+
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
@@ -107,11 +111,16 @@ def get_discount(request):
     return Response(answer)
 
 
+def id_generator(size):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
+
+
 def create_promocode(
-        promo_str, contract_types, discount, reusable=False, start=None,
+        self, contract_types, discount, reusable=False, start=None,
         stop=None, use_count=0, use_count_max=None
 ):
-    promo = Promo.objects.filter(promo_str=promo_str.upper()).first()
+    promo_str = self.id_generator(size=10)
+    promo = Promo.objects.filter(promo_str=promo_str).first()
     if promo is not None:
         print('this promocode already exists')
         return
