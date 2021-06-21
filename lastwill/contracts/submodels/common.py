@@ -543,10 +543,10 @@ class CommonDetails(models.Model):
         self.contract.save()
 
     def id_generator(self, size=10):
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k = size))
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
 
     def generate_promocode(
-            self,  contract_types, discount, promo_str=None, reusable=False, start=None,
+            self, contract_types, discount, reusable=False, start=None,
             stop=None, use_count=0, use_count_max=None
     ):
         promo_str = self.id_generator()
@@ -576,7 +576,7 @@ class CommonDetails(models.Model):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
-        promocode = self.generate_promocode(contract_types=40, discount=15)
+        promocode = self.generate_promocode(contract_types=range(40), discount=15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
