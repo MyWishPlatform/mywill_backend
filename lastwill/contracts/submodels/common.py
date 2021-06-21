@@ -546,10 +546,10 @@ class CommonDetails(models.Model):
         return ''.join(random.choice(chars) for i in range(size))
 
     def generate_promocode(
-            self, promo_str, contract_types, discount, reusable=False, start=None,
+            self,  contract_types, discount, promo_str=None, reusable=False, start=None,
             stop=None, use_count=0, use_count_max=None
     ):
-        promo = Promo.objects.filter(promo_str=promo_str.id_generator().upper()).first()
+        promo = Promo.objects.filter(promo_str=self.id_generator().upper()).first()
         print('1')
         print(promo_str, flush=True)
         if promo is not None:
@@ -575,7 +575,7 @@ class CommonDetails(models.Model):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
-        promocode = self.generate_promocode(self, range(40), 15)
+        promocode = self.generate_promocode(contract_types=40, discount=15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
@@ -584,44 +584,44 @@ class CommonDetails(models.Model):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            # if DeployAddress.network in [3, 5, 7, 11, 14, 16, 22, 24, 28, 35]:
-            if self.contract.contract_type == 11:
-                send_mail(
-                    eos_account_subject,
-                    eos_account_message.format(
-                        link=network_link.format(address=self.account_name),
-                        network_name=network_name,
-                        promocode=promocode
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
-            elif self.contract.contract_type == 10:
-                send_mail(
-                    eos_contract_subject,
-                    eos_contract_message.format(
-                        token_name=self.token_short_name,
-                        network_name=network_name,
-                        promocode=promocode
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
-            elif self.contract.contract_type == 20:
-                pass
-            else:
-                send_mail(
-                    common_subject,
-                    common_text.format(
-                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                            'name'],
-                        link=network_link.format(address=eth_contract.address),
-                        network_name=network_name,
-                        promocode=promocode
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
+            if self.contract.network.id in NETWORK_TYPES['mainnet']:
+                if self.contract.contract_type == 11:
+                    send_mail(
+                        eos_account_subject,
+                        eos_account_message.format(
+                            link=network_link.format(address=self.account_name),
+                            network_name=network_name,
+                            promocode=promocode
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
+                elif self.contract.contract_type == 10:
+                    send_mail(
+                        eos_contract_subject,
+                        eos_contract_message.format(
+                            token_name=self.token_short_name,
+                            network_name=network_name,
+                            promocode=promocode
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
+                elif self.contract.contract_type == 20:
+                    pass
+                else:
+                    send_mail(
+                        common_subject,
+                        common_text.format(
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                'name'],
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name,
+                            promocode=promocode
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
 
     def get_value(self):
         return 0
