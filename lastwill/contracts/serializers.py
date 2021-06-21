@@ -16,9 +16,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
+from lastwill.contracts.submodels.common import Contract
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
-    Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
+    Heir, EthContract, TokenHolder, WhitelistAddress,
     NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
     ContractDetailsToken, ContractDetailsICO,
     ContractDetailsAirdrop, AirdropAddress, TRONContract,
