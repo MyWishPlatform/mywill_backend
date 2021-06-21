@@ -30,11 +30,9 @@ common_text = """Hello,
 
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 {contract_type_name}: {link}
+\n
 
-Please contact support@mywish.io if you need if you have any questions.
-
-Best wishes,
-MyWish Team."""
+"""
 
 ico_subject = """Your contract is ready"""
 ico_text = """Hello,
@@ -90,7 +88,10 @@ eos_contract_message = """Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name}.
 EOS Token: {token_name}
 
-You can MINT your token now."""
+You can MINT your token now.
+\n
+
+"""
 
 heir_subject = """MyWish notification"""
 heir_message = """Hello!
@@ -129,7 +130,10 @@ MyWish Team
 neo_token_text = '''Hello,
 
 We are happy to inform you that your contract was successfully created and deployed to NEO Test network.
-Token contract address: {addr}'''
+Token contract address: {addr}
+\n
+
+'''
 
 eos_airdrop_subject = """Your contract is ready"""
 eos_airdrop_message = """Hello,
@@ -215,7 +219,10 @@ MyWish Team.
 tron_deploy_subject = """Your contract is ready"""
 tron_deploy_text = """Hello,
 
-We are happy to inform you that your contract was successfully created and deployed to {network_name} network."""
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
+\n
+
+"""
 
 swaps_subject = """Your SWAP is ready for deployment"""
 swaps_message = """Hello,
@@ -234,6 +241,8 @@ swaps_deploed_message = """Congratulations!
 
 We are happy to inform you that your contract was successfully deployed to Ethereum.
 You can use your SWAP now: {swaps_link}
+\n
+
 """
 
 swaps_support_subject = """ Swaps user notification"""
@@ -253,7 +262,10 @@ waves_sto_text = """Hello,
 
 We are happy to inform you that your Waves STO smart account was successfully created and deployed to {network_name} network.
 Asset:  {link1}
-STO contract: {link2}"""
+STO contract: {link2}
+\n
+
+"""
 
 protector_deployed_subject = """Your Protector is on"""
 protector_deployed_text = """Congratulations!
