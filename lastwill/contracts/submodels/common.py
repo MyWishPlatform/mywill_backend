@@ -543,7 +543,7 @@ class CommonDetails(models.Model):
         self.contract.save()
 
     def id_generator(self, size=10):
-        ''.join(random.choices(string.ascii_uppercase + string.digits, k = size))
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k = size))
 
     def generate_promocode(
             self,  contract_types, discount, promo_str=None, reusable=False, start=None,
