@@ -542,14 +542,14 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    def id_generator(self, size=10, chars=string.ascii_uppercase + string.digits):
-        return ''.join(random.choice(chars) for i in range(size))
+    def id_generator(self, size=10):
+        ''.join(random.choices(string.ascii_uppercase + string.digits, k = size))
 
     def generate_promocode(
             self,  contract_types, discount, promo_str=None, reusable=False, start=None,
             stop=None, use_count=0, use_count_max=None
     ):
-        promo = Promo.objects.filter(promo_str=self.id_generator().upper()).first()
+        promo = Promo.objects.filter(promo_str=self.id_generator()).first()
         print('1')
         print(promo_str, flush=True)
         if promo is not None:
