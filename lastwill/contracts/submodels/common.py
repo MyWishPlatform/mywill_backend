@@ -18,6 +18,7 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
+from lastwill.promo.api import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
