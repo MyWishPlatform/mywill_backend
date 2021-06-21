@@ -549,7 +549,8 @@ class CommonDetails(models.Model):
             self,  contract_types, discount, promo_str=None, reusable=False, start=None,
             stop=None, use_count=0, use_count_max=None
     ):
-        promo = Promo.objects.filter(promo_str=self.id_generator()).first()
+        promo_str = self.id_generator()
+        promo = Promo.objects.filter(promo_str=promo_str).first()
         print('1')
         print(promo_str, flush=True)
         if promo is not None:
