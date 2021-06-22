@@ -253,9 +253,12 @@ AVAILABLE_CONTRACT_TYPES = {
         {'contract_type': 17, 'contract_name': 'AirDrop'}
     ],
     28: [
-        {'contract_type': 28, 'contract_name': 'Token'}
+        {'contract_type': 28, 'contract_name': 'Token'},
+        {'contract_type': 27, 'contract_name': 'ICO'},
+        {'contract_type': 29, 'contract_name': 'Airdrop'}
     ],
     33: [
+        {'contract_type': 32, 'contract_name': 'Airdrop'},
         {'contract_type': 33, 'contract_name': 'Token'},
         {'contract_type': 34, 'contract_name': 'Airdrop'}
     ],
@@ -263,7 +266,8 @@ AVAILABLE_CONTRACT_TYPES = {
         {'contract_type': 35, 'contract_name': 'Token'}
         ],
     36: [
-        {'contract_type': 36, 'contract_name': 'Token'}
+        {'contract_type': 36, 'contract_name': 'Token'},
+        {'contract_type': 37, 'contract_name': 'ICO'}
     ],
 }
 
