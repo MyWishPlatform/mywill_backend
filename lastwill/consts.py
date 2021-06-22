@@ -251,7 +251,20 @@ AVAILABLE_CONTRACT_TYPES = {
         {'contract_type': 15, 'contract_name': 'Token'},
         {'contract_type': 16, 'contract_name': 'GameAsset'},
         {'contract_type': 17, 'contract_name': 'AirDrop'}
-    ]
+    ],
+    28: [
+        {'contract_type': 28, 'contract_name': 'Token'}
+    ],
+    33: [
+        {'contract_type': 33, 'contract_name': 'Token'},
+        {'contract_type': 34, 'contract_name': 'Airdrop'}
+    ],
+    35: [
+        {'contract_type': 35, 'contract_name': 'Token'}
+        ],
+    36: [
+        {'contract_type': 36, 'contract_name': 'Token'}
+    ],
 }
 
 NETWORK_TYPES = {

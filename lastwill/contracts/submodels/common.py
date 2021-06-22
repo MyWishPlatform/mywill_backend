@@ -21,7 +21,8 @@ from neocore.UInt160 import UInt160
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
+    AVAILABLE_CONTRACT_TYPES
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
@@ -544,6 +545,7 @@ class CommonDetails(models.Model):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
+        network_contracts = AVAILABLE_CONTRACT_TYPES[self.contract.network.id]
         promocode = create_promocode(range(40), discount=15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
@@ -553,50 +555,51 @@ class CommonDetails(models.Model):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            if self.contract.contract_type == 11:
-                send_mail(
-                    eos_account_subject,
-                    eos_account_message.format(
-                        link=network_link.format(address=self.account_name),
-                        network_name=network_name,
-                        promocode=promocode
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
-            elif self.contract.contract_type == 10:
-                send_mail(
-                    eos_contract_subject,
-                    eos_contract_message.format(
-                        token_name=self.token_short_name,
-                        network_name=network_name,
-                        promocode=promocode
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
-            elif self.contract.contract_type == 20:
-                pass
-            else:
-                if self.contract.network.id in NETWORK_TYPES['mainnet']:
+            for contr_dict in network_contracts:
+                if self.contract.contract_type == contr_dict['contract_type'] and \
+                        self.contract.network.id in NETWORK_TYPES['mainnet']:
                     send_mail(
-                        common_subject,
-                        common_text.format(
-                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                'name'],
-                            link=network_link.format(address=eth_contract.address),
+                        eos_account_subject,
+                        eos_account_message.format(
+                            link=network_link.format(address=self.account_name),
                             network_name=network_name,
                             promocode=promocode
                         ),
                         DEFAULT_FROM_EMAIL,
                         [self.contract.user.email]
                     )
-                if self.contract.network.id in NETWORK_TYPES['testnet']:
+                if self.contract.contract_type == 11:
+                    send_mail(
+                        eos_account_subject,
+                        eos_account_message.format(
+                            link=network_link.format(address=self.account_name),
+                            network_name=network_name,
+                            promocode=promocode
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
+                if self.contract.contract_type == 10:
+                    send_mail(
+                        eos_contract_subject,
+                        eos_contract_message.format(
+                            token_name=self.token_short_name,
+                            network_name=network_name,
+                            promocode=promocode
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
+                if self.contract.contract_type == 20:
+                    pass
+
+                elif self.contract.network.id in NETWORK_TYPES['testnet'] and \
+                        self.contract.contract_type == contr_dict['contract_type']:
                     send_mail(
                         common_subject,
                         common_text.format(
-                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                'name'],
+                            contract_type_name=self.contract.get_all_details_model()
+                            [self.contract.contract_type]['name'],
                             link=network_link.format(address=eth_contract.address),
                             network_name=network_name,
                         ),

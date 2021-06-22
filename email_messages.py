@@ -331,9 +331,14 @@ https://defiprime.com/uniswap-liquidity-pools
 JustSwap (available for TRC20 tokens only)
 https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide"""
 
-common_text += sale_message
-eos_contract_message += sale_message
-swaps_deploed_message += sale_message
-waves_sto_text += sale_message
-neo_token_text += sale_message
-tron_deploy_text += sale_message
+
+firewell_message = """
+
+Best Wishes,
+MyWish Team"""
+common_text += sale_message + firewell_message
+eos_contract_message += sale_message + firewell_message
+swaps_deploed_message += sale_message + firewell_message
+waves_sto_text += sale_message + firewell_message
+neo_token_text += sale_message + firewell_message
+tron_deploy_text += sale_message + firewell_message
