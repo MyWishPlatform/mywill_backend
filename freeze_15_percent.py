@@ -45,13 +45,14 @@ def freeze_wish(amount):
     eth_int = EthereumProvider().get_provider(network=NETWORK_SIGN_TRANSACTION_WISH)
     nonce = int(eth_int.eth_getTransactionCount(UPDATE_WISH_ADDRESS, "pending"), 16)
     signed_data = sign_transaction(
-      UPDATE_WISH_ADDRESS, nonce,
-      100000,
-      NETWORK_SIGN_TRANSACTION_WISH,
-      dest=MYWISH_ADDRESS,
-      contract_data=binascii.hexlify(
-        tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, int(amount)])
-      ).decode()
+        UPDATE_WISH_ADDRESS, nonce,
+        100000,
+        NETWORK_SIGN_TRANSACTION_WISH,
+        dest=MYWISH_ADDRESS,
+        contract_data=binascii.hexlify(
+            tr.encode_function_call('transfer', [COLD_WISH_ADDRESS, int(amount)])
+        ).decode()
+
     )
     tx_hash = eth_int.eth_sendRawTransaction(
       '0x' + signed_data

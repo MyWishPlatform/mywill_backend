@@ -652,7 +652,7 @@ class CommonDetails(models.Model):
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         print('nonce', nonce)
         signed_data = sign_transaction(
-            address, nonce, 600000, self.contract.network.name,
+            address, nonce, 600000, self.contract.network.name, self.contract.network_id,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])
