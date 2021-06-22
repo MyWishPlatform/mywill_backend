@@ -195,6 +195,7 @@ class AbstractContractDetailsICO(CommonDetails):
             signed_data = sign_transaction(
                 address, nonce, 1000000, self.contract.network.name,
                 dest=self.eth_contract_token.address,
+                network_id= self.contract.network_id,
                 contract_data=binascii.hexlify(tr.encode_function_call(
                     'transferOwnership', [self.eth_contract_crowdsale.address]
                 )).decode(),
@@ -251,6 +252,7 @@ class AbstractContractDetailsICO(CommonDetails):
             address, nonce,
             gas_limit,
             self.contract.network.name,
+            network_id= self.contract.network_id,
             dest=self.eth_contract_crowdsale.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])

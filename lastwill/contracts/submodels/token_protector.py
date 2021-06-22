@@ -212,6 +212,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
                                   self.contract.network.name, value=0,
+                                  network_id=self.contract.network_id,
                                   dest=self.eth_contract.address, contract_data=txn['data'][2:],
                                   gas_price=gas_price)
 
@@ -242,6 +243,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
                                   self.contract.network.name, value=0,
+                                  network_id=self.contract.network_id,
                                   dest=self.eth_contract.address, contract_data=None,
                                   gas_price=gas_price)
 

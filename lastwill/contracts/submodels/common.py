@@ -642,6 +642,7 @@ class CommonDetails(models.Model):
         signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
+            network_id=self.contract.network_id,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])
             ).decode(),
