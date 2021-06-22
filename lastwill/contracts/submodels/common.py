@@ -6,8 +6,6 @@ import pika
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
-import string
-import random
 
 from django.db import models
 from django.apps import apps
@@ -20,10 +18,11 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
-from lastwill.promo.models import Promo, Promo2ContractType
+from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
+    AVAILABLE_CONTRACT_TYPES
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
@@ -542,38 +541,12 @@ class CommonDetails(models.Model):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-    # def id_generator(size=10, chars=string.ascii_uppercase + string.digits):
-    #     return ''.join(random.choice(chars) for _ in range(size))
-    #
-    # def generate_promocode(
-    #         promo_str, contract_types, discount, reusable=False, start=None,
-    #         stop=None, use_count=0, use_count_max=None
-    # ):
-    #     promo = Promo.objects.filter(promo_str=promo_str.id_generator().upper()).first()
-    #     if promo is not None:
-    #         print('this promocode already exists')
-    #         return
-    #     else:
-    #         if start is None and stop is None:
-    #             start = datetime.datetime.now().date()
-    #             stop = datetime.datetime(start.year + 1, start.month, start.day).date()
-    #         promo = Promo(
-    #             promo_str=promo_str, start=start, stop=stop,
-    #             use_count=use_count, use_count_max=use_count_max, reusable=reusable,
-    #         )
-    #         promo.save()
-    #         for ct in contract_types:
-    #             p2c = Promo2ContractType(
-    #                 promo=promo, discount=discount, contract_type=ct
-    #             )
-    #             p2c.save()
-    #         return promo
-
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
-        promocode = self.generate_promocode(range(40), 15)
+        network_contracts = AVAILABLE_CONTRACT_TYPES[self.contract.network.id]
+        promocode = create_promocode(range(40), discount=15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
@@ -582,14 +555,13 @@ class CommonDetails(models.Model):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            # if DeployAddress.network in [3, 5, 7, 11, 14, 16, 22, 24, 28, 35]:
             if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,
                     eos_account_message.format(
                         link=network_link.format(address=self.account_name),
                         network_name=network_name,
-                        # promocode=promocode
+                        promocode=promocode
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -600,7 +572,7 @@ class CommonDetails(models.Model):
                     eos_contract_message.format(
                         token_name=self.token_short_name,
                         network_name=network_name,
-                        # promocode=promocode
+                        promocode=promocode
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -608,18 +580,33 @@ class CommonDetails(models.Model):
             elif self.contract.contract_type == 20:
                 pass
             else:
-                send_mail(
-                    common_subject,
-                    common_text.format(
-                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                            'name'],
-                        link=network_link.format(address=eth_contract.address),
-                        network_name=network_name,
-                        # promocode=promocode
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
+                for contract_dict in network_contracts:
+                    if self.contract.network.id in NETWORK_TYPES['mainnet'] and \
+                            contract_dict['contract_type'] == self.contract.contract_type:
+                        send_mail(
+                            common_subject,
+                            common_text.format(
+                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                    'name'],
+                                link=network_link.format(address=eth_contract.address),
+                                network_name=network_name,
+                                promocode=promocode
+                            ),
+                            DEFAULT_FROM_EMAIL,
+                            [self.contract.user.email]
+                        )
+                if self.contract.network.id in NETWORK_TYPES['testnet']:
+                    send_mail(
+                        common_subject,
+                        common_text.format(
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                'name'],
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name,
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
 
     def get_value(self):
         return 0

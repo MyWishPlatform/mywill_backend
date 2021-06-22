@@ -103,7 +103,7 @@ CONTRACT_PRICE_USDT = {
 
     'XINFIN_TOKEN': 350,
 
-    'HECOCHAIN_TOKEN': 35,
+    'HECOCHAIN_TOKEN': 149,
     'HECOCHAIN_ICO': 35,
 
 }
@@ -251,12 +251,25 @@ AVAILABLE_CONTRACT_TYPES = {
         {'contract_type': 15, 'contract_name': 'Token'},
         {'contract_type': 16, 'contract_name': 'GameAsset'},
         {'contract_type': 17, 'contract_name': 'AirDrop'}
-    ]
+    ],
+    28: [
+        {'contract_type': 28, 'contract_name': 'Token'}
+    ],
+    33: [
+        {'contract_type': 33, 'contract_name': 'Token'},
+        {'contract_type': 34, 'contract_name': 'Airdrop'}
+    ],
+    35: [
+        {'contract_type': 35, 'contract_name': 'Token'}
+        ],
+    36: [
+        {'contract_type': 36, 'contract_name': 'Token'}
+    ],
 }
 
 NETWORK_TYPES = {
-    'testnet': [2, 4, 6, 11, 15],
-    'mainnet': [1, 3, 5, 10, 14]
+    'testnet': [2, 4, 6, 11, 15, 16, 25, 23, 17],
+    'mainnet': [1, 3, 5, 10, 14, 28, 35, 24, 22, 16]
 }
 
 ALL_CONTRACT_STATES = [
