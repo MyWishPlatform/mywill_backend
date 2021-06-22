@@ -32,7 +32,7 @@ def create_promocode(
                 promo=promo, discount=discount, contract_type=ct
             )
             p2c.save()
-        return promo
+        return promo_str
 
 
 def get_all_promos():
