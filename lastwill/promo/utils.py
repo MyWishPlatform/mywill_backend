@@ -33,20 +33,3 @@ def create_promocode(
             )
             p2c.save()
         return promo_str
-
-
-def get_all_promos():
-    count = 0
-    for promo in Promo.objects.all():
-        print(
-            'promo: ' + str(promo.promo_str),
-            'start_date: ' + str(promo.start),
-            'stop_date: ' + str(promo.stop),
-            'used_times: ' + str(promo.use_count),
-            'is_limited: ' + str(promo.use_count_max),
-            '---------------',
-            sep='\n'
-        )
-        print()
-        count += 1
-    print('Promos total', count)
