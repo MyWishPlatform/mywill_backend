@@ -582,10 +582,13 @@ class CommonDetails(models.Model):
                 pass
             else:
                 for contract_dict in network_contracts:
-                    if self.contract.network.id in NETWORK_TYPES['mainnet'] and \
-                            contract_dict['contract_type'] == self.contract.contract_type: # and \
-                        print('test')
-                            # contract_dict['contract_name'] == 'Token':
+                    if self.contract.network.id in NETWORK_TYPES['mainnet']:
+                        print('biba')
+                        if contract_dict['contract_type'] == self.contract.contract_type:
+                            print('boba')
+                            if contract_dict['contract_name'] == 'Token':
+                                print('aboba')
+
                         send_mail(
                             common_subject,
                             sale_message.format(
