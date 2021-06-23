@@ -265,10 +265,6 @@ AVAILABLE_CONTRACT_TYPES = {
     35: [
         {'contract_type': 35, 'contract_name': 'Token'}
         ],
-    36: [
-        {'contract_type': 36, 'contract_name': 'Token'},
-        {'contract_type': 37, 'contract_name': 'ICO'}
-    ],
 }
 
 NETWORK_TYPES = {
