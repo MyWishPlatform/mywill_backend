@@ -567,6 +567,7 @@ class CommonDetails(models.Model):
                     [self.contract.user.email]
                 )
             elif self.contract.contract_type == 10:
+                eos_contract_message += sale_message + firewell_message
                 send_mail(
                     eos_contract_subject,
                     eos_contract_message.format(
@@ -584,6 +585,7 @@ class CommonDetails(models.Model):
                     if self.contract.network.id in NETWORK_TYPES['mainnet'] and \
                             contract_dict['contract_type'] == self.contract.contract_type and \
                             contract_dict['contract_name'] == 'Token':
+                        common_text += sale_message + firewell_message
                         send_mail(
                             common_subject,
                             common_text.format(
