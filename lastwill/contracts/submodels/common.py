@@ -590,19 +590,19 @@ class CommonDetails(models.Model):
                             print(self.contract.contract_type)
                             if contract_dict['contract_type'] == self.contract.contract_type:
                                 print('boba')
-                        send_mail(
-                            common_subject,
-                            sale_message.format(
-                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                    'name'],
-                                link=network_link.format(address=eth_contract.address),
-                                network_name=network_name,
-                                promocode=promocode
-                            ),
-                            DEFAULT_FROM_EMAIL,
-                            [self.contract.user.email]
-                        )
-                        break
+                                send_mail(
+                                    common_subject,
+                                    sale_message.format(
+                                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                            'name'],
+                                        link=network_link.format(address=eth_contract.address),
+                                        network_name=network_name,
+                                        promocode=promocode
+                                    ),
+                                    DEFAULT_FROM_EMAIL,
+                                    [self.contract.user.email]
+                                )
+                                break
                 else:
                     send_mail(
                         common_subject,
