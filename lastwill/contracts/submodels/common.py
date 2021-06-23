@@ -554,11 +554,12 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
+
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,
-                    eos_account_message.format(
+                    eos_contract_message.format(
                         link=network_link.format(address=self.account_name),
                         network_name=network_name,
                         promocode=promocode
@@ -567,7 +568,6 @@ class CommonDetails(models.Model):
                     [self.contract.user.email]
                 )
             elif self.contract.contract_type == 10:
-                eos_contract_message += sale_message + firewell_message
                 send_mail(
                     eos_contract_subject,
                     eos_contract_message.format(
@@ -585,10 +585,9 @@ class CommonDetails(models.Model):
                     if self.contract.network.id in NETWORK_TYPES['mainnet'] and \
                             contract_dict['contract_type'] == self.contract.contract_type and \
                             contract_dict['contract_name'] == 'Token':
-                        common_text += sale_message + firewell_message
                         send_mail(
                             common_subject,
-                            common_text.format(
+                            sale_message.format(
                                 contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
                                     'name'],
                                 link=network_link.format(address=eth_contract.address),

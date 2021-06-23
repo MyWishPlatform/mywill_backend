@@ -31,7 +31,8 @@ common_text = """Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 {contract_type_name}: {link}
 \n
-
+Best Wishes,
+MyWish Team
 """
 
 ico_subject = """Your contract is ready"""
@@ -299,7 +300,12 @@ You can cancel it in your profile on protector.mywish.io
 Best Wishes,
 MyWish Team"""
 
-sale_message = """We hope our cooperation will last long and would like to grant you a 15% discount promo code for 
+sale_message = """
+Hello,
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
+{contract_type_name}: {link}
+
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for 
 further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
 
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
@@ -329,15 +335,13 @@ https://docs.pancakeswap.finance/exchange/pancakeswap-pools
 Uniswap (available for ERC20 tokens only)
 https://defiprime.com/uniswap-liquidity-pools
 JustSwap (available for TRC20 tokens only)
-https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide"""
+https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
+
+Best wishes,
+Swaps Team. """
+
+firewell_message = """Best wishes,
+Swaps Team. """
 
 
-firewell_message = """
 
-Best Wishes,
-MyWish Team"""
-
-swaps_deploed_message += sale_message + firewell_message
-waves_sto_text += sale_message + firewell_message
-neo_token_text += sale_message + firewell_message
-tron_deploy_text += sale_message + firewell_message
