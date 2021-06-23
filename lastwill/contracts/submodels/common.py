@@ -545,7 +545,6 @@ class CommonDetails(models.Model):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
-        network_contracts = AVAILABLE_CONTRACT_TYPES[self.contract.network.id]
         promocode = create_promocode(range(40), discount=15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
@@ -581,14 +580,14 @@ class CommonDetails(models.Model):
             elif self.contract.contract_type == 20:
                 pass
             else:
+                network_contracts = AVAILABLE_CONTRACT_TYPES[self.contract.network.id]
                 for contract_dict in network_contracts:
                     if self.contract.network.id in NETWORK_TYPES['mainnet']:
                         print('biba')
-                        if contract_dict['contract_type'] == self.contract.contract_type:
-                            print('boba')
-                            if contract_dict['contract_name'] == 'Token':
-                                print('aboba')
-
+                        if contract_dict['contract_name'] == 'Token':
+                            print('aboba')
+                            if contract_dict['contract_type'] == self.contract.contract_type:
+                                print('boba')
                         send_mail(
                             common_subject,
                             sale_message.format(
