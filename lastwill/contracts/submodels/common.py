@@ -596,18 +596,19 @@ class CommonDetails(models.Model):
                             DEFAULT_FROM_EMAIL,
                             [self.contract.user.email]
                         )
-                if self.contract.network.id in NETWORK_TYPES['testnet']:
-                    send_mail(
-                        common_subject,
-                        common_text.format(
-                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                'name'],
-                            link=network_link.format(address=eth_contract.address),
-                            network_name=network_name,
-                        ),
-                        DEFAULT_FROM_EMAIL,
-                        [self.contract.user.email]
-                    )
+                        break
+                    else:
+                        send_mail(
+                            common_subject,
+                            common_text.format(
+                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                    'name'],
+                                link=network_link.format(address=eth_contract.address),
+                                network_name=network_name,
+                            ),
+                            DEFAULT_FROM_EMAIL,
+                            [self.contract.user.email]
+                        )
 
     def get_value(self):
         return 0
