@@ -553,7 +553,6 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(
