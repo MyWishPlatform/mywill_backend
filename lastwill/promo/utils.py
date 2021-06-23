@@ -13,7 +13,6 @@ def create_promocode(
         contract_types, discount, reusable=False, start=None,
         stop=None, use_count=0, use_count_max=None, promo_str=id_generator()
 ):
-
     promo = Promo.objects.filter(promo_str=promo_str).first()
     if promo is not None:
         print('this promocode already exists')
