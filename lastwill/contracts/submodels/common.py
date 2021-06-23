@@ -583,8 +583,8 @@ class CommonDetails(models.Model):
             else:
                 for contract_dict in network_contracts:
                     if self.contract.network.id in NETWORK_TYPES['mainnet'] and \
-                            contract_dict['contract_type'] == self.contract.contract_type: #and \
-                            # contract_dict['contract_name'] == 'Token':
+                            contract_dict['contract_type'] == self.contract.contract_type and \
+                            contract_dict['contract_name'] == 'Token':
                         send_mail(
                             common_subject,
                             sale_message.format(
@@ -598,18 +598,18 @@ class CommonDetails(models.Model):
                             [self.contract.user.email]
                         )
                         break
-                    else:
-                        send_mail(
-                            common_subject,
-                            common_text.format(
-                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                    'name'],
-                                link=network_link.format(address=eth_contract.address),
-                                network_name=network_name,
-                            ),
-                            DEFAULT_FROM_EMAIL,
-                            [self.contract.user.email]
-                        )
+                else:
+                    send_mail(
+                        common_subject,
+                        common_text.format(
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                'name'],
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name,
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
 
     def get_value(self):
         return 0
