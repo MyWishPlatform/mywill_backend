@@ -586,6 +586,8 @@ class CommonDetails(models.Model):
                         print('biba')
                         if contract_dict['contract_name'] == 'Token':
                             print('aboba')
+                            print(contract_dict['contract_type'])
+                            print(self.contract.contract_type)
                             if contract_dict['contract_type'] == self.contract.contract_type:
                                 print('boba')
                         send_mail(
