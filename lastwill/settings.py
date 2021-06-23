@@ -182,7 +182,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SIGNER='127.0.0.1:27277'
+SIGNER='127.0.0.1:5000'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
@@ -267,6 +267,8 @@ WEB3_ATTEMPT_COOLDOWN = 10
 
 BSC_WEB3_ATTEMPTS = 10
 
+XIN_ATTEMPTS = 10
+
 VERIFICATION_CONTRACTS_IDS = (
     4,  # common ICO
     5,  # common Token
@@ -277,6 +279,9 @@ VERIFICATION_CONTRACTS_IDS = (
     15,  # tron Token
     16,  # tron GameAsset
     17,  # tron AirDrop
+    35,  # xin Token
+    36,  # hecochain Token
+    37,  # hecochain Crowdsale
 )
 
 try:

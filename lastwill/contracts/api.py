@@ -143,6 +143,14 @@ def get_token_contracts(request):
             contract__network=network_id,
         )
         get_binance_token_contracts(binance_contracts, res)
+    elif network_id in [35]:
+        xin_contracts = EthContract.objects.filter(
+            contract__contract_type=35,
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
+        )
+        get_xinfin_token_contracts(xin_contracts, res)
     else:
         matic_contracts = EthContract.objects.filter(
             contract__contract_type__in=(32, 33),
@@ -219,6 +227,25 @@ def get_matic_token_contracts(matic_contracts, res):
                 state = 'closed'
             else:
                 state = 'ok'
+            res.append({
+                'id': ec.id,
+                'address': ec.address,
+                'token_name': details.token_name,
+                'token_short_name': details.token_short_name,
+                'decimals': details.decimals,
+                'state': state
+            })
+
+
+def get_xinfin_token_contracts(xin_contracts, res):
+    for ec in xin_contracts:
+        details = ec.contract.get_details()
+        if any([x.contract.contract_type == 35 and x.contract.state == 'ENDED' for x in
+                ec.xinfin_token_details_token.all()]):
+            state = 'closed'
+        else:
+            state = 'ok'
+
             res.append({
                 'id': ec.id,
                 'address': ec.address,
@@ -310,7 +337,7 @@ def i_am_alive(request):
 def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
     if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (
-    0, 1, 18):
+            0, 1, 18):
         raise PermissionDenied()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'cancel', queue)
@@ -358,7 +385,8 @@ def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
         data = response.text
         # print(data)
     except (
-    requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.TooManyRedirects) as e:
+            requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+            requests.exceptions.TooManyRedirects) as e:
         print(e)
         data = {'error': 'Exception in fetching coinmarketcap statistics'}
         return data
@@ -1491,17 +1519,17 @@ def buy_verification(request):
     details.verification_date_payment = datetime.datetime.now().date()
     details.save()
 
-    if contract.contract_type in (5, 28):
+    if contract.contract_type in (5, 28, 35, 36):
         send_verification_mail(
             network=details.contract.network.name,
-            addresses=(details.eth_contract_token.address, ),
+            addresses=(details.eth_contract_token.address,),
             compiler=details.eth_contract_token.compiler_version,
             files={'token.sol': details.eth_contract_token.source_code},
         )
-    elif contract.contract_type in (4, 27):
+    elif contract.contract_type in (4, 27, 37):
         send_verification_mail(
             network=details.contract.network.name,
-            addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address, ),
+            addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address,),
             compiler=details.eth_contract_token.compiler_version,
             files={
                 'token.sol': details.eth_contract_token.source_code,

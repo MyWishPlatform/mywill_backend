@@ -226,7 +226,8 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
-def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None):
+def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None,
+                     network_id=None):
     data = {
         'from': address,
         'nonce': nonce,
@@ -241,6 +242,8 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         data['data'] = contract_data
     if gas_price:
         data['gas_price'] = gas_price
+    if network_id:
+        data['chainID'] = network_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
     signed_data = json.loads(requests.post(
@@ -357,6 +360,9 @@ class Contract(models.Model):
         matic_ico = apps.get_model('contracts', 'ContractDetailsMaticICO')
         matic_token = apps.get_model('contracts', 'ContractDetailsMaticToken')
         matic_airdrop = apps.get_model('contracts', 'ContractDetailsMaticAirdrop')
+        xinfin_token = apps.get_model('contracts', 'ContractDetailsXinFinToken')
+        hecochain_token = apps.get_model('contracts', 'ContractDetailsHecoChainToken')
+        hecochain_ico = apps.get_model('contracts', 'ContractDetailsHecoChainICO')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -394,7 +400,9 @@ class Contract(models.Model):
         contract_details_types[32] = {'name': 'Matic MyWish ICO', 'model': matic_ico}
         contract_details_types[33] = {'name': 'Matic Token contract', 'model': matic_token}
         contract_details_types[34] = {'name': 'Matic Airdrop', 'model': matic_airdrop}
-
+        contract_details_types[35] = {'name': 'XinFin Token contract', 'model': xinfin_token}
+        contract_details_types[36] = {'name': 'HecoChain Token contract', 'model': hecochain_token}
+        contract_details_types[37] = {'name': 'HecoChain MyWish ICO', 'model': hecochain_ico}
         return contract_details_types
 
     @classmethod
@@ -477,9 +485,10 @@ class CommonDetails(models.Model):
         for attempt in range(attempts):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
-                nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+                nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
                 gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
+
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
             time.sleep(WEB3_ATTEMPT_COOLDOWN)
@@ -487,8 +496,8 @@ class CommonDetails(models.Model):
             raise Exception(f'cannot get nonce with {attempts} attempts')
 
         print('nonce', nonce, flush=True)
-        # print('BYTECODE', eth_contract.bytecode, flush=True)
-        # print('CONTRACT CODE', eth_contract.bytecode + binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
+        # print('BYTECODE', eth_contract.bytecode, flush=True) print('CONTRACT CODE', eth_contract.bytecode +
+        # binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
         data = eth_contract.bytecode + (binascii.hexlify(
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else '')

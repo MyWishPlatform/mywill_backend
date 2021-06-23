@@ -1,4 +1,4 @@
-MAX_WEI_DIGITS = len(str(2**256))
+MAX_WEI_DIGITS = len(str(2 ** 256))
 MAIL_NETWORK = {
     'ETHEREUM_MAINNET': 'Ethereum',
     'ETHEREUM_ROPSTEN': 'Ropsten (Ethereum Testnet)',
@@ -16,6 +16,9 @@ MAIL_NETWORK = {
     'BINANCE_SMART_TESTNET': 'Binance Testnet',
     'MATIC_MAINNET': 'Matic',
     'MATIC_TESTNET': 'Mumbai (Matic Testnet)',
+    'XINFIN_MAINNET': 'XinFin',
+    'HECOCHAIN_MAINNET': 'HecoChain',
+    'HECOCHAIN_TESTNET': 'HecoChainTest',
 }
 
 API_NETWORK = {
@@ -33,6 +36,9 @@ API_NETWORK = {
     'BINANCE_SMART_TESTNET': 'BINANCE_SMART_TESTNET',
     'MATIC_MAINNET': 'MATIC_MAINNET',
     'MATIC_TESTNET': 'MATIC_TESTNET',
+    'XINFIN_MAINNET': 'XINFIN_MAINNET',
+    'HECOCHAIN_MAINNET': 'HECOCHAIN_MAINNET',
+    'HECOCHAIN_TESTNET': 'HECOCHAIN_TESTNET',
 }
 
 NETWORK_SUBSITE = {
@@ -46,24 +52,28 @@ NETWORK_SUBSITE = {
     'EOS_TESTNET': 2,
     'TRON_MAINNET': 1,
     'TRON_TESTNET': 1,
-    'BINANCE_SMART_MAINNET' :1,
+    'BINANCE_SMART_MAINNET': 1,
     'BINANCE_SMART_TESTNET': 1,
     'MATIC_MAINNET': 1,
     'MATIC_TESTNET': 1,
+    'XINFIN_MAINNET': 1,
+    'HECOCHAIN_MAINNET': 1,
+    'HECOCHAIN_TESTNET': 1,
+
 }
 
 CONTRACT_PRICE_USDT = {
     'ETH_LASTWILL': 30,
     'ETH_DEFFERED': 30,
-    'ETH_ICO': 2459,
-    'ETH_TOKEN': 1699,
+    'ETH_ICO': 1249,
+    'ETH_TOKEN': 849,
     'ETH_TOKEN_AUTHIO': 450,
-    'ETH_AIRDROP': 1897,
-    'ETH_INVPOOL': 1265,
+    'ETH_AIRDROP': 949,
+    'ETH_INVPOOL': 1049,
     'ETH_LOSTKEY': 50,
-    'ETH_LOSTKEY_TOKENS': 395,
+    'ETH_LOSTKEY_TOKENS': 349,
     'ETH_SWAPS': 10,
-    'ETH_TOKEN_PROTECTOR': 1097,
+    'ETH_TOKEN_PROTECTOR': 549,
 
     'EOS_ACCOUNT': 55,
     'EOS_ICO': 345,
@@ -90,6 +100,12 @@ CONTRACT_PRICE_USDT = {
     'MATIC_TOKEN': 99,
     'MATIC_ICO': 99,
     'MATIC_AIRDROP': 99,
+
+    'XINFIN_TOKEN': 350,
+
+    'HECOCHAIN_TOKEN': 149,
+    'HECOCHAIN_ICO': 35,
+
 }
 
 CONTRACT_PRICE_ETH = {
@@ -152,6 +168,8 @@ NET_DECIMALS = {
     'SWAP': 10 ** 18,
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
+    'XIN': 10 ** 18,
+    'HT': 10 ** 18,  # HecoChain
 }
 
 TRON_REPLENISH_THRESHOLD = {
@@ -261,18 +279,18 @@ API_CONTRACT_PRICES = [
     {'contract_type': 0, 'contract_name': 'LastWill', 'price': 0.257 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
     {'contract_type': 1, 'contract_name': 'LostKey', 'price': 0.2 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
     {'contract_type': 2, 'contract_name': 'DefferedPayment', 'price': 0.025 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 4, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 5, 'contract_name': 'Token', 'price': CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 8, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 9, 'contract_name': 'InvestmentPool', 'price': CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 10, 'contract_name': 'Token', 'price': CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 11, 'contract_name': 'Account', 'price': CONTRACT_PRICE_EOS['EOS_ACCOUNT'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 12, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 13, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_EOS['EOS_AIRDROP'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 14, 'contract_name': 'TokenStandAlone', 'price': CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 15, 'contract_name': 'Token', 'price': CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
-    {'contract_type': 16, 'contract_name': 'GameAsset', 'price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
-    {'contract_type': 17, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
+    {'contract_type': 4, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'],'currency': 'ETH'},
+    {'contract_type': 5, 'contract_name': 'Token', 'price': CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'],'currency': 'ETH'},
+    {'contract_type': 8, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH'],'currency': 'ETH'},
+    {'contract_type': 9, 'contract_name': 'InvestmentPool','price': CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
+    {'contract_type': 10, 'contract_name': 'Token', 'price': CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'],'currency': 'EOS'},
+    {'contract_type': 11, 'contract_name': 'Account', 'price': CONTRACT_PRICE_EOS['EOS_ACCOUNT'] * NET_DECIMALS['EOS'],'currency': 'EOS'},
+    {'contract_type': 12, 'contract_name': 'ICO', 'price': CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'],'currency': 'EOS'},
+    {'contract_type': 13, 'contract_name': 'AirDrop', 'price': CONTRACT_PRICE_EOS['EOS_AIRDROP'] * NET_DECIMALS['EOS'],'currency': 'EOS'},
+    {'contract_type': 14, 'contract_name': 'TokenStandAlone','price': CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
+    {'contract_type': 15, 'contract_name': 'Token', 'price': CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['TRX'],'currency': 'TRX'},
+    {'contract_type': 16, 'contract_name': 'GameAsset','price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
+    {'contract_type': 17, 'contract_name': 'AirDrop','price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
 ]
 
 ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
@@ -287,6 +305,9 @@ ETH_COMMON_GAS_PRICES = {
     'BINANCE_SMART_MAINNET': 20,
     'MATIC_MAINNET': 1,
     'MATIC_TESTNET': 20,
+    'XINFIN_MAINNET': 3,
+    'HECOCHAIN_MAINNET': 6,
+    'HECOCHAIN_TESTNET': 6,
 }
 
 EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS = {
@@ -316,4 +337,6 @@ EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS = {
 
 VERIFICATION_PRICE_USDT = 450
 
+
 AUTHIO_PRICE_USDT = 1500
+

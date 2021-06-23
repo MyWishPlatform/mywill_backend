@@ -4,6 +4,7 @@ import binascii
 import string
 import random
 import uuid
+
 from ethereum.abi import method_id as m_id
 from eth_utils import int_to_big_endian
 
@@ -34,6 +35,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
+    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -345,6 +347,9 @@ class ContractSerializer(serializers.ModelSerializer):
             32: ContractDetailsMaticICOSerializer,
             33: ContractDetailsMaticTokenSerializer,
             34: ContractDetailsMaticAirdropSerializer,
+            35: ContractDetailsXinFinTokenSerializer,
+            36: ContractDetailsHecoChainTokenSerializer,
+            37: ContractDetailsHecoChainICOSerializer,
         }[contract_type]
 
 
@@ -738,13 +743,20 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         }
 
     def create(self, contract, contract_details):
+
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
+            if th_json['address'][:3] == 'xdc':
+                th_json['address'].replace('xdc', '0x')
+                th_json['address'] = th_json['address'].replace('xdc', '0x')
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
+        if contract.network.name == 'XINFIN_MAINNET' and kwargs['admin_address'][0:3] == 'xdc':
+            address = kwargs['admin_address'].replace('xdc', '0x')
+            kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
         return super().create(kwargs)
 
@@ -762,9 +774,15 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             raise ValidationError
         if details['token_name'] == '' or details['token_short_name'] == '':
             raise ValidationError
-        check.is_address(details['admin_address'])
+        try:
+            check.is_address(details['admin_address'])
+        except ValidationError:
+            check.is_xin_address(details['admin_address'])
         for th in details['token_holders']:
-            check.is_address(th['address'])
+            try:
+                check.is_address(th['address'])
+            except ValidationError:
+                check.is_xin_address(th['address'])
             if th['amount'] <= 0:
                 raise ValidationError
             if th['freeze_date'] is not None and th['freeze_date'] < now:
@@ -777,6 +795,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
+
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
                                 contract_details.contract.tokenholder_set.order_by('id').all()]
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
@@ -793,10 +812,15 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         token_holders = contract_details.pop('token_holders')
         for th_json in token_holders:
             th_json['address'] = th_json['address'].lower()
+            if th_json['address'][:3] == 'xdc':
+                th_json['address'] = th_json['address'].replace('xdc', '0x')
             kwargs = th_json.copy()
             kwargs['contract'] = contract
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
+        if contract.network.name == 'XINFIN_MAINNET' and kwargs['admin_address'][0:3] == 'xdc':
+            address = kwargs['admin_address'].replace('xdc', '0x')
+            kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
         kwargs.pop('eth_contract_token', None)
         return super().update(details, kwargs)
@@ -1949,6 +1973,18 @@ class ContractDetailsMaticICOSerializer(ContractDetailsICOSerializer):
         return res
 
 
+class ContractDetailsHecoChainICOSerializer(ContractDetailsICOSerializer):
+    class Meta(ContractDetailsICOSerializer.Meta):
+        model = ContractDetailsHecoChainICO
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        if contract_details.contract.network.name in ['HECOCHAIN_TESTNET']:
+            res['eth_contract_token']['source_code'] = ''
+            res['eth_contract_crowdsale']['source_code'] = ''
+        return res
+
+
 class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
         model = ContractDetailsMaticToken
@@ -1966,3 +2002,13 @@ class ContractDetailsMaticTokenSerializer(ContractDetailsTokenSerializer):
         if contract_details.contract.network.name in ['MATIC_TESTNET']:
             res['eth_contract_token']['source_code'] = ''
         return res
+
+
+class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsXinFinToken
+
+
+class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsHecoChainToken
