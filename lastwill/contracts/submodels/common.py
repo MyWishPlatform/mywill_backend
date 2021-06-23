@@ -584,26 +584,23 @@ class CommonDetails(models.Model):
                 for contract_dict in network_contracts:
                     if self.contract.network.id in NETWORK_TYPES['mainnet']:
                         print('biba')
-
                         print(contract_dict['contract_type'])
                         print(self.contract.contract_type)
                         if contract_dict['contract_type'] == self.contract.contract_type:
                             print('aboba')
-                            if contract_dict['contract_name'] == 'Token':
-                                print('boba')
-                                send_mail(
-                                    common_subject,
-                                    sale_message.format(
-                                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                            'name'],
-                                        link=network_link.format(address=eth_contract.address),
-                                        network_name=network_name,
-                                        promocode=promocode
-                                    ),
-                                    DEFAULT_FROM_EMAIL,
-                                    [self.contract.user.email]
-                                )
-                                break
+                            send_mail(
+                                common_subject,
+                                sale_message.format(
+                                    contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                        'name'],
+                                    link=network_link.format(address=eth_contract.address),
+                                    network_name=network_name,
+                                    promocode=promocode
+                                ),
+                                DEFAULT_FROM_EMAIL,
+                                [self.contract.user.email]
+                            )
+                            break
                 else:
                     send_mail(
                         common_subject,
