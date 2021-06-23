@@ -267,12 +267,12 @@ AVAILABLE_CONTRACT_TYPES = {
     ],
     36: [
         {'contract_type': 36, 'contract_name': 'Token'}
-    ]
+    ],
 }
 
 NETWORK_TYPES = {
     'testnet': [2, 4, 6, 11, 15, 16, 25, 23, 17, 19, 32],
-    'mainnet': [1, 3, 5, 10, 14, 28, 35, 24, 22, 16, 18, 17, 36]
+    'mainnet': [1, 3, 5, 10, 14, 28, 35, 24, 22, 16, 18, 17]
 }
 
 ALL_CONTRACT_STATES = [

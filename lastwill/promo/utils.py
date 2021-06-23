@@ -11,7 +11,7 @@ def id_generator(size=10):
 
 def create_promocode(
         contract_types, discount, reusable=False, start=None,
-        stop=None, use_count=0, use_count_max=None, promo_str=id_generator()
+        stop=None, use_count=0, use_count_max=None, promo_str=id_generator
 ):
     promo = Promo.objects.filter(promo_str=promo_str).first()
     if promo is not None:
@@ -31,4 +31,5 @@ def create_promocode(
                 promo=promo, discount=discount, contract_type=ct
             )
             p2c.save()
+            print(promo_str)
         return promo_str
