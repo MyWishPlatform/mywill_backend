@@ -336,7 +336,7 @@ firewell_message = """
 
 Best Wishes,
 MyWish Team"""
-common_text += sale_message + firewell_message
+common_text = common_text+sale_message + firewell_message
 eos_contract_message += sale_message + firewell_message
 swaps_deploed_message += sale_message + firewell_message
 waves_sto_text += sale_message + firewell_message
