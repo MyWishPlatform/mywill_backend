@@ -487,7 +487,7 @@ class CommonDetails(models.Model):
                 nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
                 if self.contract.network.name == 'ETHEREUM_MAINNET':
                     try:
-                        response = requests.get(f'{GAS_API_URL}').json()
+                        response = requests.get(GAS_API_URL).json()
                         gas_price_current = response[SPEEDLVL] / 10
                         gas_price_current = gas_price_current * 10 ** 9
                         break
