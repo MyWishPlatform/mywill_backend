@@ -1519,14 +1519,14 @@ def buy_verification(request):
     details.verification_date_payment = datetime.datetime.now().date()
     details.save()
 
-    if contract.contract_type in (5, 28, 35):
+    if contract.contract_type in (5, 28, 35, 36):
         send_verification_mail(
             network=details.contract.network.name,
             addresses=(details.eth_contract_token.address,),
             compiler=details.eth_contract_token.compiler_version,
             files={'token.sol': details.eth_contract_token.source_code},
         )
-    elif contract.contract_type in (4, 27):
+    elif contract.contract_type in (4, 27, 37):
         send_verification_mail(
             network=details.contract.network.name,
             addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address,),

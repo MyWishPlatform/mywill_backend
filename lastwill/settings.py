@@ -280,6 +280,8 @@ VERIFICATION_CONTRACTS_IDS = (
     16,  # tron GameAsset
     17,  # tron AirDrop
     35,  # xin Token
+    36,  # hecochain Token
+    37,  # hecochain Crowdsale
 )
 
 try:
@@ -357,6 +359,7 @@ COINGECKO_SYMBOLS = {
 }
 
 TEMP_SYMBOLS = {
+    'BSCBNB': 'BNB',
     'TRONISH': 'TRX',
     'EOSISH': 'EOS',
     'USD': 'USDT',
