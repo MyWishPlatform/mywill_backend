@@ -489,7 +489,7 @@ class CommonDetails(models.Model):
                     try:
                         response = requests.get(GAS_API_URL).json()
                         gas_price_current = response[SPEEDLVL] / 10
-                        gas_price_current = gas_price_current * 10 ** 9
+                        gas_price_current = int(gas_price_current * 10 ** 9)
                         break
                     except (requests.RequestException, KeyError):
                         print('gas station api is unavailable', flush=True)
