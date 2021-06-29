@@ -545,7 +545,6 @@ class CommonDetails(models.Model):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network = self.contract.network.name
         network_name = MAIL_NETWORK[network]
-        promocode = create_promocode(range(40), discount=15)
         take_off_blocking(self.contract.network.name)
         eth_contract = getattr(self, eth_contract_attr_name)
         eth_contract.address = message['address']
@@ -557,10 +556,9 @@ class CommonDetails(models.Model):
             if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,
-                    eos_contract_message.format(
+                    eos_account_message.format(
                         link=network_link.format(address=self.account_name),
-                        network_name=network_name,
-                        promocode=promocode
+                        network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -570,8 +568,7 @@ class CommonDetails(models.Model):
                     eos_contract_subject,
                     eos_contract_message.format(
                         token_name=self.token_short_name,
-                        network_name=network_name,
-                        promocode=promocode
+                        network_name=network_name
                     ),
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
@@ -582,11 +579,7 @@ class CommonDetails(models.Model):
                 network_contracts = AVAILABLE_CONTRACT_TYPES[self.contract.network.id]
                 for contract_dict in network_contracts:
                     if self.contract.network.id in NETWORK_TYPES['mainnet']:
-                        print('biba')
-                        print(contract_dict['contract_type'])
-                        print(self.contract.contract_type)
                         if contract_dict['contract_type'] == self.contract.contract_type:
-                            print('aboba')
                             send_mail(
                                 common_subject,
                                 sale_message.format(
@@ -594,7 +587,8 @@ class CommonDetails(models.Model):
                                         'name'],
                                     link=network_link.format(address=eth_contract.address),
                                     network_name=network_name,
-                                    promocode=promocode
+                                    promocode=create_promocode(range(40), discount=15),
+
                                 ),
                                 DEFAULT_FROM_EMAIL,
                                 [self.contract.user.email]
@@ -646,7 +640,6 @@ class CommonDetails(models.Model):
         signed_data = sign_transaction(
             address, nonce, 600000, self.contract.network.name,
             dest=self.eth_contract.address,
-            network_id=self.contract.network_id,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])
             ).decode(),
