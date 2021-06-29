@@ -340,7 +340,7 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
-firewell_message = """Best wishes,
+farewell_message = """Best wishes,
 Swaps Team. """
 
 
