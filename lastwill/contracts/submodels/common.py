@@ -263,6 +263,7 @@ def sign_neo_transaction(tx, binary_tx, address):
     return tx
 
 
+
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
 '''
@@ -576,24 +577,26 @@ class CommonDetails(models.Model):
             elif self.contract.contract_type == 20:
                 pass
             else:
-                network_contracts = AVAILABLE_CONTRACT_TYPES[self.contract.network.id]
-                for contract_dict in network_contracts:
-                    if self.contract.network.id in NETWORK_TYPES['mainnet']:
-                        if contract_dict['contract_type'] == self.contract.contract_type:
-                            send_mail(
-                                common_subject,
-                                sale_message.format(
-                                    contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                        'name'],
-                                    link=network_link.format(address=eth_contract.address),
-                                    network_name=network_name,
-                                    promocode=create_promocode(range(40), discount=15),
+                network_id = self.contract.network.id
+                types_info = AVAILABLE_CONTRACT_TYPES[network_id]
+                for type_info in types_info:
+                    if type_info['contract_type'] == self.contract.contract_type and \
+                            type_info['contract_name'] == 'Token' and \
+                            network_id in NETWORK_TYPES['mainnet']:
+                        send_mail(
+                            common_subject,
+                            sale_message.format(
+                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                    'name'],
+                                link=network_link.format(address=eth_contract.address),
+                                network_name=network_name,
+                                promocode=create_promocode(range(40), discount=15),
 
-                                ),
-                                DEFAULT_FROM_EMAIL,
-                                [self.contract.user.email]
-                            )
-                            break
+                            ),
+                            DEFAULT_FROM_EMAIL,
+                            [self.contract.user.email]
+                        )
+                        break
                 else:
                     send_mail(
                         common_subject,
