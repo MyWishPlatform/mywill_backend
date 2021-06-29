@@ -319,3 +319,46 @@ You can cancel it in your profile on protector.mywish.io
 
 Best Wishes,
 MyWish Team"""
+
+sale_message = """
+Hello,
+We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
+{contract_type_name}: {link}
+
+We hope our cooperation will last long and would like to grant you a 15% discount promo code for 
+further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
+
+Additionally, We have prepared a little guide for you on what to do after a token is created. 
+
+Airdrop
+Smart token distribution to thousands of addresses in batches is  available at https://airdrop.mywish.io
+
+CrowdSale Contract
+Start your ICO/Token sale with a few clicks at https://contracts.mywish.io/create
+
+Cross-Chain Bridge Service
+Apply for Cross-Chain Bridge to have your token wrapped to other blockchains 
+https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
+
+Contract verification
+Source code verification provides transparency for users interacting with smart contracts. 
+
+
+Brand Report
+The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
+
+How to list a token on PancakeSwap/Uniswap/JustSwap?
+
+Here you can find some guidelines of how to list your token on the mentioned above exchanges:
+PancakeSwap (available for BEP20 token only)
+https://docs.pancakeswap.finance/exchange/pancakeswap-pools
+Uniswap (available for ERC20 tokens only)
+https://defiprime.com/uniswap-liquidity-pools
+JustSwap (available for TRC20 tokens only)
+https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
+
+Best wishes,
+Swaps Team. """
+
+
+

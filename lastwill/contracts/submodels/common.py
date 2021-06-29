@@ -19,10 +19,12 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
+from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.settings import GAS_API_URL, SPEEDLVL
 from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
+    AVAILABLE_CONTRACT_TYPES
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
@@ -261,6 +263,7 @@ def sign_neo_transaction(tx, binary_tx, address):
         x['verification'].encode(),
     ) for x in scripts]
     return tx
+
 
 
 '''
@@ -584,16 +587,38 @@ class CommonDetails(models.Model):
             elif self.contract.contract_type == 20:
                 pass
             else:
-                send_mail(
-                    common_subject,
-                    common_text.format(
-                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
-                        link=network_link.format(address=eth_contract.address),
-                        network_name=network_name
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
+                network_id = self.contract.network.id
+                types_info = AVAILABLE_CONTRACT_TYPES[network_id]
+                for type_info in types_info:
+                    if type_info['contract_type'] == self.contract.contract_type and \
+                            type_info['contract_name'] == 'Token' and \
+                            network_id in NETWORK_TYPES['mainnet']:
+                        send_mail(
+                            common_subject,
+                            sale_message.format(
+                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                    'name'],
+                                link=network_link.format(address=eth_contract.address),
+                                network_name=network_name,
+                                promocode=create_promocode(range(40), discount=15),
+
+                            ),
+                            DEFAULT_FROM_EMAIL,
+                            [self.contract.user.email]
+                        )
+                        break
+                else:
+                    send_mail(
+                        common_subject,
+                        common_text.format(
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                'name'],
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name,
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
 
     def get_value(self):
         return 0
