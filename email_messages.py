@@ -343,7 +343,6 @@ https://cryptomywish.medium.com/mywish-cross-chain-bridge-c3de06e7865c
 Contract verification
 Source code verification provides transparency for users interacting with smart contracts. 
 
-
 Brand Report
 The branded report is needed for exchanges and gives the estimation of the security of your token contract. Every contract is verified independently.
 
