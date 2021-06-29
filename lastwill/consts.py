@@ -273,8 +273,8 @@ AVAILABLE_CONTRACT_TYPES = {
 }
 
 NETWORK_TYPES = {
-    'testnet': [2, 4, 6, 11, 15, 16, 25, 23, 17, 19, 32],
-    'mainnet': [1, 3, 5, 10, 14, 28, 35, 24, 22, 16, 18, 17]
+    'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36],
+    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35]
 }
 
 ALL_CONTRACT_STATES = [
