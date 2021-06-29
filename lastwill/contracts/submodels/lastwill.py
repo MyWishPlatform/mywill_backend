@@ -74,7 +74,6 @@ class AbstractContractDetailsLastwill(CommonDetails):
         nonce = int(eth_int.eth_getTransactionCount(wl_address, "pending"), 16)
         signed_data = sign_transaction(
             wl_address, nonce, gas_limit, self.contract.network.name,
-            network_id=self.contract.network_id,
             value=int(contract.get_details().btc_duty),
             dest=contract.get_details().eth_contract.address,
             gas_price=gas_price
@@ -220,7 +219,6 @@ class AbstractContractDetailsLastwill(CommonDetails):
         signed_data = sign_transaction(
             address, nonce, gas_limit, self.contract.network.name,
             dest=self.eth_contract.address,
-            network_id=self.contract.network_id,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('imAvailable', [])
             ).decode(),
@@ -241,7 +239,6 @@ class AbstractContractDetailsLastwill(CommonDetails):
         signed_data = sign_transaction(
             address, nonce, gas_limit, self.contract.network.name,
             dest=self.eth_contract.address,
-            network_id=self.contract.network_id,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('kill', [])
             ).decode(),
