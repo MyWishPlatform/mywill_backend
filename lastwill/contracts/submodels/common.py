@@ -227,7 +227,7 @@ def send_in_queue(contract_id, type, queue):
 
 
 def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None,
-                     network_id=None):
+                     network_id=None, contract_id=None):
     data = {
         'from': address,
         'nonce': nonce,
@@ -244,11 +244,11 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         data['gas_price'] = gas_price
     if network_id:
         data['chainID'] = network_id
+    if contract_id:
+        data['contractID'] = contract_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
-    signed_data = json.loads(requests.post(
-        'http://{}/sign/'.format(SIGNER), auth=auth, json=data
-    ).content.decode())
+    signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
     return signed_data['signed_tx']
 
 
@@ -516,7 +516,7 @@ class CommonDetails(models.Model):
         signed_data = sign_transaction(
             address, nonce, self.get_gaslimit(),
             self.contract.network.name, value=self.get_value(),
-            contract_data=data, gas_price=gas_price
+            contract_data=data, gas_price=gas_price, contract_id=self.contract.id,
         )
         print('fields of transaction', flush=True)
         print('source', address, flush=True)

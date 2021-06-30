@@ -1576,3 +1576,10 @@ def get_verification_cost(request):
     wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
     btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
+
+
+@api_view(http_method_names=['POST'])
+def buy_unique_address(request):
+    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    contract = Contract.objects.get(id=request.data.get('contract_id'))
+    ...
