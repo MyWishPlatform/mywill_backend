@@ -74,5 +74,5 @@ def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
                 type_result['with_authio'] += 1
 
         print(network)
-        for type_num, type_result in results:
+        for type_num, type_result in results.items():
             print(type_num, type_result)
