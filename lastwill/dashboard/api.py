@@ -4,6 +4,9 @@ from lastwill.consts import NET_DECIMALS
 from lastwill.parint import EthereumProvider
 from lastwill.settings import NETWORKS
 from web3 import Web3, HTTPProvider
+from lastwill.contracts.models import Contract
+from lastwill.deploy.models import Network
+from collections import defaultdict
 
 
 def get_tron_balance(network):
@@ -51,3 +54,24 @@ def contracts_today_filter(contracts, field_name):
     now = datetime.now()
     midnight = datetime.combine(now.today(), time(0, 0))
     return contracts.filter(**{f'{field_name}__gte': midnight, f'{field_name}__lte': now})
+
+
+def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
+    networks = Network.objects.get(name__endswith='TESTNET' if is_testnet else 'MAINNET')
+
+    for network in networks:
+        result = {}
+        result = defaultdict(lambda: {'amount': 0, 'with_verification': 0, 'with_authio': 0}, result)
+        contracts = Contract.objects.filter(network__name=network,
+                                            deployed_at__gte=from_date,
+                                            deployed_at__lte=to_date)
+        for contract in contracts:
+            type_result = result[contract.contract_type]
+            type_result['amount'] += 1
+            if getattr(contract.get_details(), 'verification', None):
+                type_result['with_verification'] += 1
+            if getattr(contract.get_details(), 'authio', None):
+                type_result['with_authio'] += 1
+
+        print(network)
+        print(result.items())
