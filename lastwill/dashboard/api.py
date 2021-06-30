@@ -60,13 +60,13 @@ def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
     networks = Network.objects.filter(name__endswith='TESTNET' if is_testnet else 'MAINNET')
 
     for network in networks:
-        result = {}
-        result = defaultdict(lambda: {'amount': 0, 'with_verification': 0, 'with_authio': 0}, result)
+        results = {}
+        results = defaultdict(lambda: {'amount': 0, 'with_verification': 0, 'with_authio': 0}, results)
         contracts = Contract.objects.filter(network__name=network,
                                             deployed_at__gte=from_date,
                                             deployed_at__lte=to_date)
         for contract in contracts:
-            type_result = result[contract.contract_type]
+            type_result = results[contract.contract_type]
             type_result['amount'] += 1
             if getattr(contract.get_details(), 'verification', None):
                 type_result['with_verification'] += 1
@@ -74,4 +74,5 @@ def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
                 type_result['with_authio'] += 1
 
         print(network)
-        print(result.items())
+        for type_num, type_result in results:
+            print(type_num, type_result)
