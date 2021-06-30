@@ -58,7 +58,10 @@ def contracts_today_filter(contracts, field_name):
 
 
 def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
-    networks = Network.objects.filter(name__endswith__in=('TESTNET', 'ROPSTEN') if is_testnet else 'MAINNET')
+    if is_testnet:
+        networks = Network.objects.exclude(name__endswith='MAINNET')
+    else:
+        networks = Network.objects.filter(name__endswith='MAINNET')
 
     for network in networks:
         results = {}
