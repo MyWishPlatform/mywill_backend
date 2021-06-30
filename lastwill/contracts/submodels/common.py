@@ -30,6 +30,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+from web3 import Web3
 
 
 def address_to_scripthash(address):
@@ -50,11 +51,11 @@ def add_token_params(params, details, token_holders, pause, cont_mint):
     params["D_SYMBOL"] = details.token_short_name
     params["D_DECIMALS"] = details.decimals
     params["D_CONTINUE_MINTING"] = cont_mint
-    params["D_CONTRACTS_OWNER"] = "0x8ffff2c69f000c790809f6b8f9abfcbaab46b322"
+    params["D_CONTRACTS_OWNER"] = Web3.toChecksumAddress("0x8ffff2c69f000c790809f6b8f9abfcbaab46b322")
     params["D_PAUSE_TOKENS"] = pause
     params["D_PREMINT_COUNT"] = len(token_holders)
     params["D_PREMINT_ADDRESSES"] = ','.join(map(
-        lambda th: 'address(%s)' % th.address, token_holders
+        lambda th: 'address(%s)' % Web3.toChecksumAddress(th.address), token_holders
     ))
     params["D_PREMINT_AMOUNTS"] = ','.join(map(
         lambda th: 'uint(%s)' % th.amount, token_holders
@@ -75,8 +76,8 @@ def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
     params["D_SOFT_CAP_WEI"] = str(details.soft_cap)
     params["D_HARD_CAP_WEI"] = str(details.hard_cap)
     params["D_RATE"] = int(details.rate)
-    params["D_COLD_WALLET"] = '0x9b37d7b266a41ef130c4625850c8484cf928000d'
-    params["D_CONTRACTS_OWNER"] = '0x8ffff2c69f000c790809f6b8f9abfcbaab46b322'
+    params["D_COLD_WALLET"] = Web3.toChecksumAddress('0x9b37d7b266a41ef130c4625850c8484cf928000d'),
+    params["D_CONTRACTS_OWNER"] = Web3.toChecksumAddress('0x8ffff2c69f000c790809f6b8f9abfcbaab46b322'),
     params["D_AUTO_FINALISE"] = details.platform_as_admin
     params["D_BONUS_TOKENS"] = "true" if time_bonuses or amount_bonuses else "false"
     params["D_WEI_RAISED_AND_TIME_BONUS_COUNT"] = len(time_bonuses)
@@ -96,7 +97,7 @@ def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
     params["D_WEI_AMOUNT_MILLIRATES"] = ','.join(
         map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])),
             reversed(amount_bonuses)))
-    params["D_MYWISH_ADDRESS"] = '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd'
+    params["D_MYWISH_ADDRESS"] = Web3.toChecksumAddress('0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd')
     params["D_WHITELIST_ENABLED"] = details.whitelist
     return params
 

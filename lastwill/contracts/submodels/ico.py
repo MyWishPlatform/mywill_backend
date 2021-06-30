@@ -14,6 +14,7 @@ from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
 from email_messages import *
+from web3 import Web3
 
 
 class AbstractContractDetailsICO(CommonDetails):
@@ -398,7 +399,7 @@ class AbstractContractDetailsToken(CommonDetails):
             False, self.future_minting
         )
         test_token_params(preproc_config, preproc_params, dest)
-        preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
+        preproc_params['constants']['D_CONTRACTS_OWNER'] = Web3.toChecksumAddress(self.admin_address)
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile-token'.format(dest=dest)):
