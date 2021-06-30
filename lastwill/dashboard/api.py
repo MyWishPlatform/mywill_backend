@@ -67,7 +67,7 @@ def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
                                             deployed_at__gte=from_date,
                                             deployed_at__lte=to_date)
 
-        contract_types = AVAILABLE_CONTRACT_TYPES[network.id]
+        contract_types = AVAILABLE_CONTRACT_TYPES.get(network.id, [])
         for contract in contracts:
             type_result = results[contract.contract_type]
             type_result['amount'] += 1
