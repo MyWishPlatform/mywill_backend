@@ -3,6 +3,7 @@ import os
 import uuid
 import binascii
 import pika
+import requests
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
@@ -19,10 +20,13 @@ from neo.Core.Witness import Witness
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
 
+from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
 from lastwill.settings import SECRET_KEY, KEY_ID
+from lastwill.settings import GAS_API_URL, SPEEDLVL
 from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS
+from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
+    AVAILABLE_CONTRACT_TYPES
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
@@ -264,6 +268,7 @@ def sign_neo_transaction(tx, binary_tx, address):
     return tx
 
 
+
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
 '''
@@ -486,6 +491,14 @@ class CommonDetails(models.Model):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
+                if self.contract.network.name == 'ETHEREUM_MAINNET':
+                    try:
+                        response = requests.get(GAS_API_URL).json()
+                        gas_price_current = response[SPEEDLVL] / 10
+                        gas_price_current = int(gas_price_current * 10 ** 9)
+                        break
+                    except (requests.RequestException, KeyError):
+                        print('gas station api is unavailable', flush=True)
                 gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
@@ -577,16 +590,38 @@ class CommonDetails(models.Model):
             elif self.contract.contract_type == 20:
                 pass
             else:
-                send_mail(
-                    common_subject,
-                    common_text.format(
-                        contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
-                        link=network_link.format(address=eth_contract.address),
-                        network_name=network_name
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
+                network_id = self.contract.network.id
+                types_info = AVAILABLE_CONTRACT_TYPES[network_id]
+                for type_info in types_info:
+                    if type_info['contract_type'] == self.contract.contract_type and \
+                            type_info['contract_name'] == 'Token' and \
+                            network_id in NETWORK_TYPES['mainnet']:
+                        send_mail(
+                            common_subject,
+                            sale_message.format(
+                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                    'name'],
+                                link=network_link.format(address=eth_contract.address),
+                                network_name=network_name,
+                                promocode=create_promocode(range(40), discount=15),
+
+                            ),
+                            DEFAULT_FROM_EMAIL,
+                            [self.contract.user.email]
+                        )
+                        break
+                else:
+                    send_mail(
+                        common_subject,
+                        common_text.format(
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
+                                'name'],
+                            link=network_link.format(address=eth_contract.address),
+                            network_name=network_name,
+                        ),
+                        DEFAULT_FROM_EMAIL,
+                        [self.contract.user.email]
+                    )
 
     def get_value(self):
         return 0

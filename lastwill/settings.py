@@ -359,6 +359,7 @@ COINGECKO_SYMBOLS = {
 }
 
 TEMP_SYMBOLS = {
+    'BSCBNB': 'BNB',
     'TRONISH': 'TRX',
     'EOSISH': 'EOS',
     'USD': 'USDT',
