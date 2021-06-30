@@ -57,7 +57,7 @@ def contracts_today_filter(contracts, field_name):
 
 
 def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
-    networks = Network.objects.get(name__endswith='TESTNET' if is_testnet else 'MAINNET')
+    networks = Network.objects.filter(name__endswith='TESTNET' if is_testnet else 'MAINNET')
 
     for network in networks:
         result = {}
