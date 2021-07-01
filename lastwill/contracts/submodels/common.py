@@ -7,6 +7,7 @@ import requests
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
+from requests_http_signature import HTTPSignatureAuth
 
 from django.db import models
 from django.apps import apps
@@ -21,6 +22,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
+from lastwill.settings import SECRET_KEY, KEY_ID
 from lastwill.settings import GAS_API_URL, SPEEDLVL
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
@@ -228,29 +230,24 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
-def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, contract_data=None, gas_price=None,
-                     network_id=None):
+def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None):
     data = {
-        'source': address,
+        'from': address,
         'nonce': nonce,
-        'gaslimit': gaslimit,
-        'network': network,
+        'gas': gaslimit,
     }
     if value:
         data['value'] = value
     if dest:
-        data['dest'] = dest
+        data['to'] = dest
     if contract_data:
         data['data'] = contract_data
     if gas_price:
-        data['gas_price'] = gas_price
-    if network_id:
-        data['chainID'] = network_id
+        data['gasPrice'] = gas_price
 
-    signed_data = json.loads(requests.post(
-        'http://{}/sign/'.format(SIGNER), json=data
-    ).content.decode())
-    return signed_data['result']
+    auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
+    signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
+    return signed_data['signed_tx']
 
 
 def sign_neo_transaction(tx, binary_tx, address):
@@ -523,11 +520,9 @@ class CommonDetails(models.Model):
 
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
-        signed_data = sign_transaction(
-            address, nonce, self.get_gaslimit(),
-            self.contract.network.name, value=self.get_value(),
-            contract_data=data, gas_price=gas_price
-        )
+        signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
+                                       value=self.get_value(), contract_data=data, gas_price=gas_price)
+
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
         print('gas limit', self.get_gaslimit(), flush=True)
@@ -538,7 +533,7 @@ class CommonDetails(models.Model):
         for attempt in range(attempts):
             print(f'attempt {attempt} to send deploy tx', flush=True)
             try:
-                tx_hash = eth_int.eth_sendRawTransaction('0x' + signed_data)
+                tx_hash = eth_int.eth_sendRawTransaction(signed_data)
                 break
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
