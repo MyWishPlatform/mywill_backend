@@ -236,7 +236,7 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         'from': address,
         'nonce': nonce,
         'gas': gaslimit,
-        'network': network,
+        # 'network': network,
     }
     if value:
         data['value'] = value
@@ -246,10 +246,10 @@ def sign_transaction(address, nonce, gaslimit, network, value=None, dest=None, c
         data['data'] = contract_data
     if gas_price:
         data['gasPrice'] = gas_price
-    if network_id:
-        data['chainID'] = network_id
-    if contract_id:
-        data['contractID'] = contract_id
+    # if network_id:
+    #     data['chainID'] = network_id
+    # if contract_id:
+    #     data['contractID'] = contract_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
     signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
