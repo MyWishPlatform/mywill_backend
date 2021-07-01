@@ -524,7 +524,7 @@ class CommonDetails(models.Model):
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = eth_int.eth_chainId()
         signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
-                                       value=self.get_value(), contract_data=data, gas_price=gas_price, chainId=chain_id)
+                                       value=self.get_value(), contract_data=data, gas_price=gas_price, chain_id=chain_id)
 
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
