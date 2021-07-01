@@ -230,7 +230,7 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
-def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None):
+def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None, chain_id=None):
     data = {
         'from': address,
         'nonce': nonce,
@@ -244,6 +244,9 @@ def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_d
         data['data'] = contract_data
     if gas_price:
         data['gasPrice'] = gas_price
+
+    if chain_id:
+        data['chainId'] = chain_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
     signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
@@ -519,9 +522,10 @@ class CommonDetails(models.Model):
         print('DATA', data, flush=True)
 
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
-        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixede
+        chain_id = int(eth_int.eth_chainId(), 16)
         signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
-                                       value=self.get_value(), contract_data=data, gas_price=gas_price)
+                                       value=self.get_value(), contract_data=data, gas_price=gas_price, chain_id=chain_id)
 
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
