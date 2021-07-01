@@ -4,6 +4,10 @@ from lastwill.consts import NET_DECIMALS
 from lastwill.parint import EthereumProvider
 from lastwill.settings import NETWORKS
 from web3 import Web3, HTTPProvider
+from lastwill.contracts.models import Contract
+from lastwill.deploy.models import Network
+from collections import defaultdict
+from lastwill.consts import AVAILABLE_CONTRACT_TYPES
 
 
 def get_tron_balance(network):
@@ -51,3 +55,35 @@ def contracts_today_filter(contracts, field_name):
     now = datetime.now()
     midnight = datetime.combine(now.today(), time(0, 0))
     return contracts.filter(**{f'{field_name}__gte': midnight, f'{field_name}__lte': now})
+
+
+def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
+    if is_testnet:
+        networks = Network.objects.exclude(name__endswith='MAINNET')
+    else:
+        networks = Network.objects.filter(name__endswith='MAINNET')
+
+    for network in networks:
+        results = {}
+        results = defaultdict(lambda: {'amount': 0, 'with_verification': 0, 'with_authio': 0}, results)
+        contracts = Contract.objects.filter(network=network,
+                                            deployed_at__gte=from_date,
+                                            deployed_at__lte=to_date)
+
+        contract_types = AVAILABLE_CONTRACT_TYPES.get(network.id, [])
+        for contract in contracts:
+            type_result = results[contract.contract_type]
+            type_result['amount'] += 1
+            if getattr(contract.get_details(), 'verification', None):
+                type_result['with_verification'] += 1
+            if getattr(contract.get_details(), 'authio', None):
+                type_result['with_authio'] += 1
+
+        print(network.name)
+        for type_num, type_result in results.items():
+            for contract_type_dict in contract_types:
+                if contract_type_dict['contract_type'] == type_num:
+                    print(contract_type_dict['contract_name'], type_result)
+                    break
+            else:
+                print(type_num, type_result)
