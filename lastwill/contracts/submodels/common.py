@@ -541,7 +541,7 @@ class CommonDetails(models.Model):
         for attempt in range(attempts):
             print(f'attempt {attempt} to send deploy tx', flush=True)
             try:
-                tx_hash = eth_int.eth_sendRawTransaction('0x' + signed_data)
+                tx_hash = eth_int.eth_sendRawTransaction(signed_data)
                 break
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
