@@ -1,6 +1,6 @@
 from lastwill.contracts.submodels.ico import AbstractContractDetailsICO
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
 
 
 @contract_details('Matic MyWish ICO')
@@ -30,4 +30,7 @@ class ContractDetailsMaticICO(AbstractContractDetailsICO):
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        return int(CONTRACT_PRICE_USDT['MATIC_ICO'] * NET_DECIMALS['USDT'])
+        price = CONTRACT_PRICE_USDT['MATIC_ICO']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
