@@ -31,6 +31,7 @@ from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
 from web3 import Web3
+from eth_abi import encode_abi
 
 
 def address_to_scripthash(address):
@@ -476,12 +477,15 @@ class CommonDetails(models.Model):
             return
         self.compile(eth_contract_attr_name)
         eth_contract = getattr(self, eth_contract_attr_name)
-        tr = abi.ContractTranslator(eth_contract.abi)
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
-        eth_contract.constructor_arguments = binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else ''
+        if arguments:
+            constructor_inputs = [func['inputs'] for func in eth_contract.abi if func['type'] == 'constructor'][0]
+            constructor_input_types = [input['type'] for input in constructor_inputs]
+            eth_contract.constructor_arguments = encode_abi(constructor_input_types, arguments).hex()
+        else:
+            eth_contract.constructor_arguments = ''
+
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = NETWORKS[self.contract.network.name]['address']
 
@@ -509,9 +513,7 @@ class CommonDetails(models.Model):
         print('nonce', nonce, flush=True)
         # print('BYTECODE', eth_contract.bytecode, flush=True) print('CONTRACT CODE', eth_contract.bytecode +
         # binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
-        data = eth_contract.bytecode + (binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else '')
+        data = eth_contract.bytecode + eth_contract.constructor_arguments
         print('data =', data)
         # if arguments:
         #     data = eth_contract.bytecode + (binascii.hexlify(
