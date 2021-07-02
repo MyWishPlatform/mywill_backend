@@ -1,6 +1,7 @@
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, \
+    AUTHIO_PRICE_USDT, VERIFICATION_PRICE_USDT
 
 
 @contract_details('Matic Token contract')
@@ -24,5 +25,8 @@ class ContractDetailsMaticToken(AbstractContractDetailsToken):
         if NETWORKS[network.name]['is_free']:
             return 0
         price = CONTRACT_PRICE_USDT['MATIC_TOKEN']
-        result = int(price * NET_DECIMALS['USDT'])
-        return result
+        if 'authio' in kwargs and kwargs['authio']:
+            price += AUTHIO_PRICE_USDT
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
