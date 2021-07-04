@@ -211,13 +211,13 @@ class ContractDetailsTokenProtector(CommonDetails):
         nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
         gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                  self.contract.network.name, value=0,
+                                  value=0,
                                   dest=self.eth_contract.address, contract_data=txn['data'][2:],
                                   gas_price=gas_price)
 
         print('signed', signed, flush=True)
 
-        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        tx_hash = eth_int.eth_sendRawTransaction(signed)
 
         print('hash', tx_hash, flush=True)
 
@@ -241,13 +241,13 @@ class ContractDetailsTokenProtector(CommonDetails):
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
-                                  self.contract.network.name, value=0,
+                                  value=0,
                                   dest=self.eth_contract.address, contract_data=None,
                                   gas_price=gas_price)
 
         print('signed', signed, flush=True)
 
-        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        tx_hash = eth_int.eth_sendRawTransaction(signed)
         print('hash', tx_hash, flush=True)
 
         # except:
