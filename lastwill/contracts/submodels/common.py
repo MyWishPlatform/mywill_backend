@@ -306,7 +306,6 @@ class Contract(models.Model):
     next_check = models.DateTimeField(null=True, default=None)
 
     invisible = models.BooleanField(default=False)
-    has_unique_address = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -483,13 +482,7 @@ class CommonDetails(models.Model):
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-
-        if self.contract.has_unique_address:
-            if self.contract.contract_type in ()
-            auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
-            address = requests.post(f'{ADDRESS_GEN}/{self.contract.id}', auth=auth)
-        else:
-            address = NETWORKS[self.contract.network.name]['address']
+        address = NETWORKS[self.contract.network.name]['address']
 
         for attempt in range(attempts):
             print(f'attempt {attempt} to get a nonce', flush=True)
