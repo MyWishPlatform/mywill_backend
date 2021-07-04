@@ -78,8 +78,7 @@ class AbstractContractDetailsLastwill(CommonDetails):
             dest=contract.get_details().eth_contract.address,
             gas_price=gas_price
         )
-        self.eth_contract.tx_hansh = eth_int.eth_sendRawTransaction(
-            '0x' + signed_data)
+        self.eth_contract.tx_hansh = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract.save()
 
     def get_arguments(self, *args, **kwargs):
@@ -223,9 +222,7 @@ class AbstractContractDetailsLastwill(CommonDetails):
                 tr.encode_function_call('imAvailable', [])
             ).decode(),
         )
-        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
-            '0x' + signed_data
-        )
+        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract.save()
         self.last_press_imalive = timezone.now()
 
@@ -243,9 +240,7 @@ class AbstractContractDetailsLastwill(CommonDetails):
                 tr.encode_function_call('kill', [])
             ).decode(),
         )
-        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(
-            '0x' + signed_data
-        )
+        self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract.save()
 
     def fundsAdded(self, message):

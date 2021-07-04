@@ -217,7 +217,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         print('signed', signed, flush=True)
 
-        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        tx_hash = eth_int.eth_sendRawTransaction(signed)
 
         print('hash', tx_hash, flush=True)
 
@@ -247,7 +247,7 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         print('signed', signed, flush=True)
 
-        tx_hash = eth_int.eth_sendRawTransaction('0x' + signed)
+        tx_hash = eth_int.eth_sendRawTransaction(signed)
         print('hash', tx_hash, flush=True)
 
         # except:

@@ -657,7 +657,7 @@ class CommonDetails(models.Model):
             ).decode(),
         )
         print('signed_data', signed_data)
-        eth_int.eth_sendRawTransaction('0x' + signed_data)
+        eth_int.eth_sendRawTransaction(signed_data)
         print('check ok!')
 
 

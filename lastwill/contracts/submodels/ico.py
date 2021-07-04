@@ -200,9 +200,7 @@ class AbstractContractDetailsICO(CommonDetails):
                 )).decode(),
                 gas_price=int(gas_price * 1.2)
             )
-            self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(
-                '0x' + signed_data
-            )
+            self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
             self.eth_contract_token.save()
             print('transferOwnership message sended')
 
@@ -256,9 +254,7 @@ class AbstractContractDetailsICO(CommonDetails):
             ).decode(),
             gas_price=int(gas_price * 1.2)
         )
-        self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(
-            '0x' + signed_data
-        )
+        self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract_crowdsale.save()
         print('init message sended')
 
