@@ -522,7 +522,7 @@ class CommonDetails(models.Model):
         print('DATA', data, flush=True)
 
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
-        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixede
+        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = int(eth_int.eth_chainId(), 16)
         signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
                                        value=self.get_value(), contract_data=data, gas_price=gas_price, chain_id=chain_id)

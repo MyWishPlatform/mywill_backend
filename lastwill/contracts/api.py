@@ -1152,7 +1152,7 @@ def buy_brand_report(request):
     host = request.META['HTTP_HOST']
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
-    if contract.contract_type not in (5, 28):
+    if contract.contract_type not in (5, 28, 33):
         raise PermissionDenied
 
     details = contract.get_details()
@@ -1519,14 +1519,14 @@ def buy_verification(request):
     details.verification_date_payment = datetime.datetime.now().date()
     details.save()
 
-    if contract.contract_type in (5, 28, 35, 36):
+    if contract.contract_type in (5, 28, 35, 36, 33):
         send_verification_mail(
             network=details.contract.network.name,
             addresses=(details.eth_contract_token.address,),
             compiler=details.eth_contract_token.compiler_version,
             files={'token.sol': details.eth_contract_token.source_code},
         )
-    elif contract.contract_type in (4, 27, 37):
+    elif contract.contract_type in (4, 27, 37, 32):
         send_verification_mail(
             network=details.contract.network.name,
             addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address,),
