@@ -239,7 +239,6 @@ class AbstractContractDetailsICO(CommonDetails):
             self.contract.state = 'WAITING_FOR_DEPLOYMENT'
             self.contract.save()
             # continue deploy: call init
-        tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = 100000 + 80000 * self.contract.tokenholder_set.all().count()
