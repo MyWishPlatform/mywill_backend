@@ -14,7 +14,7 @@ from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
 from email_messages import *
-from web3 import Web3
+from web3 import Web3, HTTPProvider
 
 
 class AbstractContractDetailsICO(CommonDetails):
@@ -246,13 +246,15 @@ class AbstractContractDetailsICO(CommonDetails):
         gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         print('nonce', nonce)
         print('init message signed')
+
+        w3 = Web3(HTTPProvider(eth_int.url))
+        contract = w3.eth.contract(address=self.eth_contract_crowdsale.address, abi=self.eth_contract_crowdsale.abi)
+
         signed_data = sign_transaction(
             address, nonce,
             gas_limit,
             dest=self.eth_contract_crowdsale.address,
-            contract_data=binascii.hexlify(
-                tr.encode_function_call('init', [])
-            ).decode(),
+            contract_data=contract.encodeABI(fn_name='init', args=[]),
             gas_price=int(gas_price * 1.2)
         )
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
