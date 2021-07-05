@@ -445,6 +445,7 @@ class CommonDetails(models.Model):
         abstract = True
 
     contract = models.ForeignKey(Contract)
+    white_label = models.BooleanField(default=False)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)

@@ -357,7 +357,7 @@ class TokenProtectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsTokenProtector
         fields = ['owner_address', 'reserve_address', 'end_timestamp', 'email', 'with_oracle',
-                  'oracle_inactive_interval']
+                  'oracle_inactive_interval', 'white_label']
 
     def to_representation(self, contract_details):
         if contract_details.end_timestamp < timezone.now().timestamp() + 30 * 60 and contract_details.contract.state in [
@@ -454,7 +454,7 @@ class ContractDetailsLastwillSerializer(serializers.ModelSerializer):
         fields = (
             'user_address', 'active_to', 'check_interval',
             'last_check', 'next_check', 'email', 'platform_alive',
-            'platform_cancel', 'last_reset', 'last_press_imalive'
+            'platform_cancel', 'last_reset', 'last_press_imalive', 'white_label'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
@@ -533,6 +533,7 @@ class ContractDetailsLostKeySerializer(ContractDetailsLastwillSerializer):
             'check_interval',
             'last_check',
             'next_check',
+            'white_label'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
@@ -544,7 +545,7 @@ class ContractDetailsDelayedPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsDelayedPayment
         fields = (
-            'user_address', 'date', 'recepient_address', 'recepient_email'
+            'user_address', 'date', 'recepient_address', 'recepient_email', 'white_label'
         )
 
     def create(self, contract, contract_details):
@@ -584,7 +585,7 @@ class ContractDetailsICOSerializer(serializers.ModelSerializer):
             'cold_wallet_address', 'reused_token',
             'token_type', 'min_wei', 'max_wei', 'allow_change_dates',
             'whitelist',
-            'verification', 'verification_status', 'verification_date_payment'
+            'verification', 'verification_status', 'verification_date_payment', 'white_label'
         )
         extra_kwargs = {
             'verification_status': {'read_only': True},
@@ -733,7 +734,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             'token_name', 'token_short_name', 'decimals',
             'admin_address', 'token_type', 'future_minting',
             'authio', 'authio_email', 'authio_date_payment', 'authio_date_getting',
-            'verification', 'verification_status', 'verification_date_payment'
+            'verification', 'verification_status', 'verification_date_payment', 'white_label'
         )
         extra_kwargs = {
             'authio_date_payment': {'read_only': True},
@@ -836,7 +837,7 @@ class ContractDetailsNeoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsNeo
         fields = (
-            'token_name', 'decimals', 'token_short_name', 'admin_address', 'future_minting',
+            'token_name', 'decimals', 'token_short_name', 'admin_address', 'future_minting', 'white_label'
         )
 
     def to_representation(self, contract_details):
@@ -895,7 +896,7 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
         fields = (
             'hard_cap', 'token_name', 'token_short_name',
             'start_date', 'stop_date', 'decimals', 'rate',
-            'admin_address'
+            'admin_address', 'white_label'
         )
 
     def create(self, contract, contract_details):
@@ -975,7 +976,8 @@ class ContractDetailsNeoICOSerializer(serializers.ModelSerializer):
 class ContractDetailsAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsAirdrop
-        fields = ('admin_address', 'token_address', 'verification', 'verification_status', 'verification_date_payment')
+        fields = ('admin_address', 'token_address', 'verification', 'verification_status', 'verification_date_payment',
+                  'white_label')
         extra_kwargs = {
             'verification_status': {'read_only': True},
             'verification_date_payment': {'read_only': True},
@@ -1052,7 +1054,7 @@ class ContractDetailsInvestmentPoolSerializer(serializers.ModelSerializer):
             'min_wei', 'max_wei', 'allow_change_dates', 'whitelist',
             'investment_address', 'send_tokens_hard_cap',
             'send_tokens_soft_cap', 'link', 'investment_tx_hash', 'balance',
-            'platform_as_admin'
+            'platform_as_admin', 'white_label'
         )
         extra_kwargs = {
             'link': {'read_only': True},
@@ -1120,7 +1122,7 @@ class EOSTokenHolderSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSToken
-        fields = ('token_short_name', 'admin_address', 'decimals', 'maximum_supply')
+        fields = ('token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'white_label')
 
     def create(self, contract, contract_details):
         token_holders = contract_details.pop('token_holders')
@@ -1174,7 +1176,7 @@ class ContractDetailsEOSAccountSerializer(serializers.ModelSerializer):
         model = ContractDetailsEOSAccount
         fields = (
             'owner_public_key', 'active_public_key', 'account_name',
-            'stake_net_value', 'stake_cpu_value', 'buy_ram_kbytes'
+            'stake_net_value', 'stake_cpu_value', 'buy_ram_kbytes', 'white_label'
         )
 
     def create(self, contract, contract_details):
@@ -1205,7 +1207,7 @@ class ContractDetailsEOSICOSerializer(serializers.ModelSerializer):
             'soft_cap', 'hard_cap', 'token_short_name', 'whitelist',
             'is_transferable_at_once', 'start_date', 'stop_date',
             'decimals', 'rate', 'crowdsale_address', 'min_wei', 'max_wei',
-            'allow_change_dates', 'protected_mode', 'admin_address'
+            'allow_change_dates', 'protected_mode', 'admin_address', 'white_label'
         )
 
     def create(self, contract, contract_details):
@@ -1293,7 +1295,7 @@ class ContractDetailsEOSAirdropSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSAirdrop
         fields = (
-            'admin_address', 'token_address', 'token_short_name', 'address_count'
+            'admin_address', 'token_address', 'token_short_name', 'address_count', 'white_label'
         )
         extra_kwargs = {
             'link': {'memo': True},
@@ -1333,7 +1335,8 @@ class EOSAirdropAddressSerializer(serializers.ModelSerializer):
 class ContractDetailsEOSTokenSASerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsEOSTokenSA
-        fields = ('token_short_name', 'token_account', 'admin_address', 'decimals', 'maximum_supply')
+        fields = ('token_short_name', 'token_account', 'admin_address', 'decimals', 'maximum_supply',
+                  'white_label')
 
     def validate(self, details):
         check.is_eos_address(details['admin_address'])
@@ -1377,7 +1380,7 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
         fields = (
             'token_name', 'token_short_name', 'decimals',
             'admin_address', 'token_type', 'future_minting',
-            'verification', 'verification_status', 'verification_date_payment',
+            'verification', 'verification_status', 'verification_date_payment', 'white_label'
         )
         extra_kwargs = {
             'verification_status': {'read_only': True},
@@ -1446,7 +1449,7 @@ class ContractDetailsGameAssetsSerializer(serializers.ModelSerializer):
         model = ContractDetailsGameAssets
         fields = (
             'token_name', 'token_short_name', 'admin_address', 'uri',
-            'verification', 'verification_status', 'verification_date_payment'
+            'verification', 'verification_status', 'verification_date_payment', 'white_label'
         )
         extra_kwargs = {
             'verification_status': {'read_only': True},
@@ -1487,7 +1490,7 @@ class ContractDetailsTRONAirdropSerializer(serializers.ModelSerializer):
         model = ContractDetailsTRONAirdrop
         fields = (
             'admin_address', 'token_address',
-            'verification', 'verification_status', 'verification_date_payment'
+            'verification', 'verification_status', 'verification_date_payment', 'white_label'
         )
         extra_kwargs = {
             'verification_status': {'read_only': True},
@@ -1520,7 +1523,7 @@ class ContractDetailsTRONLostkeySerializer(serializers.ModelSerializer):
         fields = (
             'user_address', 'active_to', 'check_interval',
             'last_check', 'next_check', 'email', 'platform_alive',
-            'platform_cancel', 'last_reset', 'last_press_imalive'
+            'platform_cancel', 'last_reset', 'last_press_imalive', 'white_label'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
@@ -1589,7 +1592,7 @@ class ContractDetailsLostKeyTokensSerializer(serializers.ModelSerializer):
         fields = (
             'user_address', 'active_to', 'check_interval',
             'last_check', 'next_check', 'email', 'platform_alive',
-            'platform_cancel', 'last_reset', 'last_press_imalive'
+            'platform_cancel', 'last_reset', 'last_press_imalive', 'white_label'
         )
         extra_kwargs = {
             'last_check': {'read_only': True},
@@ -1666,7 +1669,7 @@ class ContractDetailsSWAPSSerializer(serializers.ModelSerializer):
         model = ContractDetailsSWAPS
         fields = (
             'base_address', 'quote_address', 'stop_date', 'base_limit',
-            'quote_limit', 'public', 'owner_address', 'unique_link'
+            'quote_limit', 'public', 'owner_address', 'unique_link', 'white_label'
         )
         extra_kwargs = {
             'unique_link': {'read_only': True}
@@ -1722,7 +1725,7 @@ class ContractDetailsSWAPS2Serializer(serializers.ModelSerializer):
             'base_address', 'quote_address', 'stop_date', 'base_limit',
             'quote_limit', 'public', 'owner_address', 'unique_link', 'min_quote_wei',
             'memo_contract', 'whitelist', 'whitelist_address', 'min_base_wei',
-            'broker_fee', 'broker_fee_address', 'broker_fee_base', 'broker_fee_quote'
+            'broker_fee', 'broker_fee_address', 'broker_fee_base', 'broker_fee_quote', 'white_label'
         )
         extra_kwargs = {
             'unique_link': {'read_only': True},
@@ -1781,7 +1784,7 @@ class ContractDetailsSTOSerializer(serializers.ModelSerializer):
             'asset_id', 'admin_address', 'cold_wallet_address', 'start_date',
             'stop_date', 'rate', 'whitelist', 'soft_cap', 'hard_cap', 'min_wei',
             'max_wei', 'reused_token', 'token_description', 'token_short_name',
-            'decimals', 'allow_change_dates', 'total_supply'
+            'decimals', 'allow_change_dates', 'total_supply', 'white_label'
         )
 
     def to_representation(self, contract_details):
