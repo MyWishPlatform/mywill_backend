@@ -380,7 +380,7 @@ class AbstractContractDetailsToken(CommonDetails):
             price += AUTHIO_PRICE_USDT
         if 'verification' in kwargs and kwargs['verification']:
             price += VERIFICATION_PRICE_USDT
-        if 'whitelabel' in kwargs and kwargs['whitelabel']:
+        if 'white_label' in kwargs and kwargs['white_label']:
             price += WHITELABEL_PRICE_USDT
 
         return price * NET_DECIMALS['USDT']
