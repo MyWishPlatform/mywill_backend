@@ -1585,4 +1585,3 @@ def get_whitelabel_cost(request):
     wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
     btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
-
