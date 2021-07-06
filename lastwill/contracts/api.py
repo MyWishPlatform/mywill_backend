@@ -1576,3 +1576,13 @@ def get_verification_cost(request):
     wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
     btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
+
+@api_view(http_method_names=['GET'])
+def get_whitelabel_cost(request):
+    raw_usdt = WHITELABEL_PRICE_USDT
+    usdt = str(raw_usdt * NET_DECIMALS['USDT'])
+    eth = str(raw_usdt * rate('USDT', 'ETH').value * NET_DECIMALS['ETH'])
+    wish = str(raw_usdt * rate('USDT', 'WISH').value * NET_DECIMALS['WISH'])
+    btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
+    return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
+
