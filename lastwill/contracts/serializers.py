@@ -145,7 +145,7 @@ class ContractSerializer(serializers.ModelSerializer):
         model = Contract
         fields = (
             'id', 'user', 'owner_address', 'state', 'created_date', 'balance',
-            'cost', 'name', 'contract_type', 'contract_details', 'network',
+            'cost', 'name', 'contract_type', 'contract_details', 'network', 'white_label'
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -429,7 +429,7 @@ class EthContractSerializer(serializers.ModelSerializer):
         model = EthContract
         fields = (
             'id', 'address', 'source_code', 'abi',
-            'bytecode', 'compiler_version', 'constructor_arguments'
+            'bytecode', 'compiler_version', 'constructor_arguments', 'white_label'
         )
 
 
@@ -438,7 +438,7 @@ class EOSContractSerializer(serializers.ModelSerializer):
         model = EOSContract
         fields = (
             'id', 'address', 'source_code', 'abi',
-            'bytecode', 'compiler_version', 'constructor_arguments'
+            'bytecode', 'compiler_version', 'constructor_arguments', 'white_label'
         )
 
 
@@ -830,7 +830,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
 class NeoContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = NeoContract
-        fields = ('id', 'address')
+        fields = ('id', 'address', 'white_label')
 
 
 class ContractDetailsNeoSerializer(serializers.ModelSerializer):
@@ -1370,7 +1370,7 @@ class TRONContractSerializer(serializers.ModelSerializer):
         model = TRONContract
         fields = (
             'id', 'address', 'source_code', 'abi',
-            'bytecode', 'compiler_version', 'constructor_arguments'
+            'bytecode', 'compiler_version', 'constructor_arguments', 'white_label'
         )
 
 
