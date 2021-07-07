@@ -269,6 +269,14 @@ def sign_neo_transaction(tx, binary_tx, address):
     return tx
 
 
+def get_whitelabel_address(contract_id):
+    hd_wallet = BIP44HDWallet(symbol=ETH, account=0, change=False, address=0)
+    hd_wallet.from_root_xprivate_key(ROOT_EXT_KEY)
+    derived_wallet = hd_wallet.from_index(contract_id)
+    address = derived_wallet.address()
+    return address
+
+
 
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
@@ -490,11 +498,14 @@ class CommonDetails(models.Model):
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
-        if self.contract.white_label:
-            address = self.get_whitelabel_address()
+        if self.contract.white_label and not any((self.white_label_tx_hash, self.deploy_address)):
+            address = get_whitelabel_address(self.contract.id)
             self.white_label_tx_hash = self.transfer_crypto(address)
             self.deploy_address = address
             self.save()
+            return
+        elif self.contract.white_label and all((self.white_label_tx_hash, self.deploy_address)):
+            address = self.deploy_address
         else:
             address = NETWORKS[self.contract.network.name]['address']
 
@@ -701,14 +712,6 @@ class CommonDetails(models.Model):
                 return gas_price_current
             except (requests.RequestException, KeyError):
                 print('gas station api is unavailable', flush=True)
-
-
-    def get_whitelabel_address(self):
-        hd_wallet = BIP44HDWallet(symbol=ETH, account=0, change=False, address=0)
-        hd_wallet.from_root_xprivate_key(ROOT_EXT_KEY)
-        derived_wallet = hd_wallet.from_index(self.contract.id)
-        address = derived_wallet.address()
-        return address
 
 
 @contract_details('Pizza')
