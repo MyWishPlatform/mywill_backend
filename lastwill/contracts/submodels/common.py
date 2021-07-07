@@ -515,7 +515,7 @@ class CommonDetails(models.Model):
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
-        if self.contract.white_label:
+        if self.white_label:
             if not any((self.white_label_tx_hash, self.deploy_address)):
                 address = get_whitelabel_address(self.contract.id)
                 self.white_label_tx_hash = transfer_crypto(self, address)
