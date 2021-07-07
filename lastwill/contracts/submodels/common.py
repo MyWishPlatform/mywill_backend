@@ -277,6 +277,23 @@ def get_whitelabel_address(contract_id):
     return address
 
 
+def transfer_crypto(details, dest):
+    eth_int = EthereumProvider().get_provider(network=details.contract.network.name)
+    address = NETWORKS[details.contract.network.name]['address']
+    nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
+    gas_price_current = details.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
+    gas_price_fixed = ETH_COMMON_GAS_PRICES[details.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
+    gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+    eth_amount = int(gas_price * CONTRACT_GAS_LIMIT['TOKEN'], 16)
+    chain_id = int(eth_int.eth_chainId(), 16)
+
+    signed_data = sign_transaction(address, nonce, details.get_gaslimit(), value=eth_amount,
+                                   dest=dest, gas_price=gas_price, chain_id=chain_id)
+
+    tx_hash = eth_int.eth_sendRawTransaction(signed_data)
+    return tx_hash
+
+
 
 '''
 contract as user see it at site. contract as service. can contain more then one real ethereum contracts
@@ -498,14 +515,15 @@ class CommonDetails(models.Model):
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
-        if self.contract.white_label and not any((self.white_label_tx_hash, self.deploy_address)):
-            address = get_whitelabel_address(self.contract.id)
-            self.white_label_tx_hash = self.transfer_crypto(address)
-            self.deploy_address = address
-            self.save()
-            return
-        elif self.contract.white_label and all((self.white_label_tx_hash, self.deploy_address)):
-            address = self.deploy_address
+        if self.contract.white_label:
+            if not any((self.white_label_tx_hash, self.deploy_address)):
+                address = get_whitelabel_address(self.contract.id)
+                self.white_label_tx_hash = transfer_crypto(self, address)
+                self.deploy_address = address
+                self.save()
+                return
+            else:
+                address = self.deploy_address
         else:
             address = NETWORKS[self.contract.network.name]['address']
 
@@ -513,7 +531,7 @@ class CommonDetails(models.Model):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
-                gas_price_current = self.get_gas_price() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
+                gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
             except Exception:
@@ -542,14 +560,13 @@ class CommonDetails(models.Model):
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = int(eth_int.eth_chainId(), 16)
 
+        kwargs = {'address':address, 'nonce':nonce, 'gaslimit':self.get_gaslimit(), 'value':self.get_value(),
+                  'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id, 'contract_id':self.contract.id}
+
         if self.white_label:
-            signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
-                                           value=self.get_value(), contract_data=data,
-                                           gas_price=gas_price, chain_id=chain_id, contract_id=self.contract.id)
-        else:
-            signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
-                                           value=self.get_value(), contract_data=data,
-                                           gas_price=gas_price, chain_id=chain_id)
+            kwargs['contract_id'] = self.contract.id
+
+            signed_data = sign_transaction(**kwargs)
 
 
         print('fields of transaction', flush=True)
@@ -686,24 +703,7 @@ class CommonDetails(models.Model):
         print('check ok!')
 
 
-    def transfer_crypto(self, dest):
-        eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-        address = NETWORKS[self.contract.network.name]['address']
-        nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
-        gas_price_current = self.get_gas_price() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
-        gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
-        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
-        eth_amount = int(gas_price * CONTRACT_GAS_LIMIT['TOKEN'] * 10 ** 9, 16)
-        chain_id = int(eth_int.eth_chainId(), 16)
-
-        signed_data = sign_transaction(address, nonce, self.get_gaslimit(), value=eth_amount,
-                                  dest=dest, gas_price=gas_price, chain_id=chain_id)
-
-        tx_hash = eth_int.eth_sendRawTransaction(signed_data)
-        return tx_hash
-
-
-    def get_gas_price(self):
+    def get_gasstation_gasprice(self):
         if self.contract.network.name == 'ETHEREUM_MAINNET':
             try:
                 response = requests.get(GAS_API_URL).json()
