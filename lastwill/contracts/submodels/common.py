@@ -232,7 +232,7 @@ def send_in_queue(contract_id, type, queue):
 
 
 def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None,
-                     chain_id=None, contract_id=None):
+                     chain_id=None, child_id=None):
     data = {
         'from': address,
         'nonce': nonce,
@@ -249,8 +249,8 @@ def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_d
 
     if chain_id:
         data['chainId'] = chain_id
-    if contract_id:
-        data['contractId'] = contract_id
+    if child_id:
+        data['child_id'] = child_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
     signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
@@ -335,11 +335,6 @@ class Contract(models.Model):
     next_check = models.DateTimeField(null=True, default=None)
 
     invisible = models.BooleanField(default=False)
-
-    white_label = models.BooleanField(default=False)
-    deploy_address = models.CharField(max_length=50, null=True, default=None)
-    white_label_hash = models.CharField(max_length=70, null=True, default=None)
-
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -479,6 +474,9 @@ class CommonDetails(models.Model):
         abstract = True
 
     contract = models.ForeignKey(Contract)
+    white_label = models.BooleanField(default=False)
+    deploy_address = models.CharField(max_length=50, null=True, default=None)
+    white_label_hash = models.CharField(max_length=70, null=True, default=None)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
@@ -517,15 +515,15 @@ class CommonDetails(models.Model):
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
-        if self.contract.white_label:
-            if not any((self.contract.white_label_hash, self.contract.deploy_address)):
+        if self.white_label:
+            if not any((self.white_label_hash, self.deploy_address)):
                 address = get_whitelabel_address(self.contract.id)
-                self.contract.white_label_hash = transfer_crypto(self, address)
-                self.contract.deploy_address = address
-                self.contract.save()
+                self.white_label_hash = transfer_crypto(self, address)
+                self.deploy_address = address
+                self.save()
                 return
             else:
-                address = self.contract.deploy_address
+                address = self.deploy_address
         else:
             address = NETWORKS[self.contract.network.name]['address']
 
@@ -565,7 +563,7 @@ class CommonDetails(models.Model):
         kwargs = {'address':address, 'nonce':nonce, 'gaslimit':self.get_gaslimit(), 'value':self.get_value(),
                   'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id, 'contract_id':self.contract.id}
 
-        if self.contract.white_label:
+        if self.white_label:
             kwargs['contract_id'] = self.contract.id
 
             signed_data = sign_transaction(**kwargs)
