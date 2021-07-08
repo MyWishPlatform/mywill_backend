@@ -522,7 +522,7 @@ class CommonDetails(models.Model):
                 address = get_whitelabel_address(self.contract.id)
                 self.contract.white_label_hash = transfer_crypto(self, address)
                 self.contract.deploy_address = address
-                self.save()
+                self.contract.save()
                 return
             else:
                 address = self.contract.deploy_address
