@@ -561,7 +561,7 @@ class CommonDetails(models.Model):
         chain_id = int(eth_int.eth_chainId(), 16)
 
         kwargs = {'address':address, 'nonce':nonce, 'gaslimit':self.get_gaslimit(), 'value':self.get_value(),
-                  'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id, 'contract_id':self.contract.id}
+                  'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id}
 
         if self.white_label:
             kwargs['child_id'] = self.contract.id
