@@ -564,7 +564,7 @@ class CommonDetails(models.Model):
                   'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id, 'contract_id':self.contract.id}
 
         if self.white_label:
-            kwargs['contract_id'] = self.contract.id
+            kwargs['child_id'] = self.contract.id
 
             signed_data = sign_transaction(**kwargs)
 
