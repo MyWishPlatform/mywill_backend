@@ -566,7 +566,7 @@ class CommonDetails(models.Model):
         if self.white_label:
             kwargs['child_id'] = self.contract.id
 
-            signed_data = sign_transaction(**kwargs)
+        signed_data = sign_transaction(**kwargs)
 
 
         print('fields of transaction', flush=True)
