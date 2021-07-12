@@ -475,8 +475,8 @@ class CommonDetails(models.Model):
 
     contract = models.ForeignKey(Contract)
     white_label = models.BooleanField(default=False)
-    deploy_address = models.CharField(max_length=50, null=True, default='')
-    white_label_hash = models.CharField(max_length=70, null=True, default='')
+    deploy_address = models.CharField(max_length=50, default='')
+    white_label_hash = models.CharField(max_length=70, default='')
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
