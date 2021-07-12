@@ -24,7 +24,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY
+from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY, MW_COPYRIGHT
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
     AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT
@@ -490,7 +490,10 @@ class CommonDetails(models.Model):
         with open(result_name, 'rb') as f:
             result = json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
-        eth_contract.source_code = source
+        if self.white_label:
+            eth_contract.source_code = MW_COPYRIGHT + source
+        else:
+            eth_contract.source_code = source
         eth_contract.compiler_version = result['compiler']['version']
         eth_contract.abi = result['abi']
         eth_contract.bytecode = result['bytecode'][2:]
