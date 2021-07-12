@@ -12,7 +12,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
-    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
+    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
 from email_messages import *
 
 
@@ -380,6 +380,9 @@ class AbstractContractDetailsToken(CommonDetails):
             price += AUTHIO_PRICE_USDT
         if 'verification' in kwargs and kwargs['verification']:
             price += VERIFICATION_PRICE_USDT
+        if 'white_label' in kwargs and kwargs['white_label']:
+            price += WHITELABEL_PRICE_USDT
+
         return price * NET_DECIMALS['USDT']
 
     def get_arguments(self, eth_contract_attr_name):

@@ -1,6 +1,6 @@
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.settings import BSC_WEB3_ATTEMPTS
 
 
@@ -29,6 +29,8 @@ class ContractDetailsBinanceToken(AbstractContractDetailsToken):
             price += AUTHIO_PRICE_USDT
         if 'verification' in kwargs and kwargs['verification']:
             price += VERIFICATION_PRICE_USDT
+        if 'white_label' in kwargs and kwargs['white_label']:
+            price += WHITELABEL_PRICE_USDT
         return price * NET_DECIMALS['USDT']
 
     def compile(self, eth_contract_attr_name='eth_contract_token'):

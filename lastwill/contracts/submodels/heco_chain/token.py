@@ -1,4 +1,4 @@
-from lastwill.consts import CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
+from lastwill.consts import CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.contracts.submodels.common import EthContract
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 from lastwill.contracts.submodels.common import *
@@ -27,4 +27,6 @@ class ContractDetailsHecoChainToken(AbstractContractDetailsToken):
         price = CONTRACT_PRICE_USDT['HECOCHAIN_TOKEN']
         if 'verification' in kwargs and kwargs['verification']:
             price += VERIFICATION_PRICE_USDT
+        if 'white_label' in kwargs and kwargs['white_label']:
+            price += WHITELABEL_PRICE_USDT
         return int(price * NET_DECIMALS['USDT'])

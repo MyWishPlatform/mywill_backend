@@ -8,6 +8,8 @@ from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
 from requests_http_signature import HTTPSignatureAuth
+from hdwallet import BIP44HDWallet
+from hdwallet.symbols import ETH
 
 from django.db import models
 from django.apps import apps
@@ -22,11 +24,10 @@ from neocore.UInt160 import UInt160
 
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import SECRET_KEY, KEY_ID
-from lastwill.settings import GAS_API_URL, SPEEDLVL
+from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
-    AVAILABLE_CONTRACT_TYPES
+    AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
@@ -230,7 +231,8 @@ def send_in_queue(contract_id, type, queue):
     connection.close()
 
 
-def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None, chain_id=None):
+def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None,
+                     chain_id=None, child_id=None):
     data = {
         'from': address,
         'nonce': nonce,
@@ -247,6 +249,8 @@ def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_d
 
     if chain_id:
         data['chainId'] = chain_id
+    if child_id:
+        data['child_id'] = child_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
     signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
@@ -263,6 +267,31 @@ def sign_neo_transaction(tx, binary_tx, address):
         x['verification'].encode(),
     ) for x in scripts]
     return tx
+
+
+def get_whitelabel_address(contract_id):
+    hd_wallet = BIP44HDWallet(symbol=ETH, account=0, change=False, address=0)
+    hd_wallet.from_root_xprivate_key(ROOT_EXT_KEY)
+    derived_wallet = hd_wallet.from_index(contract_id)
+    address = derived_wallet.address()
+    return address
+
+
+def transfer_crypto(details, dest):
+    eth_int = EthereumProvider().get_provider(network=details.contract.network.name)
+    address = NETWORKS[details.contract.network.name]['address']
+    nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
+    gas_price_current = details.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
+    gas_price_fixed = ETH_COMMON_GAS_PRICES[details.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
+    gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+    eth_amount = hex(int(1.2 * (gas_price * CONTRACT_GAS_LIMIT['TOKEN'])))
+    chain_id = int(eth_int.eth_chainId(), 16)
+
+    signed_data = sign_transaction(address, nonce, details.get_gaslimit(), value=eth_amount,
+                                   dest=dest, gas_price=gas_price, chain_id=chain_id)
+
+    tx_hash = eth_int.eth_sendRawTransaction(signed_data)
+    return tx_hash
 
 
 
@@ -445,6 +474,9 @@ class CommonDetails(models.Model):
         abstract = True
 
     contract = models.ForeignKey(Contract)
+    white_label = models.BooleanField(default=False)
+    deploy_address = models.CharField(max_length=50, null=True, default=None)
+    white_label_hash = models.CharField(max_length=70, null=True, default=None)
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
@@ -482,21 +514,24 @@ class CommonDetails(models.Model):
             tr.encode_constructor_arguments(arguments)
         ).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
-        address = NETWORKS[self.contract.network.name]['address']
+
+        if self.white_label:
+            if not any((self.white_label_hash, self.deploy_address)):
+                address = get_whitelabel_address(self.contract.id)
+                self.white_label_hash = transfer_crypto(self, address)
+                self.deploy_address = address
+                self.save()
+                return
+            else:
+                address = self.deploy_address
+        else:
+            address = NETWORKS[self.contract.network.name]['address']
 
         for attempt in range(attempts):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
                 nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
-                if self.contract.network.name == 'ETHEREUM_MAINNET':
-                    try:
-                        response = requests.get(GAS_API_URL).json()
-                        gas_price_current = response[SPEEDLVL] / 10
-                        gas_price_current = int(gas_price_current * 10 ** 9)
-                        break
-                    except (requests.RequestException, KeyError):
-                        print('gas station api is unavailable', flush=True)
-                gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
+                gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
             except Exception:
@@ -524,8 +559,15 @@ class CommonDetails(models.Model):
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = int(eth_int.eth_chainId(), 16)
-        signed_data = sign_transaction(address, nonce, self.get_gaslimit(),
-                                       value=self.get_value(), contract_data=data, gas_price=gas_price, chain_id=chain_id)
+
+        kwargs = {'address':address, 'nonce':nonce, 'gaslimit':self.get_gaslimit(), 'value':self.get_value(),
+                  'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id}
+
+        if self.white_label:
+            kwargs['child_id'] = self.contract.id
+
+        signed_data = sign_transaction(**kwargs)
+
 
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
@@ -659,6 +701,17 @@ class CommonDetails(models.Model):
         print('signed_data', signed_data)
         eth_int.eth_sendRawTransaction(signed_data)
         print('check ok!')
+
+
+    def get_gasstation_gasprice(self):
+        if self.contract.network.name == 'ETHEREUM_MAINNET':
+            try:
+                response = requests.get(GAS_API_URL).json()
+                gas_price_current = response[SPEEDLVL] / 10
+                gas_price_current = int(gas_price_current * 10 ** 9)
+                return gas_price_current
+            except (requests.RequestException, KeyError):
+                print('gas station api is unavailable', flush=True)
 
 
 @contract_details('Pizza')
