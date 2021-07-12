@@ -490,10 +490,6 @@ class CommonDetails(models.Model):
         with open(result_name, 'rb') as f:
             result = json.loads(f.read().decode('utf-8-sig'))
         eth_contract = EthContract()
-        if self.white_label:
-            eth_contract.source_code = source
-        else:
-            eth_contract.source_code = MW_COPYRIGHT + source
         eth_contract.compiler_version = result['compiler']['version']
         eth_contract.abi = result['abi']
         eth_contract.bytecode = result['bytecode'][2:]

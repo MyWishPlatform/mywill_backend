@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.emails_api import send_verification_mail
-from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL
+from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, MW_COPYRIGHT
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
 from email_messages import *
@@ -411,6 +411,8 @@ class AbstractContractDetailsToken(CommonDetails):
             token_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
+        if not self.white_label:
+            source_code = MW_COPYRIGHT + source_code
         self.eth_contract_token = create_ethcontract_in_compile(
             token_json['abi'], token_json['bytecode'][2:],
             token_json['compiler']['version'], self.contract, source_code
