@@ -185,7 +185,7 @@ def test_crowdsale_params(config, params, dest):
     if os.system("/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
             dest=dest)):
         raise Exception('compiler error while testing')
-     if os.system("/bin/bash -c 'cd {dest} &&  yarn test-crowdsale'".format(
+    if os.system("/bin/bash -c 'cd {dest} &&  yarn test-crowdsale'".format(
             dest=dest)):
         raise Exception('testing error')
 
