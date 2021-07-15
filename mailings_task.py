@@ -23,8 +23,11 @@ def send_emails():
 
     try:
         for user in testnet_users:
-            if not user.profile.received_gift:
+            profile = user.profile
+            if not profile.received_gift:
                 positive_payment(user, amount, site_id=1)
+                profile.received_gift = True
+                profile.save()
                 send_mail()
     except OperationalError:
         pass
