@@ -195,8 +195,8 @@ def test_token_params(config, params, dest):
         f.write(json.dumps(params))
     if os.system("/bin/bash -c 'cd {dest} && yarn compile-token'".format(dest=dest)):
         raise Exception('compiler error while deploying')
-    # if os.system("/bin/bash -c 'cd {dest} && yarn test-token'".format(dest=dest)):
-    #    raise Exception('compiler error while testing')
+    if os.system("/bin/bash -c 'cd {dest} && yarn test-token'".format(dest=dest)):
+        raise Exception('compiler error while testing')
 
 
 def test_neo_token_params(config, params, dest):
