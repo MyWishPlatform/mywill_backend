@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth.models import User
 from django.db.models import F
+from django.db import transaction
 
 from rest_framework.exceptions import ValidationError
 
@@ -138,13 +139,13 @@ def freeze_payments(amount, network):
     #    )
     #    print('FREEZE', value, 'WISH', flush=True)
 
-
+@transaction.atomic
 def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
 
-
+@transaction.atomic
 def negative_payment(user, value, site_id, network):
     if not UserSiteBalance.objects.select_for_update().filter(
             user=user, subsite__id=site_id, balance__gte=value
