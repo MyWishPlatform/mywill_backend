@@ -18,6 +18,7 @@ class Profile(models.Model):
     metamask_address = models.CharField(max_length=50, null=True, default=None)
     is_swaps = models.BooleanField(default=False)
     is_swaps_admin = models.BooleanField(default=False)
+    received_gift = models.BooleanField(default=False)
 
 
 class SubSite(models.Model):
@@ -33,7 +34,6 @@ class UserSiteBalance(models.Model):
     btc_address = models.CharField(max_length=50, null=True, default=None)
     tron_address = models.CharField(max_length=50, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
-    received_gift = models.BooleanField(default=False)
 
 
 class APIToken(models.Model):

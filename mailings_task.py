@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 
 from lastwill.contracts.models import Contract
 from lastwill.profile.models import UserSiteBalance
+from lastwill.payments.api import positive_payment
 
 
 @app.task
@@ -22,13 +23,9 @@ def send_emails():
 
     try:
         for user in testnet_users:
-            with transaction.atomic():
-                user_balance = UserSiteBalance.objects.select_for_uodate()\
-                    .filter(user__id=user.id).filter(subsite_id=1)
-                if not user_balance.received_gift:
-                    user_balance += amount * 10 ** 18
-                    user_balance.save()
-                    send_mail()
+            if not user.profile.received_gift:
+                positive_payment(user, amount, site_id=1)
+                send_mail()
     except OperationalError:
         pass
 
