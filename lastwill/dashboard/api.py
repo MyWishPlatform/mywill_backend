@@ -7,7 +7,7 @@ from web3 import Web3, HTTPProvider
 from lastwill.contracts.models import Contract
 from lastwill.deploy.models import Network
 from collections import defaultdict
-from lastwill.consts import AVAILABLE_CONTRACT_TYPES
+from lastwill.consts import AVAILABLE_CONTRACT_TYPES, NET_DECIMALS
 
 
 def get_tron_balance(network):
@@ -77,7 +77,7 @@ def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
         for contract in contracts:
             type_result = results[contract.contract_type]
             type_result['amount'] += 1
-            type_result['cost'] += contract.cost
+            type_result['cost'] += int(contract.cost) / NET_DECIMALS['USDT']
             if getattr(contract.get_details(), 'verification', None):
                 type_result['with_verification'] += 1
             if getattr(contract.get_details(), 'authio', None):
