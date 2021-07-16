@@ -475,8 +475,8 @@ class CommonDetails(models.Model):
 
     contract = models.ForeignKey(Contract)
     white_label = models.BooleanField(default=False)
-    deploy_address = models.CharField(max_length=50, null=True, default=None)
-    white_label_hash = models.CharField(max_length=70, null=True, default=None)
+    deploy_address = models.CharField(max_length=50, default='')
+    white_label_hash = models.CharField(max_length=70, default='')
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
@@ -516,14 +516,17 @@ class CommonDetails(models.Model):
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
         if self.white_label:
+            print('prepare deployment of white labeled contract', flush=True)
             if not any((self.white_label_hash, self.deploy_address)):
                 address = get_whitelabel_address(self.contract.id)
                 self.white_label_hash = transfer_crypto(self, address)
                 self.deploy_address = address
                 self.save()
+                print(f'white label address: {address}, transfer hash: {self.white_label_hash}', flush=True)
                 return
             else:
                 address = self.deploy_address
+                print(f'deploying white label contract on address: {address}', flush=True)
         else:
             address = NETWORKS[self.contract.network.name]['address']
 
