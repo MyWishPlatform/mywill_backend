@@ -516,8 +516,8 @@ class CommonDetails(models.Model):
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
         if self.white_label:
-            print('prepare deployment of white labeled contract', flush=True)
             if not any((self.white_label_hash, self.deploy_address)):
+                print('prepare deployment of white labeled contract', flush=True)
                 address = get_whitelabel_address(self.contract.id)
                 self.white_label_hash = transfer_crypto(self, address)
                 self.deploy_address = address

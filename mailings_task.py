@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from celery_config import app
-from django.db import transaction, OperationalError
-from django.core.mail import send_mail
 
+from django.db import OperationalError
+from django.core.mail import send_mail
 
 from lastwill.contracts.models import Contract
 from lastwill.profile.models import UserSiteBalance
@@ -43,7 +43,6 @@ def remind_balance():
         for contract in user_contracts:
             if 'MAINNET' in contract.network.name:
                 users.pop(idx)
-
 
     for user in users:
         send_mail()
