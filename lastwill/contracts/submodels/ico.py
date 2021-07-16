@@ -243,6 +243,7 @@ class AbstractContractDetailsICO(CommonDetails):
         tr = abi.ContractTranslator(self.eth_contract_crowdsale.abi)
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+        chain_id = int(eth_int.eth_chainId(), 16)
         gas_limit = 100000 + 80000 * self.contract.tokenholder_set.all().count()
         gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         print('nonce', nonce)
@@ -254,7 +255,8 @@ class AbstractContractDetailsICO(CommonDetails):
             contract_data=binascii.hexlify(
                 tr.encode_function_call('init', [])
             ).decode(),
-            gas_price=int(gas_price * 1.2)
+            gas_price=int(gas_price * 1.2),
+            chain_id=chain_id
         )
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract_crowdsale.save()
