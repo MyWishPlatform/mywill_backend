@@ -156,6 +156,17 @@ class ContractDetailsNeo(CommonDetails):
         else:
             print(stdout.decode(), stderr.decode(), flush=True)
 
+        data = stdout.decode()
+        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1]
+        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0]
+
+        neo_contract = NeoContract()
+        neo_contract.contract = self.contract
+        neo_contract.original_contract = self.contract
+        neo_contract.tx_hash = tx_hash
+        neo_contract.address = contract_address
+        neo_contract.save()
+
         '''
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
