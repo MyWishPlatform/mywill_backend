@@ -166,6 +166,8 @@ class ContractDetailsNeo(CommonDetails):
         neo_contract.tx_hash = tx_hash
         neo_contract.address = contract_address
         neo_contract.save()
+        self.neo_contract = neo_contract
+        self.save()
 
         '''
         from_addr = NETWORKS[self.contract.network.name]['address']
