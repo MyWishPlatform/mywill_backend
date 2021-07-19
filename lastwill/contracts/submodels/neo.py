@@ -12,6 +12,7 @@ from neo.SmartContract.ContractParameterType import ContractParameterType
 from neo.IO.MemoryStream import StreamManager
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
+from subprocess import Popen, PIPE
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
@@ -58,8 +59,13 @@ class ContractDetailsNeo(CommonDetails):
             print('already compiled')
             return
         dest = create_directory(self, 'lastwill/neo3-token/*', '')[0]
-        if os.system("/bin/bash -c 'cd {dest} &&  /venv/bin/neo3-boa NEP17.py".format(dest=dest)):
+        command_list = ['cd {dest}'.format(dest=dest), 'venv/bin/neo3-boa NEP17.py']
+        process = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            print(stdout.decode(), stderr.decode(), flush=True)
             raise Exception('compiler error while deploying')
+
         '''
         dest, preproc_config = create_directory(
             self, 'lastwill/neo-ico-contracts/*', 'token-config.json'
