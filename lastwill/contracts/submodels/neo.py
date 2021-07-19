@@ -154,8 +154,26 @@ class ContractDetailsNeo(CommonDetails):
         self.save()
         '''
 
-    # @blocking
-    # @postponable
+    def deploy_new(self):
+        process = Popen(['./neo-cli'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
+        token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
+        nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
+        print('nef path', nef_path)
+        process.stdin.write((f'deploy {nef_path}' + '\n').encode())
+        process.stdin.write(('yes' + '\n').encode())
+        stdout, stderr = process.communicate()
+
+        # if process.returncode != 0:
+        #    print(stdout.decode(), stderr.decode(), flush=True)
+        #    raise Exception('error while deploying')
+        # else:
+        #    print(stdout.decode(), stderr.decode(), flush=True)
+
+        data = stdout.decode()
+        print(data)
+
+    @blocking
+    @postponable
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
 
