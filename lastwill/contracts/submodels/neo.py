@@ -169,7 +169,7 @@ class ContractDetailsNeo(CommonDetails):
         process.stdin.write(('yes' + '\n').encode())
         process.stdin.write(('list asset' + '\n').encode())
         process.stdin.write(('exit' + '\n').encode())
-        process.stdin.write(('' + '\n').encode())
+        process.stdin.write(('whoami' + '\n').encode())
         stdout, stderr = process.communicate()
         print('stdout', stdout)
         print('stderr', stderr)
