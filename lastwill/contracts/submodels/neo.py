@@ -164,7 +164,9 @@ class ContractDetailsNeo(CommonDetails):
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
+        process.stdin.flush()
         process.stdin.write(('yes' + '\n').encode())
+        process.stdin.flush()
         stdout, stderr = process.communicate()
 
 
