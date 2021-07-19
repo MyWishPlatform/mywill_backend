@@ -168,7 +168,7 @@ class ContractDetailsNeo(CommonDetails):
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
         process.stdin.write(('yes' + '\n').encode())
         process.stdin.write(('exit' + '\n').encode())
-        stdout, stderr = process.communicate()
+        stdout, stderr = process.communicate(timeout=10)
         print('stdout', stdout)
         print('stderr', stderr)
 
