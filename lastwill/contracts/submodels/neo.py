@@ -26,6 +26,17 @@ class NeoContract(EthContract):
     pass
 
 
+def deploy_contract(details_id):
+    details = ContractDetailsNeo.objects.get(id=details_id)
+    process = Popen(['./neo-cli'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
+    token_nef_file_name = '{name}.nef'.format(name=details.token_short_name)
+    nef_path = path.join(CONTRACTS_TEMP_DIR, str(details.temp_directory), token_nef_file_name)
+    print('nef path', nef_path)
+    process.stdin.write((f'deploy {nef_path}' + '\n').encode())
+    process.stdin.write(('yes' + '\n').encode())
+    stdout, stderr = process.communicate()
+    return stdout.decode()
+
 @contract_details('NEO contract')
 class ContractDetailsNeo(CommonDetails):
 
