@@ -150,6 +150,8 @@ class ContractDetailsNeo(CommonDetails):
         if process.returncode != 0:
             print(stdout.decode(), stderr.decode(), flush=True)
             raise Exception('error while deploying')
+        else:
+            print(stdout.decode(), stderr.decode(), flush=True)
 
         '''
         from_addr = NETWORKS[self.contract.network.name]['address']
