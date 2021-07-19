@@ -1591,6 +1591,11 @@ def get_whitelabel_cost(request):
 @api_view(http_method_names=['POST'])
 def check_neo3_address(request):
     data = request.data
-    is_neo3_address(data['address'])
-    return Response()
+    try:
+        is_neo3_address(data['address'])
+    except (ValidationError, ValueError):
+        return JsonResponse({'validation': False})
+
+    return JsonResponse({'validation': True})
+
 
