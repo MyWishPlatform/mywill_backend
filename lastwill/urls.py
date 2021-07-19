@@ -60,6 +60,7 @@ from lastwill.contracts.api import (
     get_verification_cost,
     buy_verification,
     get_whitelabel_cost,
+    check_neo3_address,
 )
 from lastwill.contracts.api_common import (
     get_available_contracts,
@@ -293,6 +294,7 @@ urlpatterns = [
     url(r'^api/buy_verification/$', buy_verification),
     url(r'^api/get_verification_cost/$', get_verification_cost),
     url(r'^api/get_whitelabel_cost/$', get_whitelabel_cost),
+    url(r'^api/check_neo3_address/$', check_neo3_address),
     url(r'^api/healthcheck', health_check),
 
     # dashboard

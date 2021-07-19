@@ -1,4 +1,5 @@
 import re
+import base58
 from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
 
@@ -13,6 +14,15 @@ def is_address(string):
 
 def is_xin_address(string):
     re.match('^(xdc|XDC)[a-fA-F\d]{40}$', string) or die('{} is not a valid xinfin address'.format(string))
+
+
+def is_neo3_address(string):
+    die_message = '{} is not a valid neo3 address'.format(string)
+    data = base58.b58decode_check(string) or die(die_message)
+    if len(data) != 21:
+        die(die_message)
+    elif data[0] != 53:
+        die(die_message)
 
 
 def is_email(string):
