@@ -143,6 +143,7 @@ class ContractDetailsNeo(CommonDetails):
 
         process = Popen([NEO_CLI_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         nef_path = path.join(CONTRACTS_DIR, str(self.temp_directory), 'NEP17.nef')
+        print('nef path', nef_path)
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
         process.stdin.write(('yes' + '\n').encode())
         stdout, stderr = process.communicate()
