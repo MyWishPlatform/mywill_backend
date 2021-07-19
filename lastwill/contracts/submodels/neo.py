@@ -62,6 +62,20 @@ class ContractDetailsNeo(CommonDetails):
             print('already compiled')
             return
         dest = create_directory(self, 'lastwill/neo3-token/*', '')[0]
+
+        from jinja2 import Environment, FileSystemLoader
+        env = Environment(loader=FileSystemLoader(dest))
+        template = env.get_template('NEP17.py')
+
+        output_from_parsed_template = template.render(
+            token_decimals=self.decimals,
+            token_symbol=self.token_short_name,
+        )
+        print(output_from_parsed_template)
+        # to save the results
+        with open("NEP17.py", "w") as fh:
+            fh.write(output_from_parsed_template)
+
         command = "cd {dest} && venv/bin/neo3-boa NEP17.py".format(dest=dest)
         result = subprocess.run(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
         if result.returncode != 0:
