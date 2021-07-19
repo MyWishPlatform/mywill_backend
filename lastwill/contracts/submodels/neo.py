@@ -154,8 +154,8 @@ class ContractDetailsNeo(CommonDetails):
         self.save()
         '''
 
-    @blocking
-    @postponable
+    # @blocking
+    # @postponable
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
 
@@ -164,9 +164,7 @@ class ContractDetailsNeo(CommonDetails):
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
-        process.stdin.flush()
         process.stdin.write(('yes' + '\n').encode())
-        process.stdin.flush()
         stdout, stderr = process.communicate()
 
 
