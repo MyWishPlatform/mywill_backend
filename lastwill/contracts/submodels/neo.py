@@ -57,6 +57,10 @@ class ContractDetailsNeo(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
+        dest = create_directory(self, 'lastwill/neo3-token/*', '')[0]
+        if os.system("/bin/bash -c 'cd {dest} &&  /venv/bin/neo3-boa NEP17.py".format(dest=dest)):
+            raise Exception('compiler error while deploying')
+        '''
         dest, preproc_config = create_directory(
             self, 'lastwill/neo-ico-contracts/*', 'token-config.json'
         )
@@ -113,6 +117,7 @@ class ContractDetailsNeo(CommonDetails):
         neo_contract.save()
         self.neo_contract = neo_contract
         self.save()
+        '''
 
     @blocking
     @postponable
