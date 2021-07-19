@@ -141,7 +141,7 @@ class ContractDetailsNeo(CommonDetails):
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
 
-        process = Popen(['pwd'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR)
+        process = Popen(['pwd'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), 'NEP17.nef')
         print('nef path', nef_path)
         process.stdin.write(('./neo-cli' + '\n').encode())
