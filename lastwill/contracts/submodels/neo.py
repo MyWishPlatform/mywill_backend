@@ -19,7 +19,7 @@ from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
 from lastwill.settings import NEO_CLI_DIR
-
+from jinja2 import Environment, FileSystemLoader
 
 
 class NeoContract(EthContract):
@@ -63,22 +63,24 @@ class ContractDetailsNeo(CommonDetails):
             return
         dest = create_directory(self, 'lastwill/neo3-token/*', '')[0]
 
-        from jinja2 import Environment, FileSystemLoader
-        env = Environment(loader=FileSystemLoader(dest))
-        template = env.get_template('NEP17.py')
+        jinja_env = Environment(loader=FileSystemLoader(dest))
+        token_template = jinja_env.get_template('NEP17.py')
 
-        output_from_parsed_template = template.render(
+        token_source_code = token_template.render(
             token_decimals=self.decimals,
             token_symbol=self.token_short_name,
         )
-        print(output_from_parsed_template)
-        # to save the results
-        code_file_path = path.join(dest, 'NEP17.py')
+        print(token_source_code)
+        token_source_code_file_name = '{name}.py'.format(name=self.token_short_name)
+        token_source_code_file_path = path.join(dest, token_source_code_file_name)
 
-        with open(code_file_path, "w") as fh:
-            fh.write(output_from_parsed_template)
+        with open(token_source_code_file_path, "w") as f:
+            f.write(token_source_code)
 
-        command = "cd {dest} && venv/bin/neo3-boa NEP17.py".format(dest=dest)
+        command = "cd {dest} && venv/bin/neo3-boa {source_code_path}".format(
+            dest=dest,
+            source_code_path=token_source_code_file_path,
+        )
         result = subprocess.run(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
         if result.returncode != 0:
             print(result.stdout.decode(), result.stderr.decode(), flush=True)
@@ -158,13 +160,16 @@ class ContractDetailsNeo(CommonDetails):
         self.compile()
 
         process = Popen(['./neo-cli'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
-        nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), 'NEP17.nef')
+        token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
+        nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
         process.stdin.write(('list address' + '\n').encode())
         process.stdin.write(('list asset' + '\n').encode())
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
         process.stdin.write(('yes' + '\n').encode())
         stdout, stderr = process.communicate()
+        print('stdout', stdout)
+        print('stderr', stderr)
 
         if process.returncode != 0:
             print(stdout.decode(), stderr.decode(), flush=True)
