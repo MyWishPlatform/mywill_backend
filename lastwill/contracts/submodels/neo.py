@@ -18,7 +18,7 @@ from subprocess import Popen, PIPE
 from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
-from lastwill.settings import NEO_CLI_PATH
+from lastwill.settings import NEO_CLI_DIR
 
 
 
@@ -141,9 +141,11 @@ class ContractDetailsNeo(CommonDetails):
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
 
-        process = Popen([NEO_CLI_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+        process = Popen(['cd', NEO_CLI_DIR], stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), 'NEP17.nef')
         print('nef path', nef_path)
+        process.stdin.write(('./neo-cli' + '\n').encode())
+        process.stdin.flush()
         process.stdin.write(('list address' + '\n').encode())
         process.stdin.flush()
         process.stdin.write(('list asset' + '\n').encode())
