@@ -178,8 +178,8 @@ class ContractDetailsNeo(CommonDetails):
             print(stdout.decode(), stderr.decode(), flush=True)
 
         data = stdout.decode()
-        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1]
-        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0]
+        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
+        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
 
         neo_contract = NeoContract()
         neo_contract.contract = self.contract
@@ -189,6 +189,7 @@ class ContractDetailsNeo(CommonDetails):
         neo_contract.save()
         self.neo_contract = neo_contract
         self.save()
+        self.initialized({})
 
         '''
         from_addr = NETWORKS[self.contract.network.name]['address']
