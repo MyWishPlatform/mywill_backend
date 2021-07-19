@@ -166,10 +166,7 @@ class ContractDetailsNeo(CommonDetails):
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
         process.stdin.write(('yes' + '\n').encode())
         stdout, stderr = process.communicate()
-        print('stdout', stdout)
-        print('stderr', stderr)
 
-        print(stdout.decode(), stderr.decode(), flush=True)
 
         #if process.returncode != 0:
         #    print(stdout.decode(), stderr.decode(), flush=True)
@@ -178,9 +175,11 @@ class ContractDetailsNeo(CommonDetails):
         #    print(stdout.decode(), stderr.decode(), flush=True)
 
         data = stdout.decode()
-        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
-        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
+        print(data)
+        # tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
+        # contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
 
+        '''
         neo_contract = NeoContract()
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
@@ -190,8 +189,7 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract = neo_contract
         self.save()
         self.initialized({})
-
-        '''
+        
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
