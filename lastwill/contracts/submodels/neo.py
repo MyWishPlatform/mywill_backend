@@ -73,7 +73,9 @@ class ContractDetailsNeo(CommonDetails):
         )
         print(output_from_parsed_template)
         # to save the results
-        with open("NEP17.py", "w") as fh:
+        code_file_path = path.join(dest, 'NEP17.py')
+
+        with open(code_file_path, "w") as fh:
             fh.write(output_from_parsed_template)
 
         command = "cd {dest} && venv/bin/neo3-boa NEP17.py".format(dest=dest)
