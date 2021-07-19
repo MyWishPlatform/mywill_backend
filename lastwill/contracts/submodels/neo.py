@@ -18,6 +18,8 @@ from subprocess import Popen, PIPE
 from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
+from lastwill.settings import NEO_CLI_PATH
+
 
 
 class NeoContract(EthContract):
@@ -138,6 +140,18 @@ class ContractDetailsNeo(CommonDetails):
     @postponable
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
+
+        process = Popen([NEO_CLI_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        nef_path = path.join(CONTRACTS_DIR, str(self.temp_directory), 'NEP17.nef')
+        process.stdin.write((f'deploy {nef_path}' + '\n').encode())
+        process.stdin.write(('yes' + '\n').encode())
+        stdout, stderr = process.communicate()
+
+        if process.returncode != 0:
+            print(stdout.decode(), stderr.decode(), flush=True)
+            raise Exception('error while deploying')
+
+        '''
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
@@ -184,6 +198,7 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract.address = contract_hash
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
+        '''
 
     @blocking
     @postponable
