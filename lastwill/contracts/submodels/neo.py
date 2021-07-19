@@ -1,4 +1,5 @@
 import math
+import subprocess
 
 from django.db import models
 from django.core.mail import send_mail
@@ -59,8 +60,12 @@ class ContractDetailsNeo(CommonDetails):
             print('already compiled')
             return
         dest = create_directory(self, 'lastwill/neo3-token/*', '')[0]
-        if os.system("/bin/bash -c 'cd {dest} && venv/bin/neo3-boa NEP17.py".format(dest=dest)):
+        command = "cd {dest} && venv/bin/neo3-boa NEP17.py".format(dest=dest)
+        result = subprocess.run(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+        if result.returncode != 0:
+            print(result.stdout.decode(), result.stderr.decode(), flush=True)
             raise Exception('compiler error while deploying')
+
         '''
         command_list = ['cd {dest}'.format(dest=dest), 'venv/bin/neo3-boa NEP17.py']
         process = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
