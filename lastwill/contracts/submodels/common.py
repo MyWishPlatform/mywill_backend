@@ -166,6 +166,8 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
     if config_name:
         preproc_config = os.path.join(dest, config_name)
         os.unlink(preproc_config)
+    else:
+        preproc_config = ''
     return dest, preproc_config
 
 
