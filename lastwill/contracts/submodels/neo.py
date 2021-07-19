@@ -169,11 +169,13 @@ class ContractDetailsNeo(CommonDetails):
         print('stdout', stdout)
         print('stderr', stderr)
 
-        if process.returncode != 0:
-            print(stdout.decode(), stderr.decode(), flush=True)
-            raise Exception('error while deploying')
-        else:
-            print(stdout.decode(), stderr.decode(), flush=True)
+        print(stdout.decode(), stderr.decode(), flush=True)
+
+        #if process.returncode != 0:
+        #    print(stdout.decode(), stderr.decode(), flush=True)
+        #    raise Exception('error while deploying')
+        #else:
+        #    print(stdout.decode(), stderr.decode(), flush=True)
 
         data = stdout.decode()
         tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
