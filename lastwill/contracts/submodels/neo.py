@@ -145,15 +145,10 @@ class ContractDetailsNeo(CommonDetails):
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), 'NEP17.nef')
         print('nef path', nef_path)
         process.stdin.write(('./neo-cli' + '\n').encode())
-        process.stdin.flush()
         process.stdin.write(('list address' + '\n').encode())
-        process.stdin.flush()
         process.stdin.write(('list asset' + '\n').encode())
-        process.stdin.flush()
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
-        process.stdin.flush()
         process.stdin.write(('yes' + '\n').encode())
-        process.stdin.flush()
         stdout, stderr = process.communicate()
 
         if process.returncode != 0:
