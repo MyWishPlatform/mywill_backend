@@ -97,6 +97,8 @@ class ContractDetailsNeo(CommonDetails):
             print(result.stdout.decode(), result.stderr.decode(), flush=True)
             raise Exception('compiler error while deploying')
 
+        self.save()
+
         '''
         command_list = ['cd {dest}'.format(dest=dest), 'venv/bin/neo3-boa NEP17.py']
         process = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
