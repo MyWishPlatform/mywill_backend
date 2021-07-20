@@ -93,8 +93,8 @@ class ContractDetailsNeo(CommonDetails):
         token_source_code = token_template.render(
             token_decimals=self.decimals,
             token_symbol=self.token_short_name,
-            owner = neo3_address_to_bytes(self.admin_address)
-            holders = holders
+            owner=neo3_address_to_bytes(self.admin_address),
+            holders=holders
         )
         print(token_source_code)
         token_source_code_file_name = '{name}.py'.format(name=self.token_short_name)
