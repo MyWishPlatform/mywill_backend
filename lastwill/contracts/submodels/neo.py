@@ -1,5 +1,6 @@
 import math
 import subprocess
+import os
 
 from django.db import models
 from django.core.mail import send_mail
@@ -177,9 +178,13 @@ class ContractDetailsNeo(CommonDetails):
         token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
-        process.stdin.write((f'deploy {nef_path}' + '\n').encode())
-        process.stdin.write(('yes' + '\n').encode())
-        process.stdin.write(('show state' + '\n').encode())
+        os.write(proc.stdin.fileno(), (f'deploy {nef_path}' + '\n').encode())
+        os.write(proc.stdin.fileno(), ('yes' + '\n').encode())
+        time.sleep(30)
+
+        #process.stdin.write((f'deploy {nef_path}' + '\n').encode())
+        #process.stdin.write(('yes' + '\n').encode())
+        #process.stdin.write(('show state' + '\n').encode())
         stdout, stderr = process.communicate(timeout=10)
 
         # if process.returncode != 0:
