@@ -34,7 +34,10 @@ def deploy_contract(details_id):
     print('nef path', nef_path)
     process.stdin.write((f'deploy {nef_path}' + '\n').encode())
     process.stdin.write(('yes' + '\n').encode())
+    process.stdin.write(('exit' + '\n').encode())
+    process.stdin.write(('sleep 10' + '\n').encode())
     stdout, stderr = process.communicate()
+    process.
     return stdout.decode()
 
 @contract_details('NEO contract')
