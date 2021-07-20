@@ -205,23 +205,25 @@ class ContractDetailsNeo(CommonDetails):
         token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
-        process.stdin.write((f'deploy {nef_path}' + '\n').encode())
-        process.stdin.write(('yes' + '\n').encode())
+
+        os.write(process.stdin.fileno(), b'deploy {nef_path}'.format(nef_path=nef_path))
+        os.write(process.stdin.fileno(), b'yes')
+        time.sleep(30)
+
         stdout, stderr = process.communicate()
 
 
-        #if process.returncode != 0:
-        #    print(stdout.decode(), stderr.decode(), flush=True)
-        #    raise Exception('error while deploying')
-        #else:
-        #    print(stdout.decode(), stderr.decode(), flush=True)
+        if process.returncode != 0:
+            print(stdout.decode(), stderr.decode(), flush=True)
+            raise Exception('error while deploying')
+        else:
+            print(stdout.decode(), stderr.decode(), flush=True)
 
         data = stdout.decode()
         print(data)
-        # tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
-        # contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
+        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
+        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
 
-        '''
         neo_contract = NeoContract()
         neo_contract.contract = self.contract
         neo_contract.original_contract = self.contract
@@ -231,7 +233,8 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract = neo_contract
         self.save()
         self.initialized({})
-        
+
+        '''
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
