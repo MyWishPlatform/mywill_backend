@@ -179,7 +179,8 @@ class ContractDetailsNeo(CommonDetails):
         print('nef path', nef_path)
         process.stdin.write((f'deploy {nef_path}' + '\n').encode())
         process.stdin.write(('yes' + '\n').encode())
-        stdout, stderr = process.communicate()
+        process.stdin.write(('show state' + '\n').encode())
+        stdout, stderr = process.communicate(timeout=10)
 
         # if process.returncode != 0:
         #    print(stdout.decode(), stderr.decode(), flush=True)
