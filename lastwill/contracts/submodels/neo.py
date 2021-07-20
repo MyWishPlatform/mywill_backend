@@ -178,8 +178,8 @@ class ContractDetailsNeo(CommonDetails):
         token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
-        os.write(proc.stdin.fileno(), (f'deploy {nef_path}' + '\n').encode())
-        os.write(proc.stdin.fileno(), ('yes' + '\n').encode())
+        os.write(process.stdin.fileno(), (f'deploy {nef_path}' + '\n').encode())
+        os.write(process.stdin.fileno(), ('yes' + '\n').encode())
         time.sleep(30)
 
         #process.stdin.write((f'deploy {nef_path}' + '\n').encode())
