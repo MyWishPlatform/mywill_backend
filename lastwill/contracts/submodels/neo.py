@@ -45,7 +45,7 @@ def deploy_contract(details_id):
     return stdout.decode()
 
 def neo3_address_to_bytes(address):
-    return base58.b58decode_check(address)
+    return base58.b58decode_check(address)[1:]
 
 @contract_details('NEO contract')
 class ContractDetailsNeo(CommonDetails):
