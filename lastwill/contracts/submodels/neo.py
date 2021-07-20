@@ -43,6 +43,9 @@ def deploy_contract(details_id):
     stdout, stderr = process.communicate()
     return stdout.decode()
 
+def neo3_address_to_bytes(address):
+    return base58.b58encode_check(address)
+
 @contract_details('NEO contract')
 class ContractDetailsNeo(CommonDetails):
 
@@ -82,10 +85,16 @@ class ContractDetailsNeo(CommonDetails):
 
         jinja_env = Environment(loader=FileSystemLoader(dest))
         token_template = jinja_env.get_template('NEP17.py')
+        holders = []
+        for holder in self.contract.tokenholder_set.all():
+            address_bytes = neo3_address_to_bytes(holder.address)
+            holders.append({'address': address_bytes, 'amount': holder.amount})
 
         token_source_code = token_template.render(
             token_decimals=self.decimals,
             token_symbol=self.token_short_name,
+            owner = neo3_address_to_bytes(self.admin_address)
+            holders = holders
         )
         print(token_source_code)
         token_source_code_file_name = '{name}.py'.format(name=self.token_short_name)
@@ -172,29 +181,6 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract = neo_contract
         self.save()
         '''
-
-    def deploy_new(self):
-        process = Popen(['./neo-cli'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
-        token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
-        nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
-        print('nef path', nef_path)
-        os.write(process.stdin.fileno(), (f'deploy {nef_path}' + '\n').encode())
-        os.write(process.stdin.fileno(), ('yes' + '\n').encode())
-        time.sleep(30)
-
-        #process.stdin.write((f'deploy {nef_path}' + '\n').encode())
-        #process.stdin.write(('yes' + '\n').encode())
-        #process.stdin.write(('show state' + '\n').encode())
-        stdout, stderr = process.communicate(timeout=10)
-
-        # if process.returncode != 0:
-        #    print(stdout.decode(), stderr.decode(), flush=True)
-        #    raise Exception('error while deploying')
-        # else:
-        #    print(stdout.decode(), stderr.decode(), flush=True)
-
-        data = stdout.decode()
-        print(data)
 
     @blocking
     @postponable
