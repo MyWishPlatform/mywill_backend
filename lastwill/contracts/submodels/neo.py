@@ -1,6 +1,7 @@
 import math
 import subprocess
 import os
+import base58
 
 from django.db import models
 from django.core.mail import send_mail
