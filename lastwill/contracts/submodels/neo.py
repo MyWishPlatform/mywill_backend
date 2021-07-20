@@ -37,7 +37,6 @@ def deploy_contract(details_id):
     process.stdin.write(('exit' + '\n').encode())
     process.stdin.write(('sleep 10' + '\n').encode())
     stdout, stderr = process.communicate()
-    process.
     return stdout.decode()
 
 @contract_details('NEO contract')
