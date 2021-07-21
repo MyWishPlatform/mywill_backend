@@ -102,20 +102,12 @@ class ContractDetailsNeo(CommonDetails):
             source_code_path=token_source_code_file_path,
         )
         result = subprocess.run(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+        print(result.stdout.decode(), result.stderr.decode(), flush=True)
+
         if result.returncode != 0:
-            print(result.stdout.decode(), result.stderr.decode(), flush=True)
             raise Exception('compiler error while deploying')
 
         self.save()
-
-        '''
-        command_list = ['cd {dest}'.format(dest=dest), 'venv/bin/neo3-boa NEP17.py']
-        process = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
-        if process.returncode != 0:
-            print(stdout.decode(), stderr.decode(), flush=True)
-            raise Exception('compiler error while deploying')
-        '''
 
         '''
         dest, preproc_config = create_directory(
@@ -186,18 +178,15 @@ class ContractDetailsNeo(CommonDetails):
         nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
         print('nef path', nef_path)
 
+        #  process.write() doesn't work with time.sleep()
         os.write(process.stdin.fileno(), 'deploy {nef_path}\n'.format(nef_path=nef_path).encode())
         os.write(process.stdin.fileno(), b'yes\n')
         time.sleep(30)
-
         stdout, stderr = process.communicate()
 
-
+        print(stdout.decode(), stderr.decode(), flush=True)
         if process.returncode != 0:
-            print(stdout.decode(), stderr.decode(), flush=True)
             raise Exception('error while deploying')
-        else:
-            print(stdout.decode(), stderr.decode(), flush=True)
 
         data = stdout.decode()
         print(data)
