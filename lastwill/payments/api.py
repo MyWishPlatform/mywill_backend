@@ -144,7 +144,8 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
-    send_message_to_subs.delay(user, value, site_id)
+    msg = f'[received new payment] user: {user}, value: {value}, site_id: {site_id}'
+    send_message_to_subs.delay(msg)
 
 
 def negative_payment(user, value, site_id, network):

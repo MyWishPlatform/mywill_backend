@@ -31,6 +31,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+from bot import send_message_to_subs
 
 
 def address_to_scripthash(address):
@@ -592,6 +593,8 @@ class CommonDetails(models.Model):
 
         eth_contract.tx_hash = tx_hash
         eth_contract.save()
+        msg = f'deployed contract {self}, ({self.contract.id, eth_contract.id} \n by {self.contract.user} \n {tx_hash}'
+        send_message_to_subs(msg)
         print('transaction sent', flush=True)
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()

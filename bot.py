@@ -10,14 +10,13 @@ from celery_config import app
 
 
 @app.task
-def send_message_to_subs(user, value, site_id):
+def send_message_to_subs(message):
     subs = BotSub.objects.all()
     bot = telebot.TeleBot(bot_token)
-    message = f'[received new payment] user: {user}, value: {value}, site_id: {site_id}'
 
     for sub in subs:
         try:
-            bot.send_message(sub.chat_id, message).message_id
+            bot.send_message(sub.chat_id, message)
         except Exception:
             print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
 
