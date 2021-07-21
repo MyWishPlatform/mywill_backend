@@ -35,6 +35,7 @@ from web3 import Web3, HTTPProvider
 
 from lastwill.rates.api import rate
 from lastwill.check import is_neo3_address
+from lastwill.contracts.submodels.neo import neo3_address_to_hex
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
@@ -1597,5 +1598,18 @@ def check_neo3_address(request):
         return JsonResponse({'validation': False})
 
     return JsonResponse({'validation': True})
+
+
+@api_view(http_method_names=['POST'])
+def convert_neo3_address_to_hex(request):
+    address = request.data['address']
+    try:
+        is_neo3_address(address)
+        address_hex = neo3_address_to_hex(address)
+    except (ValidationError, ValueError):
+        raise PermissionDenied
+
+    return JsonResponse({'address': address_hex})
+
 
 

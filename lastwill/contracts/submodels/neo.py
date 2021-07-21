@@ -28,24 +28,16 @@ class NeoContract(EthContract):
     pass
 
 
-def deploy_contract(details_id):
-    details = ContractDetailsNeo.objects.get(id=details_id)
-    process = Popen(['whoami'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
-    stdout, stderr = process.communicate()
-    print(stdout.decode())
-    process = Popen(['./neo-cli'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
-    token_nef_file_name = '{name}.nef'.format(name=details.token_short_name)
-    nef_path = path.join(CONTRACTS_TEMP_DIR, str(details.temp_directory), token_nef_file_name)
-    print('nef path', nef_path)
-    process.stdin.write((f'deploy {nef_path}' + '\n').encode())
-    process.stdin.write(('yes' + '\n').encode())
-    process.stdin.write(('exit' + '\n').encode())
-    process.stdin.write(('sleep 10' + '\n').encode())
-    stdout, stderr = process.communicate()
-    return stdout.decode()
+def neo3_address_to_hex(address):
+    bytes = neo3_address_to_bytes(address)
+    bytes = bytearray(bytes)
+    bytes.reverse()
+    return '0x' + bytes.hex()
+
 
 def neo3_address_to_bytes(address):
     return base58.b58decode_check(address)[1:]
+
 
 @contract_details('NEO contract')
 class ContractDetailsNeo(CommonDetails):
