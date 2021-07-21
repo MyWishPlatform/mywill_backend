@@ -1,4 +1,7 @@
 import math
+import subprocess
+import os
+import base58
 
 from django.db import models
 from django.core.mail import send_mail
@@ -12,14 +15,28 @@ from neo.SmartContract.ContractParameterType import ContractParameterType
 from neo.IO.MemoryStream import StreamManager
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
+from subprocess import Popen, PIPE
 
 from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
+from lastwill.settings import NEO_CLI_DIR
+from jinja2 import Environment, FileSystemLoader
 
 
 class NeoContract(EthContract):
     pass
+
+
+def neo3_address_to_hex(address):
+    bytes = neo3_address_to_bytes(address)
+    bytes = bytearray(bytes)
+    bytes.reverse()
+    return '0x' + bytes.hex()
+
+
+def neo3_address_to_bytes(address):
+    return base58.b58decode_check(address)[1:]
 
 
 @contract_details('NEO contract')
@@ -57,6 +74,42 @@ class ContractDetailsNeo(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
+        dest = create_directory(self, 'lastwill/neo3-token/*', '')[0]
+
+        jinja_env = Environment(loader=FileSystemLoader(dest))
+        token_template = jinja_env.get_template('NEP17.py')
+        holders = []
+        for holder in self.contract.tokenholder_set.all():
+            address_bytes = neo3_address_to_bytes(holder.address)
+            holders.append({'address': address_bytes, 'amount': holder.amount})
+
+        token_source_code = token_template.render(
+            token_decimals=self.decimals,
+            token_symbol=self.token_short_name,
+            owner=neo3_address_to_bytes(self.admin_address),
+            holders=holders,
+            continue_minting=self.future_minting,
+        )
+        print(token_source_code)
+        token_source_code_file_name = '{name}.py'.format(name=self.token_short_name)
+        token_source_code_file_path = path.join(dest, token_source_code_file_name)
+
+        with open(token_source_code_file_path, "w") as f:
+            f.write(token_source_code)
+
+        command = "cd {dest} && venv/bin/neo3-boa {source_code_path}".format(
+            dest=dest,
+            source_code_path=token_source_code_file_path,
+        )
+        result = subprocess.run(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+        print(result.stdout.decode(), result.stderr.decode(), flush=True)
+
+        if result.returncode != 0:
+            raise Exception('compiler error while deploying')
+
+        self.save()
+
+        '''
         dest, preproc_config = create_directory(
             self, 'lastwill/neo-ico-contracts/*', 'token-config.json'
         )
@@ -113,11 +166,44 @@ class ContractDetailsNeo(CommonDetails):
         neo_contract.save()
         self.neo_contract = neo_contract
         self.save()
+        '''
 
     @blocking
     @postponable
     def deploy(self, contract_params='0710', return_type='05'):
         self.compile()
+
+        process = Popen(['./neo-cli'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=NEO_CLI_DIR, shell=True)
+        token_nef_file_name = '{name}.nef'.format(name=self.token_short_name)
+        nef_path = path.join(CONTRACTS_TEMP_DIR, str(self.temp_directory), token_nef_file_name)
+        print('nef path', nef_path)
+
+        #  process.write() doesn't work with time.sleep()
+        os.write(process.stdin.fileno(), 'deploy {nef_path}\n'.format(nef_path=nef_path).encode())
+        os.write(process.stdin.fileno(), b'yes\n')
+        time.sleep(30)
+        stdout, stderr = process.communicate()
+
+        print(stdout.decode(), stderr.decode(), flush=True)
+        if process.returncode != 0:
+            raise Exception('error while deploying')
+
+        data = stdout.decode()
+        print(data)
+        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
+        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
+
+        neo_contract = NeoContract()
+        neo_contract.contract = self.contract
+        neo_contract.original_contract = self.contract
+        neo_contract.tx_hash = tx_hash
+        neo_contract.address = contract_address
+        neo_contract.save()
+        self.neo_contract = neo_contract
+        self.save()
+        self.initialized({})
+
+        '''
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
         neo_int = NeoInt(self.contract.network.name)
@@ -164,6 +250,7 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract.address = contract_hash
         self.neo_contract.tx_hash = tx.ToJson()['txid']
         self.neo_contract.save()
+        '''
 
     @blocking
     @postponable
