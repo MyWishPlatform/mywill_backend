@@ -3,7 +3,6 @@ import os
 import uuid
 import binascii
 import pika
-import requests
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
@@ -13,7 +12,6 @@ from hdwallet.symbols import ETH
 
 from django.db import models
 from django.apps import apps
-from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 
@@ -31,7 +29,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
-from bot import send_message_to_subs
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 def address_to_scripthash(address):
@@ -594,7 +592,7 @@ class CommonDetails(models.Model):
         eth_contract.tx_hash = tx_hash
         eth_contract.save()
         msg = f'deployed contract {self}, ({self.contract.id, eth_contract.id} \n by {self.contract.user} \n {tx_hash}'
-        send_message_to_subs(msg)
+        send_message_to_subs.delay(msg)
         print('transaction sent', flush=True)
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()

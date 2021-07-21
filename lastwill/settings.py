@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'lastwill.swaps_common.tokentable',
     'lastwill.panama_bridge',
     'lastwill.rates',
+    'lastwill.telegram_bot',
     # 'lastwill.swap_bridges',
 ]
 

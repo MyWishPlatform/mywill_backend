@@ -4,25 +4,8 @@ import sys
 import time
 
 import telebot
-from django.db import models
 from django.db import IntegrityError
-from celery_config import app
-
-
-@app.task
-def send_message_to_subs(message):
-    subs = BotSub.objects.all()
-    bot = telebot.TeleBot(bot_token)
-
-    for sub in subs:
-        try:
-            bot.send_message(sub.chat_id, message)
-        except Exception:
-            print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
-
-
-class BotSub(models.Model):
-    chat_id = models.IntegerField(unique=True)
+from lastwill.telegram_bot.models import BotSub
 
 
 class Bot(threading.Thread):

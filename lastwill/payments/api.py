@@ -6,12 +6,12 @@ from django.db.models import F
 from rest_framework.exceptions import ValidationError
 
 from lastwill.payments.models import InternalPayment, FreezeBalance
-from lastwill.profile.models import Profile, UserSiteBalance, SubSite
+from lastwill.profile.models import UserSiteBalance, SubSite
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS, RUBIC_EXC_URL, \
     RUBIC_FIN_URL
 from lastwill.consts import NET_DECIMALS
 from lastwill.rates.api import rate
-from bot import send_message_to_subs
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 def create_payment(uid, tx, currency, amount, site_id, network=None):
