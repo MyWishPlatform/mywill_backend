@@ -11,6 +11,7 @@ from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_
     RUBIC_FIN_URL
 from lastwill.consts import NET_DECIMALS
 from lastwill.rates.api import rate
+from bot import send_message_to_subs
 
 
 def create_payment(uid, tx, currency, amount, site_id, network=None):
@@ -143,6 +144,7 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
+    send_message_to_subs.delay(user, value, site_id)
 
 
 def negative_payment(user, value, site_id, network):
