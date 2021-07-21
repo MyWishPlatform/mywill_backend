@@ -7,6 +7,7 @@ import telebot
 from django.db import models
 from django.db import IntegrityError
 from celery_config import app
+from lastwill.settings import bot_token
 
 
 @app.task
@@ -50,15 +51,3 @@ class Bot(threading.Thread):
         @self.bot.message_handler(commands=['ping'])
         def ping_handler(message):
             self.bot.reply_to(message, 'Pong')
-
-    def run(self):
-        while True:
-            try:
-                self.bot.polling(none_stop=True)
-            except Exception:
-                print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
-                time.sleep(15)
-
-if __name__ == '__main__':
-    bot = Bot(token)
-    bot.run()
