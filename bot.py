@@ -1,13 +1,12 @@
-import time
 import threading
 import traceback
 import sys
+import time
 
 import telebot
 from django.db import models
 from django.db import IntegrityError
 from celery_config import app
-from lastwill.settings import bot_token
 
 
 @app.task
@@ -19,8 +18,8 @@ def send_message_to_subs(user, value, site_id):
     for sub in subs:
         try:
             bot.send_message(sub.chat_id, message).message_id
-        except:
-            pass
+        except Exception:
+            print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
 
 
 class BotSub(models.Model):
@@ -32,22 +31,33 @@ class Bot(threading.Thread):
         super().__init__()
         self.bot = telebot.TeleBot(token)
 
-        @self.bot.message_handler(commands=['start'])
+        @self.bot.route('/start ?(.*)')
         def start_handler(message):
             try:
+                chat_dest = message['chat']['id']
                 BotSub(chat_id=message.chat.id).save()
-                self.bot.reply_to(message, 'Hello!')
+                self.bot.send_message(chat_dest, 'Hello!')
             except IntegrityError:
                 pass
 
-        @self.bot.message_handler(commands=['stop'])
+        @self.bot.route('/stop ?(.*)')
         def stop_handler(message):
             try:
+                chat_dest = message['chat']['id']
                 BotSub.objects.get(chat_id=message.chat.id).delete()
-                self.bot.reply_to(message, 'Bye!')
+                self.bot.send_message(chat_dest, 'Bye!')
             except BotSub.DoesNotExist:
                 pass
 
-        @self.bot.message_handler(commands=['ping'])
+        @self.bot.route('/ping ?(.*)')
         def ping_handler(message):
-            self.bot.reply_to(message, 'Pong')
+            chat_dest = message['chat']['id']
+            self.bot.send_message(chat_dest, 'Pong')
+
+    def run(self):
+        while True:
+            try:
+                self.bot.poll(debug=True)
+            except Exception:
+                print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
+                time.sleep(15)
