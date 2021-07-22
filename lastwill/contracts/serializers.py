@@ -282,7 +282,6 @@ class ContractSerializer(serializers.ModelSerializer):
                 'WISH': str(int(cost) * rate('USDT', 'WISH').value * NET_DECIMALS['WISH']),
                 'BTC': str(int(cost) * rate('USDT', 'BTC').value * NET_DECIMALS['BTC']),
                 'BNB': str(int(cost) * rate('USDT', 'BNB').value * NET_DECIMALS['BNB']),
-                'SWAP': str(int(cost) * rate('USDT', 'SWAP').value * NET_DECIMALS['SWAP']),
                 'OKB': str(int(cost) * rate('USDT', 'OKB').value * NET_DECIMALS['OKB'])
             }
 
