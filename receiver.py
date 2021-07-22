@@ -159,6 +159,9 @@ class Receiver(threading.Thread):
         print('launch message', flush=True)
         try:
             contract_details = Contract.objects.get(id=message['contractId']).get_details()
+            if contract_details.contract.state == 'ARCHIVED':
+                print('archived contract, ignoging')
+                return
             contract_details.deploy()
         except ObjectDoesNotExist:
             # only when contract removed manually
