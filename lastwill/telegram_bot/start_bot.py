@@ -8,8 +8,6 @@ import django
 django.setup()
 
 
-from lastwill.settings import bot_token
-from lastwill.telegram_bot.bot import Bot
+from lastwill.settings import bot
 
-bot_instance = Bot(bot_token)
-bot_instance.start()
+bot.start()
