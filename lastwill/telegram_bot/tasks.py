@@ -1,7 +1,7 @@
 import traceback
 import sys
 
-from lastwill.telegram_bot.models import BotSub
+from models import BotSub
 from lastwill.settings import bot
 from celery_config import app
 

@@ -5,7 +5,7 @@ import time
 
 import telebot
 from django.db import IntegrityError
-from lastwill.telegram_bot.models import BotSub
+from models import BotSub
 
 
 class Bot(threading.Thread):
