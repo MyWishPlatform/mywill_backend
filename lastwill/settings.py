@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 
 from celery.schedules import crontab
+from telegram_bot.bot import Bot
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -292,7 +293,7 @@ try:
 except ImportError as exc:
     print("Can't load local settings")
 
-
+bot = Bot(bot_token)
 # REDIS settings
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6379'
