@@ -359,5 +359,14 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
+with open('tesnet_gift_reminder_email.html') as t, open('mainnet_promo_email.html') as m:
+    testnet_text = t.read()
+    mainnet_text = m.read()
 
+testnet_wish_gift_subject = 'Bonus for Testnet Contract Creation at MyWish'
+remind_balance_subject = 'MyWish bonus balance reminder'
 
+testnet_gift_reminder_message = testnet_text
+
+mainnet_created_subject = 'Contract created at MyWish'
+mainnet_created_message = mainnet_text

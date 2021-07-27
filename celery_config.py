@@ -6,6 +6,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
 
+
 app = Celery('mywish', broker='amqp://java:java@localhost:5672/mywill', include=['lastwill.rates.api',
                                                                                  'mailings_tasks'
                                                                                  ])
@@ -16,12 +17,16 @@ app.conf.beat_schedule = {
         'task': 'lastwill.rates.api.update_rates',
         'schedule': crontab(minute=f'*/10'),
     },
-    'mailings': {
-        'task': 'mailings_tasks.send_emails',
+    'send_gift_emails': {
+        'task': 'mailings_tasks.send_gift_emails',
         'schedule': crontab(minute=0, hour=0),
     },
     'remind_balance': {
         'task': 'mailings_tasks.remind_balance',
         'schedule': crontab(minute=0, hour=0, day_of_month='*/7'),
+    },
+    'send_mainnet_promo': {
+        'task': 'mailings_tasks.send_mainnet_promo',
+        'schedule': crontab(minute=f'*/1'),
     }
 }
