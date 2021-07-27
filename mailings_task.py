@@ -14,8 +14,9 @@ from email_messages import testnet_wish_gift_subject, remind_balance_subject, te
 
 @app.task
 def send_gift_emails():
-    testnet_contracts = Contract.objects.filter(deployed_at__gte=datetime.now() - timedelta(days=SEND_GIFT_MAIL_DAYS)) \
-        .exclude(network__name__contains='MAINNET')
+    delta = timedelta(days=SEND_GIFT_MAIL_DAYS)
+    testnet_contracts = Contract.objects.filter(deployed_at__gte=datetime.now() - delta).exclude(
+        network__name__contains='MAINNET')
     users = list(set(contract.user for contract in testnet_contracts))
 
     for idx, user in enumerate(users):
