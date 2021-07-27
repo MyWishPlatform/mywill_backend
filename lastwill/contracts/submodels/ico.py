@@ -14,6 +14,7 @@ from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, MW_COPYRIGHT
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
 from email_messages import *
+from lastwill.promo.utils import send_promo_mainnet
 
 
 class AbstractContractDetailsICO(CommonDetails):
@@ -295,6 +296,7 @@ class AbstractContractDetailsICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -473,6 +475,7 @@ class AbstractContractDetailsToken(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.authio_email]
             )
+        send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,

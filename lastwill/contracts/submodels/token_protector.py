@@ -8,6 +8,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USD
 from django.db import models
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
+from lastwill.promo.utils import send_promo_mainnet
 
 
 @contract_details('Token protector contract')
@@ -51,6 +52,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [email]
             )
+            send_promo_mainnet(self.contract)
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
 

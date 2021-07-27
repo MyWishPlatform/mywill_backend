@@ -16,6 +16,7 @@ from neocore.UInt160 import UInt160
 from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
+from lastwill.promo.utils import send_promo_mainnet
 
 
 class NeoContract(EthContract):
@@ -226,6 +227,7 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+        send_promo_mainnet(self.contract)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -457,6 +459,7 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+        send_promo_mainnet(self.contract)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'

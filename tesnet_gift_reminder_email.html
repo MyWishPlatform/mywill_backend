@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mail three</title>
+    <style type="text/css">
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            color: #4D525D;
+        }
+        header {
+            min-height: 78px;
+            display: flex;
+        }
+        footer {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-bottom: 58px !important;
+        }
+        .container {
+            margin: auto;
+            width: 720px;
+            min-height: 100vh;
+            background-color: #F5F5F5;
+        }
+        .testnet-contract-block {
+            min-height: 98px;
+            margin: 0 20px 20px 20px;
+            background-color: #FFFFFF;
+            border-radius: 30px;
+            color: #3470F6;
+            font-size: 30px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        .dear-user-block {
+            min-height: 290px;
+            margin: 0 20px 20px 20px;
+            padding: 30px;
+            background-color: #3470F6;
+            color: #FFFFFF;
+            border-radius: 30px;
+            line-height: 23px;
+        }
+        .check-text-block {
+            min-height: 54px;
+            text-align: center;
+            flex-direction: column;
+            font-size: 20px;
+            margin: 30px 0 0 0;
+        }
+        .manage-block {
+            background-color: #FFFFFF;
+            min-height: 626px;
+            border-radius: 30px;
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+        }
+        .guide-blocks-first {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            min-height: 252px;
+            margin: 0 20px;
+        }
+        .guide-block-small {
+            background-color: #FFFFFF;
+            height: 252px;
+            width: 162px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            margin: auto;
+            justify-content: center;
+        }
+        .mywish-team-text {
+            min-height: 116px;
+            text-align: center;
+            display: flex;
+            font-size: 16px;
+        }
+        button {
+            padding: 0;
+            border: none;
+            font: inherit;
+            color: inherit;
+            background-color: transparent;
+            cursor: pointer;
+        }
+        .button-blue {
+            color: #FFFFFF;
+            background-color: #3470F6;
+            border-radius: 40px;
+            padding: 20px 100px;
+            font-size: 28px;
+        }
+        .button-instructions {
+            min-height: 40px;
+            background-color: #FCD600;
+            color: #4D525D;
+            border-radius: 40px;
+            margin: auto;
+            font-weight: 400;
+            padding: 20px 40px 20px 40px;
+            font-size: 20px;
+        }
+        .manage-icons-first {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin: 0 20px;
+        }
+        .manage-icons-second {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin: 0 20px;
+        }
+        .button-for-icons {
+            min-height: 40px;
+            width: 100%;
+            background-color: #FCD600;
+            color: #4D525D;
+            border-radius: 40px;
+            margin: auto;
+            font-weight: 700;
+            padding: 0;
+            font-size: 18px;
+        }
+        @media screen and (max-width: 749px) {
+            header,
+            footer,
+            .mywish-team-text {
+                width: 100vw;
+            }
+            .testnet-contract-block {
+                border-radius: 0;
+                margin: 0;
+            }
+            .dear-user-block {
+                margin: 0;
+                border-radius: 0;
+            }
+            .guide-blocks-first {
+                flex-direction: column;
+                margin: 0;
+            }
+            .guide-block-small {
+                width: 100vw;
+                height: 240px;
+                border-radius: 0;
+                flex-direction: column;
+                margin: 0;
+            }
+            .manage-block {
+                border-radius: 0;
+                margin: 0;
+                background-color: #F5F5F5;
+            }
+            .manage-icons-first {
+                flex-direction: column;
+                margin: 0;
+            }
+            .manage-icons-second {
+                flex-direction: column;
+                margin: 0;
+            }
+            .manage-icon-first {
+                display: flex;
+                flex-direction: column;
+                width: 100vw;
+                border-radius: 0;
+            }
+            .manage-icon-second {
+                display: flex;
+                flex-direction: column;
+                width: 100vw;
+                border-radius: 0;
+            }
+            .manage-icon-second > img, .manage-icon-first > img {
+                height: 159px !important;
+            }
+            .market-text {
+                margin-top: 40px !important;
+                width: 100vw;
+            }
+            .check-text-block {
+                flex-direction: column;
+                width: 100vw;
+            }
+            .create-button-block {
+                width: 100vw !important;
+            }
+            .manage-text {
+                margin: 40px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <img style="margin: auto" src="https://mywish.io/assets/img/mails/my-wish.svg" alt="my-wish">
+    </header>
+    <section>
+        <div class="testnet-contract-block">
+            <div style="margin: auto">
+                <img style="margin-bottom: -4px" src="https://mywish.io/assets/img/mails/mail-three/check.svg"> <span>Testnet contract created</span>
+            </div>
+
+        </div>
+        <div class="dear-user-block">
+            <div style="font-size: 30px; font-weight: 400">Dear User,</div><br>
+            <div style="font-size: 20px;">Thank you for using MyWish platform for contract creation. Our team is excited to inform you that your new contract has been created in the testnet.
+                <br><br><b style="color:#fcd600">Quick reminder: You have a bonus of 250 WISH on your balance! Don’t forget to use them!</b></div>
+            <div style="display: flex">
+                <button onclick="window.location.href = 'https://bit.ly/3iSfBA7';" class="button-instructions" style="margin: 40px auto 0 auto; font-weight: 700;">Create a new contract</button>
+            </div>
+        </div>
+        <div class="guide-blocks-first">
+            <div class="guide-block-small">
+                <div>
+                    <img src="https://mywish.io/assets/img/mails/mail-one/token-contract.svg" alt="token-contract">
+                </div>
+                <div style="font-size: 20px; font-weight: 700; color: #000000">Token<br>Contract</div>
+            </div>
+            <div class="guide-block-small">
+                <div>
+                    <img src="https://mywish.io/assets/img/mails/mail-two/crowdsale.svg" alt="token-contract">
+                </div>
+                <div style="font-size: 20px; font-weight: 700; color: #000000">Crowdsale<br>&nbsp</div>
+            </div>
+            <div class="guide-block-small">
+                <div>
+                    <img style="height: 127px;" src="https://mywish.io/assets/img/mails/mail-two/Investment-pool.svg" alt="investment-pool">
+                </div>
+                <div style="font-size: 20px; font-weight: 700; color: #000000">Investment<br>pool</div>
+            </div>
+            <div class="guide-block-small">
+                <div>
+                    <img src="https://mywish.io/assets/img/mails/mail-one/airdrop-service.svg" alt="airdrop-service">
+                </div>
+                <div style="font-size: 20px; font-weight: 700; color: #000000">Airdrop<br>Contract</div>
+            </div>
+        </div>
+        <div class="create-button-block" style="display: flex">
+            <button onclick="window.location.href = 'https://bit.ly/3iSfBA7';" class="button-blue" style="margin: 40px auto 0 auto">Create</button>
+        </div>
+        <div class="check-text-block">
+            <div style="margin: 0 auto 20px auto">
+                Check MyWish additional services that can be added to your contract.
+            </div>
+        </div>
+        <div class="manage-block">
+            <div class="manage-icons-first">
+                <div class="manage-icon-first" style="margin-right: 20px">
+                    <img src="https://mywish.io/assets/img/mails/mail-three/verification.svg" alt="verification">
+                    <div style="text-align: center; font-weight: bold">Verification</div>
+                </div>
+                <div class="manage-icon-first" style="margin-right: 20px">
+                    <img src="https://mywish.io/assets/img/mails/mail-three/white-label.svg" alt="white label">
+                    <div style="text-align: center; font-weight: bold">White label</div>
+                </div>
+                <div class="manage-icon-first">
+                    <img src="https://mywish.io/assets/img/mails/mail-three/branded-report.svg" alt="branded report">
+                    <div style="text-align: center; font-weight: bold">Branded report</div>
+                </div>
+            </div>
+            <div class="manage-text" style="text-align: center">Manage your assets securely<br>
+                and efficiently with MyWish Services</div>
+            <div class="manage-icons-second">
+                <div class="manage-icon-second"   style="margin-right: 20px">
+                    <img src="https://mywish.io/assets/img/mails/mail-three/airdrop-service.svg" alt="airdrop service">
+                    <div style="text-align: center; font-weight: bold">
+                        <button onclick="window.location.href = 'https://airdrop.mywish.io/'" class="button-for-icons" style="cursor: pointer; padding: 11px">Airdrop service</button>
+                    </div>
+                </div>
+                <div class="manage-icon-second">
+                    <img style="height: 145px;" src="https://mywish.io/assets/img/mails/mail-three/cross-chain-bridge.svg" alt="cross-chain solution">
+                    <div style="text-align: center; font-weight: bold">
+                        <button onclick="window.location.href = 'https://mywishplatform.typeform.com/to/tlf8MEbl'" style="cursor: pointer" class="button-for-icons">Cross-chain<br>Solutions</button>
+                    </div>
+                </div>
+            </div>
+            <div class="market-text" style="text-align: center;">For 4 years of market presence, our platform and team managed to<br>outline the best industry and platform practices. Check it out at MyWish.io</div>
+        </div>
+        <div class="mywish-team-text">
+            <div style="margin: auto">
+                Sencerely yours,<br>
+                MyWish Team
+            </div>
+        </div>
+    </section>
+    <footer style="margin: 0 auto">
+        <img style="cursor: pointer; margin-right: 20px" onclick="window.location.href = 'https://www.facebook.com/MyWish.io/';" src="https://mywish.io/assets/img/mails/facebook.svg" alt="facebook">
+        <img style="cursor: pointer; margin-right: 20px" onclick="window.location.href = 'https://twitter.com/mywishplatform';" src="https://mywish.io/assets/img/mails/twitter.svg" alt="twitter">
+        <img style="cursor: pointer; margin-right: 20px" onclick="window.location.href = 'https://www.youtube.com/c/MyWishplatform';" src="https://mywish.io/assets/img/mails/youtube.svg" alt="youtube">
+        <img style="cursor: pointer; margin-right: 20px" onclick="window.location.href = 'https://t.me/MyWish_platform';" src="https://mywish.io/assets/img/mails/telegram.svg" alt="telegram">
+    </footer>
+</div>
+</body>
+</html>

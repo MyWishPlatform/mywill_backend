@@ -34,10 +34,10 @@ def send_gift_emails():
                     profile.received_gift = True
                     profile.save()
                     send_mail(subject=testnet_wish_gift_subject,
-                              message=testnet_gift_reminder_message,
+                              message='',
                               from_email='support@mywish.io',
                               recipient_list=[user.email],
-                              html_message=True)
+                              html_message=testnet_gift_reminder_message)
     except OperationalError:
         pass
 
@@ -60,21 +60,7 @@ def remind_balance():
     for user in users:
         if user.email:
             send_mail(subject=remind_balance_subject,
-                      message=testnet_gift_reminder_message,
+                      message='',
                       from_email='support@mywish.io',
                       recipient_list=[user.email],
-                      html_message=True)
-
-
-@app.task
-def send_mainnet_promo():
-    contracts = Contract.objects.filter(deployed_at__gte=datetime.now() - timedelta(minutes=1)) \
-        .exclude(network__name__contains='TESTNET')
-    users = list(set(contract.user for contract in contracts))
-    for user in users:
-        if user.email:
-            send_mail(subject=mainnet_created_subject,
-                      message=mainnet_created_message,
-                      from_email='support@mywish.io',
-                      recipient_list=[user.email],
-                      html_message=True)
+                      html_message=testnet_gift_reminder_message)

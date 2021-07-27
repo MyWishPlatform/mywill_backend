@@ -12,6 +12,8 @@ from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
+from lastwill.promo.utils import send_promo_mainnet
+
 
 from tronapi import Tron, HttpProvider
 from tron_wif.hex2wif import hex2tronwif
@@ -227,6 +229,7 @@ class ContractDetailsTRONToken(CommonDetails):
         self.contract.save()
         self.tron_contract_token.address = message['address']
         self.tron_contract_token.save()
+        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
 
         if self.verification:
@@ -407,6 +410,7 @@ class ContractDetailsGameAssets(CommonDetails):
         self.contract.save()
         self.tron_contract_token.address = message['address']
         self.tron_contract_token.save()
+        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
         if self.verification:
             send_verification_mail(
@@ -628,6 +632,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.contract.save()
         self.tron_contract.address = message['address']
         self.tron_contract.save()
+        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
 
         if self.verification:
@@ -771,6 +776,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
 
     @check_transaction

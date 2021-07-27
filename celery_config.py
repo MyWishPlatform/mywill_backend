@@ -25,8 +25,4 @@ app.conf.beat_schedule = {
         'task': 'mailings_tasks.remind_balance',
         'schedule': crontab(minute=0, hour=0, day_of_month='*/7'),
     },
-    'send_mainnet_promo': {
-        'task': 'mailings_tasks.send_mainnet_promo',
-        'schedule': crontab(minute=f'*/1'),
-    }
 }

@@ -17,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
+from lastwill.promo.utils import send_promo_mainnet
 from email_messages import waves_sto_subject, waves_sto_text
 import json
 
@@ -393,6 +394,7 @@ class ContractDetailsWavesSTO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
+            send_promo_mainnet(self.contract)
             return
 
     def finalized(self, message):

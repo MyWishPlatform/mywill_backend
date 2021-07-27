@@ -31,6 +31,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+from lastwill.promo.utils import send_promo_mainnet
 
 
 def address_to_scripthash(address):
@@ -663,6 +664,7 @@ class CommonDetails(models.Model):
                         DEFAULT_FROM_EMAIL,
                         [self.contract.user.email]
                     )
+        send_promo_mainnet(self.contract)
 
     def get_value(self):
         return 0
