@@ -8,8 +8,7 @@ from lastwill.contracts.models import Contract
 from lastwill.profile.models import UserSiteBalance
 from lastwill.payments.api import positive_payment
 from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS
-from email_messages import testnet_wish_gift_subject, remind_balance_subject, testnet_gift_reminder_message, \
-    mainnet_created_subject, mainnet_created_message
+from email_messages import testnet_wish_gift_subject, remind_balance_subject, testnet_gift_reminder_message
 
 
 @app.task
