@@ -163,8 +163,12 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
     os.mkdir(dest)
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
-    preproc_config = os.path.join(dest, config_name)
-    os.unlink(preproc_config)
+
+    if config_name:
+        preproc_config = os.path.join(dest, config_name)
+        os.unlink(preproc_config)
+    else:
+        preproc_config = ''
     return dest, preproc_config
 
 
