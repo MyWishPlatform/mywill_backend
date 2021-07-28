@@ -1,6 +1,7 @@
 import threading
 import traceback
 import sys
+import os
 import time
 
 import telebot
@@ -9,10 +10,10 @@ from django.db import IntegrityError
 from lastwill.settings import bot_token
 from .models import BotSub
 
-# sys.path.append(os.path.abspath(os.path.join(__file__, *[os.pardir] * 3)))
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
-# import django
-# django.setup()
+sys.path.append(os.path.abspath(os.path.join(__file__, *[os.pardir] * 3)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
+import django
+django.setup()
 
 
 class Bot(threading.Thread):
