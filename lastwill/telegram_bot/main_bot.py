@@ -54,6 +54,5 @@ class Bot(threading.Thread):
                 time.sleep(15)
 
 
-if __name__ == '__main__':
-    bot = Bot(bot_token)
-    bot.start()
+bot = Bot(bot_token)
+bot.start()
