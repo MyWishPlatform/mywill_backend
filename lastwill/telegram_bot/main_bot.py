@@ -7,14 +7,13 @@ import time
 import telebot
 from django.db import IntegrityError
 
-from .models import BotSub
-
 sys.path.append(os.path.abspath(os.path.join(__file__, *[os.pardir] * 3)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
 
 from lastwill.settings import bot_token
+from lastwill.telegram_bot.models import BotSub
 
 
 class Bot(threading.Thread):
@@ -25,7 +24,7 @@ class Bot(threading.Thread):
         self.bot.config['api_key'] = token
 
         @self.bot.route('/start ?(.*)')
-        def start_handler(message):
+        def start_handler(message, cmd):
             try:
                 chat_dest = message['chat']['id']
                 BotSub(chat_id=message.chat.id).save()
@@ -34,7 +33,7 @@ class Bot(threading.Thread):
                 pass
 
         @self.bot.route('/stop ?(.*)')
-        def stop_handler(message):
+        def stop_handler(message, cmd):
             try:
                 chat_dest = message['chat']['id']
                 BotSub.objects.get(chat_id=message.chat.id).delete()
@@ -43,7 +42,7 @@ class Bot(threading.Thread):
                 pass
 
         @self.bot.route('/ping ?(.*)')
-        def ping_handler(message):
+        def ping_handler(message, cmd):
             chat_dest = message['chat']['id']
             self.bot.send_message(chat_dest, 'Pong')
 
