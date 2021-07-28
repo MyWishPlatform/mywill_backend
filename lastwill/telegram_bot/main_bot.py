@@ -57,6 +57,3 @@ class Bot(threading.Thread):
 
 
 bot = Bot(bot_token)
-
-if __name__ == '__main__':
-    bot.start()
