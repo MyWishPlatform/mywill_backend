@@ -3,7 +3,7 @@ import sys
 
 from lastwill.telegram_bot.models import BotSub
 from lastwill.telegram_bot.main_bot import bot
-from celery_config import app
+from lastwill.celery import app
 
 
 @app.task

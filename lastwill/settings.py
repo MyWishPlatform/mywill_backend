@@ -300,47 +300,47 @@ BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600, }
 
 # CELERY settings
 CELERY_DATA_FORMAT = 'json'
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/0'
+CELERY_BROKER_URL = 'amqp://java:java@localhost:5672/mywill'
+#CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/0'
 CELERY_ACCEPT_CONTENT = [f'application/{CELERY_DATA_FORMAT}', ]
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
-CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-CELERY_BEAT_SCHEDULE = {
-    'update_binance_bridge_transaction_status_every_minute': {
-        'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
-        'schedule': crontab(minute='*'),
-    },
-    'updating_coingecko_tokens_once_at_day': {
-        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
-        'schedule': crontab(hour='*', minute=0),
-    },
-    'updating_coingecko_icons_once_at_week': {
-        'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
-        'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
-    },
-    'running_order_limiter': {
-        'task': 'lastwill.swaps_common.tasks.order_limiter',
-        'schedule': crontab(minute='*'),
-    },
-    'running_swap_status_updater': {
-        'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_eth_pol_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_second_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
-}
+#CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
+# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+# CELERY_BEAT_SCHEDULE = {
+#     'update_binance_bridge_transaction_status_every_minute': {
+#         'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
+#         'schedule': crontab(minute='*'),
+#     },
+#     'updating_coingecko_tokens_once_at_day': {
+#         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
+#         'schedule': crontab(hour='*', minute=0),
+#     },
+#     'updating_coingecko_icons_once_at_week': {
+#         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_icons',
+#         'schedule': crontab(hour=2, minute=0, day_of_week='mon'),
+#     },
+#     'running_order_limiter': {
+#         'task': 'lastwill.swaps_common.tasks.order_limiter',
+#         'schedule': crontab(minute='*'),
+#     },
+#     'running_swap_status_updater': {
+#         'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
+#         'schedule': crontab(minute='*'),
+#     },
+#     'update_polygon_eth_pol_status': {
+#         'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
+#         'schedule': crontab(minute='*'),
+#     },
+#     'update_polygon_pol_eth_status': {
+#         'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
+#         'schedule': crontab(minute='*'),
+#     },
+#     'update_polygon_second_pol_eth_status': {
+#         'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
+#         'schedule': crontab(minute='*'),
+#     },
+# }
 
 COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'
 
