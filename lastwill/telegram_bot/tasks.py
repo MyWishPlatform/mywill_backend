@@ -2,7 +2,7 @@ import traceback
 import sys
 
 from models import BotSub
-from lastwill.settings import bot
+from main_bot import bot
 from celery_config import app
 
 
