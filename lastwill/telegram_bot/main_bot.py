@@ -7,7 +7,7 @@ import telebot
 from django.db import IntegrityError
 
 from lastwill.settings import bot_token
-from models import BotSub
+from lastwill.telegram_bot.models import BotSub
 
 # sys.path.append(os.path.abspath(os.path.join(__file__, *[os.pardir] * 3)))
 # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
@@ -18,7 +18,9 @@ from models import BotSub
 class Bot(threading.Thread):
     def __init__(self, token):
         super().__init__()
-        self.bot = telebot.TeleBot(token)
+        self.bot = telebot.TeleBot(__name__)
+        self.token = token
+        self.bot.config['api_key'] = token
 
         @self.bot.route('/start ?(.*)')
         def start_handler(message):
@@ -51,5 +53,7 @@ class Bot(threading.Thread):
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
                 time.sleep(15)
 
-bot = Bot(bot_token)
-bot.start()
+
+if __name__ == '__main__':
+    bot = Bot(bot_token)
+    bot.start()
