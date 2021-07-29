@@ -12,6 +12,6 @@ def send_message_to_subs(message):
 
     for sub in subs:
         try:
-            bot.send_message(sub.chat_id, message)
+            bot.bot.send_message(sub.chat_id, message)
         except Exception:
             print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
