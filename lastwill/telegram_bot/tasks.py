@@ -6,7 +6,7 @@ from lastwill.telegram_bot.main_bot import bot
 from celery import shared_task
 
 
-@shared_task()
+@shared_task
 def send_message_to_subs(message):
     subs = BotSub.objects.all()
 
