@@ -11,6 +11,7 @@ from lastwill.contracts.submodels.airdrop import *
 from lastwill.json_templates import create_eos_json
 from lastwill.rates.api import rate
 from lastwill.settings import EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 def unlock_eos_account(wallet_name, password):
@@ -559,6 +560,8 @@ class ContractDetailsEOSICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
@@ -776,4 +779,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+            msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+            send_message_to_subs.delay(msg)
         self.save()

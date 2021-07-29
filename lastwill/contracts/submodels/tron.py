@@ -12,6 +12,7 @@ from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 from tronapi import Tron, HttpProvider
 from tron_wif.hex2wif import hex2tronwif
@@ -239,8 +240,8 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-
-
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -418,6 +419,8 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -640,6 +643,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
+            msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+            send_message_to_subs.delay(msg)
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
@@ -772,6 +777,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 [self.contract.user.email]
             )
         take_off_blocking(self.contract.network.name)
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
 
     @check_transaction
     def checked(self, message):

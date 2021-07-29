@@ -22,6 +22,7 @@ from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
 from lastwill.settings import NEO_CLI_DIR
 from jinja2 import Environment, FileSystemLoader
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 class NeoContract(EthContract):
@@ -313,6 +314,8 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -544,6 +547,8 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'

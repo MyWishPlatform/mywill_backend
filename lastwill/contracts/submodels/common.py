@@ -595,8 +595,6 @@ class CommonDetails(models.Model):
 
         eth_contract.tx_hash = tx_hash
         eth_contract.save()
-        msg = f'deployed contract {self}, ({self.contract.id, eth_contract.id} \n by {self.contract.user} \n {tx_hash}'
-        send_message_to_subs.delay(msg)
         print('transaction sent', flush=True)
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
@@ -612,6 +610,9 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
+        msg = f'deployed contract [{self}, {self.contract.id, eth_contract.id}\n' \
+              f'by {self.contract.user} \n {eth_contract.tx_hash}]'
+        send_message_to_subs.delay(msg)
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(

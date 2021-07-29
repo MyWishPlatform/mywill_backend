@@ -6,6 +6,7 @@ from lastwill.json_templates import create_eos_token_sa_json, token_standalone_i
 from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
 from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT, \
     EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS, EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 def get_frac(resource, system_state, account_state, value):
@@ -240,4 +241,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
         take_off_blocking(self.contract.network.name, self.contract.id)

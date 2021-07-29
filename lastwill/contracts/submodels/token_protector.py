@@ -8,6 +8,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USD
 from django.db import models
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 @contract_details('Token protector contract')
@@ -53,6 +54,8 @@ class ContractDetailsTokenProtector(CommonDetails):
             )
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
+        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
+        send_message_to_subs.delay(msg)
 
     @classmethod
     def min_cost(cls):
