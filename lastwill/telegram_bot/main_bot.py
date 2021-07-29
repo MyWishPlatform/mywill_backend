@@ -21,7 +21,7 @@ class Bot(threading.Thread):
         def start_handler(message, cmd):
             try:
                 chat_dest = message['chat']['id']
-                BotSub(chat_id=message.chat.id).save()
+                BotSub(chat_id=message['chat']['id']).save()
                 self.bot.send_message(chat_dest, 'Hello!')
             except IntegrityError:
                 pass
@@ -30,7 +30,7 @@ class Bot(threading.Thread):
         def stop_handler(message, cmd):
             try:
                 chat_dest = message['chat']['id']
-                BotSub.objects.get(chat_id=message.chat.id).delete()
+                BotSub.objects.get(chat_id=message['chat']['id']).delete()
                 self.bot.send_message(chat_dest, 'Bye!')
             except BotSub.DoesNotExist:
                 pass
