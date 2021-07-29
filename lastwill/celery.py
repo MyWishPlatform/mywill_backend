@@ -10,7 +10,7 @@ os.environ.setdefault(
 )
 
 app = Celery(
-    main='mywish',
+    main='lastwill',
     broker=settings.CELERY_BROKER_URL,
 )
 
