@@ -240,8 +240,8 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -419,8 +419,8 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -643,8 +643,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
@@ -777,8 +777,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 [self.contract.user.email]
             )
         take_off_blocking(self.contract.network.name)
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
     @check_transaction
     def checked(self, message):

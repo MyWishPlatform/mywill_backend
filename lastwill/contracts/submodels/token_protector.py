@@ -54,8 +54,8 @@ class ContractDetailsTokenProtector(CommonDetails):
             )
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
     @classmethod
     def min_cost(cls):

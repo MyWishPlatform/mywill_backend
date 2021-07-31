@@ -560,8 +560,8 @@ class ContractDetailsEOSICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
@@ -779,6 +779,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
         self.save()

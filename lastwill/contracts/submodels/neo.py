@@ -314,8 +314,8 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -547,8 +547,8 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
-        msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-        send_message_to_subs.delay(msg)
+        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+        send_message_to_subs.delay(msg, contract=self.contract)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
