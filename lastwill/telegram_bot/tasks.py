@@ -3,11 +3,10 @@ import sys
 
 from lastwill.telegram_bot.models import BotSub
 from lastwill.telegram_bot.main_bot import bot
-from celery_config import app
+from celery import shared_task
 from lastwill.settings import NETWORKS
 
-
-@app.task
+@shared_task
 def send_message_to_subs(message, contract=None):
     if contract:
         message += gen_links(contract)
