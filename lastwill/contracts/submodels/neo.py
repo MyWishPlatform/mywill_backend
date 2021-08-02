@@ -315,7 +315,7 @@ class ContractDetailsNeo(CommonDetails):
                     [self.contract.user.email]
             )
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract_id=self.contract.id)
+        send_message_to_subs.delay(msg, self.contract.id)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -548,7 +548,7 @@ class ContractDetailsNeoICO(CommonDetails):
                     [self.contract.user.email]
             )
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract_id=self.contract.id)
+        send_message_to_subs.delay(msg, self.contract.id)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'

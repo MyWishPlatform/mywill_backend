@@ -24,7 +24,7 @@ def send_message_to_subs(message, contract_id=None):
 def gen_links(contract_id):
     contract = models.Contract.objects.get(id=contract_id)
     out = ''
-    eth_contracts = contract.eth_contract_set.all()
+    eth_contracts = contract.ethcontract_set.all()
     hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]
     link = NETWORKS[contract.network.name]['link_tx']
     for hsh in hashes:
