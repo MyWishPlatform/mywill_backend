@@ -241,7 +241,7 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract=self.contract)
+        send_message_to_subs.delay(msg, contract_id=self.contract.id)
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -420,7 +420,7 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract=self.contract)
+        send_message_to_subs.delay(msg, contract_id=self.contract.id)
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -644,7 +644,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract=self.contract)
+        send_message_to_subs.delay(msg, contract_id=self.contract.id)
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
@@ -778,7 +778,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
             )
         take_off_blocking(self.contract.network.name)
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract=self.contract)
+        send_message_to_subs.delay(msg, contract_id=self.contract.id)
 
     @check_transaction
     def checked(self, message):

@@ -1,15 +1,16 @@
 import traceback
 import sys
 
+from lastwill.contracts.models import Contract
 from lastwill.telegram_bot.models import BotSub
 from lastwill.telegram_bot.main_bot import bot
 from celery import shared_task
 from lastwill.settings import NETWORKS
 
 @shared_task
-def send_message_to_subs(message, contract=None):
-    if contract:
-        message += gen_links(contract)
+def send_message_to_subs(message, contract_id=None):
+    if contract_id:
+        message += gen_links(contract_id)
 
     subs = BotSub.objects.all()
     for sub in subs:
@@ -19,7 +20,8 @@ def send_message_to_subs(message, contract=None):
             print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
 
 
-def gen_links(contract):
+def gen_links(contract_id):
+    contract = Contract.objects.get(id=contract_id)
     out = ''
     eth_contracts = contract.eth_contract_set.all()
     hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]

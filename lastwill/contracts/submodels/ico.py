@@ -310,7 +310,7 @@ class AbstractContractDetailsICO(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract=self.contract)
+        send_message_to_subs.delay(msg, contract_id=self.contract.id)
 
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
@@ -487,7 +487,7 @@ class AbstractContractDetailsToken(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, contract=self.contract)
+        send_message_to_subs.delay(msg, contract_id=self.contract.id)
         return res
 
     def ownershipTransferred(self, message):

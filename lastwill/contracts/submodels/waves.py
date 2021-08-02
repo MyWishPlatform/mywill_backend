@@ -376,8 +376,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.ride_contract.save()
             self.contract.save()
             take_off_blocking(self.contract.network.name)
-            msg = f'deployed contract [{self}, {self.contract.id}\n by {self.contract.user}]'
-            send_message_to_subs.delay(msg)
+            msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
+            send_message_to_subs.delay(msg, contract_id=self.contract.id)
             if self.contract.user.email:
                 network_link = NETWORKS[self.contract.network.name]['link_address']
                 network_asset = NETWORKS[self.contract.network.name]['link_asset']
