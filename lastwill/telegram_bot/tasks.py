@@ -33,7 +33,7 @@ def extract_info(contract_id):
     hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]
     link = NETWORKS[contract.network.name]['link_tx']
 
-    contract_type = contract.get_all_details_model()[contract.contract_type]
+    contract_type = contract.get_all_details_model()[contract.contract_type]['name']
     user_id = contract.user.id
     contract_options = []
     for option in ['white_label', 'authio', 'verification']:
@@ -45,19 +45,19 @@ def extract_info(contract_id):
     output['contract_id'] = contract_id
     output['network'] = contract.network.name
     output['contract_type'] = contract_type
-    output['contract_options'] = contract_options if contract_options else 'no options'
+    output['contract_options'] = contract_options if any(contract_options) else 'NO OPTIONS'
     output['user_id'] = user_id
-    output['links'] = [f'\n{link.format(tx=hsh)}' for hsh in hashes]
+    output['links'] = [f'{link.format(tx=hsh)}' for hsh in hashes]
 
     return output
 
 
 def text_from_data(data):
-    text = f'<p>deployed contract {data["contract_id"]} on {data["network"]}<br>' \
-           f'with {data["contract_type"]} and {data["contract_options"]}<br>' \
-           f'by {data["user_id"]}</p><br>'
+    text = f'<i>deployed contract with id <b>{data["contract_id"]}</b> on <b>{data["network"]}</b>' \
+           f' as <b>{data["contract_type"]}</b> and with <b>{data["contract_options"]}</b>' \
+           f' by user with id <b>{data["user_id"]}</b></i>'
 
-    hyperlink = '<a href="{url}">{text}</a><br>'
+    hyperlink = '<a href="{url}">{text}</a>'
     for idx, link in enumerate(data['links']):
-        text += hyperlink.format(url=link, text=f'tx{idx}')
+        text += f' {hyperlink.format(url=link, text=f"hash{idx + 1}")}'
     return text
