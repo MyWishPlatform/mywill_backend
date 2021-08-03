@@ -20,7 +20,9 @@ def send_message_to_subs(message='', contract_id=None, **kwargs):
         try:
             bot.bot.send_message(sub.chat_id, message, **kwargs)
         except Exception:
+            bot.bot.send_message(sub.chat_id, 'an exception occurred while sending the message')
             print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
+            print(message, flush=True)
 
 
 def extract_info(contract_id):
@@ -51,11 +53,11 @@ def extract_info(contract_id):
 
 
 def text_from_data(data):
-    text =  f"""\n<p>deployed contract {data["contract_id"]} on {data["network"]}
-                \nwith {data["contract_type"]} and {data["contract_options"]}
-                \nby {data["user_id"]}</p>"""
+    text =  f"""<p>deployed contract {data["contract_id"]} on {data["network"]}<br>
+                with {data["contract_type"]} and {data["contract_options"]}<br>
+                by {data["user_id"]}</p><br>"""
 
-    hyperlink = '\n<a href="{url}">{text}</a>'
+    hyperlink = '<a href="{url}">{text}</a><br>'
     for idx, link in enumerate(data['links']):
         text += hyperlink.format(url=link, text=f'tx{idx}')
     return text
