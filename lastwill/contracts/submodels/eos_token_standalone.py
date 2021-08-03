@@ -241,6 +241,5 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, self.contract.id)
+        send_message_to_subs.delay(contract_id=self.contract.id)
         take_off_blocking(self.contract.network.name, self.contract.id)

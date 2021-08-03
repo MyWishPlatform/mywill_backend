@@ -610,8 +610,7 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        msg = f'deployed contract {self.contract.id}, on {self.contract.network.name}'
-        send_message_to_subs.delay(msg, self.contract.id)
+        send_message_to_subs.delay(contract_id=self.contract.id)
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(
