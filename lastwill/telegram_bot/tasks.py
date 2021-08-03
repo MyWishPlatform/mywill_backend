@@ -13,7 +13,7 @@ def send_message_to_subs(message='', contract_id=None, **kwargs):
     if contract_id:
         info = extract_info(contract_id)
         message += text_from_data(info)
-        kwargs = {'disable_web_page_preview':True, 'parse_mode':'html'}
+        kwargs = {'disable_web_page_preview': True, 'parse_mode': 'html'}
 
     subs = BotSub.objects.all()
     for sub in subs:
@@ -53,9 +53,9 @@ def extract_info(contract_id):
 
 
 def text_from_data(data):
-    text =  f"""<p>deployed contract {data["contract_id"]} on {data["network"]}<br>
-                with {data["contract_type"]} and {data["contract_options"]}<br>
-                by {data["user_id"]}</p><br>"""
+    text = f'<p>deployed contract {data["contract_id"]} on {data["network"]}<br>' \
+           f'with {data["contract_type"]} and {data["contract_options"]}<br>' \
+           f'by {data["user_id"]}</p><br>'
 
     hyperlink = '<a href="{url}">{text}</a><br>'
     for idx, link in enumerate(data['links']):
