@@ -887,7 +887,7 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
         if not contract_id:
             raise ValidationError()
         contract = Contract.objects.get(id=contract_id)
-        if contract.user != self.request.user:
+        if contract.user != self.request.user and not contract.user.is_staff:
             raise ValidationError({'result': 2}, code=403)
         result = result.filter(contract=contract, active=True)
         state = self.request.query_params.get('state', None)
