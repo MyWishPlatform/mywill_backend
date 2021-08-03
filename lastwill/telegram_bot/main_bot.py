@@ -13,37 +13,33 @@ from lastwill.telegram_bot.models import BotSub
 class Bot(threading.Thread):
     def __init__(self, token):
         super().__init__()
-        self.bot = telebot.TeleBot(__name__)
-        self.token = token
-        self.bot.config['api_key'] = token
+        self.bot = telebot.TeleBot(token)
 
-        @self.bot.route('/start ?(.*)')
-        def start_handler(message, cmd):
+        @self.bot.message_handler(commands=['start'])
+        def start_handler(message):
             try:
-                chat_dest = message['chat']['id']
+
                 BotSub(chat_id=message['chat']['id']).save()
-                self.bot.send_message(chat_dest, 'Hello!')
+                self.bot.reply_to(message, 'Hello!')
             except IntegrityError:
                 pass
 
-        @self.bot.route('/stop ?(.*)')
-        def stop_handler(message, cmd):
+        @self.bot.message_handler(commands=['stop'])
+        def stop_handler(message):
             try:
-                chat_dest = message['chat']['id']
                 BotSub.objects.get(chat_id=message['chat']['id']).delete()
-                self.bot.send_message(chat_dest, 'Bye!')
+                self.bot.reply_to(message, 'Bye!')
             except BotSub.DoesNotExist:
                 pass
 
-        @self.bot.route('/ping ?(.*)')
-        def ping_handler(message, cmd):
-            chat_dest = message['chat']['id']
-            self.bot.send_message(chat_dest, 'Pong')
+        @self.bot.message_handler(commands=['ping'])
+        def ping_handler(message):
+            self.bot.reply_to(message, 'Pong')
 
     def run(self):
         while True:
             try:
-                self.bot.poll(debug=True)
+                self.bot.polling(none_stop=True)
             except Exception:
                 print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
                 time.sleep(15)
