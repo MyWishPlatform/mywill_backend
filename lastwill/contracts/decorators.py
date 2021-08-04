@@ -65,7 +65,9 @@ def postponable(f):
             contract.state = 'POSTPONED'
             contract.postponed_at = datetime.datetime.now()
             contract.save()
-            msg = f'<a><b>[POSTPONED CONTRACT]</b> with id <b>{contract.id}</b> on <b>{contract.network.name}</b></a>'
+            postponed_type = contract.get_all_details_model()[contract.contract_type]['name']
+            msg = f'<a><b>[POSTPONED CONTRACT]</b> with id <b>{contract.id}</b> on <b>{contract.network.name}</b>' \
+                  f' as <b>{postponed_type}</b></a>'
             transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
             send_mail(
                 postponed_subject,
