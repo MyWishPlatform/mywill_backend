@@ -10,6 +10,7 @@ import axolotl_curve25519 as curve
 import struct
 
 from django.db import models
+from django.db import transaction
 from django.core.mail import send_mail, EmailMessage
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
@@ -376,7 +377,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.ride_contract.save()
             self.contract.save()
             take_off_blocking(self.contract.network.name)
-            send_message_to_subs.delay(contract_id=self.contract.id)
+            msg = self.generate_bot_message
+            transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
             if self.contract.user.email:
                 network_link = NETWORKS[self.contract.network.name]['link_address']
                 network_asset = NETWORKS[self.contract.network.name]['link_asset']

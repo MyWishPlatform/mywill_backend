@@ -3,6 +3,7 @@ import base58
 import fcntl
 
 from django.db import models
+from django.db import transaction
 from django.core.mail import send_mail, EmailMessage
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -240,7 +241,8 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -418,7 +420,8 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -641,7 +644,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
@@ -774,7 +778,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 [self.contract.user.email]
             )
         take_off_blocking(self.contract.network.name)
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
 
     @check_transaction
     def checked(self, message):

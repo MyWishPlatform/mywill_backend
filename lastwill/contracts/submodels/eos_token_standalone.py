@@ -1,5 +1,4 @@
-import json
-from django.core.mail import send_mail
+from django.db import transaction
 
 from lastwill.contracts.submodels.eos import *
 from lastwill.json_templates import create_eos_token_sa_json, token_standalone_init_tx
@@ -241,5 +240,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
         take_off_blocking(self.contract.network.name, self.contract.id)

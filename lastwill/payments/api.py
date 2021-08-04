@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth.models import User
 from django.db.models import F
+from django.db import transaction
 
 from rest_framework.exceptions import ValidationError
 
@@ -144,8 +145,8 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
-    msg = f'[received new payment] user: {user}, value: {value}, site_id: {site_id}'
-    send_message_to_subs.delay(message=msg)
+    msg = f'[RECEIVED NEW PAYMENT] \nuser: {user} \nvalue: {value}'
+    transaction.on_commit(lambda: send_message_to_subs.delay(msg))
 
 
 def negative_payment(user, value, site_id, network):

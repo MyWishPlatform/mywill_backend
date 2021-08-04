@@ -4,6 +4,7 @@ import os
 import base58
 
 from django.db import models
+from django.db import transaction
 from django.core.mail import send_mail
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
@@ -314,7 +315,8 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -546,7 +548,8 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
 
     def finalized(self, message):
         self.contract.state = 'ENDED'

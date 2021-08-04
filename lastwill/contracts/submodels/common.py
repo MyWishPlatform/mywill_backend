@@ -11,6 +11,7 @@ from hdwallet import BIP44HDWallet
 from hdwallet.symbols import ETH
 
 from django.db import models
+from django.db import transaction
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
@@ -22,7 +23,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY
+from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY, NETWORKS
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
     AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT
@@ -295,7 +296,6 @@ def transfer_crypto(details, dest):
 
     tx_hash = eth_int.eth_sendRawTransaction(signed_data)
     return tx_hash
-
 
 
 '''
@@ -610,7 +610,8 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        send_message_to_subs.delay(contract_id=self.contract.id)
+        msg = self.generate_bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(
@@ -709,7 +710,6 @@ class CommonDetails(models.Model):
         eth_int.eth_sendRawTransaction(signed_data)
         print('check ok!')
 
-
     def get_gasstation_gasprice(self):
         if self.contract.network.name == 'ETHEREUM_MAINNET':
             try:
@@ -719,6 +719,40 @@ class CommonDetails(models.Model):
                 return gas_price_current
             except (requests.RequestException, KeyError):
                 print('gas station api is unavailable', flush=True)
+
+    @property
+    def generate_bot_message(self):
+        data = {}
+        eth_contracts = self.contract.ethcontract_set.all()
+        hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]
+        link = NETWORKS[self.contract.network.name]['link_tx']
+
+        contract_type = self.contract.get_all_details_model()[self.contract.contract_type]['name']
+        user_id = self.contract.user.id
+        contract_options = []
+        for option in ['white_label', 'authio', 'verification']:
+            try:
+                if getattr(self, option):
+                    contract_options.append(option)
+            except AttributeError:
+                pass
+
+        data['contract_id'] = self.contract.id
+        data['network'] = self.contract.network.name
+        data['contract_type'] = contract_type
+        data['contract_options'] = contract_options if any(contract_options) else 'NO OPTIONS'
+        data['user_id'] = user_id
+        data['links'] = [f'{link.format(tx=hsh)}' for hsh in hashes]
+
+        message = f'<a>deployed contract with id <b>{data["contract_id"]}</b> on <b>{data["network"]}</b>' \
+                  f' as <b>{data["contract_type"]}</b> and with <b>{data["contract_options"]}</b>' \
+                  f' by user with id <b>{data["user_id"]}</b></a>'
+
+        hyperlink = '<a href="{url}">{text}</a>'
+        for idx, link in enumerate(data['links']):
+            message += f'  {hyperlink.format(url=link, text=f"hash{idx + 1}")}'
+
+        return message
 
 
 @contract_details('Pizza')
