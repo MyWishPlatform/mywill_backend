@@ -316,7 +316,7 @@ class ContractDetailsNeo(CommonDetails):
                     [self.contract.user.email]
             )
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -549,7 +549,7 @@ class ContractDetailsNeoICO(CommonDetails):
                     [self.contract.user.email]
             )
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def finalized(self, message):
         self.contract.state = 'ENDED'

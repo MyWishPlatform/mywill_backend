@@ -311,7 +311,7 @@ class AbstractContractDetailsICO(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
@@ -488,7 +488,7 @@ class AbstractContractDetailsToken(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         return res
 
     def ownershipTransferred(self, message):

@@ -242,7 +242,7 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -421,7 +421,7 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -645,7 +645,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_status = 'IN_PROCESS'
             self.save()
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
@@ -779,7 +779,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
             )
         take_off_blocking(self.contract.network.name)
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     @check_transaction
     def checked(self, message):

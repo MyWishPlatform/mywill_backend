@@ -611,7 +611,7 @@ class CommonDetails(models.Model):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         msg = self.generate_bot_message
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg, parse_mode='html'))
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(

@@ -7,7 +7,10 @@ from celery import shared_task
 
 
 @shared_task
-def send_message_to_subs(message, **kwargs):
+def send_message_to_subs(message, parse_mode_html=False):
+    kwargs = {}
+    if parse_mode_html:
+        kwargs['parse_mode'] = 'html'
 
     subs = BotSub.objects.all()
     for sub in subs:
