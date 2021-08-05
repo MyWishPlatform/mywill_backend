@@ -82,7 +82,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('PAYMENT: Created', flush=True)
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-        .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
+        .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, txid=tx, sitename=site_id),
         flush=True)
 
 
