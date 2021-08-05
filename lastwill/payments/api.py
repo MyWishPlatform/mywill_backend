@@ -74,6 +74,15 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         original_delta=str(amount),
         site=site
     ).save()
+
+    msg = '''[RECEIVED NEW PAYMENT] \n
+             {amount} {curr} \n
+             ({wish_value} WISH) \n
+             from user {email}, id {user_id}\n
+             with TXID: {txid}
+          '''.format(amount=amount, curr=currency, wish_value=value/NET_DECIMALS[currency], email=user, user_id=uid, txid=tx)
+    transaction.on_commit(lambda: send_message_to_subs.delay(msg))
+
     print('PAYMENT: Created', flush=True)
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
@@ -145,8 +154,6 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
-    msg = f'[RECEIVED NEW PAYMENT] \nuser: {user.id} \n{currency}: {amount}'
-    transaction.on_commit(lambda: send_message_to_subs.delay(msg))
 
 
 def negative_payment(user, value, site_id, network):
