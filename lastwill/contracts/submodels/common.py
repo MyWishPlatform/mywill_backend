@@ -740,10 +740,12 @@ class CommonDetails(models.Model):
 
         message = '''
         <a>deployed contract with id <b>{contract_id}</b> on <b>{network}</b>
-        as <b>{contract_type}</b> and with <b>{contract_options}</b>
-        by user with id <b>{user_id}</b></a>'''.format(contract_id=self.contract.id, network=self.contract.network.name,
-                                                       contract_type=contract_type, contract_options=contract_options,
-                                                       user_id=user_id)
+        as <b>{contract_type}</b> and with <b>{contract_options}</b>'
+        by user with id <b>{user_id}</b></a>'''.format(contract_id=self.contract.id,
+                                                                 network=self.contract.network.name,
+                                                                 contract_type=contract_type,
+                                                                 contract_options=contract_options,
+                                                                 user_id=user_id)
 
         hyperlink = '<a href="{url}">{text}</a>'
         for idx, link in enumerate(links):
