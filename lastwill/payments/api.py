@@ -145,7 +145,7 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
-    msg = f'[RECEIVED NEW PAYMENT] \nuser: {user} \nvalue: {value}'
+    msg = f'[RECEIVED NEW PAYMENT] \nuser: {user.id} \n{currency}: {amount}'
     transaction.on_commit(lambda: send_message_to_subs.delay(msg))
 
 
