@@ -65,6 +65,11 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
             negative_payment(user, -value, site_id, network)
     else:
         positive_payment(user, value, site_id, currency, amount)
+
+        msg = '[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}\nwith TXID: {txid}' \
+            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, txid=tx)
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg))
+
     site = SubSite.objects.get(id=site_id)
     InternalPayment(
         user_id=uid,
@@ -77,7 +82,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('PAYMENT: Created', flush=True)
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-        .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
+        .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, txid=tx, sitename=site_id),
         flush=True)
 
 
@@ -145,8 +150,6 @@ def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
-    msg = f'[RECEIVED NEW PAYMENT] \nuser: {user} \nvalue: {value}'
-    transaction.on_commit(lambda: send_message_to_subs.delay(msg))
 
 
 def negative_payment(user, value, site_id, network):
