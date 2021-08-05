@@ -240,6 +240,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         take_off_blocking(self.contract.network.name, self.contract.id)

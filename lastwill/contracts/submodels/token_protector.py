@@ -55,7 +55,7 @@ class ContractDetailsTokenProtector(CommonDetails):
             )
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     @classmethod

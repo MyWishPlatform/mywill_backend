@@ -241,7 +241,7 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
@@ -420,7 +420,7 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
@@ -644,7 +644,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
 @contract_details('Tron Lost key contract')
@@ -778,7 +778,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 [self.contract.user.email]
             )
         take_off_blocking(self.contract.network.name)
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     @check_transaction

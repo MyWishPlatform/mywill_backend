@@ -377,7 +377,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.ride_contract.save()
             self.contract.save()
             take_off_blocking(self.contract.network.name)
-            msg = self.generate_bot_message
+            msg = self.bot_message
             transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
             if self.contract.user.email:
                 network_link = NETWORKS[self.contract.network.name]['link_address']

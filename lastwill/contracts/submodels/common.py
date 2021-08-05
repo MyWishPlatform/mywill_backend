@@ -566,14 +566,13 @@ class CommonDetails(models.Model):
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = int(eth_int.eth_chainId(), 16)
 
-        kwargs = {'address':address, 'nonce':nonce, 'gaslimit':self.get_gaslimit(), 'value':self.get_value(),
-                  'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id}
+        kwargs = {'address': address, 'nonce': nonce, 'gaslimit': self.get_gaslimit(), 'value': self.get_value(),
+                  'contract_data': data, 'gas_price': gas_price, 'chain_id': chain_id}
 
         if self.white_label:
             kwargs['child_id'] = self.contract.id
 
         signed_data = sign_transaction(**kwargs)
-
 
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
@@ -610,7 +609,7 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        msg = self.generate_bot_message
+        msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         if self.contract.user.email:
             if self.contract.contract_type == 11:
@@ -721,11 +720,11 @@ class CommonDetails(models.Model):
                 print('gas station api is unavailable', flush=True)
 
     @property
-    def generate_bot_message(self):
-        data = {}
+    def bot_message(self):
         eth_contracts = self.contract.ethcontract_set.all()
         hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]
         link = NETWORKS[self.contract.network.name]['link_tx']
+        links = [f'{link.format(tx=hsh)}' for hsh in hashes]
 
         contract_type = self.contract.get_all_details_model()[self.contract.contract_type]['name']
         user_id = self.contract.user.id
@@ -737,19 +736,18 @@ class CommonDetails(models.Model):
             except AttributeError:
                 pass
 
-        data['contract_id'] = self.contract.id
-        data['network'] = self.contract.network.name
-        data['contract_type'] = contract_type
-        data['contract_options'] = contract_options if any(contract_options) else 'NO OPTIONS'
-        data['user_id'] = user_id
-        data['links'] = [f'{link.format(tx=hsh)}' for hsh in hashes]
+        contract_options = contract_options if any(contract_options) else 'NO OPTIONS'
 
-        message = f'<a>deployed contract with id <b>{data["contract_id"]}</b> on <b>{data["network"]}</b>' \
-                  f' as <b>{data["contract_type"]}</b> and with <b>{data["contract_options"]}</b>' \
-                  f' by user with id <b>{data["user_id"]}</b></a>'
+        message = '''<a>deployed contract with id <b>{contract_id}</b> on <b>{network}</b>
+                  as <b>{contract_type}</b> and with <b>{contract_options}</b>
+                  by user with id <b>{user_id}</b></a>'''.format(contract_id=self.contract.id,
+                                                                 network=self.contract.network.name,
+                                                                 contract_type=contract_type,
+                                                                 contract_options=contract_options,
+                                                                 user_id=user_id)
 
         hyperlink = '<a href="{url}">{text}</a>'
-        for idx, link in enumerate(data['links']):
+        for idx, link in enumerate(links):
             message += f'  {hyperlink.format(url=link, text=f"hash{idx + 1}")}'
 
         return message
