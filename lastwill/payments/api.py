@@ -75,13 +75,9 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         site=site
     ).save()
 
-    msg = '''
-    [RECEIVED NEW PAYMENT] \n
-    {amount} {curr} \n
-    ({wish_value} WISH) \n
-    from user {email}, id {user_id}\n
-    with TXID: {txid}
-    '''.format(amount=amount, curr=currency, wish_value=value/NET_DECIMALS['WISH'], email=user, user_id=uid, txid=tx)
+    msg =
+    '[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}\nwith TXID: {txid}'\
+        .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx)
     transaction.on_commit(lambda: send_message_to_subs.delay(msg))
 
     print('PAYMENT: Created', flush=True)
