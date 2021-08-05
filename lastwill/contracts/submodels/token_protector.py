@@ -6,8 +6,10 @@ from rest_framework.exceptions import ValidationError
 import datetime
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES
 from django.db import models
+from django.db import transaction
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 @contract_details('Token protector contract')
@@ -53,6 +55,8 @@ class ContractDetailsTokenProtector(CommonDetails):
             )
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     @classmethod
     def min_cost(cls):

@@ -3,6 +3,7 @@ import base58
 import fcntl
 
 from django.db import models
+from django.db import transaction
 from django.core.mail import send_mail, EmailMessage
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -12,6 +13,7 @@ from lastwill.contracts.submodels.airdrop import AirdropAddress
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 from tronapi import Tron, HttpProvider
 from tron_wif.hex2wif import hex2tronwif
@@ -239,8 +241,8 @@ class ContractDetailsTRONToken(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
-
-
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -418,6 +420,8 @@ class ContractDetailsGameAssets(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
         if self.tron_contract_token.original_contract.state not in (
@@ -640,6 +644,8 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
@@ -772,6 +778,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 [self.contract.user.email]
             )
         take_off_blocking(self.contract.network.name)
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     @check_transaction
     def checked(self, message):

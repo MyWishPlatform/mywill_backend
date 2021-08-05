@@ -1,16 +1,16 @@
 from threading import Timer
 from subprocess import Popen, PIPE
 
-from django.db import models
+from django.db import transaction
 from django.utils import timezone
-from django.core.mail import send_mail
 from rest_framework.exceptions import ValidationError
 
-from lastwill.consts import CONTRACT_PRICE_EOS, CONTRACT_PRICE_USDT
+from lastwill.consts import CONTRACT_PRICE_EOS
 from lastwill.contracts.submodels.airdrop import *
 from lastwill.json_templates import create_eos_json
 from lastwill.rates.api import rate
 from lastwill.settings import EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 def unlock_eos_account(wallet_name, password):
@@ -559,6 +559,8 @@ class ContractDetailsEOSICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
@@ -776,4 +778,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         self.save()

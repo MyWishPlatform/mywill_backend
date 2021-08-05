@@ -3,6 +3,7 @@ import datetime
 from ethereum import abi
 
 from django.db import models
+from django.db import transaction
 from django.core.mail import send_mail, EmailMessage
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
@@ -14,6 +15,7 @@ from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, MW_COPYRIGHT
 from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
 from email_messages import *
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 class AbstractContractDetailsICO(CommonDetails):
@@ -308,6 +310,8 @@ class AbstractContractDetailsICO(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def finalized(self, message):
         if not self.continue_minting and self.eth_contract_token.original_contract.state != 'ENDED':
@@ -483,6 +487,8 @@ class AbstractContractDetailsToken(CommonDetails):
             self.verification_date_payment = datetime.datetime.now().date()
             self.verification_status = 'IN_PROCESS'
             self.save()
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         return res
 
     def ownershipTransferred(self, message):

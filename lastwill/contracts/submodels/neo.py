@@ -4,6 +4,7 @@ import os
 import base58
 
 from django.db import models
+from django.db import transaction
 from django.core.mail import send_mail
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
@@ -22,6 +23,7 @@ from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
 from lastwill.settings import NEO_CLI_DIR
 from jinja2 import Environment, FileSystemLoader
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 class NeoContract(EthContract):
@@ -313,6 +315,8 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -544,6 +548,8 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
