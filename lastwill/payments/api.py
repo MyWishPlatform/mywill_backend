@@ -66,9 +66,10 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     else:
         positive_payment(user, value, site_id, currency, amount)
 
-        msg = '[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}\nwith TXID: {txid}' \
-            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, txid=tx)
-        transaction.on_commit(lambda: send_message_to_subs.delay(msg))
+        link = NETWORKS[network]['link_tx'].format(tx=tx)
+        msg = '<a>[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}</a><a href="{url}">\n{text}</a>' \
+            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, url=link, text='hash')
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     site = SubSite.objects.get(id=site_id)
     InternalPayment(
@@ -82,7 +83,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('PAYMENT: Created', flush=True)
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-        .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, txid=tx, sitename=site_id),
+        .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
         flush=True)
 
 
