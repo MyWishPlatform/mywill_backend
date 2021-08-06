@@ -68,7 +68,7 @@ class Receiver(threading.Thread):
         print('payment ok', flush=True)
 
         create_payment(message['userId'], message['transactionHash'], message['currency'], message['amount'],
-                       message['siteId'])
+                       message['siteId'], network=self.network)
         if message['siteId'] in [4, 5]:
             autodeploing(message['userId'], message['siteId'])
 

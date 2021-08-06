@@ -738,7 +738,7 @@ class CommonDetails(models.Model):
 
         contract_options = contract_options if any(contract_options) else 'NO OPTIONS'
 
-        message = '<a>deployed contract\nid <b>{contract_id}</b>\n<b>{network}</b>\n<b>{contract_type}</b>\n<b>{contract_options}</b>\nby user <b>{user_id}</b></a>'.format(
+        message = '<a>deployed contract\nid <b>{contract_id}</b>\n<b>{network}</b>\n<b>{contract_type}</b>\n<b>{contract_options}</b>\nuser id <b>{user_id}</b></a>'.format(
             contract_id=self.contract.id, network=self.contract.network.name, contract_type=contract_type,
             contract_options=contract_options, user_id=user_id)
 
