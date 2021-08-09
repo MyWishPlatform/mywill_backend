@@ -30,8 +30,8 @@ def send_gift_emails():
             profile = user.profile
             if not profile.wish_bonus_received:
                 if user.email:
-                    amount = WISH_GIFT_AMOUNT * 10 ** 18
-                    positive_payment(user, amount, site_id=1)
+                    value = WISH_GIFT_AMOUNT * 10 ** 18
+                    positive_payment(user, value, currency='WISH', amount=WISH_GIFT_AMOUNT, site_id=1)
                     profile.wish_bonus_received = True
                     profile.save()
                     send_mail(subject=testnet_wish_gift_subject,
