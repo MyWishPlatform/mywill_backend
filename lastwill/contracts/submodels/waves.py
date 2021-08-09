@@ -380,8 +380,8 @@ class ContractDetailsWavesSTO(CommonDetails):
             take_off_blocking(self.contract.network.name)
             msg = self.bot_message
             transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
+            send_promo_mainnet(self.contract)
             if self.contract.user.email:
-                send_promo_mainnet(self.contract)
                 network_link = NETWORKS[self.contract.network.name]['link_address']
                 network_asset = NETWORKS[self.contract.network.name]['link_asset']
                 network_name = MAIL_NETWORK[self.contract.network.name]

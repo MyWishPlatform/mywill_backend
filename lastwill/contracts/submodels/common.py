@@ -612,8 +612,8 @@ class CommonDetails(models.Model):
         self.contract.save()
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
+        send_promo_mainnet(self.contract)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,

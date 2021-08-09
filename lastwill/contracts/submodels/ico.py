@@ -283,8 +283,8 @@ class AbstractContractDetailsICO(CommonDetails):
             self.eth_contract_token.original_contract.save()
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network_name = MAIL_NETWORK[self.contract.network.name]
+        send_promo_mainnet(self.contract)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             send_mail(
                 ico_subject,
                 ico_text.format(

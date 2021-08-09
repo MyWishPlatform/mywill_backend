@@ -306,9 +306,8 @@ class ContractDetailsNeo(CommonDetails):
         self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-
+        send_promo_mainnet(self.contract)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             send_mail(
                     common_subject,
                     neo_token_text.format(
@@ -541,8 +540,8 @@ class ContractDetailsNeoICO(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
 
+        send_promo_mainnet(self.contract)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             send_mail(
                     common_subject,
                     neo_token_text.format(

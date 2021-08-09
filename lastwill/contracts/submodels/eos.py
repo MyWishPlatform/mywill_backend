@@ -551,8 +551,8 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
+        send_promo_mainnet(self.contract)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             network_name = MAIL_NETWORK[self.contract.network.name]
             send_mail(
                 eos_ico_subject,
@@ -771,8 +771,8 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
+        send_promo_mainnet(self.contract)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             send_mail(
                 eos_airdrop_subject,
                 eos_airdrop_message.format(
