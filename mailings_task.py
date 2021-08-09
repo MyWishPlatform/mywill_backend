@@ -28,11 +28,11 @@ def send_gift_emails():
     try:
         for user in users:
             profile = user.profile
-            if not profile.bonus_wishes_received:
+            if not profile.wish_bonus_received:
                 if user.email:
                     amount = WISH_GIFT_AMOUNT * 10 ** 18
                     positive_payment(user, amount, site_id=1)
-                    profile.bonus_wishes_received = True
+                    profile.wish_bonus_received = True
                     profile.save()
                     send_mail(subject=testnet_wish_gift_subject,
                               message='',
@@ -51,7 +51,7 @@ def remind_balance():
     users = list(set(balance.user for balance in users_balances))
 
     for idx, user in enumerate(users):
-        if not user.profile.bonus_wishes_received:
+        if not user.profile.wish_bonus_received:
             users.pop(idx)
             continue
         user_contracts = user.contract_set.all()
