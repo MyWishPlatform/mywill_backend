@@ -282,6 +282,7 @@ class AbstractContractDetailsICO(CommonDetails):
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network_name = MAIL_NETWORK[self.contract.network.name]
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             send_mail(
                 ico_subject,
                 ico_text.format(
@@ -296,7 +297,6 @@ class AbstractContractDetailsICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -475,7 +475,6 @@ class AbstractContractDetailsToken(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.authio_email]
             )
-        send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,

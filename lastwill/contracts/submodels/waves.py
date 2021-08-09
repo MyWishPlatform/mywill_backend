@@ -377,6 +377,7 @@ class ContractDetailsWavesSTO(CommonDetails):
             self.contract.save()
             take_off_blocking(self.contract.network.name)
             if self.contract.user.email:
+                send_promo_mainnet(self.contract)
                 network_link = NETWORKS[self.contract.network.name]['link_address']
                 network_asset = NETWORKS[self.contract.network.name]['link_asset']
                 network_name = MAIL_NETWORK[self.contract.network.name]
@@ -394,7 +395,6 @@ class ContractDetailsWavesSTO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
-            send_promo_mainnet(self.contract)
             return
 
     def finalized(self, message):

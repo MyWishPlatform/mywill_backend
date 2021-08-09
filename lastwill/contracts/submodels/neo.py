@@ -306,6 +306,7 @@ class ContractDetailsNeo(CommonDetails):
         self.contract.save()
 
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             send_mail(
                     common_subject,
                     neo_token_text.format(
@@ -314,7 +315,6 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'
@@ -538,6 +538,7 @@ class ContractDetailsNeoICO(CommonDetails):
         self.contract.save()
 
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             send_mail(
                     common_subject,
                     neo_token_text.format(
@@ -546,7 +547,6 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
 
     def finalized(self, message):
         self.contract.state = 'ENDED'

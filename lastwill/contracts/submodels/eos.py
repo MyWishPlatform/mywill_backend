@@ -551,6 +551,7 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             network_name = MAIL_NETWORK[self.contract.network.name]
             send_mail(
                 eos_ico_subject,
@@ -560,7 +561,6 @@ class ContractDetailsEOSICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name, self.contract.id)
 
     def setcode(self, message):
@@ -769,6 +769,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             send_mail(
                 eos_airdrop_subject,
                 eos_airdrop_message.format(
@@ -778,5 +779,4 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
         self.save()

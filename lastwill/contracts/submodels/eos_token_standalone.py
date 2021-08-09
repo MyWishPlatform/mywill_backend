@@ -231,6 +231,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             network_name = MAIL_NETWORK[self.contract.network.name]
             send_mail(
                 eos_contract_subject,
@@ -241,5 +242,4 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name, self.contract.id)

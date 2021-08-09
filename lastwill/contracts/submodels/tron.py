@@ -229,9 +229,10 @@ class ContractDetailsTRONToken(CommonDetails):
         self.contract.save()
         self.tron_contract_token.address = message['address']
         self.tron_contract_token.save()
-        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
 
+        if self.contract.user.email:
+            send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -410,8 +411,9 @@ class ContractDetailsGameAssets(CommonDetails):
         self.contract.save()
         self.tron_contract_token.address = message['address']
         self.tron_contract_token.save()
-        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
+        if self.contract.user.email:
+            send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -632,9 +634,9 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.contract.save()
         self.tron_contract.address = message['address']
         self.tron_contract.save()
-        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
-
+        if self.contract.user.email:
+            send_promo_mainnet(self.contract)
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -764,6 +766,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.tron_contract.address = message['address']
         self.tron_contract.save()
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             network = self.contract.network.name
             network_name = MAIL_NETWORK[network]
             send_mail(
@@ -776,7 +779,6 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-        send_promo_mainnet(self.contract)
         take_off_blocking(self.contract.network.name)
 
     @check_transaction

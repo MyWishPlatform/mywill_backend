@@ -613,6 +613,7 @@ class CommonDetails(models.Model):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
+            send_promo_mainnet(self.contract)
             if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,
@@ -668,7 +669,6 @@ class CommonDetails(models.Model):
                         DEFAULT_FROM_EMAIL,
                         [self.contract.user.email]
                     )
-        send_promo_mainnet(self.contract)
 
     def get_value(self):
         return 0

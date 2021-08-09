@@ -359,7 +359,7 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
-with open('tesnet_gift_reminder_email.html') as t, open('mainnet_promo_email.html') as m:
+with open('email_templates/testnet_email.html') as t, open('email_templates/mainnet_email.html') as m:
     testnet_text = t.read()
     mainnet_text = m.read()
 
