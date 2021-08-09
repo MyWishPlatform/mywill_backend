@@ -3,7 +3,6 @@ import os
 import uuid
 import binascii
 import pika
-import requests
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
@@ -12,8 +11,8 @@ from hdwallet import BIP44HDWallet
 from hdwallet.symbols import ETH
 
 from django.db import models
+from django.db import transaction
 from django.apps import apps
-from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 
@@ -24,13 +23,14 @@ from neocore.UInt160 import UInt160
 
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY
+from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY, NETWORKS
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
     AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
 
 
@@ -297,7 +297,6 @@ def transfer_crypto(details, dest):
 
     tx_hash = eth_int.eth_sendRawTransaction(signed_data)
     return tx_hash
-
 
 
 '''
@@ -568,14 +567,13 @@ class CommonDetails(models.Model):
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = int(eth_int.eth_chainId(), 16)
 
-        kwargs = {'address':address, 'nonce':nonce, 'gaslimit':self.get_gaslimit(), 'value':self.get_value(),
-                  'contract_data':data, 'gas_price':gas_price, 'chain_id':chain_id}
+        kwargs = {'address': address, 'nonce': nonce, 'gaslimit': self.get_gaslimit(), 'value': self.get_value(),
+                  'contract_data': data, 'gas_price': gas_price, 'chain_id': chain_id}
 
         if self.white_label:
             kwargs['child_id'] = self.contract.id
 
         signed_data = sign_transaction(**kwargs)
-
 
         print('fields of transaction', flush=True)
         print('source', address, flush=True)
@@ -612,6 +610,8 @@ class CommonDetails(models.Model):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         if self.contract.user.email:
             send_promo_mainnet(self.contract)
             if self.contract.contract_type == 11:
@@ -711,7 +711,6 @@ class CommonDetails(models.Model):
         eth_int.eth_sendRawTransaction(signed_data)
         print('check ok!')
 
-
     def get_gasstation_gasprice(self):
         if self.contract.network.name == 'ETHEREUM_MAINNET':
             try:
@@ -721,6 +720,35 @@ class CommonDetails(models.Model):
                 return gas_price_current
             except (requests.RequestException, KeyError):
                 print('gas station api is unavailable', flush=True)
+
+    @property
+    def bot_message(self):
+        eth_contracts = self.contract.ethcontract_set.all()
+        hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]
+        link = NETWORKS[self.contract.network.name]['link_tx']
+        links = [f'{link.format(tx=hsh)}' for hsh in hashes]
+
+        contract_type = self.contract.get_all_details_model()[self.contract.contract_type]['name']
+        user_id = self.contract.user.id
+        contract_options = []
+        for option in ['white_label', 'authio', 'verification']:
+            try:
+                if getattr(self, option):
+                    contract_options.append(option)
+            except AttributeError:
+                pass
+
+        contract_options = contract_options if any(contract_options) else 'NO OPTIONS'
+
+        message = '<a>deployed contract\nid <b>{contract_id}</b>\n<b>{network}</b>\n<b>{contract_type}</b>\n<b>{contract_options}</b>\nuser id <b>{user_id}</b></a>'.format(
+            contract_id=self.contract.id, network=self.contract.network.name, contract_type=contract_type,
+            contract_options=contract_options, user_id=user_id)
+
+        hyperlink = '<a href="{url}">\n{text}</a>'
+        for idx, link in enumerate(links):
+            message += f'  {hyperlink.format(url=link, text=f"hash{idx + 1}")}'
+
+        return message
 
 
 @contract_details('Pizza')

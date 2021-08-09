@@ -7,11 +7,12 @@ from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from lastwill.payments.models import InternalPayment, FreezeBalance
-from lastwill.profile.models import Profile, UserSiteBalance, SubSite
+from lastwill.profile.models import UserSiteBalance, SubSite
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS, RUBIC_EXC_URL, \
     RUBIC_FIN_URL
 from lastwill.consts import NET_DECIMALS
 from lastwill.rates.api import rate
+from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
 def create_payment(uid, tx, currency, amount, site_id, network=None):
@@ -64,6 +65,12 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
             negative_payment(user, -value, site_id, network)
     else:
         positive_payment(user, value, site_id, currency, amount)
+
+        link = NETWORKS[network]['link_tx'].format(tx=tx)
+        msg = '<a>[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}</a><a href="{url}">\n{text}</a>' \
+            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, url=link, text='hash')
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
+
     site = SubSite.objects.get(id=site_id)
     InternalPayment(
         user_id=uid,

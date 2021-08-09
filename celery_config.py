@@ -6,10 +6,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
 
-
 app = Celery('mywish', broker='amqp://java:java@localhost:5672/mywill', include=['lastwill.rates.api',
-                                                                                 'mailings_tasks'
-                                                                                 ])
+                                                                                 'lastwill.telegram_bot.tasks'])
+
 app.conf.update(result_expires=3600, enable_utc=True, timezone='Europe/Moscow')
 
 app.conf.beat_schedule = {

@@ -3,11 +3,13 @@ import time
 import datetime
 
 from django.db.models import Q
+from django.db import transaction
 from django.core.mail import send_mail
 
 from lastwill.deploy.models import DeployAddress
 from lastwill.settings import DEFAULT_FROM_EMAIL, EMAIL_FOR_POSTPONED_MESSAGE
 from lastwill.settings import NETWORKS
+from lastwill.telegram_bot.tasks import send_message_to_subs
 from email_messages import *
 
 
@@ -63,6 +65,10 @@ def postponable(f):
             contract.state = 'POSTPONED'
             contract.postponed_at = datetime.datetime.now()
             contract.save()
+            postponed_type = contract.get_all_details_model()[contract.contract_type]['name']
+            msg = f'<a><b>[POSTPONED CONTRACT]</b>\nid <b>{contract.id}</b>\n<b>{contract.network.name}</b>' \
+                  f'\n<b>{postponed_type}</b></a>'
+            transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
             send_mail(
                 postponed_subject,
                 postponed_message.format(
