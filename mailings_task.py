@@ -5,7 +5,7 @@ from django.db import OperationalError
 from django.core.mail import send_mail
 
 from lastwill.contracts.models import Contract
-from lastwill.profile.models import UserSiteBalance
+from lastwill.profile.models import UserSiteBalance, SubSite
 from lastwill.payments.models import InternalPayment
 from lastwill.payments.api import positive_payment
 from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS, DEFAULT_SUPPORT_EMAIL, DEFAULT_SUPPORT_PASSWORD
@@ -35,13 +35,14 @@ def send_gift_emails():
                     positive_payment(user, value, currency='WISH', amount=WISH_GIFT_AMOUNT, site_id=1)
                     profile.wish_bonus_received = True
                     profile.save()
+                    site = SubSite.objects.get(id=1)
                     InternalPayment(
                         user_id=user.id,
                         delta=value,
                         original_currency='WISH',
                         original_delta=str(WISH_GIFT_AMOUNT),
                         fake=True,
-                        site=1).save()
+                        site=site).save()
                     send_mail(subject=testnet_wish_gift_subject,
                               message='',
                               from_email=DEFAULT_SUPPORT_EMAIL,
