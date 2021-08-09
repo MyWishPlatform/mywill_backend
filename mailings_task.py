@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from lastwill.contracts.models import Contract
 from lastwill.profile.models import UserSiteBalance
 from lastwill.payments.api import positive_payment
-from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS, DEFAULT_SUPPORT_EMAIL
+from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS, DEFAULT_SUPPORT_EMAIL, DEFAULT_SUPPORT_PASSWORD
 from email_messages import testnet_wish_gift_subject, remind_balance_subject, testnet_gift_reminder_message
 
 
@@ -38,7 +38,9 @@ def send_gift_emails():
                               message='',
                               from_email=DEFAULT_SUPPORT_EMAIL,
                               recipient_list=[user.email],
-                              html_message=testnet_gift_reminder_message)
+                              html_message=testnet_gift_reminder_message,
+                              auth_user=DEFAULT_SUPPORT_EMAIL,
+                              auth_password=DEFAULT_SUPPORT_PASSWORD)
     except OperationalError:
         pass
 
@@ -64,4 +66,6 @@ def remind_balance():
                       message='',
                       from_email=DEFAULT_SUPPORT_EMAIL,
                       recipient_list=[user.email],
-                      html_message=testnet_gift_reminder_message)
+                      html_message=testnet_gift_reminder_message,
+                      auth_user=DEFAULT_SUPPORT_EMAIL,
+                      auth_password=DEFAULT_SUPPORT_PASSWORD)
