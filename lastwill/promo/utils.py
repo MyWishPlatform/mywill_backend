@@ -4,7 +4,7 @@ import string
 
 from django.core.mail import send_mail
 
-from lastwill.settings import SUPPORT_EMAIL
+from lastwill.settings import DEFAULT_SUPPORT_EMAIL
 from lastwill.promo.models import Promo, Promo2ContractType
 from email_messages import mainnet_created_subject, mainnet_created_message
 
@@ -48,6 +48,6 @@ def send_promo_mainnet(contract):
         if user.email:
             send_mail(subject=mainnet_created_subject,
                       message='',
-                      from_email=SUPPORT_EMAIL,
+                      from_email=DEFAULT_SUPPORT_EMAIL,
                       recipient_list=[user.email],
                       html_message=mainnet_created_message)

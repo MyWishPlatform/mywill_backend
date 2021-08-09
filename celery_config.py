@@ -18,7 +18,7 @@ app.conf.beat_schedule = {
     },
     'send_gift_emails': {
         'task': 'mailings_tasks.send_gift_emails',
-        'schedule': crontab(minute=0, hour=0),
+        'schedule': crontab(minute=f'*/5'),
     },
     'remind_balance': {
         'task': 'mailings_tasks.remind_balance',
