@@ -7,7 +7,8 @@ import django
 django.setup()
 
 app = Celery('mywish', broker='amqp://java:java@localhost:5672/mywill', include=['lastwill.rates.api',
-                                                                                 'lastwill.telegram_bot.tasks'])
+                                                                                 'lastwill.telegram_bot.tasks',
+                                                                                 'mailings_task'])
 
 app.conf.update(result_expires=3600, enable_utc=True, timezone='Europe/Moscow')
 
