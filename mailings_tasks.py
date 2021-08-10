@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.db import transaction
 
+from lastwill.contracts.models import Contract
 from lastwill.profile.models import Profile
 from lastwill.profile.models import SubSite
 from lastwill.payments.models import InternalPayment
@@ -16,6 +17,9 @@ from email_messages import testnet_wish_gift_subject, remind_balance_subject, te
 @shared_task
 @transaction.atomic
 def send_testnet_gift_emails(profile_id):
+    contracts = Contract.objects.filter(user__profile__id=profile_id)
+    if 'MAINNET' in [contract.network.name for contract in contracts]:
+        return
     try:
         profile = Profile.objects.select_for_update() \
             .filter(id=profile_id).filter(wish_bonus_received=False)[0]
