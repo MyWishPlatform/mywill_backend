@@ -300,7 +300,8 @@ class AbstractContractDetailsICO(CommonDetails):
                 [self.contract.user.email]
             )
             send_promo_mainnet(self.contract)
-            send_testnet_gift_emails.delay(self.contract)
+            if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
+                send_testnet_gift_emails.delay(self.contract)
 
         if self.verification:
             send_verification_mail(

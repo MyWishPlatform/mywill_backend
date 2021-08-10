@@ -245,7 +245,8 @@ class ContractDetailsEOSTokenSA(CommonDetails):
                 [self.contract.user.email]
             )
             send_promo_mainnet(self.contract)
-            send_testnet_gift_emails.delay(self.contract)
+            if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
+                send_testnet_gift_emails.delay(self.contract)
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))

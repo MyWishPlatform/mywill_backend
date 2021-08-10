@@ -400,7 +400,9 @@ class ContractDetailsWavesSTO(CommonDetails):
                     [self.contract.user.email]
                 )
                 send_promo_mainnet(self.contract)
-                send_testnet_gift_emails.delay(self.contract)
+                if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
+                    send_testnet_gift_emails.delay(self.contract)
+
             return
 
     def finalized(self, message):

@@ -56,7 +56,8 @@ class ContractDetailsTokenProtector(CommonDetails):
                 [email]
             )
             send_promo_mainnet(self.contract)
-            send_testnet_gift_emails.delay(self.contract)
+            if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
+                send_testnet_gift_emails.delay(self.contract)
 
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
