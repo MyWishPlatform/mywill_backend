@@ -17,10 +17,6 @@ app.conf.beat_schedule = {
         'task': 'lastwill.rates.api.update_rates',
         'schedule': crontab(minute=f'*/10'),
     },
-    'send_gift_emails': {
-        'task': 'mailings_tasks.send_gift_emails',
-        'schedule': crontab(minute=f'*/5'),
-    },
     'remind_balance': {
         'task': 'mailings_tasks.remind_balance',
         'schedule': crontab(minute=0, hour=0, day_of_month='*/7'),

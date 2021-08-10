@@ -45,11 +45,10 @@ def create_promocode(
 def send_promo_mainnet(contract):
     if 'MAINNET' in contract.network.name:
         user = contract.user
-        if user.email:
-            send_mail(subject=mainnet_created_subject,
-                      message='',
-                      from_email=DEFAULT_SUPPORT_EMAIL,
-                      recipient_list=[user.email],
-                      html_message=mainnet_created_message,
-                      auth_user=DEFAULT_SUPPORT_EMAIL,
-                      auth_password=DEFAULT_SUPPORT_PASSWORD)
+        send_mail(subject=mainnet_created_subject,
+                  message='',
+                  from_email=DEFAULT_SUPPORT_EMAIL,
+                  recipient_list=[user.email],
+                  html_message=mainnet_created_message,
+                  auth_user=DEFAULT_SUPPORT_EMAIL,
+                  auth_password=DEFAULT_SUPPORT_PASSWORD)

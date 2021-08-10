@@ -13,6 +13,7 @@ from lastwill.rates.api import rate
 from lastwill.settings import EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
+from mailings_tasks import send_testnet_gift_emails
 
 
 def unlock_eos_account(wallet_name, password):
@@ -551,7 +552,6 @@ class ContractDetailsEOSICO(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             network_name = MAIL_NETWORK[self.contract.network.name]
             send_mail(
@@ -562,6 +562,9 @@ class ContractDetailsEOSICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         take_off_blocking(self.contract.network.name, self.contract.id)
@@ -771,7 +774,6 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             send_mail(
                 eos_airdrop_subject,
@@ -782,6 +784,9 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
         self.save()

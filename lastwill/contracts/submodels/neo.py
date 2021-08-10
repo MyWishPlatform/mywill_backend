@@ -25,6 +25,7 @@ from lastwill.settings import NEO_CLI_DIR
 from jinja2 import Environment, FileSystemLoader
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
+from mailings_tasks import send_testnet_gift_emails
 
 
 class NeoContract(EthContract):
@@ -306,7 +307,6 @@ class ContractDetailsNeo(CommonDetails):
         self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             send_mail(
                     common_subject,
@@ -316,6 +316,9 @@ class ContractDetailsNeo(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
@@ -540,7 +543,6 @@ class ContractDetailsNeoICO(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
 
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             send_mail(
                     common_subject,
@@ -550,6 +552,9 @@ class ContractDetailsNeoICO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
             )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 

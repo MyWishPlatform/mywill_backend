@@ -11,6 +11,7 @@ from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
+from mailings_tasks import send_testnet_gift_emails
 
 
 @contract_details('Token protector contract')
@@ -55,6 +56,8 @@ class ContractDetailsTokenProtector(CommonDetails):
                 [email]
             )
             send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
         msg = self.bot_message

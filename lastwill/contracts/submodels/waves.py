@@ -20,6 +20,7 @@ from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
+from mailings_tasks import send_testnet_gift_emails
 from email_messages import waves_sto_subject, waves_sto_text
 import json
 
@@ -380,7 +381,6 @@ class ContractDetailsWavesSTO(CommonDetails):
             take_off_blocking(self.contract.network.name)
             msg = self.bot_message
             transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
-            send_promo_mainnet(self.contract)
             if self.contract.user.email:
                 network_link = NETWORKS[self.contract.network.name]['link_address']
                 network_asset = NETWORKS[self.contract.network.name]['link_asset']
@@ -399,6 +399,8 @@ class ContractDetailsWavesSTO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
+                send_promo_mainnet(self.contract)
+                send_testnet_gift_emails.delay(self.contract)
             return
 
     def finalized(self, message):

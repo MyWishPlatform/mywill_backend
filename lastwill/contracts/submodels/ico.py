@@ -17,6 +17,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
 from email_messages import *
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
+from mailings_tasks import send_testnet_gift_emails
 
 
 class AbstractContractDetailsICO(CommonDetails):
@@ -283,7 +284,6 @@ class AbstractContractDetailsICO(CommonDetails):
             self.eth_contract_token.original_contract.save()
         network_link = NETWORKS[self.contract.network.name]['link_address']
         network_name = MAIL_NETWORK[self.contract.network.name]
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             send_mail(
                 ico_subject,
@@ -299,6 +299,9 @@ class AbstractContractDetailsICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,

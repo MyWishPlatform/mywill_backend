@@ -1,11 +1,12 @@
-from datetime import datetime, timedelta
 from celery import shared_task
 
 from django.db import OperationalError
+from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from django.db import transaction
 
-from lastwill.contracts.models import Contract
-from lastwill.profile.models import UserSiteBalance, SubSite
+from lastwill.profile.models import Profile
+from lastwill.profile.models import SubSite
 from lastwill.payments.models import InternalPayment
 from lastwill.payments.api import positive_payment
 from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS, DEFAULT_SUPPORT_EMAIL, DEFAULT_SUPPORT_PASSWORD
@@ -13,56 +14,49 @@ from email_messages import testnet_wish_gift_subject, remind_balance_subject, te
 
 
 @shared_task
-def send_gift_emails():
-    delta = timedelta(days=SEND_GIFT_MAIL_DAYS)
-    testnet_contracts = Contract.objects.filter(deployed_at__gte=datetime.now() - delta).exclude(
-        network__name__contains='MAINNET')
-    users = list(set(contract.user for contract in testnet_contracts))
+@transaction.atomic
+def send_testnet_gift_emails(contract):
+    if 'TESTNET' in contract.network.name or 'ROPSTEN' in contract.network.name:
+        try:
+            profile = Profile.objects.select_for_update() \
+                .filter(id=contract.profile.id).filter(wish_bonus_received=False)[0]
 
-    for idx, user in enumerate(users):
-        user_contracts = user.contract_set.all()
-        for contract in user_contracts:
-            if 'MAINNET' in contract.network.name:
-                users.pop(idx)
-                continue
+            user = profile.user
+            site = SubSite.objects.get(id=1)
 
-    try:
-        for user in users:
-            profile = user.profile
-            if not profile.wish_bonus_received:
-                if user.email:
-                    value = WISH_GIFT_AMOUNT * 10 ** 18
-                    positive_payment(user, value, currency='WISH', amount=WISH_GIFT_AMOUNT, site_id=1)
-                    profile.wish_bonus_received = True
-                    profile.save()
-                    site = SubSite.objects.get(id=1)
-                    InternalPayment(
-                        user_id=user.id,
-                        delta=value,
-                        original_currency='WISH',
-                        original_delta=str(WISH_GIFT_AMOUNT),
-                        fake=True,
-                        site=site).save()
-                    send_mail(subject=testnet_wish_gift_subject,
-                              message='',
-                              from_email=DEFAULT_SUPPORT_EMAIL,
-                              recipient_list=[user.email],
-                              html_message=testnet_gift_reminder_message,
-                              auth_user=DEFAULT_SUPPORT_EMAIL,
-                              auth_password=DEFAULT_SUPPORT_PASSWORD)
-    except OperationalError:
-        pass
+            value = WISH_GIFT_AMOUNT * 10 ** 18
+
+            positive_payment(user, value, currency='WISH', amount=WISH_GIFT_AMOUNT, site_id=1)
+            profile.wish_bonus_received = True
+            profile.save()
+
+            InternalPayment(
+                user_id=user.id,
+                delta=value,
+                original_currency='WISH',
+                original_delta=str(WISH_GIFT_AMOUNT),
+                fake=True,
+                site=site).save()
+
+            send_mail(subject=testnet_wish_gift_subject,
+                      message='',
+                      from_email=DEFAULT_SUPPORT_EMAIL,
+                      recipient_list=[user.email],
+                      html_message=testnet_gift_reminder_message,
+                      auth_user=DEFAULT_SUPPORT_EMAIL,
+                      auth_password=DEFAULT_SUPPORT_PASSWORD)
+
+        except OperationalError:
+            pass
 
 
 @shared_task
 def remind_balance():
-    users_balances = UserSiteBalance.objects.filter(subsite_id=1).filter(balance__gt=0)
-    users = list(set(balance.user for balance in users_balances))
+    users = list(User.objects.filter(profile__wish_bonus_received=True) \
+                 .filter(usersitebalance__balance__gt=0) \
+                 .filter(usersitebalance__subsite=1))
 
     for idx, user in enumerate(users):
-        if not user.profile.wish_bonus_received:
-            users.pop(idx)
-            continue
         user_contracts = user.contract_set.all()
         for contract in user_contracts:
             if 'MAINNET' in contract.network.name:

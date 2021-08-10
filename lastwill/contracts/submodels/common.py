@@ -30,6 +30,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+from mailings_tasks import send_testnet_gift_emails
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
 
@@ -612,7 +613,6 @@ class CommonDetails(models.Model):
         self.contract.save()
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             if self.contract.contract_type == 11:
                 send_mail(
@@ -667,6 +667,9 @@ class CommonDetails(models.Model):
                         DEFAULT_FROM_EMAIL,
                         [self.contract.user.email]
                     )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
 
     def get_value(self):
         return 0

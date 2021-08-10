@@ -15,6 +15,7 @@ from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
 from lastwill.telegram_bot.tasks import send_message_to_subs
 from lastwill.promo.utils import send_promo_mainnet
+from mailings_tasks import send_testnet_gift_emails
 
 from tronapi import Tron, HttpProvider
 from tron_wif.hex2wif import hex2tronwif
@@ -232,7 +233,10 @@ class ContractDetailsTRONToken(CommonDetails):
         self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
 
-        send_promo_mainnet(self.contract)
+        if self.contract.user.email:
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -412,7 +416,10 @@ class ContractDetailsGameAssets(CommonDetails):
         self.tron_contract_token.address = message['address']
         self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
-        send_promo_mainnet(self.contract)
+        if self.contract.user.email:
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -636,7 +643,10 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.tron_contract.address = message['address']
         self.tron_contract.save()
         take_off_blocking(self.contract.network.name)
-        send_promo_mainnet(self.contract)
+        if self.contract.user.email:
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
+
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -767,7 +777,6 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.save()
         self.tron_contract.address = message['address']
         self.tron_contract.save()
-        send_promo_mainnet(self.contract)
         if self.contract.user.email:
             network = self.contract.network.name
             network_name = MAIL_NETWORK[network]
@@ -781,6 +790,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
+            send_promo_mainnet(self.contract)
+            send_testnet_gift_emails.delay(self.contract)
         take_off_blocking(self.contract.network.name)
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
