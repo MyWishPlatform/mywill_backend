@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from celery_config import app
+from celery import shared_task
 
 from django.db import OperationalError
 from django.core.mail import send_mail
@@ -12,7 +12,7 @@ from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS, DEFAULT_SUP
 from email_messages import testnet_wish_gift_subject, remind_balance_subject, testnet_gift_reminder_message
 
 
-@app.task
+@shared_task
 def send_gift_emails():
     delta = timedelta(days=SEND_GIFT_MAIL_DAYS)
     testnet_contracts = Contract.objects.filter(deployed_at__gte=datetime.now() - delta).exclude(
@@ -54,7 +54,7 @@ def send_gift_emails():
         pass
 
 
-@app.task
+@shared_task
 def remind_balance():
     users_balances = UserSiteBalance.objects.filter(subsite_id=1).filter(balance__gt=0)
     users = list(set(balance.user for balance in users_balances))
