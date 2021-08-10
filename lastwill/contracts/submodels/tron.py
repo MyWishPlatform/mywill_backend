@@ -236,7 +236,7 @@ class ContractDetailsTRONToken(CommonDetails):
         if self.contract.user.email:
             send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
-                send_testnet_gift_emails.delay(self.contract)
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
 
         if self.verification:
             send_verification_mail(
@@ -420,7 +420,7 @@ class ContractDetailsGameAssets(CommonDetails):
         if self.contract.user.email:
             send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
-                send_testnet_gift_emails.delay(self.contract)
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
 
         if self.verification:
             send_verification_mail(
@@ -648,7 +648,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         if self.contract.user.email:
             send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
-                send_testnet_gift_emails.delay(self.contract)
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
 
         if self.verification:
             send_verification_mail(
@@ -795,7 +795,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
             )
             send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
-                send_testnet_gift_emails.delay(self.contract)
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
 
         take_off_blocking(self.contract.network.name)
         msg = self.bot_message

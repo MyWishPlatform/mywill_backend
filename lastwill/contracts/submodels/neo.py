@@ -318,7 +318,7 @@ class ContractDetailsNeo(CommonDetails):
             )
             send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
-                send_testnet_gift_emails.delay(self.contract)
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
 
 
         msg = self.bot_message
@@ -556,7 +556,7 @@ class ContractDetailsNeoICO(CommonDetails):
             )
             send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
-                send_testnet_gift_emails.delay(self.contract)
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
