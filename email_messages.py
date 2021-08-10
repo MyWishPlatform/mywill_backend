@@ -361,9 +361,9 @@ with open('email_templates/testnet_email.html') as t, open('email_templates/main
     mainnet_text = m.read()
 
 testnet_wish_gift_subject = 'Bonus for Testnet Contract Creation at MyWish'
-remind_balance_subject = 'MyWish bonus balance reminder'
+remind_balance_subject = 'MyWish Bonus Balance Reminder'
 
 testnet_gift_reminder_message = testnet_text
 
-mainnet_created_subject = 'Contract created at MyWish'
+mainnet_created_subject = 'Contract Created at MyWish'
 mainnet_created_message = mainnet_text
