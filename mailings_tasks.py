@@ -17,8 +17,9 @@ from email_messages import testnet_wish_gift_subject, remind_balance_subject, te
 @transaction.atomic
 def send_testnet_gift_emails(profile_id):
     contracts = User.objects.get(profile__id=profile_id).contract_set.all()
-    if 'MAINNET' in [contract.network.name for contract in contracts]:
-        return
+    for contract in contracts:
+        if 'MAINNET' in contract.network.name:
+            return
     try:
         profile = Profile.objects.select_for_update() \
             .filter(id=profile_id).filter(wish_bonus_received=False)[0]
