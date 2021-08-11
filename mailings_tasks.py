@@ -19,10 +19,10 @@ from email_messages import testnet_wish_gift_subject, remind_balance_subject, te
 def send_testnet_gift_emails(profile_id):
     contracts = User.objects.get(profile__id=profile_id).contract_set.all()
     deployed_contracts = contracts.exlude(state__in=('CREATED',
-                                                 'WAITING_FOR_DEPLOYMENT',
-                                                 'WAITING_FOR_PAYMENT',
-                                                 'POSTPONED',
-                                                 'TIME_IS_UP'))
+                                                     'WAITING_FOR_DEPLOYMENT',
+                                                     'WAITING_FOR_PAYMENT',
+                                                     'POSTPONED',
+                                                     'TIME_IS_UP'))
     for contract in deployed_contracts:
         if 'MAINNET' in contract.network.name:
             return
@@ -68,10 +68,10 @@ def remind_balance():
 
     for idx, user in enumerate(users):
         deployed_contracts = user.contract_set.all().exlude(state__in=('CREATED',
-                                                                   'WAITING_FOR_DEPLOYMENT',
-                                                                   'WAITING_FOR_PAYMENT',
-                                                                   'POSTPONED',
-                                                                   'TIME_IS_UP'))
+                                                                       'WAITING_FOR_DEPLOYMENT',
+                                                                       'WAITING_FOR_PAYMENT',
+                                                                       'POSTPONED',
+                                                                       'TIME_IS_UP'))
         for contract in deployed_contracts:
             if 'MAINNET' in contract.network.name:
                 users.pop(idx)
