@@ -165,7 +165,7 @@ def negative_payment(user, value, site_id, network):
 def get_payment_statistics(start, stop=None):
     if not stop:
         stop = datetime.datetime.now().date()
-    payments = InternalPayment.objects.filter(
+    payments = InternalPayment.objects.exclude(fake=True).filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     ).order_by('datetime')
 
