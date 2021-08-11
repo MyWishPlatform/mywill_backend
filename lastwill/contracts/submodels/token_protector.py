@@ -54,7 +54,7 @@ class ContractDetailsTokenProtector(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [email]
             )
-            if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
+            if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
                 send_promo_mainnet.delay(self.contract.user.email)

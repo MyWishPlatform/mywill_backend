@@ -27,34 +27,33 @@ def send_testnet_gift_emails(profile_id):
         if 'MAINNET' in contract.network.name:
             return
     try:
-        profile = Profile.objects.select_for_update() \
-            .filter(id=profile_id).filter(wish_bonus_received=False)[0]
+        profile = Profile.objects.select_for_update().get(id=profile_id)
+        if not profile.wish_bonus_received:
+            user = profile.user
+            site = SubSite.objects.get(id=1)
 
-        user = profile.user
-        site = SubSite.objects.get(id=1)
+            value = WISH_GIFT_AMOUNT * 10 ** 18
 
-        value = WISH_GIFT_AMOUNT * 10 ** 18
+            positive_payment(user, value, currency='WISH', amount=WISH_GIFT_AMOUNT, site_id=1)
+            profile.wish_bonus_received = True
+            profile.save()
 
-        positive_payment(user, value, currency='WISH', amount=WISH_GIFT_AMOUNT, site_id=1)
-        profile.wish_bonus_received = True
-        profile.save()
+            InternalPayment(
+                user_id=user.id,
+                delta=value,
+                original_currency='WISH',
+                original_delta=str(WISH_GIFT_AMOUNT),
+                fake=True,
+                site=site
+                ).save()
 
-        InternalPayment(
-            user_id=user.id,
-            delta=value,
-            original_currency='WISH',
-            original_delta=str(WISH_GIFT_AMOUNT),
-            fake=True,
-            site=site
-            ).save()
-
-        send_mail(subject=testnet_wish_gift_subject,
-                  message='',
-                  from_email=DEFAULT_SUPPORT_EMAIL,
-                  recipient_list=[user.email],
-                  html_message=testnet_gift_reminder_message,
-                  auth_user=DEFAULT_SUPPORT_EMAIL,
-                  auth_password=DEFAULT_SUPPORT_PASSWORD)
+            send_mail(subject=testnet_wish_gift_subject,
+                      message='',
+                      from_email=DEFAULT_SUPPORT_EMAIL,
+                      recipient_list=[user.email],
+                      html_message=testnet_gift_reminder_message,
+                      auth_user=DEFAULT_SUPPORT_EMAIL,
+                      auth_password=DEFAULT_SUPPORT_PASSWORD)
 
     except OperationalError:
         pass
@@ -63,6 +62,7 @@ def send_testnet_gift_emails(profile_id):
 @shared_task
 def remind_balance():
     users = list(User.objects.filter(profile__wish_bonus_received=True) \
+                 .exclude(email__exact='') \
                  .filter(usersitebalance__balance__gt=0) \
                  .filter(usersitebalance__subsite=1))
 
@@ -71,17 +71,16 @@ def remind_balance():
         for contract in user_contracts:
             if 'MAINNET' in contract.network.name:
                 users.pop(idx)
-                continue
+                break
 
     for user in users:
-        if user.email:
-            send_mail(subject=remind_balance_subject,
-                      message='',
-                      from_email=DEFAULT_SUPPORT_EMAIL,
-                      recipient_list=[user.email],
-                      html_message=testnet_gift_reminder_message,
-                      auth_user=DEFAULT_SUPPORT_EMAIL,
-                      auth_password=DEFAULT_SUPPORT_PASSWORD)
+        send_mail(subject=remind_balance_subject,
+                  message='',
+                  from_email=DEFAULT_SUPPORT_EMAIL,
+                  recipient_list=[user.email],
+                  html_message=testnet_gift_reminder_message,
+                  auth_user=DEFAULT_SUPPORT_EMAIL,
+                  auth_password=DEFAULT_SUPPORT_PASSWORD)
 
 
 @shared_task
