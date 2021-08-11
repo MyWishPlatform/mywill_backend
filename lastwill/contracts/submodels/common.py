@@ -30,9 +30,8 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
-from mailings_tasks import send_testnet_gift_emails
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from lastwill.promo.utils import send_promo_mainnet
 
 
 def address_to_scripthash(address):
@@ -667,10 +666,10 @@ class CommonDetails(models.Model):
                         DEFAULT_FROM_EMAIL,
                         [self.contract.user.email]
                     )
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
-
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
     def get_value(self):
         return 0

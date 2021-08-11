@@ -10,14 +10,20 @@ from lastwill.profile.models import SubSite
 from lastwill.payments.models import InternalPayment
 from lastwill.payments.api import positive_payment
 from lastwill.settings import WISH_GIFT_AMOUNT, SEND_GIFT_MAIL_DAYS, DEFAULT_SUPPORT_EMAIL, DEFAULT_SUPPORT_PASSWORD
-from email_messages import testnet_wish_gift_subject, remind_balance_subject, testnet_gift_reminder_message
+from email_messages import testnet_wish_gift_subject, remind_balance_subject, testnet_gift_reminder_message, \
+    mainnet_created_subject, mainnet_created_message
 
 
 @shared_task
 @transaction.atomic
 def send_testnet_gift_emails(profile_id):
     contracts = User.objects.get(profile__id=profile_id).contract_set.all()
-    for contract in contracts:
+    deployed_conts = contracts.exlude(state__in=('CREATED',
+                                                 'WAITING_FOR_DEPLOYMENT',
+                                                 'WAITING_FOR_PAYMENT',
+                                                 'POSTPONED',
+                                                 'TIME_IS_UP'))
+    for contract in deployed_conts:
         if 'MAINNET' in contract.network.name:
             return
     try:
@@ -39,7 +45,8 @@ def send_testnet_gift_emails(profile_id):
             original_currency='WISH',
             original_delta=str(WISH_GIFT_AMOUNT),
             fake=True,
-            site=site).save()
+            site=site
+            ).save()
 
         send_mail(subject=testnet_wish_gift_subject,
                   message='',
@@ -75,3 +82,14 @@ def remind_balance():
                       html_message=testnet_gift_reminder_message,
                       auth_user=DEFAULT_SUPPORT_EMAIL,
                       auth_password=DEFAULT_SUPPORT_PASSWORD)
+
+
+@shared_task
+def send_promo_mainnet(user_email):
+    send_mail(subject=mainnet_created_subject,
+              message='',
+              from_email=DEFAULT_SUPPORT_EMAIL,
+              recipient_list=[user_email],
+              html_message=mainnet_created_message,
+              auth_user=DEFAULT_SUPPORT_EMAIL,
+              auth_password=DEFAULT_SUPPORT_PASSWORD)

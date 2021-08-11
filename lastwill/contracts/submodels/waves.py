@@ -19,8 +19,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from lastwill.promo.utils import send_promo_mainnet
-from mailings_tasks import send_testnet_gift_emails
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 from email_messages import waves_sto_subject, waves_sto_text
 import json
 
@@ -399,9 +398,10 @@ class ContractDetailsWavesSTO(CommonDetails):
                     DEFAULT_FROM_EMAIL,
                     [self.contract.user.email]
                 )
-                send_promo_mainnet(self.contract)
                 if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                     send_testnet_gift_emails.delay(self.contract.user.profile.id)
+                else:
+                    send_promo_mainnet.delay(self.contract.user.email)
 
             return
 

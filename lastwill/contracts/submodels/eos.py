@@ -12,8 +12,7 @@ from lastwill.json_templates import create_eos_json
 from lastwill.rates.api import rate
 from lastwill.settings import EOS_ATTEMPTS_COUNT, CLEOS_TIME_COOLDOWN, CLEOS_TIME_LIMIT
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from lastwill.promo.utils import send_promo_mainnet
-from mailings_tasks import send_testnet_gift_emails
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 
 
 def unlock_eos_account(wallet_name, password):
@@ -562,9 +561,10 @@ class ContractDetailsEOSICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
@@ -785,9 +785,11 @@ class ContractDetailsEOSAirdrop(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
+
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))

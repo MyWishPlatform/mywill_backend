@@ -14,8 +14,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRIC
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from lastwill.promo.utils import send_promo_mainnet
-from mailings_tasks import send_testnet_gift_emails
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 
 from tronapi import Tron, HttpProvider
 from tron_wif.hex2wif import hex2tronwif
@@ -234,9 +233,10 @@ class ContractDetailsTRONToken(CommonDetails):
         take_off_blocking(self.contract.network.name)
 
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
         if self.verification:
             send_verification_mail(
@@ -418,9 +418,10 @@ class ContractDetailsGameAssets(CommonDetails):
         self.tron_contract_token.save()
         take_off_blocking(self.contract.network.name)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
         if self.verification:
             send_verification_mail(
@@ -646,9 +647,10 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         self.tron_contract.save()
         take_off_blocking(self.contract.network.name)
         if self.contract.user.email:
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
         if self.verification:
             send_verification_mail(
@@ -793,9 +795,10 @@ class ContractDetailsTRONLostkey(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
         take_off_blocking(self.contract.network.name)
         msg = self.bot_message

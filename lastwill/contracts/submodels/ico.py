@@ -16,8 +16,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
     CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
 from email_messages import *
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from lastwill.promo.utils import send_promo_mainnet
-from mailings_tasks import send_testnet_gift_emails
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 
 
 class AbstractContractDetailsICO(CommonDetails):
@@ -299,9 +298,10 @@ class AbstractContractDetailsICO(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [self.contract.user.email]
             )
-            send_promo_mainnet(self.contract)
             if 'TESTNET' in self.contract.network.name or 'ROPSTEN' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
         if self.verification:
             send_verification_mail(
