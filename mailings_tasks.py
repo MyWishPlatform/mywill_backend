@@ -59,10 +59,10 @@ def send_testnet_gift_emails(profile_id):
                       html_message=testnet_gift_reminder_message,
                       auth_user=DEFAULT_SUPPORT_EMAIL,
                       auth_password=DEFAULT_SUPPORT_PASSWORD)
-            print(f'sent gift email to user id: {user.id} {user.email}', flush=True)
+            print(f'sent gift email to user id: {user.id} {user.email}')
     except OperationalError:
         print('an error occurred while sending gift email')
-        print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
+        print('\n'.join(traceback.format_exception(*sys.exc_info())))
         pass
 
 
@@ -87,7 +87,7 @@ def remind_balance():
                   html_message=testnet_gift_reminder_message,
                   auth_user=DEFAULT_SUPPORT_EMAIL,
                   auth_password=DEFAULT_SUPPORT_PASSWORD)
-        print(f'sent reminder email to user id: {user.id} {user.email}', flush=True)
+        print(f'sent reminder email to user id: {user.id} {user.email}')
         sleep(60)
 
 
@@ -100,4 +100,4 @@ def send_promo_mainnet(user_email):
               html_message=mainnet_created_message,
               auth_user=DEFAULT_SUPPORT_EMAIL,
               auth_password=DEFAULT_SUPPORT_PASSWORD)
-    print(f'sent promo email to user id: {user_email}', flush=True)
+    print(f'sent promo email to user id: {user_email}')
