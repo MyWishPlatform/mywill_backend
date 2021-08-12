@@ -538,7 +538,8 @@ class CommonDetails(models.Model):
         for attempt in range(attempts):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
-                nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
+                nonce_type = 'latest' if self.contract.network.name == 'XINFIN_MAINNET' else 'pending'
+                nonce = int(eth_int.eth_getTransactionCount(address, nonce_type), 16)
                 gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
