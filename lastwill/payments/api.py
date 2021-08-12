@@ -70,7 +70,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         link = NETWORKS.get(network, '').get('link_tx', '').format(tx=tx)
         text = tx if not link else 'hash'
         msg = '<a>[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}</a><a href="{url}">\n{text}</a>' \
-            .format(amount=make_readable(amount, currency), wish_value=make_readable(value, currency),
+            .format(amount=make_readable(amount, currency), wish_value=make_readable(value, 'WISH'),
                     curr=currency, email=user, user_id=uid, url=link, text=text)
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
