@@ -68,14 +68,8 @@ def remind_balance():
 
     filtered_users = []
     for user in users:
-        deployed_contracts = user.contract_set.all().filter(network__name__contains='MAINNET') \
-            .exclude(state__in=('CREATED',
-                                'WAITING_FOR_DEPLOYMENT',
-                                'WAITING_FOR_PAYMENT',
-                                'POSTPONED',
-                                'TIME_IS_UP'))
-
-        if not deployed_contracts:
+        negative_payments = user.internalpayment_set.all().filter(delta__lt=0)
+        if not negative_payments:
             filtered_users.append(user)
 
     for user in filtered_users:
