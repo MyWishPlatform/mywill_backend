@@ -59,7 +59,7 @@ def send_testnet_gift_emails(profile_id):
                       html_message=testnet_gift_reminder_message,
                       auth_user=DEFAULT_SUPPORT_EMAIL,
                       auth_password=DEFAULT_SUPPORT_PASSWORD)
-        print(f'sent gift email to user id: {user.id} {user.email}', flush=True)
+            print(f'sent gift email to user id: {user.id} {user.email}', flush=True)
     except OperationalError:
         print('an error occurred while sending gift email')
         print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
