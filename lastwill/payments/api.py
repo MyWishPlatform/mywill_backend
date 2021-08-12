@@ -69,8 +69,8 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         link = NETWORKS.get(network, '').get('link_tx', '').format(tx=tx)
         text = tx if not link else 'hash'
         msg = '<a>[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}</a><a href="{url}">\n{text}</a>' \
-            .format(amount=amount / NET_DECIMALS[currency], curr=currency, wish_value=round(value / 10 ** 18, 2),
-                    email=user, user_id=uid, url=link, text=text)
+            .format(amount=make_readable(amount, currency), wish_value=make_readable(value, currency),
+                    curr=currency, email=user, user_id=uid, url=link, text=text)
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     site = SubSite.objects.get(id=site_id)
@@ -86,6 +86,10 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
             .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),flush=True)
+
+
+def make_readable(value, currency):
+    return '{value:0.{decimals}f}'.format(value=value / NET_DECIMALS[currency], decimals=NET_DECIMALS[currency])
 
 
 def calculate_decimals(currency, amount):
