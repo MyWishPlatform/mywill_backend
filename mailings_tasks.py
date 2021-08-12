@@ -66,18 +66,18 @@ def remind_balance():
                  .filter(usersitebalance__balance__gt=0) \
                  .filter(usersitebalance__subsite=1))
 
-    for idx, user in enumerate(users.copy()):
+    filtered_users = []
+    for user in users:
         deployed_contracts = user.contract_set.all().exclude(state__in=('CREATED',
                                                                         'WAITING_FOR_DEPLOYMENT',
                                                                         'WAITING_FOR_PAYMENT',
                                                                         'POSTPONED',
                                                                         'TIME_IS_UP'))
-        for contract in deployed_contracts:
-            if 'MAINNET' in contract.network.name:
-                users.pop(idx)
-                break
 
-    for user in users:
+        if not 'MAINNET' in str([cont.network.name for cont in deployed_contracts]):
+                filtered_users.append(user)
+
+    for user in filtered_users:
         send_mail(subject=remind_balance_subject,
                   message='',
                   from_email=DEFAULT_SUPPORT_EMAIL,
