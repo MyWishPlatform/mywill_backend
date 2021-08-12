@@ -68,14 +68,15 @@ def remind_balance():
 
     filtered_users = []
     for user in users:
-        deployed_contracts = user.contract_set.all().exclude(state__in=('CREATED',
-                                                                        'WAITING_FOR_DEPLOYMENT',
-                                                                        'WAITING_FOR_PAYMENT',
-                                                                        'POSTPONED',
-                                                                        'TIME_IS_UP'))
+        deployed_contracts = user.contract_set.all().filter(network__name__contains='MAINNET') \
+            .exclude(state__in=('CREATED',
+                                'WAITING_FOR_DEPLOYMENT',
+                                'WAITING_FOR_PAYMENT',
+                                'POSTPONED',
+                                'TIME_IS_UP'))
 
-        if not 'MAINNET' in str([cont.network.name for cont in deployed_contracts]):
-                filtered_users.append(user)
+        if not deployed_contracts:
+            filtered_users.append(user)
 
     for user in filtered_users:
         send_mail(subject=remind_balance_subject,
