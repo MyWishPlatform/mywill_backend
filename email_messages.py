@@ -325,9 +325,6 @@ Hello,
 We are happy to inform you that your contract was successfully created and deployed to {network_name} network.
 {contract_type_name}: {link}
 
-We hope our cooperation will last long and would like to grant you a 15% discount promo code for 
-further contract creation. To apply the discount you will need to put the code: {promocode} to the contract form.
-
 Additionally, We have prepared a little guide for you on what to do after a token is created. 
 
 Airdrop
@@ -359,5 +356,14 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
+with open('email_templates/testnet_email.html') as t, open('email_templates/mainnet_email.html') as m:
+    testnet_text = t.read()
+    mainnet_text = m.read()
 
+testnet_wish_gift_subject = 'Bonus for Testnet Contract Creation at MyWish'
+remind_balance_subject = 'MyWish Bonus Balance Reminder'
 
+testnet_gift_reminder_message = testnet_text
+
+mainnet_created_subject = 'Contract Created at MyWish'
+mainnet_created_message = mainnet_text
