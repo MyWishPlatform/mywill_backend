@@ -67,8 +67,9 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
         positive_payment(user, value, site_id, currency, amount)
 
         link = NETWORKS.get(network, '').get('link_tx', '').format(tx=tx)
+        text = tx if not link else 'hash'
         msg = '<a>[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}</a><a href="{url}">\n{text}</a>' \
-            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, url=link, text='hash')
+            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, url=link, text=text)
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     site = SubSite.objects.get(id=site_id)
