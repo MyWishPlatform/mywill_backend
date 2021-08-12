@@ -1,4 +1,5 @@
 import datetime
+from math import log10
 
 from django.contrib.auth.models import User
 from django.db.models import F
@@ -89,7 +90,8 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
 
 
 def make_readable(value, currency):
-    return '{value:0.{decimals}f}'.format(value=value / NET_DECIMALS[currency], decimals=NET_DECIMALS[currency])
+    return '{value:0.{decimals}f}'.format(value=value / NET_DECIMALS[currency],
+                                          decimals=int(log10(NET_DECIMALS[currency])))
 
 
 def calculate_decimals(currency, amount):
