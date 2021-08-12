@@ -258,7 +258,8 @@ def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_d
         data['child_id'] = child_id
 
     auth = HTTPSignatureAuth(key=SECRET_KEY, key_id=KEY_ID)
-    signed_data = json.loads(requests.post(SIGNER, auth=auth, json=data).content.decode())
+    signed_response = requests.post(SIGNER, auth=auth, json=data)
+    signed_data = json.loads(signed_response.content.decode())
     return signed_data['signed_tx']
 
 
@@ -537,7 +538,8 @@ class CommonDetails(models.Model):
         for attempt in range(attempts):
             print(f'attempt {attempt} to get a nonce', flush=True)
             try:
-                nonce = int(eth_int.eth_getTransactionCount(address, "latest"), 16)
+                nonce_type = 'latest' if self.contract.network.name == 'XINFIN_MAINNET' else 'pending'
+                nonce = int(eth_int.eth_getTransactionCount(address, nonce_type), 16)
                 gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
                 break
 
@@ -700,9 +702,14 @@ class CommonDetails(models.Model):
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
+        gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
+        gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
+        gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+
         print('nonce', nonce)
         signed_data = sign_transaction(
             address, nonce, 600000,
+            gas_price=gas_price,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])
