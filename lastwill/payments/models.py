@@ -13,6 +13,7 @@ class InternalPayment(models.Model):
     original_currency = models.CharField(max_length=66, null=True, default='')
     original_delta = models.CharField(max_length=66, null=True, default='')
     site = models.ForeignKey(SubSite)
+    fake = models.BooleanField(default=False)
 
 
 class BTCAccount(models.Model):

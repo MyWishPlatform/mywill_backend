@@ -10,6 +10,7 @@ from django.db import transaction
 from ethereum.utils import checksum_encode
 from web3 import Web3, HTTPProvider, IPCProvider
 from lastwill.telegram_bot.tasks import send_message_to_subs
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 
 
 @contract_details('Token protector contract')
@@ -53,6 +54,11 @@ class ContractDetailsTokenProtector(CommonDetails):
                 DEFAULT_FROM_EMAIL,
                 [email]
             )
+            if not 'MAINNET' in self.contract.network.name:
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
+
         except Exception as err:
             print('deployed mail failed', str(err), flush=True)
         msg = self.bot_message

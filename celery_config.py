@@ -7,11 +7,18 @@ import django
 django.setup()
 
 app = Celery('mywish', broker='amqp://java:java@localhost:5672/mywill', include=['lastwill.rates.api',
-                                                                                 'lastwill.telegram_bot.tasks'])
+                                                                                 'lastwill.telegram_bot.tasks',
+                                                                                 'mailings_tasks'])
 
 app.conf.update(result_expires=3600, enable_utc=True, timezone='Europe/Moscow')
 
-app.conf.beat_schedule['update_rates'] = {
-    'task': 'lastwill.rates.api.update_rates',
-    'schedule': crontab(minute=f'*/10'),
+app.conf.beat_schedule = {
+    'update_rates': {
+        'task': 'lastwill.rates.api.update_rates',
+        'schedule': crontab(minute=f'*/10'),
+    },
+    'remind_balance': {
+        'task': 'mailings_tasks.remind_balance',
+        'schedule': crontab(minute=0, hour=0, day_of_month='*/7'),
+    },
 }

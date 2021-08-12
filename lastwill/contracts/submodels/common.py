@@ -30,6 +30,7 @@ from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES,
 from lastwill.deploy.models import Network
 from lastwill.contracts.decorators import *
 from email_messages import *
+from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 from lastwill.telegram_bot.tasks import send_message_to_subs
 
 
@@ -649,8 +650,6 @@ class CommonDetails(models.Model):
                                     'name'],
                                 link=network_link.format(address=eth_contract.address),
                                 network_name=network_name,
-                                promocode=create_promocode(range(40), discount=15),
-
                             ),
                             DEFAULT_FROM_EMAIL,
                             [self.contract.user.email]
@@ -668,6 +667,10 @@ class CommonDetails(models.Model):
                         DEFAULT_FROM_EMAIL,
                         [self.contract.user.email]
                     )
+            if not 'MAINNET' in self.contract.network.name:
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
 
     def get_value(self):
         return 0

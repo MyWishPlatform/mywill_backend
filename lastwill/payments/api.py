@@ -146,13 +146,13 @@ def freeze_payments(amount, network):
     #    )
     #    print('FREEZE', value, 'WISH', flush=True)
 
-
+@transaction.atomic
 def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
 
-
+@transaction.atomic
 def negative_payment(user, value, site_id, network):
     if not UserSiteBalance.objects.select_for_update().filter(
             user=user, subsite__id=site_id, balance__gte=value
@@ -165,7 +165,7 @@ def negative_payment(user, value, site_id, network):
 def get_payment_statistics(start, stop=None):
     if not stop:
         stop = datetime.datetime.now().date()
-    payments = InternalPayment.objects.filter(
+    payments = InternalPayment.objects.exclude(fake=True).filter(
         delta__gte=0, datetime__gte=start, datetime__lte=stop
     ).order_by('datetime')
 
