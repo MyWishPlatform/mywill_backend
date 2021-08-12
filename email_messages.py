@@ -11,6 +11,7 @@ To confirm the registration, click on the link below:
 Best regards!
 {subsite_name} Team."""
 
+
 password_reset_subject = """Password reset on {subsite_name} """
 password_reset_text = """
 You're receiving this email because you requested a password reset for your user account at {subsite_name}.
@@ -274,6 +275,7 @@ contract's link {link}
 Best wishes,
 Swaps Team."""
 
+
 waves_sto_subject = """Your contract is ready"""
 waves_sto_text = """Hello,
 
@@ -354,8 +356,9 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
-with open('email_templates/testnet_email.html', encoding='utf-8') as t, open('email_templates/mainnet_email.html',
-                                                                             encoding='utf-8') as m:
+with open('email_templates/testnet_email.html', encoding='utf-8') as t, \
+    open('email_templates/mainnet_email.html', encoding='utf-8') as m:
+
     testnet_text = t.read()
     mainnet_text = m.read()
 
