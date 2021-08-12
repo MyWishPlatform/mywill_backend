@@ -1,3 +1,5 @@
+from time import sleep
+
 from celery import shared_task
 
 from django.db import OperationalError
@@ -80,6 +82,7 @@ def remind_balance():
                   html_message=testnet_gift_reminder_message,
                   auth_user=DEFAULT_SUPPORT_EMAIL,
                   auth_password=DEFAULT_SUPPORT_PASSWORD)
+        sleep(1)
 
 
 @shared_task
