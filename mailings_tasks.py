@@ -1,3 +1,8 @@
+import traceback
+import sys
+
+from time import sleep
+
 from celery import shared_task
 
 from django.db import OperationalError
@@ -54,8 +59,10 @@ def send_testnet_gift_emails(profile_id):
                       html_message=testnet_gift_reminder_message,
                       auth_user=DEFAULT_SUPPORT_EMAIL,
                       auth_password=DEFAULT_SUPPORT_PASSWORD)
-
+            print(f'sent gift email to user id: {user.id} {user.email}')
     except OperationalError:
+        print('an error occurred while sending gift email')
+        print('\n'.join(traceback.format_exception(*sys.exc_info())))
         pass
 
 
@@ -66,18 +73,13 @@ def remind_balance():
                  .filter(usersitebalance__balance__gt=0) \
                  .filter(usersitebalance__subsite=1))
 
-    for idx, user in enumerate(users.copy()):
-        deployed_contracts = user.contract_set.all().exclude(state__in=('CREATED',
-                                                                        'WAITING_FOR_DEPLOYMENT',
-                                                                        'WAITING_FOR_PAYMENT',
-                                                                        'POSTPONED',
-                                                                        'TIME_IS_UP'))
-        for contract in deployed_contracts:
-            if 'MAINNET' in contract.network.name:
-                users.pop(idx)
-                break
-
+    filtered_users = []
     for user in users:
+        negative_payments = user.internalpayment_set.all().filter(delta__lt=0)
+        if not negative_payments:
+            filtered_users.append(user)
+
+    for user in filtered_users:
         send_mail(subject=remind_balance_subject,
                   message='',
                   from_email=DEFAULT_SUPPORT_EMAIL,
@@ -85,6 +87,8 @@ def remind_balance():
                   html_message=testnet_gift_reminder_message,
                   auth_user=DEFAULT_SUPPORT_EMAIL,
                   auth_password=DEFAULT_SUPPORT_PASSWORD)
+        print(f'sent reminder email to user id: {user.id} {user.email}')
+        sleep(60)
 
 
 @shared_task
@@ -96,3 +100,4 @@ def send_promo_mainnet(user_email):
               html_message=mainnet_created_message,
               auth_user=DEFAULT_SUPPORT_EMAIL,
               auth_password=DEFAULT_SUPPORT_PASSWORD)
+    print(f'sent promo email to user id: {user_email}')
