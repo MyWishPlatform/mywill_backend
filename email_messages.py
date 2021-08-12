@@ -356,7 +356,9 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
-with open('email_templates/testnet_email.html') as t, open('email_templates/mainnet_email.html') as m:
+with open('email_templates/testnet_email.html', encoding='utf-8') as t, \
+    open('email_templates/mainnet_email.html', encoding='utf-8') as m:
+
     testnet_text = t.read()
     mainnet_text = m.read()
 
