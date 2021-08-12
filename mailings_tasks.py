@@ -1,3 +1,6 @@
+import traceback
+import sys
+
 from time import sleep
 
 from celery import shared_task
@@ -56,8 +59,10 @@ def send_testnet_gift_emails(profile_id):
                       html_message=testnet_gift_reminder_message,
                       auth_user=DEFAULT_SUPPORT_EMAIL,
                       auth_password=DEFAULT_SUPPORT_PASSWORD)
-
+        print(f'sent gift email to user id: {user.id} {user.email}', flush=True)
     except OperationalError:
+        print('an error occurred while sending gift email')
+        print('\n'.join(traceback.format_exception(*sys.exc_info())), flush=True)
         pass
 
 
@@ -82,7 +87,8 @@ def remind_balance():
                   html_message=testnet_gift_reminder_message,
                   auth_user=DEFAULT_SUPPORT_EMAIL,
                   auth_password=DEFAULT_SUPPORT_PASSWORD)
-        sleep(1)
+        print(f'sent reminder email to user id: {user.id} {user.email}', flush=True)
+        sleep(60)
 
 
 @shared_task
@@ -94,3 +100,4 @@ def send_promo_mainnet(user_email):
               html_message=mainnet_created_message,
               auth_user=DEFAULT_SUPPORT_EMAIL,
               auth_password=DEFAULT_SUPPORT_PASSWORD)
+    print(f'sent promo email to user id: {user_email}', flush=True)
