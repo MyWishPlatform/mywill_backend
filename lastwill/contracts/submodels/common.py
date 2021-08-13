@@ -755,7 +755,7 @@ class CommonDetails(models.Model):
         hyperlink = '<a href="{url}">\n{text}</a>'
         for idx, link in enumerate(links):
             if link:
-                message += f'  {hyperlink.format(url=link, text=f"hash{idx + 1}")}'
+                message += f'{hyperlink.format(url=link, text=f"hash{idx + 1}")}'
             else:
                 message += f'\n{hashes[idx]}'
 
