@@ -733,7 +733,7 @@ class CommonDetails(models.Model):
     def bot_message(self):
         eth_contracts = self.contract.ethcontract_set.all()
         hashes = [eth_contract.tx_hash for eth_contract in eth_contracts]
-        link = NETWORKS[self.contract.network.name]['link_tx']
+        link = NETWORKS.get(self.contract.network.name, '').get('link_tx', '')
         links = [f'{link.format(tx=hsh)}' for hsh in hashes]
 
         contract_type = self.contract.get_all_details_model()[self.contract.contract_type]['name']
@@ -754,7 +754,10 @@ class CommonDetails(models.Model):
 
         hyperlink = '<a href="{url}">\n{text}</a>'
         for idx, link in enumerate(links):
-            message += f'  {hyperlink.format(url=link, text=f"hash{idx + 1}")}'
+            if link:
+                message += f'{hyperlink.format(url=link, text=f"hash{idx + 1}")}'
+            else:
+                message += f'\n{hashes[idx]}'
 
         return message
 

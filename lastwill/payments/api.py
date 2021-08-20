@@ -1,4 +1,5 @@
 import datetime
+from math import log10
 
 from django.contrib.auth.models import User
 from django.db.models import F
@@ -70,9 +71,11 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     else:
         positive_payment(user, value, site_id, currency, amount)
 
-        link = NETWORKS[network]['link_tx'].format(tx=tx)
+        link = NETWORKS.get(network, '').get('link_tx', '').format(tx=tx)
+        text = tx if not link else 'hash'
         msg = '<a>[RECEIVED NEW PAYMENT]\n{amount} {curr}\n({wish_value} WISH)\nfrom user {email}, id {user_id}</a><a href="{url}">\n{text}</a>' \
-            .format(amount=amount, curr=currency, wish_value=round(value,2), email=user, user_id=uid, url=link, text='hash')
+            .format(amount=make_readable(amount, currency), wish_value=make_readable(value, 'WISH'),
+                    curr=currency, email=user, user_id=uid, url=link, text=text)
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     site = SubSite.objects.get(id=site_id)
@@ -87,8 +90,12 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('PAYMENT: Created', flush=True)
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-        .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),
-        flush=True)
+            .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),flush=True)
+
+
+def make_readable(value, currency):
+    return '{value:0.{decimals}f}'.format(value=value / NET_DECIMALS[currency],
+                                          decimals=int(log10(NET_DECIMALS[currency])))
 
 
 def calculate_decimals(currency, amount):
@@ -150,11 +157,13 @@ def freeze_payments(amount, network):
     #    )
     #    print('FREEZE', value, 'WISH', flush=True)
 
+
 @transaction.atomic
 def positive_payment(user, value, site_id, currency, amount):
     UserSiteBalance.objects.select_for_update().filter(
         user=user, subsite__id=site_id).update(
         balance=F('balance') + value)
+
 
 @transaction.atomic
 def negative_payment(user, value, site_id, network):
