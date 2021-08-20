@@ -5,7 +5,7 @@ from django.db.models import F
 from django.db import transaction
 
 from rest_framework.exceptions import ValidationError
-
+from lastwill.contracts.decorators import PaymentAlreadyRegistered
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import UserSiteBalance, SubSite
 from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS, RUBIC_EXC_URL, \
@@ -20,6 +20,10 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     if amount == 0.0:
         return
     print('create payment')
+
+    if tx and InternalPayment.objects.filter(tx_hash=tx).count():  # tx='' if payment received from frontend
+        print(f'tx hash {tx} already processed')
+        raise PaymentAlreadyRegistered
 
     if (SubSite.objects.get(id=site_id).site_name == MY_WISH_URL
             or SubSite.objects.get(id=site_id).site_name == TRON_URL):

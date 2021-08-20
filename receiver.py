@@ -19,7 +19,7 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 
 from lastwill.contracts.models import (
-    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed,
+    Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed, PaymentAlreadyRegistered,
     WhitelistAddress, ContractDetailsSWAPS2
 )
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
@@ -290,7 +290,7 @@ class Receiver(threading.Thread):
                           )
                     fcntl.fcntl(1, fcntl.F_SETFL, 0)
                 getattr(self, properties.type, self.unknown_handler)(message)
-        except (TxFail, AlreadyPostponed):
+        except (TxFail, AlreadyPostponed, PaymentAlreadyRegistered):
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except NeedRequeue:
             print('requeueing message', flush=True)

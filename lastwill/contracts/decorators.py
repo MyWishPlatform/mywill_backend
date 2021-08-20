@@ -34,6 +34,10 @@ class AlreadyPostponed(Exception):
     pass
 
 
+class PaymentAlreadyRegistered(Exception):
+    pass
+
+
 def check_transaction(f):
     def wrapper(*args, **kwargs):
         if not args[1].get('success', True):
