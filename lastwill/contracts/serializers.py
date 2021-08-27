@@ -35,7 +35,8 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
-    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO
+    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
+    ContractDetailsMoonriverToken,
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -349,6 +350,7 @@ class ContractSerializer(serializers.ModelSerializer):
             35: ContractDetailsXinFinTokenSerializer,
             36: ContractDetailsHecoChainTokenSerializer,
             37: ContractDetailsHecoChainICOSerializer,
+            38: ContractDetailsMoonriverTokenSerializer,
         }[contract_type]
 
 
@@ -2014,3 +2016,8 @@ class ContractDetailsXinFinTokenSerializer(ContractDetailsTokenSerializer):
 class ContractDetailsHecoChainTokenSerializer(ContractDetailsTokenSerializer):
     class Meta(ContractDetailsTokenSerializer.Meta):
         model = ContractDetailsHecoChainToken
+
+
+class ContractDetailsMoonriverTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta(ContractDetailsTokenSerializer.Meta):
+        model = ContractDetailsMoonriverToken
