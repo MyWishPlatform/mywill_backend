@@ -284,6 +284,7 @@ VERIFICATION_CONTRACTS_IDS = (
     35,  # xin Token
     36,  # hecochain Token
     37,  # hecochain Crowdsale
+    38,  # moonriver token
 )
 
 try:

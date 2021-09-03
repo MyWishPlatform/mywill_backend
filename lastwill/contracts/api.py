@@ -153,6 +153,14 @@ def get_token_contracts(request):
             contract__network=network_id,
         )
         get_xinfin_token_contracts(xin_contracts, res)
+    elif network_id in [37]:
+        moonriver_contracts = EthContract.objects.filter(
+            contract__contract_type=38,
+            contract__user=request.user,
+            address__isnull=False,
+            contract__network=network_id,
+        )
+        get_moonriver_token_contracts(moonriver_contracts, res)
     else:
         matic_contracts = EthContract.objects.filter(
             contract__contract_type__in=(32, 33),
@@ -256,6 +264,24 @@ def get_xinfin_token_contracts(xin_contracts, res):
                 'decimals': details.decimals,
                 'state': state
             })
+
+
+def get_moonriver_token_contracts(moonriver_contracts, res):
+    for ec in moonriver_contracts:
+        details = ec.contract.get_details()
+        if any([x.contract.contract_type == 38 and x.contract.state == 'ENDED' for x in
+                ec.moonriver_token_details_token.all()]):
+            state = 'closed'
+        else:
+            state = 'ok'
+        res.append({
+            'id': ec.id,
+            'address': ec.address,
+            'token_name': details.token_name,
+            'token_short_name': details.token_short_name,
+            'decimals': details.decimals,
+            'state': state
+        })
 
 
 def check_error_promocode(promo_str, contract_type):
@@ -1581,6 +1607,7 @@ def get_verification_cost(request):
     btc = str(raw_usdt * rate('USDT', 'BTC').value * NET_DECIMALS['BTC'])
     return JsonResponse({'USDT': usdt, 'ETH': eth, 'WISH': wish, 'BTC': btc})
 
+
 @api_view(http_method_names=['GET'])
 def get_whitelabel_cost(request):
     raw_usdt = WHITELABEL_PRICE_USDT
@@ -1612,6 +1639,3 @@ def convert_neo3_address_to_hex(request):
         raise PermissionDenied
 
     return JsonResponse({'address': address_hex})
-
-
-

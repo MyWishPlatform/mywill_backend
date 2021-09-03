@@ -19,6 +19,7 @@ MAIL_NETWORK = {
     'XINFIN_MAINNET': 'XinFin',
     'HECOCHAIN_MAINNET': 'HecoChain',
     'HECOCHAIN_TESTNET': 'HecoChainTest',
+    'MOONRIVER_MAINNET': 'Moonriver',
 }
 
 API_NETWORK = {
@@ -39,6 +40,7 @@ API_NETWORK = {
     'XINFIN_MAINNET': 'XINFIN_MAINNET',
     'HECOCHAIN_MAINNET': 'HECOCHAIN_MAINNET',
     'HECOCHAIN_TESTNET': 'HECOCHAIN_TESTNET',
+    'MOONRIVER_MAINNET': 'MOONRIVER_MAINNET',
 }
 
 NETWORK_SUBSITE = {
@@ -59,6 +61,7 @@ NETWORK_SUBSITE = {
     'XINFIN_MAINNET': 1,
     'HECOCHAIN_MAINNET': 1,
     'HECOCHAIN_TESTNET': 1,
+    'MOONRIVER_MAINNET': 1,
 
 }
 
@@ -105,6 +108,8 @@ CONTRACT_PRICE_USDT = {
 
     'HECOCHAIN_TOKEN': 149,
     'HECOCHAIN_ICO': 35,
+
+    'MOONRIVER_TOKEN': 250,
 
 }
 
@@ -171,6 +176,7 @@ NET_DECIMALS = {
     'RBC': 10 ** 18,
     'XIN': 10 ** 18,
     'HT': 10 ** 18,  # HecoChain
+    'MOVR': 10 ** 18,
 }
 
 TRON_REPLENISH_THRESHOLD = {
@@ -282,11 +288,14 @@ AVAILABLE_CONTRACT_TYPES = {
     36: [
         {'contract_type': 36, 'contract_name': 'Token'}
     ],
+    37: [
+        {'contract_type': 38, 'contract_name': 'Token'}
+    ],
 }
 
 NETWORK_TYPES = {
     'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36],
-    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35]
+    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37]
 }
 
 ALL_CONTRACT_STATES = [
@@ -338,6 +347,7 @@ ETH_COMMON_GAS_PRICES = {
     'XINFIN_MAINNET': 3,
     'HECOCHAIN_MAINNET': 6,
     'HECOCHAIN_TESTNET': 6,
+    'MOONRIVER_MAINNET': 20,
 }
 
 EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS = {
