@@ -289,7 +289,7 @@ AVAILABLE_CONTRACT_TYPES = {
         {'contract_type': 36, 'contract_name': 'Token'}
     ],
     37: [
-        {'contract_type': 37, 'contract_name': 'Token'}
+        {'contract_type': 38, 'contract_name': 'Token'}
     ],
 }
 
