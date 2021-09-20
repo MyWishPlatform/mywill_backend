@@ -35,15 +35,19 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
             else:
                 amount *= 1.1
 
+        # конвертируем стоимость валюты в WISH
+        # TODO: отрефакторить это уродство. Будем брать константу по ключу
         value = amount if (currency in ['WISH', 'BWISH', 'BSCWISH', 'WWISH']) else amount * rate(currency, 'WISH').value
         if currency == 'BTC':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['BTC']
-        if currency in ['TRON', 'TRX', 'TRONISH']:
+        elif currency in ['TRON', 'TRX', 'TRONISH']:
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['TRX']
-        if currency in ['EOS', 'EOSISH']:
+        elif currency in ['EOS', 'EOSISH']:
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['EOS']
-        if currency == 'USDT':
+        elif currency == 'USDT':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['USDT']
+        elif currency == 'XDC':
+            value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['XIN']
     elif SubSite.objects.get(id=site_id).site_name in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         value = amount if currency == 'USDT' else amount * float(rate(
             currency, 'USDT'
@@ -90,7 +94,7 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
     print('PAYMENT: Created', flush=True)
     print(
         'PAYMENT: Received {amount} {curr} ({wish_value} WISH) from user {email}, id {user_id} with TXID: {txid} at site: {sitename}'
-            .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id),flush=True)
+            .format(amount=amount, curr=currency, wish_value=value, email=user, user_id=uid, txid=tx, sitename=site_id), flush=True)
 
 
 def make_readable(value, currency):

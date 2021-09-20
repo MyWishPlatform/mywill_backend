@@ -360,6 +360,8 @@ COINGECKO_SYMBOLS = {
     'SWAP': 'swaps-network',
     'MATIC': 'matic-network',
     'WAVES': 'waves',
+    # TODO: проверить правильность
+    'XDC': 'xdc'
 }
 
 TEMP_SYMBOLS = {

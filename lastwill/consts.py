@@ -155,6 +155,7 @@ CONTRACT_GAS_LIMIT = {
     'TOKEN_PROTECTOR': 3000000
 }
 
+# минимальное кол-во крипты
 NET_DECIMALS = {
     'ETH': 10 ** 18,
     'ETH_GAS_PRICE': 10 ** 9,
