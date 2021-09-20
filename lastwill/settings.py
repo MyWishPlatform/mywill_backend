@@ -361,7 +361,7 @@ COINGECKO_SYMBOLS = {
     'MATIC': 'matic-network',
     'WAVES': 'waves',
     # TODO: проверить правильность
-    'XDC': 'xdc'
+    'XDC': 'xdce-crowd-sale'
 }
 
 TEMP_SYMBOLS = {
