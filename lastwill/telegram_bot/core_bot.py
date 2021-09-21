@@ -5,9 +5,11 @@ import time
 
 import telebot
 from django.db import IntegrityError
+from django.contrib.auth.models import User
 
 from lastwill.settings import bot_token
 from lastwill.telegram_bot.models import BotSub
+from lastwill.telegram_bot.serializers import UserMinifiedSerializer
 
 
 class Bot(threading.Thread):
@@ -35,6 +37,28 @@ class Bot(threading.Thread):
         @self.bot.message_handler(commands=['ping'])
         def ping_handler(message):
             self.bot.reply_to(message, 'Pong')
+
+        @self.bot.message_handler(commands=['users'])
+        def get_user(message):
+            """
+                позволяет достать из базы данных пользователя по внутреннему id
+            """
+            msg = ""
+
+            try:
+                user_id: int = int(message.html_text[7:])
+                user = User.objects.get(user_id)
+                serialized = UserMinifiedSerializer(data=User)
+                serialized.is_valid()
+
+                for key, val in serialized.data.items():
+                    msg += f"{key}: {val}\n"
+
+            except Exception as ex:
+                msg = "неправильный ввод"
+
+            finally:
+                bot.reply_to(message, msg)
 
     def run(self):
         while True:
