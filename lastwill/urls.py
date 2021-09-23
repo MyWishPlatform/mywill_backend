@@ -98,7 +98,8 @@ from lastwill.main.views import (
     redirect_contribute
 )
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
-from lastwill.panama_bridge.views import UserTransactionsView
+# TODO
+# from lastwill.panama_bridge.views import UserTransactionsView
 from lastwill.profile.helpers import generate_metamask_message
 from lastwill.profile.views import confirm_email as allauthemailconfirmation
 from lastwill.profile.views import (
@@ -306,7 +307,7 @@ urlpatterns = [
     url(r'^api/advanced_rate/$', advanced_rate_view),
 
     # panama_bridge
-    url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
+    # url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
     # ---
 ]
 

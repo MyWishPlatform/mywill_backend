@@ -117,6 +117,7 @@ def get_code(request):
 
 @api_view()
 def test_comp(request):
+    # TODO:  это за зверь
     contract = Contract.objects.get(id=request.query_params['id'])
     contract.get_details().compile()
     contract.save()
@@ -312,6 +313,7 @@ def check_promocode(promo_str, user, cost, contract, details):
 
 @api_view(http_method_names=['POST'])
 def deploy(request):
+    # TODO: где сериализаторы ????
     contract = Contract.objects.get(id=request.data.get('id'))
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
@@ -886,6 +888,7 @@ class ReadOnly(BasePermission):
 
 
 class WhitelistAddressViewSet(viewsets.ModelViewSet):
+    # TODO: зачем оно ?
     queryset = WhitelistAddress.objects.all()
     serializer_class = WhitelistAddressSerializer
     permission_classes = (ReadOnly,)
@@ -903,6 +906,7 @@ class WhitelistAddressViewSet(viewsets.ModelViewSet):
 
 
 class AirdropAddressViewSet(viewsets.ModelViewSet):
+    # TODO: Нет никаких endpoint'ов этой штуки. Надо выпилить эту ссанину
     queryset = AirdropAddress.objects.all()
     serializer_class = AirdropAddressSerializer
     permission_classes = (ReadOnly,)
@@ -928,6 +932,7 @@ class AirdropAddressViewSet(viewsets.ModelViewSet):
 
 
 class EOSAirdropAddressViewSet(viewsets.ModelViewSet):
+    # TODO: Нет никаких endpoint'ов этой штуки. Надо выпилить эту ссанину
     queryset = EOSAirdropAddress.objects.all()
     serializer_class = EOSAirdropAddressSerializer
     permission_classes = (ReadOnly,)

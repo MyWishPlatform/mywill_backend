@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 import os
+import environ
+from pathlib import Path
 
 from celery.schedules import crontab
 
@@ -17,8 +19,13 @@ from celery.schedules import crontab
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(os.path.realpath(__file__))
 
+env = environ.Env()
+env.read_env(env_file=str(Path(BASE_DIR, ".env")))
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
+
+SECRET_KEY = str(env("SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -58,10 +65,8 @@ INSTALLED_APPS = [
     'lastwill.snapshot',
     'lastwill.swaps_common',
     'lastwill.swaps_common.tokentable',
-    'lastwill.panama_bridge',
     'lastwill.rates',
     'lastwill.telegram_bot',
-    # 'lastwill.swap_bridges',
 ]
 
 MIDDLEWARE = [
