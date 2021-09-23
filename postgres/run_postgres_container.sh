@@ -1,0 +1,1 @@
+sudo docker run --rm --name selectel-pgdocker -e POSTGRES_PASSWORD=lastwill_new -e POSTGRES_USER=lastwill_new -e POSTGRES_DB=lastwill_new -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data postgres
