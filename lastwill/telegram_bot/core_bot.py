@@ -7,10 +7,11 @@ import time
 import telebot
 from django.db import IntegrityError
 
+from lastwill.payments.api import get_payment_statistics
 from lastwill.settings import bot_token
 from lastwill.telegram_bot.models import BotSub
 from lastwill.profile.models import UserSiteBalance
-from lastwill.deploy.models import Network
+# from lastwill.deploy.models import Network
 
 
 def stringify_payment(payment):
@@ -95,14 +96,14 @@ class Bot(threading.Thread):
             finally:
                 self.bot.reply_to(message, msg, parse_mode='html', disable_web_page_preview=True)
 
-        @self.bot.message_handler(commands=["contracts"])
+        @self.bot.message_handler(commands=["monthly"])
         def contracts_statistics(message):
             # TODO: недописано. Мб удалить
             """
                 выгрузка статистики по контрактам с опциями за текущий год. За определённое время
                 пример ввода:
 
-                /contracts январь-август
+                /monthly январь-август
             """
             period_from, period_to = sorted([Bot.MONTHES.index(period) + 1 for period in message.html_text.split()[1].split("-")])
             current_year = datetime.date.today().year
@@ -110,12 +111,17 @@ class Bot(threading.Thread):
             date_from = datetime.date(day=1, month=period_from, year=current_year)
             date_to = datetime.date(day=1, month=period_to, year=current_year)
 
-            # contracts = Contract.objects.filter(network__name__endswith='MAINNET',
-            #                                     deployed_at__gte=from_date,
-            #                                     deployed_at__lte=to_date,
-            #                                     user__id=user.id)
-
-            # self.bot.reply_to(message, "suchka", parse_mode='html', disable_web_page_preview=True)
+            # payment_statistics = get_payment_statistics(start=date_from, stop=date_to)
+            #
+            # msg = f"PAYMENTS\n\nETH {payment_statistics['ETH']}\nBNB {payment_statistics['BNB']}\n\
+            # BSCBNB {payment_statistics['BSCBNB']}\nTRX {payment_statistics['TRX']}"
+            #
+            # # contracts = Contract.objects.filter(network__name__endswith='MAINNET',
+            # #                                     deployed_at__gte=from_date,
+            # #                                     deployed_at__lte=to_date,
+            # #                                     user__id=user.id)
+            #
+            # self.bot.reply_to(message, msg, parse_mode='html', disable_web_page_preview=True)
 
             # period_from, period_to
 
