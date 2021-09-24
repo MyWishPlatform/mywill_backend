@@ -1357,6 +1357,7 @@ def confirm_swaps_info(request):
 
 @api_view(http_method_names=['POST'])
 def confirm_protector_info(request):
+    # TODO: неинформативные принты. Выпилить
     print('protector confirm', flush=True)
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     print(contract.__dict__, flush=True)
@@ -1472,6 +1473,7 @@ def get_test_tokens(request):
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_unique_link(request):
+    # TODO: перенести во viewset с контрактами
     link = request.query_params.get('unique_link', None)
     if not link:
         raise PermissionDenied

@@ -57,7 +57,7 @@ def contracts_today_filter(contracts, field_name):
     return contracts.filter(**{f'{field_name}__gte': midnight, f'{field_name}__lte': now})
 
 
-def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
+def deployed_contracts_statistic(from_date: datetime.date, to_date: datetime.date, is_testnet: bool=True):
     if is_testnet:
         networks = Network.objects.exclude(name__endswith='MAINNET')
     else:
