@@ -170,7 +170,8 @@ router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
 
 
 urlpatterns = [
-    url(r'^jopa/', include(admin.site.urls)),
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/', include(admin.site.urls)),
     url(r'^', include('django.contrib.auth.urls')),
     url(r'^reset', index),
     url(r'^api/', include(router.urls)),
@@ -315,3 +316,6 @@ urlpatterns += url(r'^/*', index, name='all'),
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# if settings.DEBUG:
+#     urlpatterns = [url(r'^admin/doc/', include('django.contrib.admindocs.urls'))] + urlpatterns

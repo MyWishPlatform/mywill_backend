@@ -32,6 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.admindocs',
     'django_extensions',
     'corsheaders',
     'rest_framework',
@@ -185,6 +187,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+# TODO: это уязвимость
 CORS_ORIGIN_ALLOW_ALL = True
 
 SIGNER='127.0.0.1:5000'
