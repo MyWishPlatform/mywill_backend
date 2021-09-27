@@ -8,7 +8,10 @@ import django
 
 django.setup()
 
-from lastwill.telegram_bot.core_bot import bot
+from django.conf import settings
+from lastwill.telegram_bot.core_bot import init_bot
+
+init_bot()
 
 if __name__ == '__main__':
-    bot.start()
+    settings.bot.start()

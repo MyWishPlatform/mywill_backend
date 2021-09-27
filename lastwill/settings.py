@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django_extensions',
+
+    'pygraphviz',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -63,6 +65,7 @@ INSTALLED_APPS = [
     'lastwill.telegram_bot',
     # 'lastwill.swap_bridges',
 ]
+
 
 MIDDLEWARE = [
     # 'lastwill.profile.middleware.session_middleware.SessionHostDomainMiddleware',
