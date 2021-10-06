@@ -75,7 +75,6 @@ CONTRACT_PRICE_USDT = {
     'ETH_INVPOOL': 1199,
     'ETH_LOSTKEY': 499,
     'ETH_LOSTKEY_TOKENS': 549,
-    'ETH_SWAPS': 10,
     'ETH_TOKEN_PROTECTOR': 759,
 
     'EOS_ACCOUNT': 55,
@@ -171,7 +170,6 @@ NET_DECIMALS = {
     'TRONISH': 10 ** 6,
     'TRX': 10 ** 6,
     'USDT': 10 ** 6,
-    'SWAP': 10 ** 18,
     'OKB': 10 ** 18,
     'RBC': 10 ** 18,
     'XIN': 10 ** 18,

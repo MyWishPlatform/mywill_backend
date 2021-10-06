@@ -1,8 +1,7 @@
 from django.core.mail import send_mail
 from django.contrib.sites.shortcuts import get_current_site
 from allauth.account.adapter import DefaultAccountAdapter
-from lastwill.settings import MY_WISH_URL, WAVES_URL, TOKEN_PROTECTOR_URL, SWAPS_URL, EMAIL_HOST_USER, \
-    EMAIL_HOST_USER_SWAPS, RUBIC_EXC_URL, RUBIC_FIN_URL
+from lastwill.settings import MY_WISH_URL, WAVES_URL, TOKEN_PROTECTOR_URL, EMAIL_HOST_USER
 from email_messages import register_subject, register_text
 
 

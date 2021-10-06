@@ -5,8 +5,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from lastwill.settings import MY_WISH_URL, SWAPS_URL, EMAIL_HOST_USER, EMAIL_HOST_USER_SWAPS,\
-    RUBIC_FIN_URL, RUBIC_EXC_URL
+from lastwill.settings import MY_WISH_URL, EMAIL_HOST_USER
 from email_messages import password_reset_subject, password_reset_text
 
 

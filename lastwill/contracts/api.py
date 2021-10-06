@@ -12,8 +12,7 @@ from collections import OrderedDict
 import cloudscraper
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
-    RUBIC_FIN_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, WAVES_URL, TOKEN_PROTECTOR_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
@@ -53,22 +52,6 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     return cost
 
 
-def sendEMail(sub, text, mail):
-    server = smtplib.SMTP('smtp.yandex.ru', 587)
-    server.starttls()
-    server.ehlo()
-    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
-    message = "\r\n".join([
-        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
-        "To: {to}".format(to=mail),
-        "Subject: {sub}".format(sub=sub),
-        "",
-        str(text)
-    ])
-    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
-    server.quit()
-
-
 class ContractViewSet(ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
@@ -95,9 +78,6 @@ class ContractViewSet(ModelViewSet):
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
-        if host in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-            # result = result.filter(contract_type__in=[20, 21, 23])
-            result = result.filter(contract_type__in=[20])
         if host == WAVES_URL:
             result = result.filter(contract_type=22)
         if host == TOKEN_PROTECTOR_URL:
@@ -1442,20 +1422,6 @@ def get_test_tokens(request):
 
 
 @api_view(http_method_names=['GET'])
-def get_contract_for_unique_link(request):
-    link = request.query_params.get('unique_link', None)
-    if not link:
-        raise PermissionDenied
-    details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
-    if not details:
-        details = ContractDetailsSWAPS2.objects.filter(unique_link=link).first()
-    if not details:
-        raise PermissionDenied
-    contract = details.contract
-    return JsonResponse(ContractSerializer().to_representation(contract))
-
-
-@api_view(http_method_names=['GET'])
 def get_public_contracts(request):
     contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
     result = []
@@ -1476,8 +1442,6 @@ def change_contract_state(request):
     if contract.contract_type != 21:
         raise PermissionDenied
     if contract.network.name != 'ETHEREUM_MAINNET':
-        raise PermissionDenied
-    if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
     contract.state = 'WAITING_FOR_ACTIVATION'
     contract.save()

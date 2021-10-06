@@ -226,7 +226,6 @@ urlpatterns = [
     url(r'^api/confirm_protector_tokens/$', confirm_protector_tokens),
     url(r'^api/skip_protector_approve/$', skip_protector_approve),
     url(r'^api/get_test_tokens/$', get_test_tokens),
-    url(r'^api/get_contract_for_unique_link/$', get_contract_for_unique_link),
     url(r'^api/get_public_contracts/$', get_public_contracts),
     url(r'^api/change_contract_state/$', change_contract_state),
     url(r'^contribute', redirect_contribute),
