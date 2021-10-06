@@ -37,7 +37,6 @@ from lastwill.profile.helpers import valid_totp
 from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL, \
     SWAPS_URL, RUBIC_EXC_URL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
-from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 
 
 

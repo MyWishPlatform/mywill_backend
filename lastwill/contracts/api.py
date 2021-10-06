@@ -25,7 +25,7 @@ from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
-    EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
+    EOSAirdropAddressSerializer, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
@@ -1316,8 +1316,6 @@ def autodeploing(user_id, subsite_id):
         )().to_representation(contract_details)
         cost = contract_details.calc_cost_usdt(kwargs, contract.network)
         if bb.balance >= cost or bb.balance >= cost * 0.95:
-            if subsite_id == 4:
-                deploy_swaps(contract.id)
             if subsite_id == 5:
                 deploy_protector(contract.id)
         bb.refresh_from_db()
@@ -1326,28 +1324,6 @@ def autodeploing(user_id, subsite_id):
         print('check3', flush=True)
     print('check4', flush=True)
     return True
-
-
-@api_view(http_method_names=['POST'])
-def confirm_swaps_info(request):
-    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
-    host = request.META['HTTP_HOST']
-    if contract.user != request.user or contract.state != 'CREATED':
-        raise PermissionDenied
-    if contract.contract_type != 20:
-        raise PermissionDenied
-    if contract.network.name != 'ETHEREUM_MAINNET':
-        raise PermissionDenied
-    if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-        raise PermissionDenied
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
-    for c in confirm_contracts:
-        c.state = 'WAITING_FOR_PAYMENT'
-        c.save()
-    contract.state = 'WAITING_FOR_PAYMENT'
-    contract.save()
-    autodeploing(contract.user.id, 4)
-    return JsonResponse(ContractSerializer().to_representation(contract))
 
 
 @api_view(http_method_names=['POST'])
@@ -1506,25 +1482,6 @@ def change_contract_state(request):
     contract.state = 'WAITING_FOR_ACTIVATION'
     contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
-
-
-@api_view(http_method_names=['POST'])
-def send_message_author_swap(request):
-    contract_id = int(request.data.get('contract_id'))
-    link = request.data.get('link')
-    email = request.data.get('email')
-    message = request.data.get('message')
-    sendEMail(
-        swaps_support_subject,
-        swaps_support_message.format(
-            id=contract_id,
-            email=email,
-            link=link,
-            msg=message.encode('utf-8')
-        ),
-        [SWAPS_SUPPORT_MAIL]
-    )
-    return Response('ok')
 
 
 @api_view(http_method_names=['POST'])

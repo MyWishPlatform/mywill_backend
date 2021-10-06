@@ -65,44 +65,6 @@ def count_sold_tokens(address):
     return sold_tokens
 
 
-def sendEMail(sub, text, mail):
-    server = smtplib.SMTP('smtp.yandex.ru', 587)
-    server.starttls()
-    server.ehlo()
-    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
-    message = "\r\n".join([
-        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
-        "To: {to}".format(to=mail),
-        "Subject: {sub}".format(sub=sub),
-        "",
-        str(text)
-    ])
-    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
-    server.quit()
-
-
-def deploy_swaps(contract_id):
-    contract = Contract.objects.get(id=contract_id)
-    if contract.state == 'WAITING_FOR_PAYMENT':
-        contract_details = contract.get_details()
-        contract_details.predeploy_validate()
-        kwargs = ContractSerializer().get_details_serializer(
-            contract.contract_type
-        )().to_representation(contract_details)
-        cost = contract_details.calc_cost_usdt(kwargs, contract.network)
-        site_id = 4
-        currency = 'USDT'
-        user_info = UserSiteBalance.objects.get(user=contract.user, subsite__id=4)
-        if user_info.balance >= cost or int(user_info.balance) >= cost * 0.95:
-            create_payment(contract.user.id, '', currency, -cost, site_id, 'ETHEREUM_MAINNET')
-            contract.state = 'WAITING_FOR_DEPLOYMENT'
-            contract.deploy_started_at = datetime.datetime.now()
-            contract.save()
-            queue = NETWORKS[contract.network.name]['queue']
-            send_in_queue(contract.id, 'launch', queue)
-    return True
-
-
 def deploy_protector(contract_id):
     contract = Contract.objects.get(id=contract_id)
     if contract.state == 'WAITING_FOR_PAYMENT':
@@ -194,12 +156,6 @@ class ContractSerializer(serializers.ModelSerializer):
                     ),
                     DEFAULT_FROM_EMAIL,
                     [validated_data['user'].email]
-                )
-            elif contract.contract_type in (20, 21):
-                sendEMail(
-                    email_messages.swaps_subject,
-                    email_messages.swaps_message,
-                    validated_data['user'].email
                 )
             elif contract.contract_type == 23:
                 email = contract_details['email'] if contract_details['email'] else validated_data['user'].email
