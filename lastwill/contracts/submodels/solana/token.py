@@ -27,6 +27,7 @@ class ContractDetailsSolanaToken(CommonDetails):
     decimals = models.IntegerField()
     admin_address = models.CharField(max_length=70)
     future_minting = models.BooleanField(default=False)
+    token_type = models.CharField(max_length=32, default='SPL')
 
 
     @classmethod
