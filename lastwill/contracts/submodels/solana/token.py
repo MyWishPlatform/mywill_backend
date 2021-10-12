@@ -31,7 +31,7 @@ class ContractDetailsSolanaToken(CommonDetails):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='SOLANA_MAINNET')
+        network = Network.objects.get(name='SOLANA_TESTNET')
         cost = cls.calc_cost({}, network)
         return cost
 

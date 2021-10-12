@@ -19,7 +19,7 @@ import lastwill.check as check
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
-    NeoContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    NeoContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
     ContractDetailsToken, ContractDetailsICO,
     ContractDetailsAirdrop, AirdropAddress, TRONContract,
     ContractDetailsLastwill, ContractDetailsLostKey,
@@ -2024,6 +2024,60 @@ class ContractDetailsMoonriverTokenSerializer(ContractDetailsTokenSerializer):
         model = ContractDetailsMoonriverToken
 
 
-class ContractDetailsSolanaTokenSerializer(ContractDetailsTokenSerializer):
-    class Meta(ContractDetailsTokenSerializer.Meta):
+class SolanaContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SolanaContract
+        fields = ('id', 'address')
+
+
+class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDetailsSolanaToken
+        fields = (
+            'token_name', 'decimals', 'token_short_name', 'admin_address', 'future_minting',
+        )
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def validate(self, details):
+        if details['decimals'] < 0 or details['decimals'] > 9:
+            raise ValidationError
+        if len(details['token_short_name']) == 0 or len(details['token_short_name']) > 9:
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['solana_contract_token'] = SolanaContractSerializer().to_representation(contract_details.solana_contract)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th)
+            for th in
+            contract_details.contract.tokenholder_set.order_by('id').all()
+        ]
+        return res
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
+
+
+class ContractDetailsSolanaTokenSerializer(ContractDetailsSolanaSerializer):
+    class Meta(ContractDetailsSolanaSerializer.Meta):
         model = ContractDetailsSolanaToken
