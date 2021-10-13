@@ -467,7 +467,7 @@ class EthContract(models.Model):
         Contract, null=True, default=None, related_name='orig_ethcontract'
     )
     address = models.CharField(max_length=50, null=True, default=None)
-    tx_hash = models.CharField(max_length=70, null=True, default=None)
+    tx_hash = models.CharField(max_length=90, null=True, default=None)
 
     source_code = models.TextField()
     bytecode = models.TextField()
