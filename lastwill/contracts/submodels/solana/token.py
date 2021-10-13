@@ -1,7 +1,7 @@
 from subprocess import Popen, PIPE
-from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.settings import SOLANA_CLI_DIR, DEFAULT_FROM_EMAIL
+from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
+from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
 
 

@@ -289,10 +289,18 @@ VERIFICATION_CONTRACTS_IDS = (
 
 try:
     from lastwill.settings_local import *
-    with open(f'{BASE_DIR}/keypair.json', 'w') as f:
-        f.write(SOLANA_KEYPAIR)
 except ImportError as exc:
     print("Can't load local settings")
+
+
+try:
+    with open((f'{BASE_DIR}/keypair.json'), 'r') as f:
+            pass
+except FileNotFoundError:
+    print("Can't read solana keypair.json")
+    with open(f'{BASE_DIR}/keypair.json', 'w') as f:
+        f.write(SOLANA_KEYPAIR)
+    print("created new solana keypair.json")
 
 
 # REDIS settings
