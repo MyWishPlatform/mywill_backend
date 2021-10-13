@@ -289,6 +289,8 @@ VERIFICATION_CONTRACTS_IDS = (
 
 try:
     from lastwill.settings_local import *
+    with open(f'{BASE_DIR}/keypair.json', 'w') as f:
+        f.write(SOLANA_KEYPAIR)
 except ImportError as exc:
     print("Can't load local settings")
 

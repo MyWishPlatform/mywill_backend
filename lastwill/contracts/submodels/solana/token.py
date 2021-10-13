@@ -1,4 +1,4 @@
-from subprocess import run
+from subprocess import Popen, PIPE
 from lastwill.contracts.submodels.common import *
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.settings import SOLANA_CLI_DIR, DEFAULT_FROM_EMAIL
@@ -47,13 +47,13 @@ class ContractDetailsSolanaToken(CommonDetails):
     @blocking
     @postponable
     def deploy(self):
-        output = run(['./spl-token create-token'], capture_output=True, cwd=SOLANA_CLI_DIR, shell=True)
+        process = Popen(['./spl-token create-token'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=SOLANA_CLI_DIR, shell=True)
 
-        stdout, stderr = output.stdout, output.stderr
+        stdout, stderr = process.communicate()
 
         print(stdout.decode(), stderr.decode(), flush=True)
 
-        if output.returncode != 0:
+        if process.returncode != 0:
             raise Exception('error while deploying')
 
         success_result = stdout.decode()

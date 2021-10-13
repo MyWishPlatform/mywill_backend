@@ -358,7 +358,7 @@ Swaps Team. """
 
 solana_token_text = '''Hello,
 
-We are happy to inform you that your contract was successfully created and deployed to Solana Dev network.
+We are happy to inform you that your contract was successfully created and deployed to Solana Devnet network.
 Token contract address: {addr}
 
 Please contact support@mywish.io if you have any questions.
