@@ -1,5 +1,8 @@
-from subprocess import Popen, PIPE
-from lastwill.settings import SOLANA_CLI_DIR, DEFAULT_FROM_EMAIL
+from spl.token.client import Token
+from spl.token.constants import TOKEN_PROGRAM_ID
+from solana.keypair import Keypair
+from solana.publickey import PublicKey
+from lastwill.settings import SOLANA_CLI_DIR, DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
@@ -39,64 +42,61 @@ class ContractDetailsSolanaToken(CommonDetails):
 
     @blocking
     @postponable
-    @check_transaction
     def deploy(self):
         print('deploying solana SPL token')
-        process = Popen(['./spl-token create-token'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=SOLANA_CLI_DIR,
-                        shell=True)
+        conn = SolanaInt(self.contract.network.name).connect()
+        owner = PublicKey(str(self.admin_address))
+        key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
+        balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
+        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, owner, 4, TOKEN_PROGRAM_ID,
+                                                                        owner, False, balance_needed, Token)
 
-        stdout, stderr = process.communicate()
 
-        print(stdout.decode(), stderr.decode(), flush=True)
-
-        if process.returncode != 0:
-            raise Exception('error while deploying')
-
-        success_result = stdout.decode()
-        print(success_result)
-        tx_hash = success_result.split("Signature: ", 1)[1][:-2]
-        contract_address = success_result.split("Signature: ", 1)[0].split('Creating token ')[1][:-2]
-
-        solana_contract = SolanaContract()
-        solana_contract.contract = self.contract
-        solana_contract.original_contract = self.contract
-        solana_contract.tx_hash = tx_hash
-        solana_contract.address = contract_address
-        solana_contract.save()
-        self.solana_contract = solana_contract
-        self.save()
-        self.msg_deployed({})
-
-    @blocking
-    @postponable
-    @check_transaction
-    def msg_deployed(self, message):
-        print('msg_deployed method of the solana token contract')
-        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-            take_off_blocking(self.contract.network.name)
-            return
+        response = conn.send_transaction(txn, payer, mint_account, opts=opts)
+        error = response['result']['meta']['err']
+        if error:
+            raise Exception(f'error while deploying \n {error}')
         else:
-            print('transferring of ownership started')
-            owner = self.admin_address
-            address = self.solana_contract.address
-            process = Popen([f'./spl-token authorize {address} owner {owner}'], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                            cwd=SOLANA_CLI_DIR,
-                            shell=True)
-
-            stdout, stderr = process.communicate()
-
-            print(stdout.decode(), stderr.decode(), flush=True)
-
-            if process.returncode != 0:
-                raise Exception('error while transferring owner')
-
-            success_result = stdout.decode()
-            print(success_result)
-            tx_hash = success_result.split("Signature: ", 1)[1][:-2]
-            self.transfer_tx_hash = tx_hash
+            tx_hash = response['result']['transaction']['signatures'][0]
+            contract_address = response['result']['transaction']['message']['accountKeys'][1]
+            solana_contract = SolanaContract()
+            solana_contract.contract = self.contract
+            solana_contract.original_contract = self.contract
+            solana_contract.tx_hash = tx_hash
+            solana_contract.address = contract_address
+            solana_contract.save()
+            self.solana_contract = solana_contract
             self.save()
-            print('transferOwnership success')
-            self.initialized()
+            self.initialized({})
+
+    # @blocking
+    # @postponable
+    # @check_transaction
+    # def msg_deployed(self, message):
+    #     print('msg_deployed method of the solana spl token')
+    #     if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+    #         take_off_blocking(self.contract.network.name)
+    #         return
+    #     else:
+    #         print('transferring of mint authority started')
+    #         owner = self.admin_address
+    #         address = self.solana_contract.address
+    #         process = Popen([f'./spl-token authorize {address} mint {owner}'],
+    #                         stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=SOLANA_CLI_DIR, shell=True)
+    #
+    #         stdout, stderr = process.communicate()
+    #
+    #         print(stdout.decode(), stderr.decode(), flush=True)
+    #
+    #         if process.returncode != 0:
+    #             raise Exception('error while transferring authority')
+    #
+    #         success_result = stdout.decode()
+    #         tx_hash = success_result.split("Signature: ", 1)[1][:-2]
+    #         self.transfer_tx_hash = tx_hash
+    #         self.save()
+    #         print('mint authority transferred')
+    #         self.initialized()
 
     @postponable
     @check_transaction
@@ -123,6 +123,3 @@ class ContractDetailsSolanaToken(CommonDetails):
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
-
-    def finalized(self, message):
-        pass

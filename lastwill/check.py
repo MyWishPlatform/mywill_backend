@@ -2,6 +2,7 @@ import re
 import base58
 from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
+from solana.publickey import PublicKey
 
 
 def die(message):
@@ -23,6 +24,11 @@ def is_neo3_address(string):
         die(die_message)
     elif data[0] != 53:
         die(die_message)
+
+
+def is_solana_address(string: str) -> PublicKey:
+    address = PublicKey(string)
+    return address
 
 
 def is_email(string):
