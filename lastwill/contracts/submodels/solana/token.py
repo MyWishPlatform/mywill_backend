@@ -9,14 +9,6 @@ class SolanaContract(EthContract):
     pass
 
 
-def solana_address_to_hex(address):
-    pass
-
-
-def solana_address_to_bytes(address):
-    pass
-
-
 @contract_details('Solana SPL Token contract')
 class ContractDetailsSolanaToken(CommonDetails):
     solana_contract = models.ForeignKey(SolanaContract, null=True, default=None)
@@ -26,6 +18,7 @@ class ContractDetailsSolanaToken(CommonDetails):
     admin_address = models.CharField(max_length=70)
     future_minting = models.BooleanField(default=False)
     token_type = models.CharField(max_length=32, default='SPL')
+    transfer_tx_hash = models.CharField(max_length=90, null=True, default=None)
 
     @classmethod
     def min_cost(cls):
@@ -46,8 +39,11 @@ class ContractDetailsSolanaToken(CommonDetails):
 
     @blocking
     @postponable
+    @check_transaction
     def deploy(self):
-        process = Popen(['./spl-token create-token'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=SOLANA_CLI_DIR, shell=True)
+        print('deploying solana SPL token')
+        process = Popen(['./spl-token create-token'], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=SOLANA_CLI_DIR,
+                        shell=True)
 
         stdout, stderr = process.communicate()
 
@@ -69,13 +65,38 @@ class ContractDetailsSolanaToken(CommonDetails):
         solana_contract.save()
         self.solana_contract = solana_contract
         self.save()
-        self.initialized({})
+        self.msg_deployed({})
 
     @blocking
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        pass
+        print('msg_deployed method of the solana token contract')
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            take_off_blocking(self.contract.network.name)
+            return
+        else:
+            print('transferring of ownership started')
+            owner = self.admin_address
+            address = self.solana_contract.address
+            process = Popen([f'./spl-token authorize {address} owner {owner}'], stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                            cwd=SOLANA_CLI_DIR,
+                            shell=True)
+
+            stdout, stderr = process.communicate()
+
+            print(stdout.decode(), stderr.decode(), flush=True)
+
+            if process.returncode != 0:
+                raise Exception('error while transferring owner')
+
+            success_result = stdout.decode()
+            print(success_result)
+            tx_hash = success_result.split("Signature: ", 1)[1][:-2]
+            self.transfer_tx_hash = tx_hash
+            self.save()
+            print('transferOwnership success')
+            self.initialized()
 
     @postponable
     @check_transaction

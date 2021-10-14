@@ -66,10 +66,6 @@ class NeoInt(ParInt):
     pass
 
 
-class SolanaInt(ParInt):
-    pass
-
-
 class InfuraConnectExc(InterfaceConnectExc):
     def __init__(self, *args):
         super().__init__(name='infura')
