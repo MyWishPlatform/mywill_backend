@@ -67,7 +67,7 @@ class ContractDetailsSolanaToken(CommonDetails):
             solana_contract.save()
             self.solana_contract = solana_contract
             self.save()
-            self.initialized({})
+            self.initialized()
 
     # @blocking
     # @postponable

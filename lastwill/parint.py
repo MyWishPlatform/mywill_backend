@@ -68,13 +68,13 @@ class NeoInt(ParInt):
 
 
 class SolanaInt:
-    def __init__(self, network: str = None):
+    def __init__(self, network = None):
         if network is None:
             raise AttributeError('network argument is unfilled')
         else:
             self.network = network
 
-    def connect(self) -> Client:
+    def connect(self):
         node = Client(NETWORKS[self.network]['node_url'])
         return node
 
