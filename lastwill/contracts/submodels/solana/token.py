@@ -2,7 +2,7 @@ from spl.token.client import Token
 from spl.token.constants import TOKEN_PROGRAM_ID
 from solana.keypair import Keypair
 from solana.publickey import PublicKey
-from lastwill.settings import SOLANA_CLI_DIR, DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
+from lastwill.settings import DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
