@@ -32,7 +32,7 @@ def is_solana_address(string: str) -> Union[bool, Exception]:
         PublicKey(string)
         return True
     except ValueError:
-        return die(f'{string} is not a valid solana address')
+        die(f'{string} is not a valid solana address')
 
 
 def is_email(string):
