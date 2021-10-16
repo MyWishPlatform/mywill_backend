@@ -48,11 +48,12 @@ class ContractDetailsSolanaToken(CommonDetails):
         owner = PublicKey(str(self.admin_address))
         key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
         balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
-        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, owner, 4, TOKEN_PROGRAM_ID,
+        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, owner, self.decimals, TOKEN_PROGRAM_ID,
                                                                         owner, False, balance_needed, Token)
 
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
+        print(response)
         error = response['result']['meta']['err']
         if error:
             raise Exception(f'error while deploying \n {error}')
@@ -67,7 +68,7 @@ class ContractDetailsSolanaToken(CommonDetails):
             solana_contract.save()
             self.solana_contract = solana_contract
             self.save()
-            self.initialized()
+            self.initialized({})
 
     # @blocking
     # @postponable

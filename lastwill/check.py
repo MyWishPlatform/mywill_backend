@@ -3,6 +3,7 @@ import base58
 from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
 from solana.publickey import PublicKey
+from typing import Union
 
 
 def die(message):
@@ -26,9 +27,12 @@ def is_neo3_address(string):
         die(die_message)
 
 
-def is_solana_address(string: str) -> PublicKey:
-    address = PublicKey(string)
-    return address
+def is_solana_address(string: str) -> Union[bool, Exception]:
+    try:
+        PublicKey(string)
+        return True
+    except ValueError:
+        return die(f'{string} is not a valid solana address')
 
 
 def is_email(string):

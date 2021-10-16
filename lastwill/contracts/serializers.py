@@ -2053,10 +2053,7 @@ class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
             raise ValidationError
         if len(details['token_short_name']) == 0 or len(details['token_short_name']) > 9:
             raise ValidationError
-        try:
-            check.is_solana_address(details['admin_address'])
-        except:
-            raise ValidationError
+        check.is_solana_address(details['admin_address'])
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
