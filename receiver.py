@@ -43,7 +43,7 @@ class Receiver(threading.Thread):
             5672,
             'mywill',
             pika.PlainCredentials('java', 'java'),
-            heartbeat_interval=0,
+            heartbeat=0,
         ))
 
         channel = connection.channel()
