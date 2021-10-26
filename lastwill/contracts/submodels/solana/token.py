@@ -48,7 +48,7 @@ class ContractDetailsSolanaToken(CommonDetails):
         owner = PublicKey(str(self.admin_address))
         key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
         balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
-        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, owner, self.decimals, TOKEN_PROGRAM_ID,
+        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, key.public_key, self.decimals, TOKEN_PROGRAM_ID,
                                                                         owner, False, balance_needed, Token)
 
 
@@ -68,44 +68,40 @@ class ContractDetailsSolanaToken(CommonDetails):
             solana_contract.save()
             self.solana_contract = solana_contract
             self.save()
-            self.initialized({})
+            self.msg_deployed({})
 
-    # @blocking
-    # @postponable
-    # @check_transaction
-    # def msg_deployed(self, message):
-    #     print('msg_deployed method of the solana spl token')
-    #     if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
-    #         take_off_blocking(self.contract.network.name)
-    #         return
-    #     else:
-    #         print('transferring of mint authority started')
-    #         owner = self.admin_address
-    #         address = self.solana_contract.address
-    #         process = Popen([f'./spl-token authorize {address} mint {owner}'],
-    #                         stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=SOLANA_CLI_DIR, shell=True)
-    #
-    #         stdout, stderr = process.communicate()
-    #
-    #         print(stdout.decode(), stderr.decode(), flush=True)
-    #
-    #         if process.returncode != 0:
-    #             raise Exception('error while transferring authority')
-    #
-    #         success_result = stdout.decode()
-    #         tx_hash = success_result.split("Signature: ", 1)[1][:-2]
-    #         self.transfer_tx_hash = tx_hash
-    #         self.save()
-    #         print('mint authority transferred')
-    #         self.initialized()
+    @blocking
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        print('msg_deployed method of the solana spl token')
+        if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
+            take_off_blocking(self.contract.network.name)
+            return
+        else:
+            conn = SolanaInt(self.contract.network.name).connect()
+            key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
+            tok = Token(conn, self.solana_contract.address, TOKEN_PROGRAM_ID, key)
+            holders = self.contract.tokenholder_set.all()
+            if holders:
+                print('transfering premint tokens')
+                for th in holders:
+                    tok.mint_to(th.address, key, th.amount)
+
+            print('transferring of mint authority started')
+            owner = self.admin_address
+            address = self.solana_contract.address
+            tok.set_authority(address, key.public_key, 0, PublicKey(owner))
+
+            print('mint authority transferred')
+            self.initialized()
 
     @postponable
     @check_transaction
     def initialized(self, message):
         if self.contract.state not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
+            take_off_blocking(self.contract.network.name)
             return
-
-        take_off_blocking(self.contract.network.name)
 
         self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
         self.contract.deployed_at = datetime.datetime.now()
