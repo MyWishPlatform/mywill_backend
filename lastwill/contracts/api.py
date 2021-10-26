@@ -24,6 +24,7 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
+from settings_local import VERIFICATION_CONTRACTS_IDS_DOMAINS
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
     EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
@@ -1543,6 +1544,37 @@ def buy_verification(request):
     site_id = 1
     network = contract.network.name
     create_payment(request.user.id, '', currency, -cost, site_id, network)
+
+    # автоверификация контракта через etherscan
+    scraper = cloudscraper.create_scraper()
+
+    if contract.original_contract.network_id in VERIFICATION_CONTRACTS_IDS_DOMAINS.keys():
+        # details = contract.get_details()
+        scanner_meta = VERIFICATION_CONTRACTS_IDS_DOMAINS[contract.original_contract.network_id]
+        domain = scanner_meta["domain"]
+        token = scanner_meta["token"]
+
+        data = {
+            # auth data
+            "apikey": token,
+            "module": "contract",
+            "action": "verifysourcecode",
+            "sourceCode": contract.source_code,
+            # contract data
+            "contractaddress": contract.address,
+            "codeformat": "solidity-single-file",
+            "contractname": contract.original_contract.name,
+            "compilerversion": f"v{'.'.join(contract.compiler_version.split('.')[:-2])}",
+            # ???
+            "optimizationUsed": 1,
+            "runs": 200
+        }
+
+        verification_traceback = scraper.post(f"https://{domain}/api", data=data)
+        result = json.loads(verification_traceback.text)
+
+    else:
+        print(f"auto verification not available for network with id: {contract.original_contract.network_id}")
 
     details.verification = True
     details.verification_status = 'IN_PROCESS'

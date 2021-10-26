@@ -290,6 +290,7 @@ VERIFICATION_CONTRACTS_IDS = (
     38,  # moonriver token
 )
 
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
@@ -371,6 +372,8 @@ TEMP_SYMBOLS = {
     'EOSISH': 'EOS',
     'USD': 'USDT',
 }
+
+
 
 DASHBOARD_NETWORKS = {
     'ETHEREUM': {
