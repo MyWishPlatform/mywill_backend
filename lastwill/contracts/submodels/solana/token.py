@@ -1,5 +1,7 @@
 from spl.token.client import Token
 from spl.token.constants import TOKEN_PROGRAM_ID
+from spl.token.instructions import get_associated_token_address
+from solana.rpc.core import RPCException
 from solana.keypair import Keypair
 from solana.publickey import PublicKey
 from lastwill.settings import DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
@@ -48,9 +50,9 @@ class ContractDetailsSolanaToken(CommonDetails):
         owner = PublicKey(str(self.admin_address))
         key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
         balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
-        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, key.public_key, self.decimals, TOKEN_PROGRAM_ID,
+        token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, key.public_key, self.decimals,
+                                                                        TOKEN_PROGRAM_ID,
                                                                         owner, False, balance_needed, Token)
-
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
         print(response)
@@ -86,14 +88,22 @@ class ContractDetailsSolanaToken(CommonDetails):
             if holders:
                 print('transfering premint tokens')
                 for th in holders:
-                    tok.mint_to(th.address, key, th.amount)
+                    holder_addr = PublicKey(th.address)
+                    try:
+                        associated_address = tok.create_associated_token_account(holder_addr)
+                        print(f'created associated account {associated_address}')
+                    except RPCException:
+                        print('associated token account already created')
+                        associated_address = get_associated_token_address(holder_addr, tok.pubkey)
+                    response = tok.mint_to(associated_address, key, th.amount)
+                    print(f'tx_hash = {response["result"]}')
 
             print('transferring of mint authority started')
-            owner = self.admin_address
+            owner = PublicKey(self.admin_address)
             address = self.solana_contract.address
-            tok.set_authority(address, key.public_key, 0, PublicKey(owner))
+            tok.set_authority(address, key.public_key, 0, owner)
+            print('successfully transferred mint authority')
 
-            print('mint authority transferred')
             self.initialized()
 
     @postponable
