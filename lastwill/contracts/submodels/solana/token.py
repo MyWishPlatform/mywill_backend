@@ -83,25 +83,26 @@ class ContractDetailsSolanaToken(CommonDetails):
         else:
             conn = SolanaInt(self.contract.network.name).connect()
             key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
-            tok = Token(conn, self.solana_contract.address, TOKEN_PROGRAM_ID, key)
+            token_address = PublicKey(self.solana_contract.address)
+            tok_int = Token(conn, token_address, TOKEN_PROGRAM_ID, key)
             holders = self.contract.tokenholder_set.all()
             if holders:
                 print('transfering premint tokens')
                 for th in holders:
                     holder_addr = PublicKey(th.address)
                     try:
-                        associated_address = tok.create_associated_token_account(holder_addr)
+                        associated_address = tok_int.create_associated_token_account(holder_addr)
                         print(f'created associated account {associated_address}')
                     except RPCException:
                         print('associated token account already created')
-                        associated_address = get_associated_token_address(holder_addr, tok.pubkey)
-                    response = tok.mint_to(associated_address, key, th.amount)
+                        associated_address = get_associated_token_address(holder_addr, tok_int.pubkey)
+                    response = tok_int.mint_to(associated_address, key, int(th.amount))
                     print(f'tx_hash = {response["result"]}')
 
             print('transferring of mint authority started')
             owner = PublicKey(self.admin_address)
             address = self.solana_contract.address
-            tok.set_authority(address, key.public_key, 0, owner)
+            tok_int.set_authority(address, key.public_key, 0, owner)
             print('successfully transferred mint authority')
 
             self.initialized()
