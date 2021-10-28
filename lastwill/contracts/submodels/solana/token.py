@@ -105,7 +105,7 @@ class ContractDetailsSolanaToken(CommonDetails):
             tok_int.set_authority(address, key.public_key, 0, owner)
             print('successfully transferred mint authority')
 
-            self.initialized()
+            self.initialized({})
 
     @postponable
     @check_transaction
