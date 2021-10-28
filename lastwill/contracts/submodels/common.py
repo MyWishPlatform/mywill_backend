@@ -709,11 +709,13 @@ class CommonDetails(models.Model):
         gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+        chain_id = int(eth_int.eth_chainId(), 16)
 
         print('nonce', nonce)
         signed_data = sign_transaction(
             address, nonce, 600000,
             gas_price=gas_price,
+            chain_id=chain_id,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])
