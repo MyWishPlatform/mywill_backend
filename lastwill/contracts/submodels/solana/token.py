@@ -111,9 +111,9 @@ class ContractDetailsSolanaToken(CommonDetails):
     @check_transaction
     def initialized(self, message):
         if self.contract.state not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
-            take_off_blocking(self.contract.network.name)
             return
 
+        take_off_blocking(self.contract.network.name)
         self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
