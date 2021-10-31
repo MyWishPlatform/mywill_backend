@@ -290,10 +290,11 @@ def transfer_crypto(details, dest):
     gas_price_current = details.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
     gas_price_fixed = ETH_COMMON_GAS_PRICES[details.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
     gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+    gas_limit = CONTRACT_GAS_LIMIT['WHITELABEL']
     eth_amount = hex(int(1.2 * (gas_price * CONTRACT_GAS_LIMIT['TOKEN'])))
     chain_id = int(eth_int.eth_chainId(), 16)
 
-    signed_data = sign_transaction(address, nonce, details.get_gaslimit(), value=eth_amount,
+    signed_data = sign_transaction(address, nonce, gas_limit, value=eth_amount,
                                    dest=dest, gas_price=gas_price, chain_id=chain_id)
 
     tx_hash = eth_int.eth_sendRawTransaction(signed_data)
