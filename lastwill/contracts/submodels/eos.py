@@ -189,7 +189,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
+            eos_url = 'http://%s' % (
                 str(NETWORKS[network.name]['host'])
             )
         else:
@@ -625,7 +625,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
+            eos_url = 'http://%s' % (
                 str(NETWORKS[network.name]['host'])
             )
         else:

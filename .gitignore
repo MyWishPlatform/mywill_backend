@@ -47,3 +47,5 @@ settings_local.py
 contracts/*
 test.py
 test_2.py
+
+contracts/

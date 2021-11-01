@@ -12,8 +12,8 @@ from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
 
 
 def get_frac(resource, system_state, account_state, value):
-    account_resource_max = account_state[f'{resource}_limit']['max']
-    account_resource_weight = account_state[f'{resource}_weight']
+    account_resource_max = int(account_state[f'{resource}_limit']['max'])
+    account_resource_weight = int(account_state[f'{resource}_weight'])
     system_resource_weight = int(system_state['rows'][0][resource]['weight'])
 
     frac = 10 ** 18 * account_resource_weight / (system_resource_weight * account_resource_max)
