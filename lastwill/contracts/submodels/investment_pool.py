@@ -10,7 +10,7 @@ from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USD
 
 
 class InvestAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     address = models.CharField(max_length=50, db_index=True)
     take_away = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -24,7 +24,7 @@ class AbstractContractDetailsInvestmentPool(CommonDetails):
     class Meta:
         abstract = True
 
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     admin_address = models.CharField(max_length=50)
     admin_percent = models.FloatField()
     temp_directory = models.CharField(max_length=36)

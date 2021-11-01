@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django_extensions',
 
-    'pygraphviz',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -60,7 +59,7 @@ INSTALLED_APPS = [
     'lastwill.snapshot',
     'lastwill.swaps_common',
     'lastwill.swaps_common.tokentable',
-    'lastwill.panama_bridge',
+    # 'lastwill.panama_bridge',
     'lastwill.rates',
     'lastwill.telegram_bot',
     # 'lastwill.swap_bridges',
@@ -112,7 +111,7 @@ DATABASES = {
         'NAME': 'lastwill_new',
         'USER': 'lastwill_new',
         'PASSWORD': 'lastwill_new',
-        'HOST': 'localhost',
+        'HOST': 'db_2',
         'PORT': 5432,
         'CONN_MAX_AGE': None
     }

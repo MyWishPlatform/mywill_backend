@@ -306,8 +306,8 @@ contract as user see it at site. contract as service. can contain more then one 
 
 
 class Contract(models.Model):
-    user = models.ForeignKey(User)
-    network = models.ForeignKey(Network, default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    network = models.ForeignKey(Network, default=1, on_delete=models.CASCADE)
 
     address = models.CharField(max_length=50, null=True, default=None)
     owner_address = models.CharField(max_length=50, null=True, default=None)
@@ -340,6 +340,9 @@ class Contract(models.Model):
     next_check = models.DateTimeField(null=True, default=None)
 
     invisible = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name}"
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -460,9 +463,9 @@ real contract to deploy to ethereum
 
 
 class EthContract(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None)
+    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.CASCADE)
     original_contract = models.ForeignKey(
-        Contract, null=True, default=None, related_name='orig_ethcontract'
+        Contract, null=True, default=None, related_name='orig_ethcontract', on_delete=models.CASCADE
     )
     address = models.CharField(max_length=50, null=True, default=None)
     tx_hash = models.CharField(max_length=70, null=True, default=None)
@@ -480,7 +483,7 @@ class CommonDetails(models.Model):
     class Meta:
         abstract = True
 
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     white_label = models.BooleanField(default=False)
     deploy_address = models.CharField(max_length=50, default='')
     white_label_hash = models.CharField(max_length=70, default='')
@@ -776,7 +779,7 @@ class ContractDetailsPizza(CommonDetails):
     salt = models.CharField(max_length=len(str(2 ** 256)))
     pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)  # weis
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
 
     @classmethod
     def min_cost(cls):
@@ -784,14 +787,14 @@ class ContractDetailsPizza(CommonDetails):
 
 
 class Heir(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     percentage = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
 
 
 class TokenHolder(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(
@@ -801,13 +804,13 @@ class TokenHolder(models.Model):
 
 
 class WhitelistAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
 
 
 class EOSTokenHolder(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(

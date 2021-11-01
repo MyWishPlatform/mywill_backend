@@ -13,6 +13,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 
 django.setup()
+
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q

@@ -6,13 +6,13 @@ from lastwill.consts import MAX_WEI_DIGITS
 
 
 class InternalPayment(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     delta = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     tx_hash = models.CharField(max_length=66, null=True, default='')
     datetime = models.DateTimeField(auto_now_add=True)
     original_currency = models.CharField(max_length=66, null=True, default='')
     original_delta = models.CharField(max_length=66, null=True, default='')
-    site = models.ForeignKey(SubSite)
+    site = models.ForeignKey(SubSite, on_delete=models.CASCADE)
     fake = models.BooleanField(default=False)
 
 
@@ -20,7 +20,7 @@ class BTCAccount(models.Model):
     address = models.CharField(max_length=50)
     used = models.BooleanField(default=False)
     balance = models.IntegerField(default=0)
-    user = models.ForeignKey(User, null=True, default=None)
+    user = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE)
 
 
 class FreezeBalance(models.Model):

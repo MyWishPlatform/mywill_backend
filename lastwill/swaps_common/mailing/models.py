@@ -9,7 +9,7 @@ class SwapsMailing(models.Model):
 
 
 class SwapsNotificationDefaults(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.CharField(max_length=50, null=True, default=None)
     telegram_name = models.CharField(max_length=50, null=True, default=None)
     notification = models.BooleanField(default=False)
