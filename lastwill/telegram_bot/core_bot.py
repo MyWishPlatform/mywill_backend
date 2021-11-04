@@ -55,7 +55,6 @@ class Bot(threading.Thread):
         @self.bot.message_handler(commands=['start'])
         def start_handler(message):
             try:
-
                 BotSub(chat_id=message.chat.id).save()
                 self.bot.reply_to(message, 'Hello!')
             except IntegrityError:
