@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django_extensions',
 
-    'pygraphviz',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -60,7 +59,7 @@ INSTALLED_APPS = [
     'lastwill.snapshot',
     'lastwill.swaps_common',
     'lastwill.swaps_common.tokentable',
-    'lastwill.panama_bridge',
+    # 'lastwill.panama_bridge',
     'lastwill.rates',
     'lastwill.telegram_bot',
     # 'lastwill.swap_bridges',
@@ -112,7 +111,7 @@ DATABASES = {
         'NAME': 'lastwill_new',
         'USER': 'lastwill_new',
         'PASSWORD': 'lastwill_new',
-        'HOST': 'localhost',
+        'HOST': 'db_2',
         'PORT': 5432,
         'CONN_MAX_AGE': None
     }
@@ -185,7 +184,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SIGNER='127.0.0.1:5000'
+SIGNER='https://sign.mywish.io/sign/'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
@@ -290,6 +289,7 @@ VERIFICATION_CONTRACTS_IDS = (
     38,  # moonriver token
 )
 
+
 try:
     from lastwill.settings_local import *
 except ImportError as exc:
@@ -372,6 +372,8 @@ TEMP_SYMBOLS = {
     'USD': 'USDT',
 }
 
+
+
 DASHBOARD_NETWORKS = {
     'ETHEREUM': {
         'original_name': {
@@ -433,3 +435,11 @@ DASHBOARD_NETWORKS = {
         }
     },
 }
+
+
+SOLANA_KEYPAIR = [
+    121, 210, 183, 197, 70, 136, 170, 219, 172, 50, 155, 14, 20, 146, 106, 104,
+    178, 211, 227, 36, 63, 246, 55, 69, 108, 29, 53, 57, 227, 15, 142, 151, 99,
+    233, 253, 32, 157, 252, 171, 212, 45, 108, 17, 3, 163, 86, 216, 90, 48, 81,
+    53, 180, 22, 19, 159, 110, 53, 133, 205, 22, 191, 198, 135, 138
+]

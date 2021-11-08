@@ -3,6 +3,7 @@ import json
 import requests
 import sys
 from lastwill.settings import NETWORKS
+from solana.rpc.api import Client
 
 
 class InterfaceConnectExc(Exception):
@@ -64,6 +65,18 @@ class ParInt:
 
 class NeoInt(ParInt):
     pass
+
+
+class SolanaInt:
+    def __init__(self, network: str = None):
+        if network is None:
+            raise AttributeError('network argument is unfilled')
+        else:
+            self.network = network
+
+    def connect(self) -> Client:
+        node = Client(NETWORKS[self.network]['node_url'])
+        return node
 
 
 class InfuraConnectExc(InterfaceConnectExc):

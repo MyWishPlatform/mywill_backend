@@ -51,4 +51,10 @@ settings_local.py
 **static**
 **.sql**
 
+!/contracts/
+./contracts
+contracts/*
+test.py
+test_2.py
+
 contracts/

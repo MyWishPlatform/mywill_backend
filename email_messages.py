@@ -362,12 +362,22 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
-
 testnet_email_template = str(TEMPLATES_DIR / 'testnet_email.html')
 mainnet_email_template = str(TEMPLATES_DIR / 'mainnet_email.html')
 
-with open(testnet_email_template, encoding='utf-8') as t, \
-    open(mainnet_email_template, encoding='utf-8') as m:
+solana_token_text = '''Hello,
+
+We are happy to inform you that your contract was successfully created and deployed to Solana Devnet network.
+Token contract address: {addr}
+
+Please contact support@mywish.io if you have any questions.
+
+Best wishes,
+MyWish Team.
+'''
+
+with open('email_templates/testnet_email.html', encoding='utf-8') as t, \
+    open('email_templates/mainnet_email.html', encoding='utf-8') as m:
 
     testnet_text = t.read()
     mainnet_text = m.read()

@@ -189,7 +189,7 @@ class ContractDetailsEOSAccount(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
+            eos_url = 'http://%s' % (
                 str(NETWORKS[network.name]['host'])
             )
         else:
@@ -592,7 +592,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
 
 class EOSAirdropAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     address = models.CharField(max_length=50, default=None)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
@@ -625,7 +625,7 @@ class ContractDetailsEOSAirdrop(CommonDetails):
         if NETWORKS[network.name]['is_free']:
             return 0
         if network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
+            eos_url = 'http://%s' % (
                 str(NETWORKS[network.name]['host'])
             )
         else:

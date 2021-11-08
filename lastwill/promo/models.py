@@ -16,13 +16,13 @@ class Promo(models.Model):
 
 
 class User2Promo(models.Model):
-    user = models.ForeignKey(User)
-    promo = models.ForeignKey(Promo)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    promo = models.ForeignKey(Promo, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
     contract_id = models.IntegerField(default=0)
 
 
 class Promo2ContractType(models.Model):
-    promo = models.ForeignKey(Promo)
+    promo = models.ForeignKey(Promo, on_delete=models.CASCADE)
     contract_type = models.IntegerField()
     discount = models.IntegerField()

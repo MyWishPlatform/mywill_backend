@@ -13,6 +13,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 
 django.setup()
+
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
@@ -43,7 +44,7 @@ class Receiver(threading.Thread):
             5672,
             'mywill',
             pika.PlainCredentials('java', 'java'),
-            heartbeat_interval=0,
+            heartbeat=0,
         ))
 
         channel = connection.channel()
@@ -55,8 +56,8 @@ class Receiver(threading.Thread):
             exclusive=False
         )
         channel.basic_consume(
+            NETWORKS[self.network]['queue'],
             self.callback,
-            queue=NETWORKS[self.network]['queue']
         )
 
         print('receiver start ', self.network, flush=True)
@@ -413,7 +414,7 @@ class WSInterface(threading.Thread):
             5672,
             'mywill',
             pika.PlainCredentials('java', 'java'),
-            heartbeat_interval=0,
+            heartbeat=0,
         ))
         self.channel = connection.channel()
         self.channel.queue_declare(queue='websockets', durable=True, auto_delete=False, exclusive=False)

@@ -290,10 +290,11 @@ def transfer_crypto(details, dest):
     gas_price_current = details.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
     gas_price_fixed = ETH_COMMON_GAS_PRICES[details.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
     gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+    gas_limit = CONTRACT_GAS_LIMIT['WHITELABEL']
     eth_amount = hex(int(1.2 * (gas_price * CONTRACT_GAS_LIMIT['TOKEN'])))
     chain_id = int(eth_int.eth_chainId(), 16)
 
-    signed_data = sign_transaction(address, nonce, details.get_gaslimit(), value=eth_amount,
+    signed_data = sign_transaction(address, nonce, gas_limit, value=eth_amount,
                                    dest=dest, gas_price=gas_price, chain_id=chain_id)
 
     tx_hash = eth_int.eth_sendRawTransaction(signed_data)
@@ -306,8 +307,8 @@ contract as user see it at site. contract as service. can contain more then one 
 
 
 class Contract(models.Model):
-    user = models.ForeignKey(User)
-    network = models.ForeignKey(Network, default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    network = models.ForeignKey(Network, default=1, on_delete=models.CASCADE)
 
     address = models.CharField(max_length=50, null=True, default=None)
     owner_address = models.CharField(max_length=50, null=True, default=None)
@@ -340,6 +341,9 @@ class Contract(models.Model):
     next_check = models.DateTimeField(null=True, default=None)
 
     invisible = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name}"
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -400,6 +404,7 @@ class Contract(models.Model):
         hecochain_token = apps.get_model('contracts', 'ContractDetailsHecoChainToken')
         hecochain_ico = apps.get_model('contracts', 'ContractDetailsHecoChainICO')
         moonriver_token = apps.get_model('contracts', 'ContractDetailsMoonriverToken')
+        solana_token = apps.get_model('contracts', 'ContractDetailsSolanaToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -441,6 +446,7 @@ class Contract(models.Model):
         contract_details_types[36] = {'name': 'HecoChain Token contract', 'model': hecochain_token}
         contract_details_types[37] = {'name': 'HecoChain MyWish ICO', 'model': hecochain_ico}
         contract_details_types[38] = {'name': 'Moonriver Token contract', 'model': moonriver_token}
+        contract_details_types[39] = {'name': 'Solana Token contract', 'model': solana_token}
         return contract_details_types
 
     @classmethod
@@ -460,12 +466,12 @@ real contract to deploy to ethereum
 
 
 class EthContract(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None)
+    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.CASCADE)
     original_contract = models.ForeignKey(
-        Contract, null=True, default=None, related_name='orig_ethcontract'
+        Contract, null=True, default=None, related_name='orig_ethcontract', on_delete=models.CASCADE
     )
     address = models.CharField(max_length=50, null=True, default=None)
-    tx_hash = models.CharField(max_length=70, null=True, default=None)
+    tx_hash = models.CharField(max_length=90, null=True, default=None)
 
     source_code = models.TextField()
     bytecode = models.TextField()
@@ -480,7 +486,7 @@ class CommonDetails(models.Model):
     class Meta:
         abstract = True
 
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     white_label = models.BooleanField(default=False)
     deploy_address = models.CharField(max_length=50, default='')
     white_label_hash = models.CharField(max_length=70, default='')
@@ -707,11 +713,13 @@ class CommonDetails(models.Model):
         gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+        chain_id = int(eth_int.eth_chainId(), 16)
 
         print('nonce', nonce)
         signed_data = sign_transaction(
             address, nonce, 600000,
             gas_price=gas_price,
+            chain_id=chain_id,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])
@@ -776,7 +784,7 @@ class ContractDetailsPizza(CommonDetails):
     salt = models.CharField(max_length=len(str(2 ** 256)))
     pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)  # weis
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
 
     @classmethod
     def min_cost(cls):
@@ -784,14 +792,14 @@ class ContractDetailsPizza(CommonDetails):
 
 
 class Heir(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     percentage = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
 
 
 class TokenHolder(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(
@@ -801,13 +809,13 @@ class TokenHolder(models.Model):
 
 
 class WhitelistAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
 
 
 class EOSTokenHolder(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(

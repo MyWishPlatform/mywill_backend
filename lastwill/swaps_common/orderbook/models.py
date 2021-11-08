@@ -215,7 +215,7 @@ class OrderBookSwaps(models.Model):
     state_changed_at = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
     whitelist_address = models.CharField(max_length=50, null=True)
-    swap_ether_contract = models.ForeignKey(Contract, null=True)
+    swap_ether_contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     is_exchange = models.BooleanField(default=False)
     notification = models.BooleanField(default=False)
     notification_email = models.CharField(

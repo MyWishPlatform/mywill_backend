@@ -24,6 +24,7 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
+from settings_local import VERIFICATION_CONTRACTS_IDS_DOMAINS
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
     EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
@@ -34,7 +35,7 @@ from tron_wif.hex2wif import hex2tronwif
 from web3 import Web3, HTTPProvider
 
 from lastwill.rates.api import rate
-from lastwill.check import is_neo3_address
+from lastwill.check import is_neo3_address, is_solana_address
 from lastwill.contracts.submodels.neo import neo3_address_to_hex
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
@@ -1544,6 +1545,37 @@ def buy_verification(request):
     network = contract.network.name
     create_payment(request.user.id, '', currency, -cost, site_id, network)
 
+    # автоверификация контракта через etherscan
+    scraper = cloudscraper.create_scraper()
+
+    if contract.original_contract.network_id in VERIFICATION_CONTRACTS_IDS_DOMAINS.keys():
+        # details = contract.get_details()
+        scanner_meta = VERIFICATION_CONTRACTS_IDS_DOMAINS[contract.original_contract.network_id]
+        domain = scanner_meta["domain"]
+        token = scanner_meta["token"]
+
+        data = {
+            # auth data
+            "apikey": token,
+            "module": "contract",
+            "action": "verifysourcecode",
+            "sourceCode": contract.source_code,
+            # contract data
+            "contractaddress": contract.address,
+            "codeformat": "solidity-single-file",
+            "contractname": contract.original_contract.name,
+            "compilerversion": f"v{'.'.join(contract.compiler_version.split('.')[:-2])}",
+            # ???
+            "optimizationUsed": 1,
+            "runs": 200
+        }
+
+        verification_traceback = scraper.post(f"https://{domain}/api", data=data)
+        result = json.loads(verification_traceback.text)
+
+    else:
+        print(f"auto verification not available for network with id: {contract.original_contract.network_id}")
+
     details.verification = True
     details.verification_status = 'IN_PROCESS'
     details.verification_date_payment = datetime.datetime.now().date()
@@ -1639,3 +1671,14 @@ def convert_neo3_address_to_hex(request):
         raise PermissionDenied
 
     return JsonResponse({'address': address_hex})
+
+
+@api_view(http_method_names=['POST'])
+def check_solana_address(request):
+    data = request.data
+    try:
+        is_solana_address(data['address'])
+    except (ValidationError, ValueError):
+        return JsonResponse({'validation': False})
+
+    return JsonResponse({'validation': True})
