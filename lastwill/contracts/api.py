@@ -34,7 +34,7 @@ from tron_wif.hex2wif import hex2tronwif
 from web3 import Web3, HTTPProvider
 
 from lastwill.rates.api import rate
-from lastwill.check import is_neo3_address
+from lastwill.check import is_neo3_address, is_solana_address
 from lastwill.contracts.submodels.neo import neo3_address_to_hex
 
 BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
@@ -1639,3 +1639,14 @@ def convert_neo3_address_to_hex(request):
         raise PermissionDenied
 
     return JsonResponse({'address': address_hex})
+
+
+@api_view(http_method_names=['POST'])
+def check_solana_address(request):
+    data = request.data
+    try:
+        is_solana_address(data['address'])
+    except (ValidationError, ValueError):
+        return JsonResponse({'validation': False})
+
+    return JsonResponse({'validation': True})
