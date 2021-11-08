@@ -1,4 +1,12 @@
+settings_local.py
 */settings_local.py
+
+.env
+*/.env
+./contracts/*
+contracts/*
+
+
 templates/.DS_Store
 templates/account/.DS_Store
 .DS_Store
