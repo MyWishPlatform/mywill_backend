@@ -175,7 +175,7 @@ def negative_payment(user, value, site_id, network):
         freeze_payments(value, network)
 
 
-def get_payment_statistics(start, stop=None):
+def get_payment_statistics(start, stop=None, only_total=False):
     if not stop:
         stop = datetime.datetime.now().date()
     payments = InternalPayment.objects.exclude(fake=True).filter(
@@ -215,5 +215,8 @@ def get_payment_statistics(start, stop=None):
         total_payments[pay.original_currency] += float(pay.original_delta) / NET_DECIMALS[pay.original_currency]
         user_ids.append(pay.user.id)
 
-    print('total_payments', total_payments, flush=True)
-    return user_ids
+    if only_total:
+        return total_payments
+
+    else:
+        return user_ids

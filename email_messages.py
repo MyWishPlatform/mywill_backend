@@ -1,3 +1,9 @@
+from django.conf import settings
+import pathlib
+
+TEMPLATES_DIR = pathlib.Path(settings.BASE_DIR) / "email_templates"
+
+
 register_subject = """Please Confirm Your E-mail Address"""
 
 register_text = """{subsite_name} team welcomes you!
@@ -356,8 +362,12 @@ https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 Best wishes,
 Swaps Team. """
 
-with open('email_templates/testnet_email.html', encoding='utf-8') as t, \
-    open('email_templates/mainnet_email.html', encoding='utf-8') as m:
+
+testnet_email_template = str(TEMPLATES_DIR / 'testnet_email.html')
+mainnet_email_template = str(TEMPLATES_DIR / 'mainnet_email.html')
+
+with open(testnet_email_template, encoding='utf-8') as t, \
+    open(mainnet_email_template, encoding='utf-8') as m:
 
     testnet_text = t.read()
     mainnet_text = m.read()

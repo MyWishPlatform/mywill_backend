@@ -1,4 +1,12 @@
+settings_local.py
 */settings_local.py
+
+.env
+*/.env
+./contracts/*
+contracts/*
+
+
 templates/.DS_Store
 templates/account/.DS_Store
 .DS_Store
@@ -38,6 +46,7 @@ api_params.json
 get_secret_key_Dasha.py
 tst.json
 .vscode/
+settings_local.py
 **media**
 **static**
 **.sql**
