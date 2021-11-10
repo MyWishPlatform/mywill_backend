@@ -34,10 +34,8 @@ from lastwill.rates.api import rate
 from tron_wif.hex2wif import hex2tronwif
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL, \
-    SWAPS_URL, RUBIC_EXC_URL
+from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL
 from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
-from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 
 
 
@@ -155,8 +153,6 @@ def profile_view(request):
         site_name = site_name.replace('trondev', 'dev')
     if site_name == WAVES_URL:
         site_name = MY_WISH_URL
-    if site_name == RUBIC_EXC_URL:
-        site_name = SWAPS_URL
     site = SubSite.objects.get(site_name=site_name)
     user_balance = UserSiteBalance.objects.get(subsite=site, user=request.user)
 
@@ -166,25 +162,6 @@ def profile_view(request):
         user_name = '{} {}'.format(request.user.first_name, request.user.last_name)
     else:
         user_name = request.user.username
-
-    swaps_notifications = None
-    swaps_notification_email = None
-    swaps_notification_telegram_name = None
-    swaps_notification_type = None
-
-    swaps_notification_set = request.user.swapsnotificationdefaults_set.all()
-    if swaps_notification_set:
-        swaps_notification_set = swaps_notification_set.first()
-        swaps_notification_email = swaps_notification_set.email
-        swaps_notification_telegram_name = swaps_notification_set.telegram_name
-        swaps_notification_type = swaps_notification_set.notification
-
-    swaps_notifications = {
-            'email': swaps_notification_email,
-            'telegram_name': swaps_notification_telegram_name,
-            'notification': swaps_notification_type
-        }
-
     answer = {
             'username': user_name,
             'contracts': Contract.objects.filter(user=request.user).count(),
@@ -200,8 +177,6 @@ def profile_view(request):
             'bnb_address': BINANCE_PAYMENT_ADDRESS,
             'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else '',
             'usdt_balance': str(int(int(user_balance.balance) / 10 ** 18 * rate('WISH', 'USDT').value * 10 ** 6)),
-            'is_swaps_admin': request.user.profile.is_swaps_admin,
-            'swaps_notifications': swaps_notifications
     }
     return Response(answer)
 

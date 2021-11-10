@@ -5,9 +5,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from lastwill.settings import MY_WISH_URL, SWAPS_URL, EMAIL_HOST_USER, EMAIL_HOST_USER_SWAPS,\
-    RUBIC_FIN_URL, RUBIC_EXC_URL
-from lastwill.contracts.submodels.swaps import sendEMail
+from lastwill.settings import MY_WISH_URL, EMAIL_HOST_USER
 from email_messages import password_reset_subject, password_reset_text
 
 
@@ -48,19 +46,4 @@ class SubSitePasswordResetForm(PasswordResetForm):
                         ),
                         from_email,
                         [user.username]
-                )
-
-            if subsite_domain in [SWAPS_URL, RUBIC_FIN_URL, RUBIC_EXC_URL]:
-                #from_email = EMAIL_HOST_USER_SWAPS
-                subsite_name = "SWAPS.NETWORK"
-
-                sendEMail(
-                        password_reset_subject.format(subsite_name=subsite_name),
-                        password_reset_text.format(
-                                subsite_name=subsite_name,
-                                user_display=user,
-                                password_reset_url=token_generator_link
-                        ),
-                        # from_email,
-                        user.username
                 )

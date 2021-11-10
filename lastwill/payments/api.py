@@ -9,8 +9,7 @@ from rest_framework.exceptions import ValidationError
 from lastwill.contracts.decorators import PaymentAlreadyRegistered
 from lastwill.payments.models import InternalPayment, FreezeBalance
 from lastwill.profile.models import UserSiteBalance, SubSite
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, NETWORKS, RUBIC_EXC_URL, \
-    RUBIC_FIN_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, TOKEN_PROTECTOR_URL, NETWORKS
 from lastwill.consts import NET_DECIMALS
 from lastwill.rates.api import rate
 from lastwill.telegram_bot.tasks import send_message_to_subs
@@ -44,11 +43,6 @@ def create_payment(uid, tx, currency, amount, site_id, network=None):
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['EOS']
         if currency == 'USDT':
             value = value * NET_DECIMALS['ETH'] / NET_DECIMALS['USDT']
-    elif SubSite.objects.get(id=site_id).site_name in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-        value = amount if currency == 'USDT' else amount * float(rate(
-            currency, 'USDT'
-        ).value) / NET_DECIMALS[currency] * NET_DECIMALS['USDT']
-
     elif SubSite.objects.get(id=site_id).site_name == TOKEN_PROTECTOR_URL:
         value = amount if currency == 'USDT' else amount * float(rate(
             currency, 'USDT'
@@ -193,9 +187,7 @@ def get_payment_statistics(start, stop=None, only_total=False):
         'TRX': 0.0,
         'TRONISH': 0.0,
         'BWISH': 0.0,
-        'SWAP': 0.0,
         'OKB': 0.0,
-        'RBC': 0.0,
         'BSCWISH': 0.0,
         'WWISH': 0.0,
         'XIN': 0.0,

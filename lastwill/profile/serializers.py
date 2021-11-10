@@ -15,8 +15,7 @@ from rest_auth.serializers import (
 
 from lastwill.profile.models import Profile, UserSiteBalance, SubSite
 from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL, \
-    ROOT_PUBLIC_KEY_TRON, ROOT_PUBLIC_KEY_SWAPS, SWAPS_URL, ROOT_PUBLIC_KEY_PROTECTOR, TOKEN_PROTECTOR_URL, \
-    RUBIC_FIN_URL, RUBIC_EXC_URL
+    ROOT_PUBLIC_KEY_TRON, ROOT_PUBLIC_KEY_PROTECTOR, TOKEN_PROTECTOR_URL
 from lastwill.profile.helpers import valid_totp
 from lastwill.profile.forms import SubSitePasswordResetForm
 
@@ -70,17 +69,6 @@ def create_tron_balance(user, eth_address, btc_address, memo_str):
     ).save()
 
 
-def create_swaps_balance(user, eth_address, btc_address, memo_str):
-    swaps = SubSite.objects.get(site_name=SWAPS_URL)
-    UserSiteBalance(
-        user=user, subsite=swaps,
-        eth_address=eth_address,
-        btc_address=btc_address,
-        tron_address='41' + eth_address[2:],
-        memo=memo_str
-    ).save()
-
-
 def create_protector_balance(user, eth_address, btc_address, memo_str):
     protector = SubSite.objects.get(site_name=TOKEN_PROTECTOR_URL)
     UserSiteBalance(
@@ -103,7 +91,7 @@ def create_protector_balance(user, eth_address, btc_address, memo_str):
 #     ).save()
 
 
-def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=False):
+def init_profile(user, is_social=False, metamask_address=None, lang='en'):
     m = hashlib.sha256()
     memo_str1 = generate_memo(m)
     # memo_str2 = generate_memo(m)
@@ -115,33 +103,28 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=
     wish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY, public=True)
     # eosish_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_EOSISH, public=True)
     # tron_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_TRON, public=True)
-    swaps_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_SWAPS, public=True)
     protector_key = BIP32Key.fromExtendedKey(ROOT_PUBLIC_KEY_PROTECTOR, public=True)
 
     btc_address1 = wish_key.ChildKey(user.id).Address()
     # btc_address2 = eosish_key.ChildKey(user.id).Address()
     # btc_address3 = tron_key.ChildKey(user.id).Address()
-    btc_address4 = swaps_key.ChildKey(user.id).Address()
     btc_address5 = protector_key.ChildKey(user.id).Address()
     # btc_address6 = swaps_key.ChildKey(user.id).Address()
     eth_address1 = keys.PublicKey(wish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address2 = keys.PublicKey(eosish_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address3 = keys.PublicKey(tron_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
-    eth_address4 = keys.PublicKey(swaps_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     eth_address5 = keys.PublicKey(protector_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
     # eth_address6 = keys.PublicKey(swaps_key.ChildKey(user.id).K.to_string()).to_checksum_address().lower()
 
-    Profile(user=user, is_social=is_social, metamask_address=metamask_address, lang=lang, is_swaps=swaps).save()
+    Profile(user=user, is_social=is_social, metamask_address=metamask_address, lang=lang).save()
     create_wish_balance(user, eth_address1, btc_address1, memo_str1)
     # create_eosish_balance(user, eth_address2, btc_address2, memo_str2)
     # create_tron_balance(user, eth_address3, btc_address3, memo_str3)
-    create_swaps_balance(user, eth_address4, btc_address4, memo_str4)
     create_protector_balance(user, eth_address5, btc_address5, memo_str5)
     # create_rubic_balance(user, eth_address6, btc_address6, memo_str6)
     registration_btc_address(btc_address1)
     # registration_btc_address(btc_address2)
     # registration_btc_address(btc_address3)
-    registration_btc_address(btc_address4)
     registration_btc_address(btc_address5)
     # registration_btc_address(btc_address6)
 
@@ -150,11 +133,7 @@ class UserRegisterSerializer(RegisterSerializer):
     def save(self, request):
         user = super().save(request)
         host = request.META['HTTP_HOST']
-        if host in [SWAPS_URL, RUBIC_FIN_URL, RUBIC_EXC_URL]:
-            swaps = True
-        else:
-            swaps = False
-        init_profile(user, lang=request.COOKIES.get('lang', 'en'), swaps=swaps)
+        init_profile(user, lang=request.COOKIES.get('lang', 'en'))
         return user
 
 

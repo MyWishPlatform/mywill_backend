@@ -4,6 +4,8 @@ import uuid
 import binascii
 import pika
 from copy import deepcopy
+
+import typing
 from base58 import b58decode
 from ethereum import abi
 from requests_http_signature import HTTPSignatureAuth
@@ -362,6 +364,12 @@ class Contract(models.Model):
             self.contract_type
         ).__name__.lower() + '_set').first()
 
+    @property
+    def details(self):
+        return getattr(self, self.get_details_model(
+            self.contract_type
+        ).__name__.lower() + '_set').first()
+
     @classmethod
     def get_all_details_model(cls):
         contract_details_types = {}
@@ -385,9 +393,7 @@ class Contract(models.Model):
         tron_airdrop = apps.get_model('contracts', 'ContractDetailsTRONAirdrop')
         tron_lostkey = apps.get_model('contracts', 'ContractDetailsTRONLostkey')
         eth_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsLostKeyTokens')
-        swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
         waves = apps.get_model('contracts', 'ContractDetailsWavesSTO')
-        swap2 = apps.get_model('contracts', 'ContractDetailsSWAPS2')
         token_protector = apps.get_model('contracts', 'ContractDetailsTokenProtector')
         binance_lastwill = apps.get_model('contracts', 'ContractDetailsBinanceLastwill')
         binance_lostkey = apps.get_model('contracts', 'ContractDetailsBinanceLostKey')
@@ -427,9 +433,7 @@ class Contract(models.Model):
         contract_details_types[17] = {'name': 'TRON Airdrop', 'model': tron_airdrop}
         contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
-        contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
         contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
-        contract_details_types[21] = {'name': 'SWAPS Contract', 'model': swap2}
         contract_details_types[23] = {'name': 'Token protector contract', 'model': token_protector}
         contract_details_types[24] = {'name': 'Binance Will contract', 'model': binance_lastwill}
         contract_details_types[25] = {'name': 'Binance Wallet contract (lost key)', 'model': binance_lostkey}
@@ -490,6 +494,20 @@ class CommonDetails(models.Model):
     white_label = models.BooleanField(default=False)
     deploy_address = models.CharField(max_length=50, default='')
     white_label_hash = models.CharField(max_length=70, default='')
+
+    @classmethod
+    def filter(cls, **kwargs):
+        for contract in Contract.objects.all():
+            try:
+                details = contract.get_details()
+            except:
+                continue
+
+            for key, value in kwargs.items():
+                if not (hasattr(details, key) and getattr(details, key) == value):
+                    break
+
+            yield contract
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)

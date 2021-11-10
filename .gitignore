@@ -58,3 +58,5 @@ test.py
 test_2.py
 
 contracts/
+!/lastwill/demo_hdwallet.pydemo_
+lastwill/demo_hdwallet.py

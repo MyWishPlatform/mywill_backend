@@ -12,8 +12,7 @@ from collections import OrderedDict
 import cloudscraper
 
 from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
-    RUBIC_FIN_URL
+from lastwill.settings import MY_WISH_URL, TRON_URL, WAVES_URL, TOKEN_PROTECTOR_URL
 from lastwill.permissions import IsOwner, IsStaff
 from lastwill.snapshot.models import *
 from lastwill.promo.api import check_and_get_discount
@@ -26,7 +25,7 @@ from lastwill.payments.api import create_payment
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
 from settings_local import VERIFICATION_CONTRACTS_IDS_DOMAINS
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
-    EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
+    EOSAirdropAddressSerializer, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
 import requests
 from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
@@ -52,22 +51,6 @@ def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
         else:
             cost = cost - cost * discount / 100
     return cost
-
-
-def sendEMail(sub, text, mail):
-    server = smtplib.SMTP('smtp.yandex.ru', 587)
-    server.starttls()
-    server.ehlo()
-    server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
-    message = "\r\n".join([
-        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
-        "To: {to}".format(to=mail),
-        "Subject: {sub}".format(sub=sub),
-        "",
-        str(text)
-    ])
-    server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
-    server.quit()
 
 
 class ContractViewSet(ModelViewSet):
@@ -96,9 +79,6 @@ class ContractViewSet(ModelViewSet):
             result = result.filter(contract_type__in=(10, 11, 12, 13, 14))
         if host == TRON_URL:
             result = result.exclude(contract_type__in=[20, 21])
-        if host in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-            # result = result.filter(contract_type__in=[20, 21, 23])
-            result = result.filter(contract_type__in=[20])
         if host == WAVES_URL:
             result = result.filter(contract_type=22)
         if host == TOKEN_PROTECTOR_URL:
@@ -1317,8 +1297,6 @@ def autodeploing(user_id, subsite_id):
         )().to_representation(contract_details)
         cost = contract_details.calc_cost_usdt(kwargs, contract.network)
         if bb.balance >= cost or bb.balance >= cost * 0.95:
-            if subsite_id == 4:
-                deploy_swaps(contract.id)
             if subsite_id == 5:
                 deploy_protector(contract.id)
         bb.refresh_from_db()
@@ -1327,28 +1305,6 @@ def autodeploing(user_id, subsite_id):
         print('check3', flush=True)
     print('check4', flush=True)
     return True
-
-
-@api_view(http_method_names=['POST'])
-def confirm_swaps_info(request):
-    contract = Contract.objects.get(id=int(request.data.get('contract_id')))
-    host = request.META['HTTP_HOST']
-    if contract.user != request.user or contract.state != 'CREATED':
-        raise PermissionDenied
-    if contract.contract_type != 20:
-        raise PermissionDenied
-    if contract.network.name != 'ETHEREUM_MAINNET':
-        raise PermissionDenied
-    if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-        raise PermissionDenied
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
-    for c in confirm_contracts:
-        c.state = 'WAITING_FOR_PAYMENT'
-        c.save()
-    contract.state = 'WAITING_FOR_PAYMENT'
-    contract.save()
-    autodeploing(contract.user.id, 4)
-    return JsonResponse(ContractSerializer().to_representation(contract))
 
 
 @api_view(http_method_names=['POST'])
@@ -1467,20 +1423,6 @@ def get_test_tokens(request):
 
 
 @api_view(http_method_names=['GET'])
-def get_contract_for_unique_link(request):
-    link = request.query_params.get('unique_link', None)
-    if not link:
-        raise PermissionDenied
-    details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
-    if not details:
-        details = ContractDetailsSWAPS2.objects.filter(unique_link=link).first()
-    if not details:
-        raise PermissionDenied
-    contract = details.contract
-    return JsonResponse(ContractSerializer().to_representation(contract))
-
-
-@api_view(http_method_names=['GET'])
 def get_public_contracts(request):
     contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
     result = []
@@ -1502,30 +1444,9 @@ def change_contract_state(request):
         raise PermissionDenied
     if contract.network.name != 'ETHEREUM_MAINNET':
         raise PermissionDenied
-    if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
-        raise PermissionDenied
     contract.state = 'WAITING_FOR_ACTIVATION'
     contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
-
-
-@api_view(http_method_names=['POST'])
-def send_message_author_swap(request):
-    contract_id = int(request.data.get('contract_id'))
-    link = request.data.get('link')
-    email = request.data.get('email')
-    message = request.data.get('message')
-    sendEMail(
-        swaps_support_subject,
-        swaps_support_message.format(
-            id=contract_id,
-            email=email,
-            link=link,
-            msg=message.encode('utf-8')
-        ),
-        [SWAPS_SUPPORT_MAIL]
-    )
-    return Response('ok')
 
 
 @api_view(http_method_names=['POST'])

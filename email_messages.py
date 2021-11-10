@@ -245,42 +245,6 @@ Please contact support@mywish.io if you need if you have any questions.
 Best wishes,
 MyWish Team."""
 
-swaps_subject = """Your SWAP is ready for deployment"""
-swaps_message = """Hello,
-
-Your SWAP is created and ready for deployment to Ethereum.
-
-If you have any questions please contact support@swaps.network.
-
-Best wishes,
-SWAPS.NETWORK Team.
-
-"""
-
-swaps_deploed_subject = """Your contract is ready"""
-swaps_deploed_message = """Congratulations!
-
-We are happy to inform you that your contract was successfully deployed to Ethereum.
-You can use your SWAP now: {swaps_link}
-
-Please contact support@swaps.network if you have any questions.
-
-Best wishes,
-SWAPS.NETWORK Team.
-"""
-
-swaps_support_subject = """ Swaps user notification"""
-swaps_support_message = """Hello,
-
-User with email {email} want to send next message:
-{msg}
-
-to swap with id {id}
-contract's link {link}
-
-Best wishes,
-Swaps Team."""
-
 
 waves_sto_subject = """Your contract is ready"""
 waves_sto_text = """Hello,
@@ -360,7 +324,7 @@ JustSwap (available for TRC20 tokens only)
 https://justswap.zendesk.com/hc/en-us/sections/360010016571--Beginner-s-Guide
 
 Best wishes,
-Swaps Team. """
+MyWish Team. """
 
 testnet_email_template = str(TEMPLATES_DIR / 'testnet_email.html')
 mainnet_email_template = str(TEMPLATES_DIR / 'mainnet_email.html')
@@ -375,9 +339,10 @@ Please contact support@mywish.io if you have any questions.
 Best wishes,
 MyWish Team.
 '''
+templates_path = pathlib.Path.cwd().parents[0] / "email_templates"
 
-with open('email_templates/testnet_email.html', encoding='utf-8') as t, \
-    open('email_templates/mainnet_email.html', encoding='utf-8') as m:
+with open((TEMPLATES_DIR / "testnet_email.html").as_posix(), encoding='utf-8') as t, \
+    open((TEMPLATES_DIR / "mainnet_email.html").as_posix(), encoding='utf-8') as m:
 
     testnet_text = t.read()
     mainnet_text = m.read()

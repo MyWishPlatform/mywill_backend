@@ -21,9 +21,8 @@ from django.db.models.signals import post_save
 
 from lastwill.contracts.models import (
     Contract, EthContract, TxFail, NeedRequeue, AlreadyPostponed, PaymentAlreadyRegistered,
-    WhitelistAddress, ContractDetailsSWAPS2
+    WhitelistAddress
 )
-from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.contracts.api import autodeploing
 from lastwill.settings import NETWORKS
@@ -80,22 +79,6 @@ class Receiver(threading.Thread):
             print('ignored because already active', flush=True)
             return
         contract.get_details().msg_deployed(message)
-        print('deployed ok!', flush=True)
-
-    def orderCreated(self, message):
-        print('deployed message received', flush=True)
-        # commenting because of upgrade to orderboook
-        #
-        # details = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-        # if details.contract.state == 'ACTIVE':
-        #    print('ignored because already active', flush=True)
-        #    return
-        # details.msg_deployed(message)
-        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-        if order.contract_state == 'ACTIVE':
-            print('ignored because already active', flush=True)
-            return
-        order.msg_deployed(message)
         print('deployed ok!', flush=True)
 
     def killed(self, message):
@@ -189,29 +172,14 @@ class Receiver(threading.Thread):
 
     def finish(self, message):
         print('finish message')
-        if 'id' in message:
-            # contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-            # contract.finalized(message)
-            order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-            order.finalized(message)
-        else:
-            contract = EthContract.objects.get(id=message['contractId']).contract
-            contract.get_details().finalized(message)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().finalized(message)
         print('finish ok')
 
     def finalized(self, message):
         print('finalized message')
-        if 'id' in message:
-            # contract = ContractDetailsSWAPS2.objects.get(
-            #     memo_contract=message['id'])
-            # contract.finalized(message)
-            order = OrderBookSwaps.objects.get(
-                memo_contract=message['id'])
-            order.finalized(message)
-        else:
-            contract = EthContract.objects.get(
-                id=message['contractId']).contract
-            contract.get_details().finalized(message)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        contract.get_details().finalized(message)
         print('finalized ok')
 
     def transactionCompleted(self, message):
@@ -339,15 +307,9 @@ class Receiver(threading.Thread):
         details.save()
 
     def cancelled(self, message):
-        if 'id' in message:
-            # contract = ContractDetailsSWAPS2.objects.get(memo_contract=message['id'])
-            # contract.cancelled(message)
-            order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-            order.cancelled(message)
-        else:
-            contract = EthContract.objects.get(id=message['contractId']).contract
-            details = contract.get_details()
-            details.cancelled(message)
+        contract = EthContract.objects.get(id=message['contractId']).contract
+        details = contract.get_details()
+        details.cancelled(message)
 
     def refund(self, message):
         contract = EthContract.objects.get(id=message['contractId']).contract
@@ -376,24 +338,6 @@ class Receiver(threading.Thread):
         contract = EthContract.objects.get(id=message['contractId']).contract
         details = contract.get_details()
         details.setcode(message)
-
-    def refundOrder(self, message):
-        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-        order.refund_order(message)
-
-    def depositOrder(self, message):
-        order = OrderBookSwaps.objects.get(memo_contract=message['id'])
-        order.deposit_order(message)
-
-    def refundSwaps(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        details = contract.get_details()
-        details.refund_swaps(message)
-
-    def depositSwaps(self, message):
-        contract = EthContract.objects.get(id=message['contractId']).contract
-        details = contract.get_details()
-        details.deposit_swaps(message)
 
 
 def methods(cls):
