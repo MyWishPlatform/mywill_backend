@@ -1,0 +1,69 @@
+name: build action
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: ''
+
+jobs:
+  build_1:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Check Out Repo
+          uses: actions/checkout@v2
+
+        - name: Docker Login
+          uses: docker/login-action@v1.10.0
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+        - name: Set up Docker Buildx
+          id: buildx
+          uses: docker/setup-buildx-action@v1
+
+        # BACKEND BUILD
+        - name: Build and push mywish backend
+          id: docker_backend_build
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./docker/backend/Dockerfile
+            push: true
+            tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_REPO_NAME}}:latest
+
+        - name: Image digest
+          run: echo ${{ steps.docker_backend_build.outputs.digest }}
+
+        # RECEIVER BUILD
+        - name: Build and push mywish receiver
+          id: docker_receiver_build
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./docker/reciever/Dockerfile
+            push: true
+            tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.RECEIVER_REPO_NAME}}:latest
+
+        - name: Image digest
+          run: echo ${{ steps.docker_receiver_build.outputs.digest }}
+
+        # BOT BUILD
+        - name: Build and push mywish bot
+          id: docker_bot_build
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./docker/bot/Dockerfile
+            push: true
+            tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BOT_REPO_NAME}}:latest
+
+        - name: Image digest
+          run: echo ${{ steps.docker_bot_build.outputs.digest }}

@@ -282,6 +282,7 @@ def get_whitelabel_address(contract_id):
     hd_wallet.from_root_xprivate_key(ROOT_EXT_KEY)
     derived_wallet = hd_wallet.from_index(contract_id)
     address = derived_wallet.address()
+    derived_wallet.clean_derivation()
     return address
 
 
