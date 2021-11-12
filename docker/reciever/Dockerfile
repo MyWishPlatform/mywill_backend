@@ -20,6 +20,6 @@ RUN pip install -r requirements.txt --no-deps || true
 # ставим говнозависимось для работы airdrop-contract (./contracts/airdrop-contract)
 RUN pip install git+https://chromium.googlesource.com/external/gyp
 
-CMD ["python", "./receiver.py", "ETHEREUM_MAINNET"]
+CMD ["python", "/app/lastwill/receiver.py", "ETHEREUM_MAINNET"]
 
 EXPOSE 8002

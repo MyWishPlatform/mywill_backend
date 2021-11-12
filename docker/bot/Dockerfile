@@ -21,6 +21,6 @@ RUN pip install -r requirements.txt --no-deps || true
 RUN pip install git+https://chromium.googlesource.com/external/gyp
 
 
-CMD ["python", "./lastwill/telegram_bot/start_bot.py"]
+CMD ["python", "/app/lastwill/telegram_bot/start_bot.py"]
 
 EXPOSE 8001

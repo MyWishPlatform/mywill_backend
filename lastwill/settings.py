@@ -280,7 +280,7 @@ VERIFICATION_CONTRACTS_IDS = (
 
 
 try:
-    from lastwill.settings_local import *
+    from lastwill.secret.settings_local import *
 except ImportError as exc:
     print("Can't load local settings")
 

@@ -1,9 +1,6 @@
 FROM python:3.7
 #FROM node:6.7.0
 
-WORKDIR /app
-COPY . /app
-
 # setting up python backend
 
 RUN pip install -r requirements.txt || true
@@ -21,7 +18,11 @@ RUN pip install -r requirements.txt --no-deps || true
 RUN pip install git+https://chromium.googlesource.com/external/gyp
 
 
-#CMD ["gunicorn", "-c", "gunicorn.conf.py", "lastwill.wsgi:application", "--preload"]
+
+WORKDIR /app
+COPY . /app
+
+CMD ["gunicorn", "-c", "./lastwill/secret/gunicorn.conf.py", "lastwill.wsgi:application", "--preload"]
 #CMD ["python", "manage.py", "runserver"]
 
 EXPOSE 8000

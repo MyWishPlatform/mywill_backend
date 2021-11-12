@@ -29,6 +29,6 @@ RUN pip install git+https://chromium.googlesource.com/external/gyp
 # установка ярна для компиляции контрактов
 #RUN npm install -g yarn
 
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "lastwill.wsgi:application", "--preload"]
+CMD ["gunicorn", "-c", "/app/lastwill/secret/gunicorn.conf.py", "lastwill.wsgi:application", "--preload"]
 
 EXPOSE 8000

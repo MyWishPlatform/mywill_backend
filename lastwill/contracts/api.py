@@ -23,7 +23,7 @@ from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress
 from lastwill.deploy.models import Network
 from lastwill.payments.api import create_payment
 from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from settings_local import VERIFICATION_CONTRACTS_IDS_DOMAINS
+from lastwill.secret.settings_local import VERIFICATION_CONTRACTS_IDS_DOMAINS
 from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
     EOSAirdropAddressSerializer, deploy_protector, ContractDetailsTokenSerializer
 from lastwill.consts import *
