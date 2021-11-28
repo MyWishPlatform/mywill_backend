@@ -46,7 +46,7 @@ services:
     command: "gunicorn -c gunicorn.conf.py lastwill.wsgi:application"
     networks:
       mywill_backend:
-  reciever:
+  receiver:
     build:
       context: .
       dockerfile: Dockerfile
@@ -83,7 +83,7 @@ services:
   checker:
     build:
       context: .
-      dockerfile: Dockerfie
+      dockerfile: Dockerfile
     depends_on:
       - receiver
       - web
