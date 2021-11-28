@@ -24,6 +24,7 @@ services:
     networks:
       mywill_backend:
   signer:
+    env_file: .env
     image: myw1sh/mywish_signer
     depends_on:
       - db
