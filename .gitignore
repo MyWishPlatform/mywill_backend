@@ -1,4 +1,5 @@
 */settings_local.py
+.env
 templates/.DS_Store
 templates/account/.DS_Store
 .DS_Store
@@ -41,3 +42,4 @@ tst.json
 **media**
 **static**
 **.sql**
+docker/

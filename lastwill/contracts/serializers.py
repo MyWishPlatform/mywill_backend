@@ -1611,12 +1611,6 @@ class ContractDetailsLostKeyTokensSerializer(serializers.ModelSerializer):
         return details
 
 
-class InvestAddressesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InvestAddresses
-        fields = ('address', 'amount')
-
-
 class ContractDetailsSTOSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsWavesSTO
