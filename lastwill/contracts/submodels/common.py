@@ -290,10 +290,11 @@ def transfer_crypto(details, dest):
     gas_price_current = details.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
     gas_price_fixed = ETH_COMMON_GAS_PRICES[details.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
     gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+    gas_limit = CONTRACT_GAS_LIMIT['WHITELABEL']
     eth_amount = hex(int(1.2 * (gas_price * CONTRACT_GAS_LIMIT['TOKEN'])))
     chain_id = int(eth_int.eth_chainId(), 16)
 
-    signed_data = sign_transaction(address, nonce, details.get_gaslimit(), value=eth_amount,
+    signed_data = sign_transaction(address, nonce, gas_limit, value=eth_amount,
                                    dest=dest, gas_price=gas_price, chain_id=chain_id)
 
     tx_hash = eth_int.eth_sendRawTransaction(signed_data)
@@ -398,6 +399,7 @@ class Contract(models.Model):
         hecochain_token = apps.get_model('contracts', 'ContractDetailsHecoChainToken')
         hecochain_ico = apps.get_model('contracts', 'ContractDetailsHecoChainICO')
         moonriver_token = apps.get_model('contracts', 'ContractDetailsMoonriverToken')
+        solana_token = apps.get_model('contracts', 'ContractDetailsSolanaToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -437,6 +439,7 @@ class Contract(models.Model):
         contract_details_types[36] = {'name': 'HecoChain Token contract', 'model': hecochain_token}
         contract_details_types[37] = {'name': 'HecoChain MyWish ICO', 'model': hecochain_ico}
         contract_details_types[38] = {'name': 'Moonriver Token contract', 'model': moonriver_token}
+        contract_details_types[39] = {'name': 'Solana Token contract', 'model': solana_token}
         return contract_details_types
 
     @classmethod
@@ -461,7 +464,7 @@ class EthContract(models.Model):
         Contract, null=True, default=None, related_name='orig_ethcontract'
     )
     address = models.CharField(max_length=50, null=True, default=None)
-    tx_hash = models.CharField(max_length=70, null=True, default=None)
+    tx_hash = models.CharField(max_length=90, null=True, default=None)
 
     source_code = models.TextField()
     bytecode = models.TextField()
@@ -703,11 +706,13 @@ class CommonDetails(models.Model):
         gas_price_current = self.get_gasstation_gasprice() or int(1.1 * int(eth_int.eth_gasPrice(), 16))
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
+        chain_id = int(eth_int.eth_chainId(), 16)
 
         print('nonce', nonce)
         signed_data = sign_transaction(
             address, nonce, 600000,
             gas_price=gas_price,
+            chain_id=chain_id,
             dest=self.eth_contract.address,
             contract_data=binascii.hexlify(
                 tr.encode_function_call('check', [])

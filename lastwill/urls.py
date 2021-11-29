@@ -53,6 +53,7 @@ from lastwill.contracts.api import (
     i_am_alive,
     load_airdrop,
     neo_crowdsale_finalize,
+    send_message_author_swap,
     skip_protector_approve,
     test_comp,
     get_verification_cost,
@@ -60,6 +61,7 @@ from lastwill.contracts.api import (
     get_whitelabel_cost,
     check_neo3_address,
     convert_neo3_address_to_hex,
+    check_solana_address,
 )
 from lastwill.contracts.api_common import (
     get_available_contracts,
