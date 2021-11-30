@@ -102,12 +102,11 @@ WSGI_APPLICATION = 'lastwill.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lastwill_new',
-        'USER': 'lastwill_new',
-        'PASSWORD': 'lastwill_new',
-        'HOST': 'localhost',
-        'PORT': 5432,
-        'CONN_MAX_AGE': None
+        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.getenv('POSTGRES_PORT', 5432),
     }
 }
 
