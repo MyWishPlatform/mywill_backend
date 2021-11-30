@@ -82,6 +82,7 @@ services:
     networks:
       mywill_backend:
   checker:
+    env_file: .env
     build:
       context: .
       dockerfile: Dockerfile
