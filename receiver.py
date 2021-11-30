@@ -37,13 +37,8 @@ class Receiver(threading.Thread):
         self.network = network
 
     def run(self):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-            heartbeat=0,
-        ))
+        params = pika.URLParameters('amqp://rabbit:rabbit@rabbitmq:5672/rabbit?heartbeat=0')
+        connection = pika.BlockingConnection(params)
 
         channel = connection.channel()
 
@@ -352,13 +347,8 @@ class WSInterface(threading.Thread):
         self.interthread_queue.put({'user': user, 'msg': message, 'data': data})
 
     def run(self):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            '127.0.0.1',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-            heartbeat=0,
-        ))
+        params = pika.URLParameters('amqp://rabbit:rabbit@rabbitmq:5672/rabbit?heartbeat=0')
+        connection = pika.BlockingConnection(params)
         self.channel = connection.channel()
         self.channel.queue_declare(queue='websockets', durable=True, auto_delete=False, exclusive=False)
         while 1:

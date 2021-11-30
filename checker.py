@@ -109,12 +109,8 @@ def send_reminders(contract):
 
 
 def send_in_pika(contract):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
-        'mywill',
-        pika.PlainCredentials('java', 'java'),
-    ))
+    params = pika.URLParameters('amqp://rabbit:rabbit@rabbitmq:5672/rabbit?heartbeat=0')
+    connection = pika.BlockingConnection(params)
     queue = NETWORKS[contract.network.name]['queue']
     channel = connection.channel()
     channel.queue_declare(queue=queue, durable=True,

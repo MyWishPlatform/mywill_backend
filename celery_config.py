@@ -6,7 +6,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
 django.setup()
 
-app = Celery('mywish', broker='amqp://java:java@localhost:5672/mywill', include=['lastwill.rates.api',
+app = Celery('mywish', broker='amqp://rabbit:rabbit@rabbitmq:5672/rabbit', include=['lastwill.rates.api',
                                                                                  'lastwill.telegram_bot.tasks',
                                                                                  'mailings_tasks'])
 
