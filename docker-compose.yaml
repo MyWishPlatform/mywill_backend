@@ -16,6 +16,7 @@ services:
     networks:
       mywill_backend:
   scanner:
+    env_file: .env
     image: myw1sh/mywish_scanner
     depends_on:
       - db
@@ -23,6 +24,8 @@ services:
     restart: unless-stopped
     networks:
       mywill_backend:
+    ports:
+      - "${SCANNER_EXPOSE_PORT?8002}:${SCANNER_PORT?8002}"
   signer:
     env_file: .env
     image: myw1sh/mywish_signer
@@ -44,7 +47,8 @@ services:
     ports:
       - "${DOCKER_EXPOSE_PORT?8000}:${DJANGO_PORT?8000}"
     restart: unless-stopped
-    command: "gunicorn -c gunicorn.conf.py lastwill.wsgi:application"
+    command: "python manage.py runserver 0.0.0.0:${DJANGO_PORT?8000}"
+    #command: "gunicorn -c gunicorn.conf.py lastwill.wsgi:application"
     networks:
       mywill_backend:
   receiver:
