@@ -52,6 +52,7 @@ services:
     networks:
       mywill_backend:
   receiver:
+    env_file: .env
     build:
       context: .
       dockerfile: Dockerfile

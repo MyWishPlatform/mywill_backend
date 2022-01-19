@@ -218,7 +218,7 @@ def test_neo_ico_params(config, params, dest):
 
 
 def send_in_queue(contract_id, type, queue):
-    params = pika.URLParameters('amqp://rabbit:rabbit@rabbitmq:5672/rabbit?heartbeat=0')
+    params = pika.URLParameters('amqp://rabbit:rabbit@rabbitmq:5672/rabbit')
     connection = pika.BlockingConnection(params)
     channel = connection.channel()
     channel.queue_declare(queue=queue, durable=True, auto_delete=False,
@@ -725,7 +725,7 @@ class CommonDetails(models.Model):
                 gas_price_current = response[SPEEDLVL] / 10
                 gas_price_current = int(gas_price_current * 10 ** 9)
                 return gas_price_current
-            except (requests.RequestException, KeyError):
+            except Exception:
                 print('gas station api is unavailable', flush=True)
 
     @property
