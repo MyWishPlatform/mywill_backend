@@ -2049,7 +2049,7 @@ class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
         return super().create(kwargs)
 
     def validate(self, details):
-        if details['decimals'] < 0 or details['decimals'] > 9:
+        if details['decimals'] < 0 or details['decimals'] > 20:
             raise ValidationError
         if len(details['token_short_name']) == 0 or len(details['token_short_name']) > 9:
             raise ValidationError

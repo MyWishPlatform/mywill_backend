@@ -52,16 +52,17 @@ class ContractDetailsSolanaToken(CommonDetails):
         balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
         token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, key.public_key, self.decimals,
                                                                         TOKEN_PROGRAM_ID,
-                                                                        owner, False, balance_needed, Token)
+                                                                        owner, True, balance_needed, Token)
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
-        print(response)
-        error = response['result']['meta']['err']
+        print(f'tx hash = ', response["result"])
+        tx_data = conn.get_transaction(response['result'])
+        error = tx_data['result']['meta']['err']
         if error:
             raise Exception(f'error while deploying \n {error}')
         else:
-            tx_hash = response['result']['transaction']['signatures'][0]
-            contract_address = response['result']['transaction']['message']['accountKeys'][1]
+            tx_hash = tx_data['result']['transaction']['signatures'][0]
+            contract_address = tx_data['result']['transaction']['message']['accountKeys'][1]
             solana_contract = SolanaContract()
             solana_contract.contract = self.contract
             solana_contract.original_contract = self.contract
