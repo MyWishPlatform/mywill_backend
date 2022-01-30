@@ -8,6 +8,7 @@ from lastwill.settings import DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
+from time import sleep
 
 
 class SolanaContract(EthContract):
@@ -56,7 +57,10 @@ class ContractDetailsSolanaToken(CommonDetails):
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
         print(f'tx hash = ', response["result"])
+        sleep(60)
         tx_data = conn.get_transaction(response['result'])
+        print(tx_data)
+
         error = tx_data['result']['meta']['err']
         if error:
             raise Exception(f'error while deploying \n {error}')
@@ -73,9 +77,6 @@ class ContractDetailsSolanaToken(CommonDetails):
             self.save()
             self.msg_deployed({})
 
-    @blocking
-    @postponable
-    @check_transaction
     def msg_deployed(self, message):
         print('msg_deployed method of the solana spl token')
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
@@ -98,7 +99,7 @@ class ContractDetailsSolanaToken(CommonDetails):
                         print('associated token account already created')
                         associated_address = get_associated_token_address(holder_addr, tok_int.pubkey)
                     response = tok_int.mint_to(associated_address, key, int(th.amount))
-                    print(f'tx_hash = {response["result"]}')
+                    print(f'tx hash = ', response['result'])
 
             print('transferring of mint authority started')
             owner = PublicKey(self.admin_address)
@@ -108,8 +109,6 @@ class ContractDetailsSolanaToken(CommonDetails):
 
             self.initialized({})
 
-    @postponable
-    @check_transaction
     def initialized(self, message):
         if self.contract.state not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
             return
