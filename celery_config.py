@@ -4,11 +4,15 @@ from celery.schedules import crontab
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 import django
+
 django.setup()
 
-app = Celery('mywish', broker='amqp://rabbit:rabbit@rabbitmq:5672/rabbit', include=['lastwill.rates.api',
-                                                                                 'lastwill.telegram_bot.tasks',
-                                                                                 'mailings_tasks'])
+app = Celery('mywish',
+             broker='amqp://rabbit:rabbit@rabbitmq:5672/rabbit',
+             backend='rpc://',
+             include=['lastwill.rates.api',
+                      'lastwill.telegram_bot.tasks',
+                      'mailings_tasks'])
 
 app.conf.update(result_expires=3600, enable_utc=True, timezone='Europe/Moscow')
 

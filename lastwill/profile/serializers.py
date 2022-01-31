@@ -122,10 +122,10 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en'):
     # create_tron_balance(user, eth_address3, btc_address3, memo_str3)
     create_protector_balance(user, eth_address5, btc_address5, memo_str5)
     # create_rubic_balance(user, eth_address6, btc_address6, memo_str6)
-    registration_btc_address(btc_address1)
+    # registration_btc_address(btc_address1)
     # registration_btc_address(btc_address2)
     # registration_btc_address(btc_address3)
-    registration_btc_address(btc_address5)
+    # registration_btc_address(btc_address5)
     # registration_btc_address(btc_address6)
 
 
