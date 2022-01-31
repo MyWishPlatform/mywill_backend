@@ -70,8 +70,9 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - web
+      - rabbitmq
     restart: unless-stopped
-    command: celery -A celery_config worker -B
+    command: celery -A celery_config worker -B -l INFO
     networks:
       mywill_backend:
   bot:
