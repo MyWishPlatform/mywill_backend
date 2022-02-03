@@ -65,6 +65,7 @@ services:
     networks:
       - mywill_backend
   celery:
+    env_file: .env
     build:
       context: .
       dockerfile: Dockerfile
