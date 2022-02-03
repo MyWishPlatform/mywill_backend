@@ -3,10 +3,10 @@ import sys
 
 from lastwill.telegram_bot.models import BotSub
 from lastwill.telegram_bot.core_bot import bot
-from celery_config import app
+from celery import shared_task
 
 
-@app.task
+@shared_task
 def send_message_to_subs(message, parse_mode_html=False):
     kwargs = {}
     if parse_mode_html:
