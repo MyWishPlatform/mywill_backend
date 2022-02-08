@@ -36,7 +36,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
     ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
-    ContractDetailsMoonriverToken, ContractDetailsSolanaToken
+    ContractDetailsMoonriverToken, ContractDetailsSolanaToken, SolanaTokenInfo
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.decorators import *
@@ -2034,7 +2034,8 @@ class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractDetailsSolanaToken
         fields = (
-            'token_name', 'token_type', 'decimals', 'token_short_name', 'admin_address', 'future_minting',
+            'token_name', 'token_type', 'decimals',
+            'token_short_name', 'admin_address', 'future_minting',
         )
 
     def create(self, contract, contract_details):
@@ -2082,3 +2083,9 @@ class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
 class ContractDetailsSolanaTokenSerializer(ContractDetailsSolanaSerializer):
     class Meta(ContractDetailsSolanaSerializer.Meta):
         model = ContractDetailsSolanaToken
+
+
+class SolanaTokenInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SolanaTokenInfo
+        fields = '__all__'

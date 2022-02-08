@@ -131,3 +131,16 @@ class ContractDetailsSolanaToken(CommonDetails):
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
+
+
+def get_path(instance):
+    return f'token-logos/{instance.details.solana_contract.address}'
+
+class SolanaTokenInfo(models.Model):
+    details = models.ForeignKey(ContractDetailsSolanaToken, null=True, default=None)
+    logo = models.ImageField(upload_to=get_path)
+    site_link = models.CharField(max_length=40, null=True, default=None)
+    coingecko_id = models.CharField(max_length=40, null=True, default=None)
+    description = models.CharField(max_length=40, null=True, default=None)
+    disc_link = models.CharField(max_length=40, null=True, default=None)
+    twitter_link = models.CharField(max_length=40, null=True, default=None)

@@ -32,6 +32,7 @@ from lastwill.contracts.submodels.token_protector import ContractDetailsTokenPro
 from django.db.models import Q
 from tron_wif.hex2wif import hex2tronwif
 from web3 import Web3, HTTPProvider
+from lastwill.parint import SolanaInt
 
 from lastwill.rates.api import rate
 from lastwill.check import is_neo3_address, is_solana_address
@@ -1650,3 +1651,17 @@ def check_solana_address(request):
         return JsonResponse({'validation': False})
 
     return JsonResponse({'validation': True})
+
+
+@api_viev(http_method_names=['POST'])
+def get_token_supply(request):
+    data = requests.data
+    address = data['address']
+    network = data['network']
+    try:
+        conn = SolanaInt(network)
+        resp = conn.get_token_supply(address)
+        supply = resp['result']['value']['amount']
+        return JsonResponse({'supply': supply})
+    except KeyError:
+        return Response('wrong address')
