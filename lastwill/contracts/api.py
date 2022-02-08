@@ -1653,13 +1653,14 @@ def check_solana_address(request):
     return JsonResponse({'validation': True})
 
 
-@api_viev(http_method_names=['POST'])
+@api_view(http_method_names=['POST'])
 def get_token_supply(request):
-    data = requests.data
+    data = request.data
     address = data['address']
-    network = data['network']
+    network_id = data['network']
+    network = Network.objects.get(id=network_id)
     try:
-        conn = SolanaInt(network)
+        conn = SolanaInt(network.name)
         resp = conn.get_token_supply(address)
         supply = resp['result']['value']['amount']
         return JsonResponse({'supply': supply})
