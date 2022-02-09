@@ -137,7 +137,7 @@ def get_path(instance):
     return f'token-logos/{instance.details.solana_contract.address}'
 
 class SolanaTokenInfo(models.Model):
-    details = models.ForeignKey(ContractDetailsSolanaToken, null=True, default=None)
+    contract_id = models.ForeignKey(Contract, null=True, default=None)
     logo = models.ImageField(upload_to=get_path)
     site_link = models.CharField(max_length=40, null=True, default=None)
     coingecko_id = models.CharField(max_length=40, null=True, default=None)

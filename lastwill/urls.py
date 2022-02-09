@@ -26,6 +26,7 @@ from lastwill.contracts.api import (
     EOSAirdropAddressViewSet,
     ICOtokensView,
     WhitelistAddressViewSet,
+    SolanaTokenInfoViewSet,
     buy_brand_report,
     cancel,
     change_contract_state,
@@ -167,6 +168,7 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
+router.register(r'token_info', SolanaTokenInfoViewSet)
 # router.register('orders', OrderBookSwapsModelViewSet)
 
 

@@ -108,6 +108,27 @@ class ContractViewSet(ModelViewSet):
         return result.filter(user=self.request.user).exclude(state='ARCHIVED')
 
 
+class SolanaTokenInfoViewSet(ModelViewSet):
+    queryset = SolanaTokenInfo.objects.all()
+    serializer_class = SolanaTokenInfoSerializer
+    permission_classes = (IsAuthenticated, IsStaff | IsOwner)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        contract = instance.details.contract
+        if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
+            try:
+                self.perform_destroy(instance)
+            except Http404:
+                pass
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        raise PermissionDenied()
+
+    def get_queryset(self):
+        result = self.queryset.order_by('-created_date')
+        return result.filter(user=self.request.user)
+
+
 @api_view()
 def get_code(request):
     with open(path.join(CONTRACTS_DIR, Contract.get_details_model(
@@ -1660,7 +1681,7 @@ def get_token_supply(request):
     network_id = data['network']
     network = Network.objects.get(id=network_id)
     try:
-        conn = SolanaInt(network.name)
+        conn = SolanaInt(network.name).connect()
         resp = conn.get_token_supply(address)
         supply = resp['result']['value']['amount']
         return JsonResponse({'supply': supply})
