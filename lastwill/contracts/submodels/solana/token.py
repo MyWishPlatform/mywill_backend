@@ -58,7 +58,7 @@ class ContractDetailsSolanaToken(CommonDetails):
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
         print(f'tx hash = ', response["result"])
         for attempt in range(5):
-            print('attempt', attempt, flush=True)
+            print(f'attempt {attempt} to confirm transaction', attempt, flush=True)
             tx_data = conn.get_transaction(response['result'])
             if tx_data['result'] is not None:
                 print(tx_data)
