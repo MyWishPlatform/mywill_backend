@@ -113,21 +113,6 @@ class SolanaTokenInfoViewSet(ModelViewSet):
     serializer_class = SolanaTokenInfoSerializer
     permission_classes = (IsAuthenticated, IsStaff | IsOwner)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        contract = instance.details.contract
-        if contract.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
-            try:
-                self.perform_destroy(instance)
-            except Http404:
-                pass
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        raise PermissionDenied()
-
-    def get_queryset(self):
-        result = self.queryset.order_by('-created_date')
-        return result.filter(user=self.request.user)
-
 
 @api_view()
 def get_code(request):
