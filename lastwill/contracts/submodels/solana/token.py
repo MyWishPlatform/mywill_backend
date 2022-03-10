@@ -10,14 +10,28 @@ from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
 from time import sleep
 
+def get_path(instance, filename):
+    return f'token-logos/{instance.contract.get_details().solana_contract.address}'
+
 
 class SolanaContract(EthContract):
     pass
 
 
+class SolanaTokenInfo(models.Model):
+    contract = models.ForeignKey(Contract, null=True, default=None, unique=True, primary_key=True)
+    logo = models.ImageField(upload_to=get_path)
+    site_link = models.CharField(max_length=40, null=True, default=None)
+    coingecko_id = models.CharField(max_length=40, null=True, default=None)
+    description = models.CharField(max_length=40, null=True, default=None)
+    disc_link = models.CharField(max_length=40, null=True, default=None)
+    twitter_link = models.CharField(max_length=40, null=True, default=None)
+
+
 @contract_details('Solana SPL Token contract')
 class ContractDetailsSolanaToken(CommonDetails):
     solana_contract = models.ForeignKey(SolanaContract, null=True, default=None)
+    token_info = models.ForeignKey(SolanaTokenInfo, null=True, default=None)
     token_name = models.CharField(max_length=50)
     token_short_name = models.CharField(max_length=10)
     decimals = models.IntegerField()
@@ -136,16 +150,3 @@ class ContractDetailsSolanaToken(CommonDetails):
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
-
-
-def get_path(instance, filename):
-    return f'token-logos/{instance.contract.get_details().solana_contract.address}'
-
-class SolanaTokenInfo(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None)
-    logo = models.ImageField(upload_to=get_path)
-    site_link = models.CharField(max_length=40, null=True, default=None)
-    coingecko_id = models.CharField(max_length=40, null=True, default=None)
-    description = models.CharField(max_length=40, null=True, default=None)
-    disc_link = models.CharField(max_length=40, null=True, default=None)
-    twitter_link = models.CharField(max_length=40, null=True, default=None)

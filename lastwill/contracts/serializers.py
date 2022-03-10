@@ -2059,6 +2059,7 @@ class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['solana_contract_token'] = SolanaContractSerializer().to_representation(contract_details.solana_contract)
+        res['solana_token_info'] = SolanaTokenInfoSerializer().to_representation(contract_details.token_info)
         token_holder_serializer = TokenHolderSerializer()
         res['token_holders'] = [
             token_holder_serializer.to_representation(th)
