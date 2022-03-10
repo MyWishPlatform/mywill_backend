@@ -19,7 +19,7 @@ class SolanaContract(EthContract):
 
 
 class SolanaTokenInfo(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None, unique=True, primary_key=True)
+    contract = models.ForeignKey(Contract, null=True, default=None)
     logo = models.ImageField(upload_to=get_path)
     site_link = models.CharField(max_length=40, null=True, default=None)
     coingecko_id = models.CharField(max_length=40, null=True, default=None)
