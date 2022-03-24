@@ -14,12 +14,29 @@ def get_path(instance, filename):
     return f'token-logos/{instance.contract.get_details().solana_contract.address}'
 
 
+def confirm_solana_tx(response, network):
+    conn = SolanaInt(network.name).connect()
+    for attempt in range(5):
+        print(f'attempt {attempt} to confirm transaction', flush=True)
+        tx_data = conn.get_transaction(response['result'])
+        if tx_data['result'] is not None:
+            print(tx_data)
+            error = tx_data['result']['meta']['err']
+            if error:
+                raise Exception(f'transaction reverted \n {error}')
+            return tx_data
+        else:
+            sleep(60)
+
+    raise Exception('unable to confirm transaction')
+
+
 class SolanaContract(EthContract):
     pass
 
 
 class SolanaTokenInfo(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None)
+    contract_id = models.ForeignKey(Contract, null=True, default=None, unique=True)
     logo = models.ImageField(upload_to=get_path)
     site_link = models.CharField(max_length=40, null=True, default=None)
     coingecko_id = models.CharField(max_length=40, null=True, default=None)
@@ -71,30 +88,19 @@ class ContractDetailsSolanaToken(CommonDetails):
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
         print(f'tx hash = ', response["result"])
-        for attempt in range(5):
-            print(f'attempt {attempt} to confirm transaction', attempt, flush=True)
-            tx_data = conn.get_transaction(response['result'])
-            if tx_data['result'] is not None:
-                print(tx_data)
-                break
-            else:
-                sleep(60)
+        tx_data = confirm_solana_tx(response, self.contract.network)
 
-        error = tx_data['result']['meta']['err']
-        if error:
-            raise Exception(f'error while deploying \n {error}')
-        else:
-            tx_hash = tx_data['result']['transaction']['signatures'][0]
-            contract_address = tx_data['result']['transaction']['message']['accountKeys'][1]
-            solana_contract = SolanaContract()
-            solana_contract.contract = self.contract
-            solana_contract.original_contract = self.contract
-            solana_contract.tx_hash = tx_hash
-            solana_contract.address = contract_address
-            solana_contract.save()
-            self.solana_contract = solana_contract
-            self.save()
-            self.msg_deployed({})
+        tx_hash = tx_data['result']['transaction']['signatures'][0]
+        contract_address = tx_data['result']['transaction']['message']['accountKeys'][1]
+        solana_contract = SolanaContract()
+        solana_contract.contract = self.contract
+        solana_contract.original_contract = self.contract
+        solana_contract.tx_hash = tx_hash
+        solana_contract.address = contract_address
+        solana_contract.save()
+        self.solana_contract = solana_contract
+        self.save()
+        self.msg_deployed({})
 
     def msg_deployed(self, message):
         print('msg_deployed method of the solana spl token')
@@ -112,18 +118,24 @@ class ContractDetailsSolanaToken(CommonDetails):
                 for th in holders:
                     holder_addr = PublicKey(th.address)
                     try:
-                        associated_address = tok_int.create_associated_token_account(holder_addr)
+                        associated_address, txn, payer, opts = tok_int._create_associated_token_account_args(holder_addr,
+                                                                                                     skip_confirmation=True)
+                        response = conn.send_transaction(txn, payer, opts=opts)
+                        print(f'tx hash = ', response["result"])
+                        confirm_solana_tx(response, self.contract.network)
                         print(f'created associated account {associated_address}')
                     except RPCException:
                         print('associated token account already created')
                         associated_address = get_associated_token_address(holder_addr, tok_int.pubkey)
                     response = tok_int.mint_to(associated_address, key, int(th.amount))
                     print(f'tx hash = ', response['result'])
+                    confirm_solana_tx(response, self.contract.network)
 
             print('transferring of mint authority started')
             owner = PublicKey(self.admin_address)
             address = self.solana_contract.address
-            tok_int.set_authority(address, key.public_key, 0, owner)
+            response = tok_int.set_authority(address, key.public_key, 0, owner)
+            confirm_solana_tx(response, self.contract.network)
             print('successfully transferred mint authority')
 
             self.initialized({})

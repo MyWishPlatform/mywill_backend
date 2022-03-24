@@ -2092,9 +2092,13 @@ class SolanaTokenInfoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        instance = super().create(validated_data)
-        contract_id = validated_data['contract']
-        details = Contract.objects.get(id=contract_id).get_details()
-        details.token_info = instance.id
-        details.save()
-        return instance
+        contract = validated_data['contract_id']
+        details = contract.get_details()
+        if details.token_info:
+            super().update(details.token_info, validated_data)
+            return details.token_info
+        else:
+            instance = super().create(validated_data)
+            details.token_info = instance
+            details.save()
+            return instance
