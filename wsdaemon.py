@@ -109,7 +109,7 @@ if __name__ == '__main__':
             5672,
             'mywill',
             pika.PlainCredentials('java', 'java'),
-            heartbeat_interval=0,
+            heartbeat=0,
         )
     )
     d = cc.connectTCP('127.0.0.1', 5672)

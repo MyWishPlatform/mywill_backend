@@ -8,6 +8,24 @@ from lastwill.settings import DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
 from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
 from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
+from time import sleep
+
+
+def confirm_solana_tx(response, network):
+    conn = SolanaInt(network.name).connect()
+    for attempt in range(5):
+        print(f'attempt {attempt} to confirm transaction', flush=True)
+        tx_data = conn.get_transaction(response['result'])
+        if tx_data['result'] is not None:
+            print(tx_data)
+            error = tx_data['result']['meta']['err']
+            if error:
+                raise Exception(f'transaction reverted \n {error}')
+            return tx_data
+        else:
+            sleep(60)
+
+    raise Exception('unable to confirm transaction')
 
 
 class SolanaContract(EthContract):
@@ -27,7 +45,7 @@ class ContractDetailsSolanaToken(CommonDetails):
 
     @classmethod
     def min_cost(cls):
-        network = Network.objects.get(name='SOLANA_TESTNET')
+        network = Network.objects.get(name='SOLANA_MAINNET')
         cost = cls.calc_cost({}, network)
         return cost
 
@@ -52,29 +70,24 @@ class ContractDetailsSolanaToken(CommonDetails):
         balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
         token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, key.public_key, self.decimals,
                                                                         TOKEN_PROGRAM_ID,
-                                                                        owner, False, balance_needed, Token)
+                                                                        owner, True, balance_needed, Token)
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
-        print(response)
-        error = response['result']['meta']['err']
-        if error:
-            raise Exception(f'error while deploying \n {error}')
-        else:
-            tx_hash = response['result']['transaction']['signatures'][0]
-            contract_address = response['result']['transaction']['message']['accountKeys'][1]
-            solana_contract = SolanaContract()
-            solana_contract.contract = self.contract
-            solana_contract.original_contract = self.contract
-            solana_contract.tx_hash = tx_hash
-            solana_contract.address = contract_address
-            solana_contract.save()
-            self.solana_contract = solana_contract
-            self.save()
-            self.msg_deployed({})
+        print(f'tx hash = ', response["result"])
+        tx_data = confirm_solana_tx(response, self.contract.network)
 
-    @blocking
-    @postponable
-    @check_transaction
+        tx_hash = tx_data['result']['transaction']['signatures'][0]
+        contract_address = tx_data['result']['transaction']['message']['accountKeys'][1]
+        solana_contract = SolanaContract()
+        solana_contract.contract = self.contract
+        solana_contract.original_contract = self.contract
+        solana_contract.tx_hash = tx_hash
+        solana_contract.address = contract_address
+        solana_contract.save()
+        self.solana_contract = solana_contract
+        self.save()
+        self.msg_deployed({})
+
     def msg_deployed(self, message):
         print('msg_deployed method of the solana spl token')
         if self.contract.state != 'WAITING_FOR_DEPLOYMENT':
@@ -91,24 +104,29 @@ class ContractDetailsSolanaToken(CommonDetails):
                 for th in holders:
                     holder_addr = PublicKey(th.address)
                     try:
-                        associated_address = tok_int.create_associated_token_account(holder_addr)
+                        associated_address, txn, payer, opts = tok_int._create_associated_token_account_args(
+                            holder_addr,
+                            skip_confirmation=True)
+                        response = conn.send_transaction(txn, payer, opts=opts)
+                        print(f'tx hash = ', response["result"])
+                        confirm_solana_tx(response, self.contract.network)
                         print(f'created associated account {associated_address}')
                     except RPCException:
                         print('associated token account already created')
                         associated_address = get_associated_token_address(holder_addr, tok_int.pubkey)
                     response = tok_int.mint_to(associated_address, key, int(th.amount))
-                    print(f'tx_hash = {response["result"]}')
+                    print(f'tx hash = ', response['result'])
+                    confirm_solana_tx(response, self.contract.network)
 
             print('transferring of mint authority started')
             owner = PublicKey(self.admin_address)
             address = self.solana_contract.address
-            tok_int.set_authority(address, key.public_key, 0, owner)
+            response = tok_int.set_authority(address, key.public_key, 0, owner)
+            confirm_solana_tx(response, self.contract.network)
             print('successfully transferred mint authority')
 
             self.initialized({})
 
-    @postponable
-    @check_transaction
     def initialized(self, message):
         if self.contract.state not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
             return
