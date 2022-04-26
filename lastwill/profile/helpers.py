@@ -21,9 +21,9 @@ def valid_totp(user, totp):
 
 
 def valid_metamask_message(address, message, signature):
-    #address = attrs['address']
-    #message = attrs['msg']
-    #signature = attrs['signed_msg']
+    # address = attrs['address']
+    # message = attrs['msg']
+    # signature = attrs['signed_msg']
 
     r = int(signature[0:66], 16)
     s = int(add_0x_prefix(signature[66:130]), 16)
