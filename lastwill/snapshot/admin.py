@@ -9,10 +9,36 @@ from .models import (
 
 
 # snapshots
-admin.site.register(SnapshotRow)
-admin.site.register(SnapshotEOSRow)
-admin.site.register(TRONSnapshotEth)
-admin.site.register(TRONSnapshotTRON)
-admin.site.register(TRONSnapshotEOS)
-admin.site.register(TRONISHAirdropEOSISHHolders)
-admin.site.register(TRONISHAirdropWISHHolders)
+@admin.register(SnapshotRow)
+class SnapshotRowAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'value'
+
+
+@admin.register(SnapshotEOSRow)
+class SnapshotEOSRowAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'value'
+
+
+@admin.register(TRONSnapshotEth)
+class TRONSnapshotEthAdmin(admin.ModelAdmin):
+    list_display = 'eth_address', 'tron_address', 'balance'
+
+
+@admin.register(TRONSnapshotTRON)
+class TRONSnapshotTRONAdmin(admin.ModelAdmin):
+    list_display = 'eos_address', 'tron_address', 'balance'
+
+
+@admin.register(TRONSnapshotEOS)
+class TRONSnapshotEOSAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'balance'
+
+
+@admin.register(TRONISHAirdropEOSISHHolders)
+class TRONISHAirdropEOSISHHoldersAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'balance'
+
+
+@admin.register(TRONISHAirdropWISHHolders)
+class TRONISHAirdropWISHHoldersAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'balance'
