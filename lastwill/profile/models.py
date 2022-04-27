@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+
 from lastwill.consts import MAX_WEI_DIGITS
 
 
@@ -18,10 +19,16 @@ class Profile(models.Model):
     metamask_address = models.CharField(max_length=50, null=True, default=None)
     wish_bonus_received = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.user.username
+
 
 class SubSite(models.Model):
     site_name = models.CharField(max_length=35, null=True, default=None)
     currencies = models.CharField(max_length=80, null=True, default=None)
+
+    def __str__(self):
+        return self.site_name
 
 
 class UserSiteBalance(models.Model):
@@ -33,6 +40,9 @@ class UserSiteBalance(models.Model):
     tron_address = models.CharField(max_length=50, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
 
+    def __str__(self):
+        return f"{self.user.username} from {self.subsite.site_name}"
+
 
 class APIToken(models.Model):
     user = models.ForeignKey(User)
@@ -43,3 +53,6 @@ class APIToken(models.Model):
 
     class Meta:
         unique_together = ("user", "token")
+
+    def __str__(self):
+        return f"Token {self.token} for {self.user.username}"

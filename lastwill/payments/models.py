@@ -1,8 +1,8 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
-from lastwill.profile.models import SubSite
 from lastwill.consts import MAX_WEI_DIGITS
+from lastwill.profile.models import SubSite
 
 
 class InternalPayment(models.Model):
@@ -15,6 +15,9 @@ class InternalPayment(models.Model):
     site = models.ForeignKey(SubSite)
     fake = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.user.username} from {self.site.site_name} payment"
+
 
 class BTCAccount(models.Model):
     address = models.CharField(max_length=50)
@@ -22,9 +25,15 @@ class BTCAccount(models.Model):
     balance = models.IntegerField(default=0)
     user = models.ForeignKey(User, null=True, default=None)
 
+    def __str__(self):
+        return f"{self.user.username} BTC account"
+
 
 class FreezeBalance(models.Model):
     eosish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     wish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     tronish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
     bwish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
+
+    def __str__(self):
+        return f"Freeze balance {self.id}"

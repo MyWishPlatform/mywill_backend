@@ -6,7 +6,18 @@ from .models import (
     FreezeBalance
 )
 
+
 # payments
-admin.site.register(InternalPayment)
-admin.site.register(BTCAccount)
-admin.site.register(FreezeBalance)
+@admin.register(InternalPayment)
+class InternalPaymentAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'original_currency', 'tx_hash', 'datetime', 'fake'
+
+
+@admin.register(BTCAccount)
+class BTCAccountAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'balance', 'used'
+
+
+@admin.register(FreezeBalance)
+class FreezeBalanceAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'eosish', 'wish', 'tronish', 'bwish'

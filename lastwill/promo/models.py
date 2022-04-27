@@ -25,7 +25,7 @@ class User2Promo(models.Model):
     contract_id = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.promo.promo_str} for {self.user.__str__()}"
+        return f"{self.promo.promo_str} for {self.user.username}"
 
 
 class Promo2ContractType(models.Model):
