@@ -24,13 +24,13 @@ class TRONSnapshotEthAdmin(admin.ModelAdmin):
     list_display = 'eth_address', 'tron_address', 'balance'
 
 
-@admin.register(TRONSnapshotTRON)
-class TRONSnapshotTRONAdmin(admin.ModelAdmin):
+@admin.register(TRONSnapshotEOS)
+class TRONSnapshotEOSAdmin(admin.ModelAdmin):
     list_display = 'eos_address', 'tron_address', 'balance'
 
 
-@admin.register(TRONSnapshotEOS)
-class TRONSnapshotEOSAdmin(admin.ModelAdmin):
+@admin.register(TRONSnapshotTRON)
+class TRONSnapshotTRONAdmin(admin.ModelAdmin):
     list_display = '__str__', 'balance'
 
 
