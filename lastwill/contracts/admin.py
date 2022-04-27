@@ -22,22 +22,62 @@ from lastwill.contracts.models import (
     ContractDetailsMoonriverToken, ContractDetailsSolanaToken
 )
 
+
 # contracts
-admin.site.register(CurrencyStatisticsCache)
-admin.site.register(Contract)
-admin.site.register(Heir)
-admin.site.register(EthContract)
-admin.site.register(TokenHolder)
-admin.site.register(WhitelistAddress)
-admin.site.register(NeoContract)
-admin.site.register(SolanaContract)
+@admin.register(CurrencyStatisticsCache)
+class CurrencyStatisticsCacheAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'wish_usd_percent_change_24h', 'btc_percent_change_24h', \
+                   'eth_percent_change_24h', 'eos_percent_change_24h', 'usd_percent_change_24h'
+
+
+@admin.register(Contract)
+class ContractAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'state', 'created_date', 'last_check', 'active_to'
+
+
+@admin.register(Heir)
+class HeirAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'percentage'
+
+
+@admin.register(EthContract)
+class EthContractAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address'
+
+
+@admin.register(TokenHolder)
+class TokenHolderAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'amount', 'freeze_date'
+
+
+@admin.register(WhitelistAddress)
+class WhitelistAddressAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'active'
+
+
+@admin.register(NeoContract)
+class NeoContractAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address'
+
+
+@admin.register(SolanaContract)
+class SolanaContractAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address'
+
+
 admin.site.register(ContractDetailsNeoICO)
 admin.site.register(ContractDetailsNeo)
 admin.site.register(ContractDetailsToken)
 admin.site.register(ContractDetailsICO)
 admin.site.register(ContractDetailsAirdrop)
 admin.site.register(AirdropAddress)
-admin.site.register(TRONContract)
+
+
+@admin.register(TRONContract)
+class TRONContractAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address'
+
+
 admin.site.register(ContractDetailsLastwill)
 admin.site.register(ContractDetailsLostKey)
 admin.site.register(ContractDetailsDelayedPayment)
@@ -45,7 +85,13 @@ admin.site.register(ContractDetailsInvestmentPool)
 admin.site.register(InvestAddress)
 admin.site.register(EOSTokenHolder)
 admin.site.register(ContractDetailsEOSToken)
-admin.site.register(EOSContract)
+
+
+@admin.register(EOSContract)
+class EOSContractAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address'
+
+
 admin.site.register(ContractDetailsEOSAccount)
 admin.site.register(ContractDetailsEOSICO)
 admin.site.register(EOSAirdropAddress)

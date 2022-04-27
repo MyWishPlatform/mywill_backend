@@ -338,6 +338,9 @@ class Contract(models.Model):
 
     invisible = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.name} for {self.user.__str__()} in {self.network.name}"
+
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
@@ -469,6 +472,9 @@ class EthContract(models.Model):
         max_length=200, null=True, default=None
     )
     constructor_arguments = models.TextField()
+
+    def __str__(self):
+        return f"{self.contract.name} on original eth {self.original_contract.name}"
 
 
 class CommonDetails(models.Model):
@@ -786,6 +792,9 @@ class Heir(models.Model):
     percentage = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
 
+    def __str__(self):
+        return f"{self.contract.name} for {self.email}"
+
 
 class TokenHolder(models.Model):
     contract = models.ForeignKey(Contract)
@@ -796,11 +805,17 @@ class TokenHolder(models.Model):
     )
     freeze_date = models.IntegerField(null=True)
 
+    def __str__(self):
+        return f"{self.name} has {self.contract.name}"
+
 
 class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.contract.__str__()}"
 
 
 class EOSTokenHolder(models.Model):

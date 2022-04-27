@@ -53,4 +53,6 @@ class CurrencyStatisticsCache(models.Model):
     usd_percent_change_24h = models.FloatField(default=0, null=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Statistics id {self.id} on {self.updated_at}"
 
