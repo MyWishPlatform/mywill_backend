@@ -17,6 +17,9 @@ class Rate(models.Model):
     class Meta:
         unique_together = (('fsym', 'tsym'),)
 
+    def __str__(self):
+        return f"{self.fsym}-{self.tsym}"
+
     @classmethod
     def _get_coin_info(cls, sym):
         coin_id = cls._get_coingecko_sym(sym)
