@@ -15,7 +15,7 @@ class Promo(models.Model):
     reusable = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.promo_str} {self.referral_bonus_usd}"
+        return f"{self.promo_str} for {self.referral_bonus_usd} USD"
 
 
 class User2Promo(models.Model):

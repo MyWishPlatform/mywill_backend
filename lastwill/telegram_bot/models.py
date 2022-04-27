@@ -5,4 +5,4 @@ class BotSub(models.Model):
     chat_id = models.IntegerField(unique=True)
 
     def __str__(self):
-        return str(self.chat_id)
+        return f"Chat id {self.chat_id}"

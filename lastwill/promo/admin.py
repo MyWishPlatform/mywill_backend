@@ -6,6 +6,7 @@ from .models import (
     Promo2ContractType
 )
 
+
 # promo codes
 # user2promo - for specific user
 # promo2contract - for specific contract
@@ -13,9 +14,11 @@ from .models import (
 class PromoAdmin(admin.ModelAdmin):
     list_display = '__str__', 'start', 'stop', 'user'
 
+
 @admin.register(User2Promo)
 class User2Promo(admin.ModelAdmin):
     list_display = '__str__', 'created_date', 'contract_id'
+
 
 @admin.register(Promo2ContractType)
 class Promo2ContractTypeAdmin(admin.ModelAdmin):
