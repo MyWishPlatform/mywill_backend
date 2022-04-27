@@ -11,4 +11,4 @@ class SentenceAdmin(admin.ModelAdmin):
 
 @admin.register(ExternalService)
 class ExternalService(admin.ModelAdmin):
-    list_display = '__str__'
+    list_display = '__str__',
