@@ -474,7 +474,7 @@ class EthContract(models.Model):
     constructor_arguments = models.TextField()
 
     def __str__(self):
-        return f"{self.contract.name} on original eth {self.original_contract.name}"
+        return self.contract.__str__()
 
 
 class CommonDetails(models.Model):

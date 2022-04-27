@@ -42,7 +42,11 @@ class HeirAdmin(admin.ModelAdmin):
 
 @admin.register(EthContract)
 class EthContractAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'address'
+    model = EthContract
+    list_display = '__str__', 'get_original_contract_address', 'address'
+
+    def get_original_contract_address(self, obj):
+        return obj.original_contract.address
 
 
 @admin.register(TokenHolder)
@@ -57,12 +61,20 @@ class WhitelistAddressAdmin(admin.ModelAdmin):
 
 @admin.register(NeoContract)
 class NeoContractAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'address'
+    model = NeoContract
+    list_display = '__str__', 'get_original_contract_address', 'address'
+
+    def get_original_contract_address(self, obj):
+        return obj.original_contract.address
 
 
 @admin.register(SolanaContract)
 class SolanaContractAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'address'
+    model = SolanaContract
+    list_display = '__str__', 'get_original_contract_address', 'address'
+
+    def get_original_contract_address(self, obj):
+        return obj.original_contract.address
 
 
 admin.site.register(ContractDetailsNeoICO)
@@ -75,7 +87,11 @@ admin.site.register(AirdropAddress)
 
 @admin.register(TRONContract)
 class TRONContractAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'address'
+    model = TRONContract
+    list_display = '__str__', 'get_original_contract_address', 'address'
+
+    def get_original_contract_address(self, obj):
+        return obj.original_contract.address
 
 
 admin.site.register(ContractDetailsLastwill)
