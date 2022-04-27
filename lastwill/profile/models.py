@@ -20,7 +20,7 @@ class Profile(models.Model):
     wish_bonus_received = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.user.username
+        return self.user.__str__()
 
 
 class SubSite(models.Model):
@@ -41,7 +41,7 @@ class UserSiteBalance(models.Model):
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
 
     def __str__(self):
-        return f"{self.user.username} from {self.subsite.site_name}"
+        return f"{self.user.__str__()} from {self.subsite.site_name}"
 
 
 class APIToken(models.Model):
@@ -55,4 +55,4 @@ class APIToken(models.Model):
         unique_together = ("user", "token")
 
     def __str__(self):
-        return f"Token {self.token} for {self.user.username}"
+        return f"{self.token} for {self.user.__str__()}"

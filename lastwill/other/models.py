@@ -36,4 +36,4 @@ class ExternalService(models.Model):
     old_hmac = models.CharField(max_length=300)
 
     def __str__(self):
-        return f"External service for {self.user.username}"
+        return f"External service for {self.user.__str__()}"

@@ -9,7 +9,7 @@ from .models import (
 # profile
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'lang', 'totp_key', 'last_used_totp'
+    list_display = '__str__', 'lang', 'balance', 'eos_balance', 'totp_key', 'last_used_totp'
 
 
 @admin.register(SubSite)

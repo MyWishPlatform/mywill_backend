@@ -16,7 +16,7 @@ class InternalPayment(models.Model):
     fake = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.username} from {self.site.site_name} payment"
+        return f"{self.user.__str__()} from {self.site.site_name} payment"
 
 
 class BTCAccount(models.Model):
@@ -26,7 +26,7 @@ class BTCAccount(models.Model):
     user = models.ForeignKey(User, null=True, default=None)
 
     def __str__(self):
-        return f"{self.user.username} BTC account"
+        return f"{self.user.__str__()} BTC account"
 
 
 class FreezeBalance(models.Model):
@@ -36,4 +36,4 @@ class FreezeBalance(models.Model):
     bwish = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
 
     def __str__(self):
-        return f"Freeze balance {self.id}"
+        return f"ID {self.id}"
