@@ -109,12 +109,18 @@ class ContractDetailsLastwillAdmin(admin.ModelAdmin):
 @admin.register(ContractDetailsLostKey)
 class ContractDetailsLostKeyAdmin(admin.ModelAdmin):
     list_display = '__str__', 'user_address', 'active_to'
+
+
 @admin.register(ContractDetailsDelayedPayment)
 class ContractDetailsDelayedPaymentAdmin(admin.ModelAdmin):
     list_display = '__str__', 'date', 'user_address', 'recepient_address', 'recepient_email'
+
+
 @admin.register(ContractDetailsInvestmentPool)
 class ContractDetailsInvestmentPoolAdmin(admin.ModelAdmin):
     list_display = '__str__', 'admin_address', 'whitelist'
+
+
 @admin.register(ContractDetailsLostKeyTokens)
 class ContractDetailsLostKeyTokensAdmin(admin.ModelAdmin):
     list_display = '__str__', 'user_address', 'email'
@@ -213,12 +219,18 @@ class ContractDetailsBinanceTokenAdmin(admin.ModelAdmin):
 @admin.register(ContractDetailsBinanceLostKeyTokens)
 class ContractDetailsBinanceLostKeyTokensAdmin(admin.ModelAdmin):
     list_display = '__str__', 'user_address', 'email'
+
+
 @admin.register(ContractDetailsBinanceDelayedPayment)
 class ContractDetailsBinanceDelayedPaymentAdmin(admin.ModelAdmin):
     list_display = '__str__', 'date', 'user_address', 'recepient_address', 'recepient_email'
+
+
 @admin.register(ContractDetailsBinanceLostKey)
 class ContractDetailsBinanceLostKeyAdmin(admin.ModelAdmin):
     list_display = '__str__', 'user_address', 'active_to'
+
+
 @admin.register(ContractDetailsBinanceInvestmentPool)
 class ContractDetailsBinanceInvestmentPoolAdmin(admin.ModelAdmin):
     list_display = '__str__', 'admin_address', 'whitelist'
