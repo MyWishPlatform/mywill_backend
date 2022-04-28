@@ -32,7 +32,7 @@ class CurrencyStatisticsCacheAdmin(admin.ModelAdmin):
 
 @admin.register(Contract)
 class ContractAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'state', 'created_date', 'last_check', 'active_to'
+    list_display = '__str__', 'state', 'created_date', 'address', 'last_check', 'active_to'
 
 
 @admin.register(Heir)
@@ -111,7 +111,9 @@ class InvestAddressAdmin(admin.ModelAdmin):
     list_display = '__str__', 'address', 'amount', 'created_date', 'take_away'
 
 
-admin.site.register(EOSTokenHolder)
+@admin.register(EOSTokenHolder)
+class EOSTokenHolderAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'name', 'address', 'amount', 'freeze_date'
 
 
 @admin.register(ContractDetailsEOSToken)
@@ -124,7 +126,9 @@ class EOSContractAdmin(admin.ModelAdmin):
     list_display = '__str__', 'address'
 
 
-admin.site.register(ContractDetailsEOSAccount)
+@admin.register(ContractDetailsEOSAccount)
+class ContractDetailsEOSAccountAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'account_name', 'owner_public_key', 'active_public_key'
 
 
 @admin.register(ContractDetailsEOSICO)

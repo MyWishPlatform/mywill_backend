@@ -339,7 +339,7 @@ class Contract(models.Model):
     invisible = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.name} for {self.user.__str__()} in {self.network.name}"
+        return f"ID {self.id} {self.name} for {self.user.__str__()} in {self.network.name}"
 
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
@@ -829,3 +829,6 @@ class EOSTokenHolder(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     freeze_date = models.IntegerField(null=True)
+
+    def __str__(self):
+        return self.contract.__str__()
