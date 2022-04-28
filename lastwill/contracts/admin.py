@@ -77,7 +77,7 @@ class ContractDetailsNeoAdmin(admin.ModelAdmin):
 
 @admin.register(ContractDetailsAirdrop)
 class ContractDetailsAirdropAdmin(admin.ModelAdmin):
-    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+    list_display = '__str__', 'token_address', 'admin_address', 'airdrop_in_progress'
 
 
 admin.site.register(ContractDetailsICO)
@@ -145,7 +145,7 @@ admin.site.register(ApprovedToken)
 
 @admin.register(ProtectorChecker)
 class ProtectorCheckerAdmin(admin.ModelAdmin):
-    list_display = 'last_check'
+    list_display = 'last_check',
 
 
 admin.site.register(ContractDetailsBinanceLostKeyTokens)
