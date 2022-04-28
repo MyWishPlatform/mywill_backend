@@ -32,7 +32,7 @@ class CurrencyStatisticsCacheAdmin(admin.ModelAdmin):
 
 @admin.register(Contract)
 class ContractAdmin(admin.ModelAdmin):
-    search_fields = 'id', 'name', 'address', 'user.name'
+    search_fields = 'id', 'name', 'address', 'user_address'
     list_display = '__str__', 'state', 'created_date', 'address', 'last_check', 'active_to'
 
 
