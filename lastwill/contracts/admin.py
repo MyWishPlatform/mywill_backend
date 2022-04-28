@@ -80,8 +80,14 @@ class ContractDetailsAirdropAdmin(admin.ModelAdmin):
     list_display = '__str__', 'token_address', 'admin_address', 'airdrop_in_progress'
 
 
-admin.site.register(ContractDetailsICO)
-admin.site.register(ContractDetailsNeoICO)
+@admin.register(ContractDetailsICO)
+class ContractDetailsICOAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'start_date', 'stop_date'
+
+
+@admin.register(ContractDetailsNeoICO)
+class ContractDetailsNeoICOAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'start_date', 'stop_date'
 
 
 @admin.register(AirdropAddress)
@@ -119,10 +125,26 @@ class EOSContractAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ContractDetailsEOSAccount)
-admin.site.register(ContractDetailsEOSICO)
-admin.site.register(EOSAirdropAddress)
-admin.site.register(ContractDetailsEOSAirdrop)
-admin.site.register(ContractDetailsEOSTokenSA)
+
+
+@admin.register(ContractDetailsEOSICO)
+class ContractDetailsEOSICOAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'start_date', 'stop_date'
+
+
+@admin.register(EOSAirdropAddress)
+class EOSAirdropAddress(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'active', 'state', 'amount'
+
+
+@admin.register(ContractDetailsEOSAirdrop)
+class ContractDetailsEOSAirdropAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_address', 'admin_address'
+
+
+@admin.register(ContractDetailsEOSTokenSA)
+class ContractDetailsEOSTokenSAAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
 
 
 @admin.register(ContractDetailsTRONToken)
@@ -135,7 +157,11 @@ class ContractDetailsGameAssetsAdmin(admin.ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'uri'
 
 
-admin.site.register(ContractDetailsTRONAirdrop)
+@admin.register(ContractDetailsTRONAirdrop)
+class ContractDetailsTRONAirdropAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_address', 'admin_address'
+
+
 admin.site.register(ContractDetailsTRONLostkey)
 admin.site.register(ContractDetailsLostKeyTokens)
 admin.site.register(ContractDetailsWavesSTO)
@@ -160,9 +186,21 @@ admin.site.register(ContractDetailsBinanceDelayedPayment)
 admin.site.register(ContractDetailsBinanceLostKey)
 admin.site.register(ContractDetailsBinanceLastwill)
 admin.site.register(ContractDetailsBinanceInvestmentPool)
-admin.site.register(ContractDetailsBinanceICO)
-admin.site.register(ContractDetailsBinanceAirdrop)
-admin.site.register(ContractDetailsMaticICO)
+
+
+@admin.register(ContractDetailsBinanceICO)
+class ContractDetailsBinanceICOAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'start_date', 'stop_date'
+
+
+@admin.register(ContractDetailsBinanceAirdrop)
+class ContractDetailsBinanceAirdropAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_address', 'admin_address', 'airdrop_in_progress'
+
+
+@admin.register(ContractDetailsMaticICO)
+class ContractDetailsMaticICOAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'start_date', 'stop_date'
 
 
 @admin.register(ContractDetailsMaticToken)
@@ -170,7 +208,9 @@ class ContractDetailsMaticTokenAdmin(admin.ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
 
 
-admin.site.register(ContractDetailsMaticAirdrop)
+@admin.register(ContractDetailsMaticAirdrop)
+class ContractDetailsMaticAirdropAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_address', 'admin_address', 'airdrop_in_progress'
 
 
 @admin.register(ContractDetailsXinFinToken)
@@ -183,7 +223,9 @@ class ContractDetailsHecoChainTokenAdmin(admin.ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
 
 
-admin.site.register(ContractDetailsHecoChainICO)
+@admin.register(ContractDetailsHecoChainICO)
+class ContractDetailsHecoChainICOAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'start_date', 'stop_date'
 
 
 @admin.register(ContractDetailsMoonriverToken)

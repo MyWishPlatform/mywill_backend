@@ -16,7 +16,7 @@ class AirdropAddress(models.Model):
     )
 
     def __str__(self):
-        return self.contract
+        return self.contract.__str__()
 
 
 class AbstractContractDetailsAirdrop(CommonDetails):
