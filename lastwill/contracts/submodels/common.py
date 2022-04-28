@@ -486,6 +486,9 @@ class CommonDetails(models.Model):
     deploy_address = models.CharField(max_length=50, default='')
     white_label_hash = models.CharField(max_length=70, default='')
 
+    def __str__(self):
+        return self.contract.__str__()
+
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
         sol_path = self.sol_path
@@ -815,7 +818,7 @@ class WhitelistAddress(models.Model):
     active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.contract.__str__()}"
+        return self.contract.__str__()
 
 
 class EOSTokenHolder(models.Model):

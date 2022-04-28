@@ -15,6 +15,9 @@ class AirdropAddress(models.Model):
         db_index=True
     )
 
+    def __str__(self):
+        return self.contract
+
 
 class AbstractContractDetailsAirdrop(CommonDetails):
     class Meta:

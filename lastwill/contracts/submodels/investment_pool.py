@@ -19,6 +19,9 @@ class InvestAddress(models.Model):
         db_index=True
     )
 
+    def __str__(self):
+        return self.contract
+
 
 class AbstractContractDetailsInvestmentPool(CommonDetails):
     class Meta:

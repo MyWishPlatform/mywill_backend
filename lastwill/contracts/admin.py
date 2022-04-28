@@ -19,7 +19,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
     ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
-    ContractDetailsMoonriverToken, ContractDetailsSolanaToken
+    ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ProtectorChecker
 )
 
 
@@ -65,12 +65,28 @@ class SolanaContractAdmin(admin.ModelAdmin):
     list_display = '__str__', 'address'
 
 
-admin.site.register(ContractDetailsNeoICO)
-admin.site.register(ContractDetailsNeo)
-admin.site.register(ContractDetailsToken)
+@admin.register(ContractDetailsToken)
+class ContractDetailsTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
+@admin.register(ContractDetailsNeo)
+class ContractDetailsNeoAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
+@admin.register(ContractDetailsAirdrop)
+class ContractDetailsAirdropAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
 admin.site.register(ContractDetailsICO)
-admin.site.register(ContractDetailsAirdrop)
-admin.site.register(AirdropAddress)
+admin.site.register(ContractDetailsNeoICO)
+
+
+@admin.register(AirdropAddress)
+class AirdropAddressAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'amount', 'state', 'active'
 
 
 @admin.register(TRONContract)
@@ -82,9 +98,19 @@ admin.site.register(ContractDetailsLastwill)
 admin.site.register(ContractDetailsLostKey)
 admin.site.register(ContractDetailsDelayedPayment)
 admin.site.register(ContractDetailsInvestmentPool)
-admin.site.register(InvestAddress)
+
+
+@admin.register(InvestAddress)
+class InvestAddressAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'address', 'amount', 'created_date', 'take_away'
+
+
 admin.site.register(EOSTokenHolder)
-admin.site.register(ContractDetailsEOSToken)
+
+
+@admin.register(ContractDetailsEOSToken)
+class ContractDetailsEOSTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
 
 
 @admin.register(EOSContract)
@@ -97,16 +123,39 @@ admin.site.register(ContractDetailsEOSICO)
 admin.site.register(EOSAirdropAddress)
 admin.site.register(ContractDetailsEOSAirdrop)
 admin.site.register(ContractDetailsEOSTokenSA)
-admin.site.register(ContractDetailsTRONToken)
-admin.site.register(ContractDetailsGameAssets)
+
+
+@admin.register(ContractDetailsTRONToken)
+class ContractDetailsTRONTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
+@admin.register(ContractDetailsGameAssets)
+class ContractDetailsGameAssetsAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'uri'
+
+
 admin.site.register(ContractDetailsTRONAirdrop)
 admin.site.register(ContractDetailsTRONLostkey)
 admin.site.register(ContractDetailsLostKeyTokens)
 admin.site.register(ContractDetailsWavesSTO)
 admin.site.register(ContractDetailsTokenProtector)
 admin.site.register(ApprovedToken)
+
+
+@admin.register(ProtectorChecker)
+class ProtectorCheckerAdmin(admin.ModelAdmin):
+    list_display = 'last_check'
+
+
 admin.site.register(ContractDetailsBinanceLostKeyTokens)
-admin.site.register(ContractDetailsBinanceToken)
+
+
+@admin.register(ContractDetailsBinanceToken)
+class ContractDetailsBinanceTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
 admin.site.register(ContractDetailsBinanceDelayedPayment)
 admin.site.register(ContractDetailsBinanceLostKey)
 admin.site.register(ContractDetailsBinanceLastwill)
@@ -114,10 +163,34 @@ admin.site.register(ContractDetailsBinanceInvestmentPool)
 admin.site.register(ContractDetailsBinanceICO)
 admin.site.register(ContractDetailsBinanceAirdrop)
 admin.site.register(ContractDetailsMaticICO)
-admin.site.register(ContractDetailsMaticToken)
+
+
+@admin.register(ContractDetailsMaticToken)
+class ContractDetailsMaticTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
 admin.site.register(ContractDetailsMaticAirdrop)
-admin.site.register(ContractDetailsXinFinToken)
-admin.site.register(ContractDetailsHecoChainToken)
+
+
+@admin.register(ContractDetailsXinFinToken)
+class ContractDetailsXinFinTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
+@admin.register(ContractDetailsHecoChainToken)
+class ContractDetailsHecoChainTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
 admin.site.register(ContractDetailsHecoChainICO)
-admin.site.register(ContractDetailsMoonriverToken)
-admin.site.register(ContractDetailsSolanaToken)
+
+
+@admin.register(ContractDetailsMoonriverToken)
+class ContractDetailsMoonriverTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+
+@admin.register(ContractDetailsSolanaToken)
+class ContractDetailsSolanaTokenAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
