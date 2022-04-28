@@ -104,9 +104,20 @@ class TRONContractAdmin(admin.ModelAdmin):
 @admin.register(ContractDetailsLastwill)
 class ContractDetailsLastwillAdmin(admin.ModelAdmin):
     list_display = '__str__', 'user_address', 'email', 'btc_key'
-admin.site.register(ContractDetailsLostKey)
-admin.site.register(ContractDetailsDelayedPayment)
-admin.site.register(ContractDetailsInvestmentPool)
+
+
+@admin.register(ContractDetailsLostKey)
+class ContractDetailsLostKeyAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'user_address', 'active_to'
+@admin.register(ContractDetailsDelayedPayment)
+class ContractDetailsDelayedPaymentAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'date', 'user_address', 'recepient_address', 'recepient_email'
+@admin.register(ContractDetailsInvestmentPool)
+class ContractDetailsInvestmentPoolAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'admin_address', 'whitelist'
+@admin.register(ContractDetailsLostKeyTokens)
+class ContractDetailsLostKeyTokensAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'user_address', 'email'
 
 
 @admin.register(InvestAddress)
@@ -169,14 +180,21 @@ class ContractDetailsTRONAirdropAdmin(admin.ModelAdmin):
     list_display = '__str__', 'token_address', 'admin_address'
 
 
-admin.site.register(ContractDetailsTRONLostkey)
-admin.site.register(ContractDetailsLostKeyTokens)
+@admin.register(ContractDetailsTRONLostkey)
+class ContractDetailsTRONLostkeyAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'user_address', 'active_to'
+
+
 @admin.register(ContractDetailsWavesSTO)
 class ContractDetailsWavesSTOAdmin(admin.ModelAdmin):
     list_display = '__str__', 'admin_address', 'start_date', 'stop_date'
+
+
 @admin.register(ContractDetailsTokenProtector)
 class ContractDetailsTokenProtectorAdmin(admin.ModelAdmin):
     list_display = '__str__', 'owner_address', 'reserve_address', 'email'
+
+
 @admin.register(ApprovedToken)
 class ApprovedTokenAdmin(admin.ModelAdmin):
     list_display = '__str__', 'address', 'is_confirmed', 'approve_from_scanner', 'approve_from_front'
@@ -187,20 +205,28 @@ class ProtectorCheckerAdmin(admin.ModelAdmin):
     list_display = 'last_check',
 
 
-admin.site.register(ContractDetailsBinanceLostKeyTokens)
-
-
 @admin.register(ContractDetailsBinanceToken)
 class ContractDetailsBinanceTokenAdmin(admin.ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
 
 
-admin.site.register(ContractDetailsBinanceDelayedPayment)
-admin.site.register(ContractDetailsBinanceLostKey)
+@admin.register(ContractDetailsBinanceLostKeyTokens)
+class ContractDetailsBinanceLostKeyTokensAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'user_address', 'email'
+@admin.register(ContractDetailsBinanceDelayedPayment)
+class ContractDetailsBinanceDelayedPaymentAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'date', 'user_address', 'recepient_address', 'recepient_email'
+@admin.register(ContractDetailsBinanceLostKey)
+class ContractDetailsBinanceLostKeyAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'user_address', 'active_to'
+@admin.register(ContractDetailsBinanceInvestmentPool)
+class ContractDetailsBinanceInvestmentPoolAdmin(admin.ModelAdmin):
+    list_display = '__str__', 'admin_address', 'whitelist'
+
+
 @admin.register(ContractDetailsBinanceLastwill)
 class ContractDetailsBinanceLastwillAdmin(admin.ModelAdmin):
     list_display = '__str__', 'user_address', 'email', 'btc_key'
-admin.site.register(ContractDetailsBinanceInvestmentPool)
 
 
 @admin.register(ContractDetailsBinanceICO)
