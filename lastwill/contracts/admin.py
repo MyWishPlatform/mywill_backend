@@ -32,6 +32,7 @@ class CurrencyStatisticsCacheAdmin(admin.ModelAdmin):
 
 @admin.register(Contract)
 class ContractAdmin(admin.ModelAdmin):
+    search_fields = '__str__',
     list_display = '__str__', 'state', 'created_date', 'address', 'last_check', 'active_to'
 
 
