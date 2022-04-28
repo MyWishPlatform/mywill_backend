@@ -30,7 +30,6 @@ class ContractDetailsTokenProtector(CommonDetails):
     last_account_nonce = models.IntegerField()
     last_active_time = models.DateTimeField(null=True, default=None)
 
-
     def predeploy_validate(self):
         # now = timezone.now().timestamp()
         if self.end_timestamp < timezone.now().timestamp() + 30 * 60:
@@ -315,6 +314,9 @@ class ApprovedToken(models.Model):
     is_confirmed = models.BooleanField(default=False)
     approve_from_scanner = models.BooleanField(default=False)
     approve_from_front = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.contract.__str__()
 
 
 class ProtectorChecker(models.Model):
