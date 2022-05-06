@@ -342,6 +342,10 @@ class Contract(models.Model):
 
     invisible = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"ID {self.id} {self.name} for {self.user.__str__()} in {self.network.name}"
+
+
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
@@ -478,6 +482,9 @@ class EthContract(models.Model):
     )
     constructor_arguments = models.TextField()
 
+    def __str__(self):
+        return self.contract.__str__()
+
 
 class CommonDetails(models.Model):
     class Meta:
@@ -487,6 +494,9 @@ class CommonDetails(models.Model):
     white_label = models.BooleanField(default=False)
     deploy_address = models.CharField(max_length=50, default='')
     white_label_hash = models.CharField(max_length=70, default='')
+
+    def __str__(self):
+        return self.contract.__str__()
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('compiling', flush=True)
@@ -794,6 +804,9 @@ class Heir(models.Model):
     percentage = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
 
+    def __str__(self):
+        return f"{self.contract.name} for {self.email}"
+
 
 class TokenHolder(models.Model):
     contract = models.ForeignKey(Contract)
@@ -804,11 +817,17 @@ class TokenHolder(models.Model):
     )
     freeze_date = models.IntegerField(null=True)
 
+    def __str__(self):
+        return f"{self.name} has {self.contract.name}"
+
 
 class WhitelistAddress(models.Model):
     contract = models.ForeignKey(Contract, null=True)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.contract.__str__()
 
 
 class EOSTokenHolder(models.Model):
@@ -819,3 +838,6 @@ class EOSTokenHolder(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
     freeze_date = models.IntegerField(null=True)
+
+    def __str__(self):
+        return self.contract.__str__()

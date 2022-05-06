@@ -316,6 +316,8 @@ class ApprovedToken(models.Model):
     approve_from_scanner = models.BooleanField(default=False)
     approve_from_front = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.contract.__str__()
 
 class ProtectorChecker(models.Model):
     last_check = models.DateTimeField(default=None, null=True)

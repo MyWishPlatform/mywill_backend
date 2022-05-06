@@ -8,12 +8,18 @@ class SnapshotRow(models.Model):
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
 
+    def __str__(self):
+        return self.eth_address
+
 
 class SnapshotEOSRow(models.Model):
     eos_address = models.CharField(max_length=50)
     value = models.DecimalField(
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+
+    def __str__(self):
+        return self.eos_address
 
 
 class TRONSnapshotEth(models.Model):
@@ -38,6 +44,9 @@ class TRONSnapshotTRON(models.Model):
             max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
 
+    def __str__(self):
+        return self.tron_address
+
 
 class TRONISHAirdropWISHHolders(models.Model):
     address = models.CharField(max_length=50)
@@ -45,9 +54,15 @@ class TRONISHAirdropWISHHolders(models.Model):
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
 
+    def __str__(self):
+        return self.address
+
 
 class TRONISHAirdropEOSISHHolders(models.Model):
     address = models.CharField(max_length=50)
     balance = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
     )
+
+    def __str__(self):
+        return self.address

@@ -10,6 +10,9 @@ class Sentence(models.Model):
     contract_name = models.CharField(max_length=200)
     message = models.TextField()
 
+    def __str__(self):
+        return f"Contract for {self.username}"
+
     def save(self, *args, **kwargs):
         new_obj = not self.id
         super().save(*args, **kwargs)
@@ -31,3 +34,6 @@ class ExternalService(models.Model):
     )
     secret = models.CharField(max_length=300)
     old_hmac = models.CharField(max_length=300)
+
+    def __str__(self):
+        return f"External service for {self.user.__str__()}"

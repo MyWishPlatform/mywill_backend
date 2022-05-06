@@ -601,6 +601,8 @@ class EOSAirdropAddress(models.Model):
         db_index=True
     )
 
+    def __str__(self):
+        return self.contract.__str__()
 
 class ContractDetailsEOSAirdrop(CommonDetails):
 
