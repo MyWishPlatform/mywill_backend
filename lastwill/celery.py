@@ -1,27 +1,27 @@
 import os
 from celery import Celery
 
-from lastwill import settings
+from celery.schedules import crontab
 
-# set the default Django settings module for the 'celery' program.
-os.environ.setdefault(
-    'DJANGO_SETTINGS_MODULE',
-    'lastwill.settings',
-)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lastwill.settings')
 
-app = Celery(
-    main='lastwill',
-    broker=settings.CELERY_BROKER_URL,
-)
+app = Celery('mywish',
+             broker='amqp://rabbit:rabbit@rabbitmq:5672/rabbit',
+             backend='rpc://',
+             include=['lastwill.rates.api',
+                      'mailings_tasks'])
 
-# Using a string here means the worker doesn't have to serialize
-# the configuration object to child processes.
-# - namespace='CELERY' means all celery-related configuration keys
-#   should have a `CELERY_` prefix.
-app.config_from_object(
-    'django.conf:settings',
-    namespace='CELERY',
-)
+app.conf.update(result_expires=3600, enable_utc=True, timezone='Europe/Moscow')
 
-# Load task modules from all registered Django app configs.
+app.conf.beat_schedule = {
+    'update_rates': {
+        'task': 'lastwill.rates.api.update_rates',
+        'schedule': crontab(minute=f'*/10'),
+    },
+    'remind_balance': {
+        'task': 'mailings_tasks.remind_balance',
+        'schedule': crontab(minute=0, hour=0, day_of_month='*/7'),
+    },
+}
+
 app.autodiscover_tasks()

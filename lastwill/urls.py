@@ -33,12 +33,10 @@ from lastwill.contracts.api import (
     check_status,
     confirm_protector_info,
     confirm_protector_tokens,
-    confirm_swaps_info,
     deploy,
     get_authio_cost,
     get_code,
     get_contract_for_link,
-    get_contract_for_unique_link,
     get_cost_all_contracts,
     get_eos_airdrop_cost,
     get_eos_cost,
@@ -54,7 +52,6 @@ from lastwill.contracts.api import (
     i_am_alive,
     load_airdrop,
     neo_crowdsale_finalize,
-    send_message_author_swap,
     skip_protector_approve,
     test_comp,
     get_verification_cost,
@@ -99,7 +96,6 @@ from lastwill.main.views import (
     redirect_contribute
 )
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
-from lastwill.panama_bridge.views import UserTransactionsView
 from lastwill.profile.helpers import generate_metamask_message
 from lastwill.profile.views import confirm_email as allauthemailconfirmation
 from lastwill.profile.views import (
@@ -122,37 +118,6 @@ from lastwill.social.views import (
     GoogleLogin,
     MetamaskLogin
 )
-from lastwill.swaps_common.mailing.api import save_swaps_mail
-from lastwill.swaps_common.orderbook.api import (
-    admin_delete_swaps_v3,
-    cancel_swaps_v3,
-    create_contract_swaps_backend,
-    delete_swaps_v3,
-    edit_contract_swaps_backend,
-    get_non_active_orders,
-    get_swap_v3_for_unique_link,
-    get_swap_v3_public, health_check,
-    set_swaps_expired,
-    show_contract_swaps_backend,
-    show_user_contract_swaps_backend
-    )
-from lastwill.swaps_common.orderbook.api_exchange import (
-    create_swaps_order_api,
-    create_token_for_session,
-    create_token_for_session_mywish,
-    delete_order_for_user,
-    get_cmc_tokens_for_api,
-    get_user_orders_for_api
-)
-# from lastwill.swaps_common.orderbook.views import \
-#      OrderBookSwapsModelViewSet
-from lastwill.swaps_common.tokentable.api import (
-    get_all_coinmarketcap_tokens,
-    get_all_tokens,
-    get_coingecko_tokens,
-    get_coins_rate,
-    get_standarts_tokens
-)
 from lastwill.dashboard.views import (
     deploy_accounts_balances_view,
     contracts_statistic_view,
@@ -166,7 +131,6 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
-# router.register('orders', OrderBookSwapsModelViewSet)
 
 
 urlpatterns = [
@@ -258,48 +222,19 @@ urlpatterns = [
     url(r'^api/get_testnet_tron_tokens/$', get_testnet_tron_tokens),
     url(r'^api/get_tokens_for_eth_address/$', get_tokens_for_eth_address),
     url(r'^api/get_tronish_balance/$', get_tronish_balance),
-    url(r'^api/get_all_tokens/$', get_all_tokens),
-    url(r'^api/get_standarts_tokens/$', get_standarts_tokens),
-    url(r'^api/get_coinmarketcap_tokens/$', get_all_coinmarketcap_tokens),
-    url(r'^api/coingecko_tokens/$', get_coingecko_tokens),
-    url(r'^api/confirm_swaps_info/$', confirm_swaps_info),
     url(r'^api/confirm_protector_info/$', confirm_protector_info),
     url(r'^api/confirm_protector_tokens/$', confirm_protector_tokens),
     url(r'^api/skip_protector_approve/$', skip_protector_approve),
     url(r'^api/get_test_tokens/$', get_test_tokens),
-    url(r'^api/get_contract_for_unique_link/$', get_contract_for_unique_link),
     url(r'^api/get_public_contracts/$', get_public_contracts),
     url(r'^api/change_contract_state/$', change_contract_state),
-    url(r'^api/send_message_author_swap/$', send_message_author_swap),
-    url(r'^api/save_swaps_mail/$', save_swaps_mail),
-    url(r'^api/create_swap3/$', create_contract_swaps_backend),
-    url(r'^api/get_swap3/$', show_contract_swaps_backend),
-    url(r'^api/get_swap3_for_unique_link/$', get_swap_v3_for_unique_link),
-    url(r'^api/edit_swap3/(?P<swap_id>\d+)/$', edit_contract_swaps_backend),
-    url(r'^api/get_user_swap3/$', show_user_contract_swaps_backend),
-    url(r'^api/get_public_swap3/$', get_swap_v3_public),
-    url(r'^api/set_swap3_expired/$', set_swaps_expired),
-    url(r'^api/delete_swap3/$', delete_swaps_v3),
-    url(r'^api/cancel_swap3/$', cancel_swaps_v3),
-    url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
-    url(r'^api/create_swap_order/$', create_swaps_order_api),
-    url(r'^api/get_swap_order_token/$', create_token_for_session),
-    url(r'^api/get_swap_tokens_api/$', get_cmc_tokens_for_api),
-    url(r'^api/get_swap3_orders/$', get_user_orders_for_api),
-    url(r'^api/delete_order_for_user/$', delete_order_for_user),
-    url(r'^api/generate_mywish_swap_token/$', create_token_for_session_mywish),
     url(r'^contribute', redirect_contribute),
-    url(r'^api/get_non_active_swap3', get_non_active_orders),
-    url(r'^api/admin_delete_swap3/$', admin_delete_swaps_v3),
-    url(r'^api/get_cmc_token_rate', get_coins_rate),
     url(r'^api/get_all_promos/$', get_all_promos_api),
     url(r'^api/buy_verification/$', buy_verification),
     url(r'^api/get_verification_cost/$', get_verification_cost),
     url(r'^api/get_whitelabel_cost/$', get_whitelabel_cost),
     url(r'^api/check_neo3_address/$', check_neo3_address),
     url(r'^api/convert_neo3_address_to_hex/$', convert_neo3_address_to_hex),
-    url(r'^api/check_solana_address/$', check_solana_address),
-    url(r'^api/healthcheck', health_check),
 
     # dashboard
     url(r'^api/deploy_accounts_balances/$', deploy_accounts_balances_view),
@@ -307,9 +242,6 @@ urlpatterns = [
     url(r'^api/users_statistic/$', users_statistic_view),
     url(r'^api/advanced_rate/$', advanced_rate_view),
 
-    # panama_bridge
-    url(r'^api/bridge/transactions', UserTransactionsView.as_view()),
-    # ---
 ]
 
 urlpatterns += url(r'^/*', index, name='all'),

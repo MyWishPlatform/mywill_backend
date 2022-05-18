@@ -218,12 +218,8 @@ def test_neo_ico_params(config, params, dest):
 
 
 def send_in_queue(contract_id, type, queue):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
-        'mywill',
-        pika.PlainCredentials('java', 'java'),
-    ))
+    params = pika.URLParameters('amqp://rabbit:rabbit@rabbitmq:5672/rabbit')
+    connection = pika.BlockingConnection(params)
     channel = connection.channel()
     channel.queue_declare(queue=queue, durable=True, auto_delete=False,
                           exclusive=False)
@@ -382,9 +378,7 @@ class Contract(models.Model):
         tron_airdrop = apps.get_model('contracts', 'ContractDetailsTRONAirdrop')
         tron_lostkey = apps.get_model('contracts', 'ContractDetailsTRONLostkey')
         eth_lostkey_tokens = apps.get_model('contracts', 'ContractDetailsLostKeyTokens')
-        swap = apps.get_model('contracts', 'ContractDetailsSWAPS')
         waves = apps.get_model('contracts', 'ContractDetailsWavesSTO')
-        swap2 = apps.get_model('contracts', 'ContractDetailsSWAPS2')
         token_protector = apps.get_model('contracts', 'ContractDetailsTokenProtector')
         binance_lastwill = apps.get_model('contracts', 'ContractDetailsBinanceLastwill')
         binance_lostkey = apps.get_model('contracts', 'ContractDetailsBinanceLostKey')
@@ -424,9 +418,7 @@ class Contract(models.Model):
         contract_details_types[17] = {'name': 'TRON Airdrop', 'model': tron_airdrop}
         contract_details_types[18] = {'name': 'TRON LostKey', 'model': tron_lostkey}
         contract_details_types[19] = {'name': 'ETH LostKey with tokens', 'model': eth_lostkey_tokens}
-        contract_details_types[20] = {'name': 'SWAPS Contract', 'model': swap}
         contract_details_types[22] = {'name': 'WAVES Contract STO', 'model': waves}
-        contract_details_types[21] = {'name': 'SWAPS Contract', 'model': swap2}
         contract_details_types[23] = {'name': 'Token protector contract', 'model': token_protector}
         contract_details_types[24] = {'name': 'Binance Will contract', 'model': binance_lastwill}
         contract_details_types[25] = {'name': 'Binance Wallet contract (lost key)', 'model': binance_lostkey}
@@ -733,7 +725,7 @@ class CommonDetails(models.Model):
                 gas_price_current = response[SPEEDLVL] / 10
                 gas_price_current = int(gas_price_current * 10 ** 9)
                 return gas_price_current
-            except (requests.RequestException, KeyError):
+            except Exception:
                 print('gas station api is unavailable', flush=True)
 
     @property

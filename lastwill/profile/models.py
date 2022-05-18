@@ -16,8 +16,6 @@ class Profile(models.Model):
     last_used_totp = models.CharField(max_length=64, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
     metamask_address = models.CharField(max_length=50, null=True, default=None)
-    is_swaps = models.BooleanField(default=False)
-    is_swaps_admin = models.BooleanField(default=False)
     wish_bonus_received = models.BooleanField(default=False)
 
 
@@ -42,7 +40,6 @@ class APIToken(models.Model):
     comment = models.CharField(max_length=50, null=True, default=None)
     active = models.BooleanField(default=True)
     last_accessed = models.DateTimeField(null=True, default=None)
-    swaps_exchange_domain = models.CharField(max_length=50, null=True, default=None)
 
     class Meta:
         unique_together = ("user", "token")
