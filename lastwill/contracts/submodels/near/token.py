@@ -38,7 +38,22 @@ NEAR_NETWORK_URL = "https://rpc.testnet.near.org"
 # исходя из того что с лишнего газа будет сдача,
 # можно просто стандартное кол-во ставить 300 TGas
 NEAR_GAS_PER_TRANSACTION = 300 * 10**12
+# данные нашего аккаунта в Near сети
+MYWISH_ACCOUNT_NAME = "mywish.testnet"
+MYWISH_PRIVATE_KEY = ""
 
+def init_mywish_account():
+    """
+    init_mywish_account - функция инициализации аккаунта в near-api-py
+    (получает информацию о существующем аккаунте и импортирует его в соответствующий класс)
+    
+    Returns:
+        near_api.account.Account : класс аккаунта из модуля
+    """
+    provider = near_api.providers.JsonProvider(NEAR_NETWORK_URL)
+    signer = near_api.signer.Signer(MYWISH_ACCOUNT_NAME, near_api.signer.KeyPair(MYWISH_PRIVATE_KEY))
+    mywish_account = near_api.account.Account(provider, signer, MYWISH_ACCOUNT_NAME)
+    return mywish_account
 
 def generate_account_name():
     """
@@ -158,7 +173,14 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     @blocking
     @postponable
     def deploy(self):
-        pass
+        """
+        deploy _summary_
+        
+        для создания аккаунта нужен трансфер на 182 * 10**19 монет
+        """
+        mywish_account = init_mywish_account()
+        tx_hash_initial_transfer = mywish_account.send_money(self.admin_address, 182 * 10**19)
+        
 
     @postponable
     @check_transaction
