@@ -97,6 +97,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         
         создание аккаунта будет проводиться через near-cli
         https://docs.near.org/docs/roles/integrator/implicit-accounts
+        
+        ключи аккаунта хранятся в ~/.near-credentials/{network-type}/{self.admin_address}.json
         """
         near_network_type = 'testnet'
         if os.system(f"/bin/bash -c 'export NEAR_ENV={near_network_type}'"):
@@ -119,22 +121,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         except Exception:
             print('Error moving keys to Near Account')
             traceback.print_exc()
-
-        try:
-            private_key = run(f'cat ~/.near-credentials/{near_network_type}/{account_name}.json',
-                              stdout=PIPE,
-                              stderr=STDOUT,
-                              check=True,
-                              shell=True)
-        except Exception:
-            print('Error getting private key from Near Account json')
-            traceback.print_exc()
-        else:
-            private_key = private_key.stdout.decode('utf-8').split('"')[7].split(':')[1]
-        provider = near_api.providers.JsonProvider(NEAR_NETWORK_URL)
-        signer = near_api.signer.Signer(implicit_account_name, near_api.signer.KeyPair(private_key))
-        account = near_api.account.Account(provider, signer, implicit_account_name)
-        return account
+        self.admin_address = implicit_account_name
+        self.save()
 
     def compile(self):
         if self.temp_directory:
