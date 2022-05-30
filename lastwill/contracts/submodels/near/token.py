@@ -35,6 +35,7 @@ ADDRESS_LENGTH_NEAR = 64
 # https://docs.near.org/docs/concepts/account#account-id-rules
 ACCOUNT_NAME_REGEX = '^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$'
 # сеть Near
+NEAR_NETWORK_TYPE = "testnet"
 NEAR_NETWORK_URL = "https://rpc.testnet.near.org"
 # исходя из того что с лишнего газа будет сдача,
 # можно просто стандартное кол-во ставить 300 TGas
@@ -44,18 +45,20 @@ MYWISH_ACCOUNT_NAME = "mywish.testnet"
 MYWISH_PRIVATE_KEY = ""
 
 
-def init_mywish_account():
+def init_account(network: str = NEAR_NETWORK_URL,
+                 account_id: str = MYWISH_ACCOUNT_NAME,
+                 private_key: str = MYWISH_PRIVATE_KEY):
     """
-    init_mywish_account - функция инициализации аккаунта в near-api-py
+    init_account - функция инициализации аккаунта в near-api-py
     (получает информацию о существующем аккаунте и импортирует его в соответствующий класс)
     
     Returns:
         near_api.account.Account : класс аккаунта из модуля
     """
-    provider = near_api.providers.JsonProvider(NEAR_NETWORK_URL)
-    signer = near_api.signer.Signer(MYWISH_ACCOUNT_NAME, near_api.signer.KeyPair(MYWISH_PRIVATE_KEY))
-    mywish_account = near_api.account.Account(provider, signer, MYWISH_ACCOUNT_NAME)
-    return mywish_account
+    provider = near_api.providers.JsonProvider(network)
+    signer = near_api.signer.Signer(account_id, near_api.signer.KeyPair(private_key))
+    near_account = near_api.account.Account(provider, signer, account_id)
+    return near_account
 
 
 def generate_account_name():
@@ -120,8 +123,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         
         ключи аккаунта хранятся в ~/.near-credentials/{network-type}/{self.admin_address}.json
         """
-        near_network_type = 'testnet'
-        if os.system(f"/bin/bash -c 'export NEAR_ENV={near_network_type}'"):
+        if os.system(f"/bin/bash -c 'export NEAR_ENV={NEAR_NETWORK_TYPE}'"):
             raise Exception('Error setting the Near Network env')
         try:
             account_name = generate_account_name()
@@ -134,7 +136,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             public_key = public_key.stdout.decode('utf-8').split()[4].split(':')[1]
         implicit_account_name = base58.b58decode(public_key).hex()
         try:
-            run(f'mv ~/.near-credentials/{near_network_type}/{account_name}.json ~/.near-credentials/{near_network_type}/{implicit_account_name}.json',
+            run(f'mv ~/.near-credentials/{NEAR_NETWORK_TYPE}/{account_name}.json ~/.near-credentials/{NEAR_NETWORK_TYPE}/{implicit_account_name}.json',
                 stdout=PIPE,
                 stderr=STDOUT,
                 check=True,
@@ -186,8 +188,9 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         для создания аккаунта нужен трансфер на 182 * 10**19 монет
         для создания, деплоя и инициализации нужно 222281 * 10 ** 19 монет
         """
-        mywish_account = init_mywish_account()
+        mywish_account = init_account()
         # sending await transfer to new user account
+        self.new_account()
         for attempt in range(attempts):
             print(f'attempt {attempt} to send account creation tx', flush=True)
             try:
@@ -199,6 +202,21 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             time.sleep(WEB3_ATTEMPT_COOLDOWN)
         else:
             raise Exception(f'cannot send account creation tx with {attempts} attempts')
+
+        try:
+            private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
+                              stdout=PIPE,
+                              stderr=STDOUT,
+                              check=True,
+                              shell=True)
+        except Exception:
+            print('Error getting private key from Near Account json')
+            traceback.print_exc()
+        else:
+            private_key = private_key.stdout.decode('utf-8').split('"')[7].split(':')[1]
+            if len(private_key) != 88:
+                raise Exception("Wrong private key provided")
+        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.admin_address, private_key=private_key)
 
         self.compile()
         args = {
@@ -212,13 +230,13 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             }
         }
         print(args, flush=True)
-        tx_deploy_hash = mywish_account.deploy_and_init_contract_async(contract_code=self.near_contract.bytecode,
-                                                                       args=args,
-                                                                       gas=near_api.account.DEFAULT_ATTACHED_GAS,
-                                                                       init_method_name="new")
+
+        tx_deploy_hash = near_account.deploy_and_init_contract_async(contract_code=self.near_contract.bytecode,
+                                                                     args=args,
+                                                                     gas=near_api.account.DEFAULT_ATTACHED_GAS,
+                                                                     init_method_name="new")
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
-        self.near_contract.address = self.token_account
         self.near_contract.save()
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
