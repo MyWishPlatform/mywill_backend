@@ -11,6 +11,7 @@ from numpy import uint8
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
+from lastwill.settings import WEB3_ATTEMPT_COOLDOWN
 """
 24.05.2022
 ПЕРВИЧНАЯ ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
@@ -42,6 +43,7 @@ NEAR_GAS_PER_TRANSACTION = 300 * 10**12
 MYWISH_ACCOUNT_NAME = "mywish.testnet"
 MYWISH_PRIVATE_KEY = ""
 
+
 def init_mywish_account():
     """
     init_mywish_account - функция инициализации аккаунта в near-api-py
@@ -54,6 +56,7 @@ def init_mywish_account():
     signer = near_api.signer.Signer(MYWISH_ACCOUNT_NAME, near_api.signer.KeyPair(MYWISH_PRIVATE_KEY))
     mywish_account = near_api.account.Account(provider, signer, MYWISH_ACCOUNT_NAME)
     return mywish_account
+
 
 def generate_account_name():
     """
@@ -88,14 +91,16 @@ class BaseContract(Contract):
 class NearContract(EthContract):
     contract = models.ForeignKey(BaseContract, null=True, default=None)
     original_contract = models.ForeignKey(BaseContract, null=True, default=None, related_name='orig_ethcontract')
+    # адрес контракта
     address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
 
 
 @contract_details('Near Token contract')
 class ContractDetailsNearToken(AbstractContractDetailsToken):
+    # адрес пользователя в сети Near
     admin_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
+    # адрес деплоя
     deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, default='')
-    token_type = models.CharField(max_length=32, default='NEP-141')
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS_NEAR, decimal_places=0, null=True)
     near_contract = models.ForeignKey(NearContract,
                                       null=True,
@@ -121,8 +126,9 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         try:
             account_name = generate_account_name()
             public_key = run(['near', 'generate-key', f'{account_name}'], stdout=PIPE, stderr=STDOUT, check=True)
+            print(f'Public key: {public_key}', flush=True)
         except Exception:
-            print('Error generating key for Near Account')
+            print('Error generating key for Near Account', flush=True)
             traceback.print_exc()
         else:
             public_key = public_key.stdout.decode('utf-8').split()[4].split(':')[1]
@@ -136,19 +142,21 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         except Exception:
             print('Error moving keys to Near Account')
             traceback.print_exc()
+        print(f'Near user address {implicit_account_name}', flush=True)
         self.admin_address = implicit_account_name
         self.save()
 
     def compile(self):
         if self.temp_directory:
-            print('Near Token is already compiled')
+            print('Near Token is already compiled', flush=True)
             return
         dest, _ = create_directory(self, sour_path='lastwill/near_token/*', config_name=None)
         try:
             # https://docs.python.org/3/library/subprocess.html
             result = run(['cd', f'{dest}', '&&', 'make'], stdout=PIPE, stderr=STDOUT, check=True)
+            print('Near Token compiled successfully', flush=True)
         except Exception:
-            print('Near Token compilation error')
+            print('Near Token compilation error', flush=True)
             traceback.print_exc()
         with open(path.join(dest, 'near.token/near.token.wasm'), 'rb') as f:
             # код контракта представляет из себя побайтовый массив uint8
@@ -157,12 +165,11 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
                 char = f.read(1)
                 if not char:
                     break
-            bytecode.append(uint8(int.from_bytes(char, byteorder)))
+                bytecode.append(uint8(int.from_bytes(char, byteorder)))
         with open(path.join(dest, 'near.token.rs'), 'rb') as f:
             # не уверен нужен ли вообще, но пока пусть будет так
             source_code = f.read().decode('utf-8-sig')
         near_contract = NearContract()
-        near_contract.abi = abi
         near_contract.bytecode = bytecode
         near_contract.source_code = source_code
         near_contract.contract = self.contract
@@ -172,15 +179,49 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
 
     @blocking
     @postponable
-    def deploy(self):
+    def deploy(self, attempts: int = 1):
         """
         deploy _summary_
         
         для создания аккаунта нужен трансфер на 182 * 10**19 монет
+        для создания, деплоя и инициализации нужно 222281 * 10 ** 19 монет
         """
         mywish_account = init_mywish_account()
-        tx_hash_initial_transfer = mywish_account.send_money(self.admin_address, 182 * 10**19)
-        
+        # sending await transfer to new user account
+        for attempt in range(attempts):
+            print(f'attempt {attempt} to send account creation tx', flush=True)
+            try:
+                tx_account_hash = mywish_account.send_money(self.admin_address, 222281 * 10**19)
+                print(f'account creation:\n{tx_account_hash}\n', flush=True)
+                break
+            except Exception:
+                traceback.print_exc()
+            time.sleep(WEB3_ATTEMPT_COOLDOWN)
+        else:
+            raise Exception(f'cannot send account creation tx with {attempts} attempts')
+
+        self.compile()
+        args = {
+            "owner_id": self.near_contract.contract.owner_address,
+            "total_supply": f"{self.maximum_supply}",
+            "metadata": {
+                "spec": "ft-1.0.0",
+                "name": f"{self.token_name}",
+                "symbol": f"{self.token_short_name}",
+                "decimals": self.decimals
+            }
+        }
+        print(args, flush=True)
+        tx_deploy_hash = mywish_account.deploy_and_init_contract_async(contract_code=self.near_contract.bytecode,
+                                                                       args=args,
+                                                                       gas=near_api.account.DEFAULT_ATTACHED_GAS,
+                                                                       init_method_name="new")
+        print(f'tx_hash: {tx_deploy_hash}', flush=True)
+        self.near_contract.tx_hash = tx_deploy_hash
+        self.near_contract.address = self.token_account
+        self.near_contract.save()
+        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.save()
 
     @postponable
     @check_transaction
