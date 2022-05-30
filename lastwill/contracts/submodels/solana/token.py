@@ -32,9 +32,25 @@ class SolanaContract(EthContract):
     pass
 
 
+class SolanaTokenLogo(models.Model):
+    logo = models.ImageField(upload_to=get_path)
+    user_id = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE)
+
+
+class SolanaTokenInfo(models.Model):
+    contract_id = models.ForeignKey(Contract, null=True, default=None, unique=True, on_delete=models.CASCADE)
+    logo = models.ForeignKey(SolanaTokenLogo, null=True, default=None, on_delete=models.CASCADE)
+    site_link = models.CharField(max_length=40, null=True, default=None)
+    coingecko_id = models.CharField(max_length=40, null=True, default=None)
+    description = models.CharField(max_length=40, null=True, default=None)
+    disc_link = models.CharField(max_length=40, null=True, default=None)
+    twitter_link = models.CharField(max_length=40, null=True, default=None)
+
+
 @contract_details('Solana SPL Token contract')
 class ContractDetailsSolanaToken(CommonDetails):
-    solana_contract = models.ForeignKey(SolanaContract, null=True, default=None)
+    solana_contract = models.ForeignKey(SolanaContract, null=True, default=None, on_delete=models.CASCADE)
+    token_info = models.ForeignKey(SolanaTokenInfo, null=True, default=None, on_delete=models.CASCADE)
     token_name = models.CharField(max_length=50)
     token_short_name = models.CharField(max_length=10)
     decimals = models.IntegerField()
