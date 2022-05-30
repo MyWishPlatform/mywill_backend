@@ -20,10 +20,16 @@ class Profile(models.Model):
     is_swaps_admin = models.BooleanField(default=False)
     wish_bonus_received = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.user.__str__()
+
 
 class SubSite(models.Model):
     site_name = models.CharField(max_length=35, null=True, default=None)
     currencies = models.CharField(max_length=80, null=True, default=None)
+
+    def __str__(self):
+        return self.site_name
 
 
 class UserSiteBalance(models.Model):
@@ -34,6 +40,9 @@ class UserSiteBalance(models.Model):
     btc_address = models.CharField(max_length=50, null=True, default=None)
     tron_address = models.CharField(max_length=50, null=True, default=None)
     memo = models.CharField(max_length=25, null=True, default=None, unique=True)
+
+    def __str__(self):
+        return f"{self.user.__str__()} from {self.subsite.site_name}"
 
 
 class APIToken(models.Model):
@@ -46,3 +55,6 @@ class APIToken(models.Model):
 
     class Meta:
         unique_together = ("user", "token")
+
+    def __str__(self):
+        return f"{self.token} for {self.user.__str__()}"

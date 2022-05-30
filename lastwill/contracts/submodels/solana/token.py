@@ -10,9 +10,6 @@ from lastwill.contracts.submodels.common import *
 from email_messages import solana_token_text
 from time import sleep
 
-def get_path(instance, filename):
-    return f'token-logos/{instance.contract.get_details().solana_contract.address}'
-
 
 def confirm_solana_tx(response, network):
     conn = SolanaInt(network.name).connect()
@@ -123,8 +120,9 @@ class ContractDetailsSolanaToken(CommonDetails):
                 for th in holders:
                     holder_addr = PublicKey(th.address)
                     try:
-                        associated_address, txn, payer, opts = tok_int._create_associated_token_account_args(holder_addr,
-                                                                                                     skip_confirmation=True)
+                        associated_address, txn, payer, opts = tok_int._create_associated_token_account_args(
+                            holder_addr,
+                            skip_confirmation=True)
                         response = conn.send_transaction(txn, payer, opts=opts)
                         print(f'tx hash = ', response["result"])
                         confirm_solana_tx(response, self.contract.network)

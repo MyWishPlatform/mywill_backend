@@ -173,7 +173,7 @@ router.register(r'token_info', SolanaTokenInfoViewSet)
 
 
 urlpatterns = [
-    url(r'^jopa/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
     url(r'^', include('django.contrib.auth.urls')),
     url(r'^reset', index),
     url(r'^api/', include(router.urls)),

@@ -14,6 +14,9 @@ class Promo(models.Model):
     referral_bonus_usd = models.IntegerField(default=0)
     reusable = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.promo_str} for {self.referral_bonus_usd} USD"
+
 
 class User2Promo(models.Model):
     user = models.ForeignKey(User)
@@ -21,8 +24,15 @@ class User2Promo(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     contract_id = models.IntegerField(default=0)
 
+    def __str__(self):
+        return f"{self.promo.promo_str} for {self.user.__str__()}"
+
 
 class Promo2ContractType(models.Model):
     promo = models.ForeignKey(Promo)
     contract_type = models.IntegerField()
     discount = models.IntegerField()
+    
+    def __str__(self):
+        return f"{self.promo.promo_str}"
+
