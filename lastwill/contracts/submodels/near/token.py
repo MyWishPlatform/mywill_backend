@@ -213,7 +213,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             print('Error getting private key from Near Account json')
             traceback.print_exc()
         else:
-            private_key = private_key.stdout.decode('utf-8').split('"')[7].split(':')[1]
+            private_key = private_key.stdout.decode('utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
                 raise Exception("Wrong private key provided")
         near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.admin_address, private_key=private_key)
@@ -245,6 +245,32 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     @check_transaction
     def msg_deployed(self, message):
         pass
+    
+    @postponable
+    @check_transaction
+    def burn_keys(self, message):
+        try:
+            public_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
+                              stdout=PIPE,
+                              stderr=STDOUT,
+                              check=True,
+                              shell=True)
+        except Exception:
+            print('Error getting public key from Near Account json')
+            traceback.print_exc()
+        else:
+            public_key = public_key.stdout.decode('utf-8').split('"')[7].split(':')[1]
+            if len(public_key) != 44:
+                raise Exception("Wrong public key provided")
+            
+        try:
+            run(['near', 'delete-key', f'{self.admin_address}', f'{public_key}'], stdout=PIPE, stderr=STDOUT, check=True)
+        except Exception:
+            print(f'Error burning key on Near Account {self.admin_address}', flush=True)
+            traceback.print_exc()
+            
+        print(f'Near Account {self.admin_address} keys burnt', flush=True)
+        
 
     def check_contract(self):
         pass
