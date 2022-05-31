@@ -443,6 +443,15 @@ class EOSContractSerializer(serializers.ModelSerializer):
             'bytecode', 'compiler_version', 'constructor_arguments'
         )
 
+      
+class NearContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSContract
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
+
 
 class WhitelistAddressSerializer(serializers.ModelSerializer):
     class Meta:
