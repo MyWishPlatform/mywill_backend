@@ -11,7 +11,6 @@ from numpy import uint8
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
-from lastwill.settings import WEB3_ATTEMPT_COOLDOWN
 """
 24.05.2022
 ПЕРВИЧНАЯ ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
@@ -77,23 +76,9 @@ def generate_account_name():
     return result
 
 
-class BaseContract(Contract):
-    """
-    BaseContract - наследник базового контракта Contract из common.py
-
-    Args:
-        address - адрес деплоя
-        owner - адрес внутри контракта
-        user - адрес подписи (должен совпадать с address или быть его родительским аккаунтом)
-    """
-    address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
-    owner_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
-    user_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
-
-
 class NearContract(EthContract):
-    contract = models.ForeignKey(BaseContract, null=True, default=None)
-    original_contract = models.ForeignKey(BaseContract, null=True, default=None, related_name='orig_ethcontract')
+    contract = models.ForeignKey(Contract, null=True, default=None)
+    original_contract = models.ForeignKey(Contract, null=True, default=None, related_name='orig_ethcontract')
     # адрес контракта
     address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
 
