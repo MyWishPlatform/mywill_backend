@@ -85,10 +85,10 @@ class NearContract(EthContract):
 
 @contract_details('Near Token contract')
 class ContractDetailsNearToken(AbstractContractDetailsToken):
-    # адрес пользователя в сети Near
+    # адрес владельца контракта
     admin_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
-    # адрес деплоя
-    deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, default='')
+    # адрес аккаунта контракта
+    deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS_NEAR, decimal_places=0, null=True)
     near_contract = models.ForeignKey(NearContract,
                                       null=True,
@@ -130,7 +130,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             print('Error moving keys to Near Account')
             traceback.print_exc()
         print(f'Near user address {implicit_account_name}', flush=True)
-        self.admin_address = implicit_account_name
+        self.deploy_address = implicit_account_name
         self.save()
 
     def compile(self):
@@ -189,13 +189,13 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         # sending await transfer to new user account
         self.new_account()
         try:
-            tx_account_hash = mywish_account.send_money(self.admin_address, 23 * 10**23)
+            tx_account_hash = mywish_account.send_money(self.deploy_address, 23 * 10**23)
             print(f'account creation:\n{tx_account_hash}\n', flush=True)
         except Exception:
             traceback.print_exc()
 
         try:
-            private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
+            private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
                               stdout=PIPE,
                               stderr=STDOUT,
                               check=True,
@@ -207,11 +207,11 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             private_key = private_key.stdout.decode('utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
                 raise Exception("Wrong private key provided")
-        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.admin_address, private_key=private_key)
+        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         self.compile()
         args = {
-            "owner_id": self.near_contract.contract.owner_address,
+            "owner_id": self.admin_address,
             "total_supply": f"{self.maximum_supply}",
             "metadata": {
                 "spec": "ft-1.0.0",
@@ -259,7 +259,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             take_off_blocking(self.contract.network.name)
             return
         try:
-            public_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
+            public_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
                              stdout=PIPE,
                              stderr=STDOUT,
                              check=True,
@@ -273,15 +273,15 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
                 raise Exception("Wrong public key provided")
 
         try:
-            run(['near', 'delete-key', f'{self.admin_address}', f'{public_key}'],
+            run(['near', 'delete-key', f'{self.deploy_address}', f'{public_key}'],
                 stdout=PIPE,
                 stderr=STDOUT,
                 check=True)
         except Exception:
-            print(f'Error burning key on Near Account {self.admin_address}', flush=True)
+            print(f'Error burning key on Near Account {self.deploy_address}', flush=True)
             traceback.print_exc()
 
-        print(f'Near Account {self.admin_address} keys burnt', flush=True)
+        print(f'Near Account {self.deploy_address} keys burnt', flush=True)
 
     def check_contract(self):
         pass
