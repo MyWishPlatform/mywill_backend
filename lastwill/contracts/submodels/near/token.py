@@ -181,27 +181,25 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
 
     @blocking
     @postponable
-    def deploy(self, attempts: int = 1):
+    def deploy(self):
         """
         deploy _summary_
         
         для создания аккаунта нужен трансфер на 182 * 10**19 монет
         для создания, деплоя и инициализации нужно 222281 * 10 ** 19 монет
         """
+        if self.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
+            print('launch message ignored because already deployed', flush=True)
+            take_off_blocking(self.contract.network.name)
+            return
         mywish_account = init_account()
         # sending await transfer to new user account
         self.new_account()
-        for attempt in range(attempts):
-            print(f'attempt {attempt} to send account creation tx', flush=True)
-            try:
-                tx_account_hash = mywish_account.send_money(self.admin_address, 222281 * 10**19)
-                print(f'account creation:\n{tx_account_hash}\n', flush=True)
-                break
-            except Exception:
-                traceback.print_exc()
-            time.sleep(WEB3_ATTEMPT_COOLDOWN)
-        else:
-            raise Exception(f'cannot send account creation tx with {attempts} attempts')
+        try:
+            tx_account_hash = mywish_account.send_money(self.admin_address, 222281 * 10**19)
+            print(f'account creation:\n{tx_account_hash}\n', flush=True)
+        except Exception:
+            traceback.print_exc()
 
         try:
             private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
