@@ -269,6 +269,10 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
                 - если завалится парсинг ключа из json файла
                 - если сжигание ключей не пройдет
         """
+        if self.contract.state not in ('ACTIVE', 'ENDED'):
+            print('burning keys message ignored because state is not ACTIVE or ENDED', flush=True)
+            take_off_blocking(self.contract.network.name)
+            return
         try:
             public_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
                              stdout=PIPE,
