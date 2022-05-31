@@ -16,6 +16,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
+from lastwill.contracts.submodels.near.token import ContractDetailsNearToken
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -352,6 +353,7 @@ class ContractSerializer(serializers.ModelSerializer):
             37: ContractDetailsHecoChainICOSerializer,
             38: ContractDetailsMoonriverTokenSerializer,
             39: ContractDetailsSolanaTokenSerializer,
+            40: ContractDetailsNearTokenSerializer
         }[contract_type]
 
 
@@ -436,15 +438,6 @@ class EthContractSerializer(serializers.ModelSerializer):
 
 
 class EOSContractSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EOSContract
-        fields = (
-            'id', 'address', 'source_code', 'abi',
-            'bytecode', 'compiler_version', 'constructor_arguments'
-        )
-
-      
-class NearContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EOSContract
         fields = (
@@ -2091,3 +2084,33 @@ class ContractDetailsSolanaSerializer(serializers.ModelSerializer):
 class ContractDetailsSolanaTokenSerializer(ContractDetailsSolanaSerializer):
     class Meta(ContractDetailsSolanaSerializer.Meta):
         model = ContractDetailsSolanaToken
+
+
+class NearContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSContract
+        fields = (
+            'id', 'address', 'source_code', 'abi',
+            'bytecode', 'compiler_version', 'constructor_arguments'
+        )
+
+class ContractDetailsNearTokenSerializer(ContractDetailsTokenSerializer):
+    class Meta:
+        model = ContractDetailsNearToken
+        fields = (
+            'token_name', 'token_short_name', 'decimals',
+            'admin_address', 'token_type', 'future_minting',
+            'maximum_supply'
+        )
+
+    def create(self, contract, contract_details):
+        pass
+
+    def validate(self, details):
+        pass
+
+    def to_representation(self, contract_details):
+        pass
+
+    def update(self, contract, details, contract_details):
+        pass

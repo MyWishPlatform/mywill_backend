@@ -406,6 +406,7 @@ class Contract(models.Model):
         hecochain_ico = apps.get_model('contracts', 'ContractDetailsHecoChainICO')
         moonriver_token = apps.get_model('contracts', 'ContractDetailsMoonriverToken')
         solana_token = apps.get_model('contracts', 'ContractDetailsSolanaToken')
+        near_token = apps.get_model('contracts', 'ContractDetailsNearToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)',
@@ -448,6 +449,7 @@ class Contract(models.Model):
         contract_details_types[37] = {'name': 'HecoChain MyWish ICO', 'model': hecochain_ico}
         contract_details_types[38] = {'name': 'Moonriver Token contract', 'model': moonriver_token}
         contract_details_types[39] = {'name': 'Solana Token contract', 'model': solana_token}
+        contract_details_types[40] = {'name': 'Near Token contract', 'model': near_token}
         return contract_details_types
 
     @classmethod
