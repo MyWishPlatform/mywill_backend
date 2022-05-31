@@ -183,10 +183,18 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     @postponable
     def deploy(self):
         """
-        deploy _summary_
+        deploy - функция создания аккаунта и деплоя контракта
         
         для создания аккаунта нужен трансфер на 182 * 10**19 монет
         для создания, деплоя и инициализации нужно 222281 * 10 ** 19 монет
+        для удаления ключей нужно 40601225 * 10**12 ~ 5 * 10**19 монет
+        буду отправлять 24 * 10**23, чтобы гарантированно хватило
+        
+        Raises:
+            Exception:
+                - если не получилось создать аккаунт с помощью transfer()
+                - если завалится парсинг ключа из json файла
+                - если завалится деплой контракта на аккаунт
         """
         if self.contract.state not in ('CREATED', 'WAITING_FOR_DEPLOYMENT'):
             print('launch message ignored because already deployed', flush=True)
@@ -196,7 +204,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         # sending await transfer to new user account
         self.new_account()
         try:
-            tx_account_hash = mywish_account.send_money(self.admin_address, 222281 * 10**19)
+            tx_account_hash = mywish_account.send_money(self.admin_address, 23 * 10**23)
             print(f'account creation:\n{tx_account_hash}\n', flush=True)
         except Exception:
             traceback.print_exc()
@@ -229,10 +237,13 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         }
         print(args, flush=True)
 
-        tx_deploy_hash = near_account.deploy_and_init_contract_async(contract_code=self.near_contract.bytecode,
-                                                                     args=args,
-                                                                     gas=near_api.account.DEFAULT_ATTACHED_GAS,
-                                                                     init_method_name="new")
+        try:
+            tx_deploy_hash = near_account.deploy_and_init_contract_async(contract_code=self.near_contract.bytecode,
+                                                                         args=args,
+                                                                         gas=near_api.account.DEFAULT_ATTACHED_GAS,
+                                                                         init_method_name="new")
+        except Exception:
+            traceback.print_exc()
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
@@ -243,32 +254,45 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     @check_transaction
     def msg_deployed(self, message):
         pass
-    
+
     @postponable
     @check_transaction
     def burn_keys(self, message):
+        """
+        burn_keys - функция для сжигания ключей после деплоя контракта
+
+        Args:
+            message (_type_): _description_
+
+        Raises:
+            Exception:
+                - если завалится парсинг ключа из json файла
+                - если сжигание ключей не пройдет
+        """
         try:
             public_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.admin_address}.json',
-                              stdout=PIPE,
-                              stderr=STDOUT,
-                              check=True,
-                              shell=True)
+                             stdout=PIPE,
+                             stderr=STDOUT,
+                             check=True,
+                             shell=True)
         except Exception:
-            print('Error getting public key from Near Account json')
+            print('Error getting public key from Near Account json', flush=True)
             traceback.print_exc()
         else:
             public_key = public_key.stdout.decode('utf-8').split('"')[7].split(':')[1]
             if len(public_key) != 44:
                 raise Exception("Wrong public key provided")
-            
+
         try:
-            run(['near', 'delete-key', f'{self.admin_address}', f'{public_key}'], stdout=PIPE, stderr=STDOUT, check=True)
+            run(['near', 'delete-key', f'{self.admin_address}', f'{public_key}'],
+                stdout=PIPE,
+                stderr=STDOUT,
+                check=True)
         except Exception:
             print(f'Error burning key on Near Account {self.admin_address}', flush=True)
             traceback.print_exc()
-            
+
         print(f'Near Account {self.admin_address} keys burnt', flush=True)
-        
 
     def check_contract(self):
         pass
