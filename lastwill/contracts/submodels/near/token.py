@@ -153,12 +153,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
                 if not char:
                     break
                 bytecode.append(uint8(int.from_bytes(char, byteorder)))
-        with open(path.join(dest, 'near.token.rs'), 'rb') as f:
-            # не уверен нужен ли вообще, но пока пусть будет так
-            source_code = f.read().decode('utf-8-sig')
         near_contract = NearContract()
         near_contract.bytecode = bytecode
-        near_contract.source_code = source_code
         near_contract.contract = self.contract
         near_contract.save()
         self.near_contract = near_contract

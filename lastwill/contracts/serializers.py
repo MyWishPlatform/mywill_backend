@@ -2087,30 +2087,42 @@ class ContractDetailsSolanaTokenSerializer(ContractDetailsSolanaSerializer):
 
 
 class NearContractSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = EOSContract
-        fields = (
-            'id', 'address', 'source_code', 'abi',
-            'bytecode', 'compiler_version', 'constructor_arguments'
-        )
+        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version', 'constructor_arguments')
+
 
 class ContractDetailsNearTokenSerializer(ContractDetailsTokenSerializer):
+
     class Meta:
         model = ContractDetailsNearToken
-        fields = (
-            'token_name', 'token_short_name', 'decimals',
-            'admin_address', 'token_type', 'future_minting',
-            'maximum_supply'
-        )
-
-    def create(self, contract, contract_details):
-        pass
+        fields = ('token_name', 'token_short_name', 'owner_address', 'decimals', 'maximum_supply', 'future_minting')
 
     def validate(self, details):
-        pass
+        check.is_near_address(details['owner_address'])
+        details['decimals'] = int(details['decimals'])
+        if details['decimals'] < 0 or details['decimals'] > 24:
+            raise ValidationError
+        details['maximum_supply'] = int(details['maximum_supply'])
+        if details['maximum_supply'] < 0 or details['maximum_supply'] > 2**128 - 1:
+            raise ValidationError
+        if any([x in string.punctuation for x in details['token_name']]):
+            raise ValidationError
+        if any([x in string.punctuation for x in details['token_short_name']]):
+            raise ValidationError
 
     def to_representation(self, contract_details):
-        pass
+        res = super().to_representation(contract_details)
+        res['near_contract'] = NearContractSerializer().to_representation(contract_details.near_contract)
+        return res
+
+    def create(self, contract, contract_details):
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
 
     def update(self, contract, details, contract_details):
-        pass
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)

@@ -62,3 +62,6 @@ def is_eos_address(string):
 
 def is_eos_public(string):
     all(x in ascii_letters + digits for x in string) or die('{} is not a valid public key'.format(string))
+    
+def is_near_address(string):
+    re.match('^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$', string) or die('{} is not a valid near address'.format(string))
