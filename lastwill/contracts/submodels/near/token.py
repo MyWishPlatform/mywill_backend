@@ -20,8 +20,7 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
  - contract calls details
  - new_account()
  - deploy() (with compile() inside)
- - initialized() (with burn_keys())
- - msg_deployed() (with check_contract() to be 100% sure)
+ - initialized() (with burn_keys() and check_contract() to be 100% sure)
 
 пусть константы пока будут тут,
 чтобы было проще исправлять
@@ -232,67 +231,91 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
-        self.contract.state = 'ACTIVE'
+        self.contract.state = 'DONE'
         self.contract.save()
 
-    @postponable
-    @check_transaction
-    def msg_deployed(self, message):
-        # 'WAITING_ACTIVATION' state if keys not burnt
-        pass
-
-    @postponable
-    @check_transaction
-    def burn_keys(self, message):
+    def burn_keys(self):
         """
         burn_keys - функция для сжигания ключей после деплоя контракта
-
-        Args:
-            message (_type_): _description_
 
         Raises:
             Exception:
                 - если завалится парсинг ключа из json файла
                 - если сжигание ключей не пройдет
         """
-        if self.contract.state not in ('ACTIVE', 'ENDED'):
-            print('burning keys message ignored because state is not ACTIVE or ENDED', flush=True)
-            take_off_blocking(self.contract.network.name)
-            return
         try:
-            public_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
-                             stdout=PIPE,
-                             stderr=STDOUT,
-                             check=True,
-                             shell=True)
+            keys = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
+                       stdout=PIPE,
+                       stderr=STDOUT,
+                       check=True,
+                       shell=True)
         except Exception:
-            print('Error getting public key from Near Account json', flush=True)
+            print('Error getting keys from Near Account json')
             traceback.print_exc()
         else:
-            public_key = public_key.stdout.decode('utf-8').split('"')[7].split(':')[1]
+            private_key = keys.stdout.decode('utf-8').split('"')[11].split(':')[1]
+            public_key = keys.stdout.decode('utf-8').split('"')[7].split(':')[1]
+            if len(private_key) != 88:
+                raise Exception("Wrong private key provided")
             if len(public_key) != 44:
                 raise Exception("Wrong public key provided")
 
-        try:
-            run(['near', 'delete-key', f'{self.deploy_address}', f'{public_key}'],
-                stdout=PIPE,
-                stderr=STDOUT,
-                check=True)
-        except Exception:
-            print(f'Error burning key on Near Account {self.deploy_address}', flush=True)
-            traceback.print_exc()
+        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
-        print(f'Near Account {self.deploy_address} keys burnt', flush=True)
+        try:
+            tx_burn_hash = near_account.delete_access_key(public_key=public_key)
+        except Exception:
+            traceback.print_exc()
+        else:
+            tx_burn_hash = tx_burn_hash['transaction_outcome']['id']
+
+        print(f'Near Account {self.deploy_address} keys burnt\nTx_hash: {tx_burn_hash}', flush=True)
 
     def check_contract(self):
         # call ft_metadata and compare
         # also check access keys
         pass
 
+    @postponable
+    @check_transaction
     def initialized(self, message):
-        # changes to state 'ACTIVE'
-        # example in solana and eos
-        pass
+        """
+        initialized - финальная функция,
+        которая сжигает ключи и 
+        проверяет, что контракт был успешно задеплоен
+        
+        затем отправляет сообщение пользователю и боту
+        об успешности операции
+
+        Args:
+            message (_type_): _description_
+        """
+        if self.contract.state not in ('DONE'):
+            take_off_blocking(self.contract.network.name)
+            return
+
+        self.burn_keys()
+        self.check_contract()
+
+        self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.deployed_at = datetime.datetime.now()
+        self.contract.save()
+        if self.contract.user.email:
+            send_mail(common_subject, solana_token_text.format(addr=self.solana_contract.address), DEFAULT_FROM_EMAIL,
+                      [self.contract.user.email])
+            if not 'MAINNET' in self.contract.network.name:
+                send_testnet_gift_emails.delay(self.contract.user.profile.id)
+            else:
+                send_promo_mainnet.delay(self.contract.user.email)
+
+        msg = self.bot_message
+        transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
+
+    @postponable
+    @check_transaction
+    def msg_deployed(self, message):
+        # deprecated
+        return
 
     def get_arguments(self, eth_contract_attr_name='near_contract'):
-        return []
+        super().get_arguments('near_contract')
