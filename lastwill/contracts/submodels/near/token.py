@@ -16,10 +16,12 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 ПЕРВИЧНАЯ ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
 
 Как выглядит флоу:
-- мы создаем аккаунт пользователю в Near
-- деплоим на этот аккаунт контракт
-- генерируем ключи для пользователя и передаем их
-- свои ключи сжигаем
+ - create contract class
+ - contract calls details
+ - new_account()
+ - deploy() (with compile() inside)
+ - initialized() (with burn_keys())
+ - msg_deployed() (with check_contract() to be 100% sure)
 
 пусть константы пока будут тут,
 чтобы было проще исправлять
@@ -185,7 +187,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         # sending await transfer to new user account
         self.new_account()
         try:
-            tx_account_hash = mywish_account.send_money(self.deploy_address, 23 * 10**23)
+            tx_account_hash = mywish_account.send_money(self.deploy_address, 24 * 10**23)
             print(f'account creation:\n{tx_account_hash}\n', flush=True)
         except Exception:
             traceback.print_exc()
@@ -219,21 +221,24 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         print(args, flush=True)
 
         try:
-            tx_deploy_hash = near_account.deploy_and_init_contract_async(contract_code=self.near_contract.bytecode,
-                                                                         args=args,
-                                                                         gas=near_api.account.DEFAULT_ATTACHED_GAS,
-                                                                         init_method_name="new")
+            tx_deploy_hash = near_account.deploy_and_init_contract(contract_code=self.near_contract.bytecode,
+                                                                   args=args,
+                                                                   gas=near_api.account.DEFAULT_ATTACHED_GAS,
+                                                                   init_method_name="new")
         except Exception:
             traceback.print_exc()
+        else:
+            tx_deploy_hash = tx_deploy_hash['transaction_outcome']['id']
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
-        self.contract.state = 'WAITING_FOR_DEPLOYMENT'
+        self.contract.state = 'ACTIVE'
         self.contract.save()
 
     @postponable
     @check_transaction
     def msg_deployed(self, message):
+        # 'WAITING_ACTIVATION' state if keys not burnt
         pass
 
     @postponable
@@ -280,7 +285,14 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         print(f'Near Account {self.deploy_address} keys burnt', flush=True)
 
     def check_contract(self):
+        # call ft_metadata and compare
+        # also check access keys
         pass
 
     def initialized(self, message):
+        # changes to state 'ACTIVE'
+        # example in solana and eos
         pass
+
+    def get_arguments(self, eth_contract_attr_name='near_contract'):
+        return []
