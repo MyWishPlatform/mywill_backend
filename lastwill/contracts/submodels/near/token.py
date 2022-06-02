@@ -4,9 +4,11 @@ from random import choices
 from string import ascii_lowercase, digits
 from subprocess import PIPE, STDOUT, run
 from sys import byteorder
+from xml.dom import ValidationErr
 
 import base58
 import near_api
+from django.forms import ValidationError
 from numpy import uint8
 
 from lastwill.contracts.submodels.common import *
@@ -198,12 +200,12 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
                               check=True,
                               shell=True)
         except Exception:
-            print('Error getting private key from Near Account json')
+            print(f'Error getting private key from Near Account json {self.deploy_address}')
             traceback.print_exc()
         else:
             private_key = private_key.stdout.decode('utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
-                raise Exception("Wrong private key provided")
+                raise Exception(f"Wrong private key provided for account {self.deploy_address}")
         near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         self.compile()
@@ -212,8 +214,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             "total_supply": f"{self.maximum_supply}",
             "metadata": {
                 "spec": "ft-1.0.0",
-                "name": f"{self.token_name}",
-                "symbol": f"{self.token_short_name}",
+                "name": self.token_name,
+                "symbol": self.token_short_name,
                 "decimals": self.decimals
             }
         }
@@ -256,9 +258,9 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             private_key = keys.stdout.decode('utf-8').split('"')[11].split(':')[1]
             public_key = keys.stdout.decode('utf-8').split('"')[7].split(':')[1]
             if len(private_key) != 88:
-                raise Exception("Wrong private key provided")
+                raise ValidationError(f"Wrong private key provided for account {self.deploy_address}")
             if len(public_key) != 44:
-                raise Exception("Wrong public key provided")
+                raise ValidationError(f"Wrong public key provided for account {self.deploy_address}")
 
         near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
@@ -274,9 +276,49 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     def check_contract(self):
         # call ft_metadata and compare
         # also check access keys
-        pass
+        try:
+            keys = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
+                       stdout=PIPE,
+                       stderr=STDOUT,
+                       check=True,
+                       shell=True)
+        except Exception:
+            print('Error getting keys from Near Account json')
+            traceback.print_exc()
+        else:
+            private_key = keys.stdout.decode('utf-8').split('"')[11].split(':')[1]
+            if len(private_key) != 88:
+                raise ValidationError(f"Wrong private key provided for account {self.deploy_address}")
+
+        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+
+        try:
+            result = near_account.function_call(self,
+                                                contract_id=self.deploy_address,
+                                                method_name='ft_metadata',
+                                                args={},
+                                                gas=near_api.account.DEFAULT_ATTACHED_GAS)
+        except Exception:
+            print(f'Error function call ft_metadata() for {near_account.account_id}')
+            traceback.print_exc()
+        else:
+            if not (result['name'] == self.token_name and result['symbol'] == self.token_short_name and
+                    result['decimals'] == self.decimals):
+                raise ValidationError(f"Contract metadata is corrupted on account {self.deploy_address}")
+
+        try:
+            result = near_account._provider.get_access_key_list(account_id=self.deploy_address)
+        except Exception:
+            print(f'Error function call ft_metadata() for {near_account.account_id}')
+            traceback.print_exc()
+        else:
+            if not (result['keys'] == ''):
+                raise ValidationError(f"There are existing keys on account {self.deploy_address}")
+        
+        print(f'Contract {self.deploy_address} checked successfully', flush=True)
 
     @postponable
+    @blocking
     @check_transaction
     def initialized(self, message):
         """
