@@ -198,4 +198,38 @@ def delete_near_contract(request):
 
 @api_view(http_method_names=['GET'])
 def get_near_contracts(request):
-    pass
+    '''
+    get info about all user's near contracts
+    :param request: token, network_id
+    :return: balance
+    '''
+    token = request.META['HTTP_TOKEN']
+    log_action_name = 'get_near_contracts'
+    log_userinfo(log_action_name, token)
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    if 'limit' in request.data:
+        limit = int(request.data['limit'])
+    else:
+        limit = 8
+    log_additions(log_action_name, limit)
+    contracts = Contract.objects.filter(contract_type=40,
+                                        user=user,
+                                        network__name__in=['NEAR_MAINNET', 'NEAR_TESTNET'],
+                                        invisible=False)
+    contracts = contracts.order_by('-created_date')[0:limit]
+    answer = {'contracts': []}
+    for c in contracts:
+        contract_info = {
+            'contract_id': c.id,
+            'state': c.state,
+            'created_date': c.created_date,
+            'network': c.network.name,
+            'network_id': c.network.id,
+            'name': c.name,
+            'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
+        }
+        answer['contracts'].append(contract_info)
+    log_userinfo('get_near_contracts', token, user)
+    return JsonResponse(answer)
