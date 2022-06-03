@@ -13,6 +13,7 @@ from numpy import uint8
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
+
 """
 24.05.2022
 ПЕРВИЧНАЯ ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
@@ -211,7 +212,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         self.compile()
         args = {
             "owner_id": self.admin_address,
-            "total_supply": f"{self.maximum_supply}",
+            "total_supply": str(self.maximum_supply),
             "metadata": {
                 "spec": "ft-1.0.0",
                 "name": self.token_name,
@@ -320,13 +321,13 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         else:
             if not (result['keys'] == ''):
                 raise ValidationError(f"There are existing keys on account {self.deploy_address}")
-        
+
         print(f'Contract {self.deploy_address} checked successfully', flush=True)
 
     @postponable
     @blocking
     @check_transaction
-    def initialized(self, message):
+    def initialized(self):
         """
         initialized - финальная функция,
         которая сжигает ключи и 
@@ -334,9 +335,6 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         
         затем отправляет сообщение пользователю и боту
         об успешности операции
-
-        Args:
-            message (_type_): _description_
         """
         if self.contract.state not in ('DONE'):
             take_off_blocking(self.contract.network.name)
