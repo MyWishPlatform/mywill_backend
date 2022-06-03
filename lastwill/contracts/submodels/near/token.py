@@ -13,7 +13,6 @@ from numpy import uint8
 
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
-
 """
 24.05.2022
 ПЕРВИЧНАЯ ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
@@ -94,6 +93,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     # адрес аккаунта контракта
     deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS_NEAR, decimal_places=0, null=True)
+    token_type = models.CharField(max_length=32, default='NEP141')
     near_contract = models.ForeignKey(NearContract,
                                       null=True,
                                       default=None,

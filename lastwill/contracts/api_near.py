@@ -77,9 +77,9 @@ def create_near_contract(request):
 @api_view(http_method_names=['POST'])
 def deploy_near_contract(request):
     '''
-    view for deploy eth token
+    view for deploy near token
     :param request: contain contract id
-    :return:
+    :return: id, state
     '''
     token = request.META['HTTP_TOKEN']
     if not token:
@@ -134,12 +134,66 @@ def deploy_near_contract(request):
 
 @api_view(http_method_names=['GET'])
 def show_near_contract(request):
-    pass
+    '''
+    view for show near token
+    :param request: contain contract id
+    :return:
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    log_action_name = 'show_near_token'
+    log_userinfo(log_action_name, token, user)
+    contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
+    if contract.invisible:
+        raise ValidationError({'result': 'Contract is deleted'}, code=404)
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    contract_details = contract.get_details()
+    answer = {
+        'state': contract.state,
+        'contract_id': contract.id,
+        'created_date': contract.created_date,
+        'network': contract.network.name,
+        'network_id': contract.network.id,
+        'token_name': contract_details.token_name,
+        'token_short_name': contract_details.token_short_name,
+        'admin_address': contract_details.admin_address,
+        'deploy_address': contract_details.deploy_address,
+        'decimals': contract_details.decimals,
+        'maximum_supply': contract_details.maximum_supply,
+        'token_type': contract_details.token_type,
+        'future_minting': contract_details.future_minting
+    }
+    log_additions(log_action_name, {'contract_id': int(request.data['contract_id'])})
+    if contract_details.near_contract_token and contract_details.near_contract_token.tx_hash:
+        answer['tx_hash'] = contract_details.near_contract_token.tx_hash
+    if contract_details.near_contract_token and contract_details.near_contract_token.address:
+        answer['contract_address'] = contract_details.near_contract_token.address
+    return JsonResponse(answer)
 
 
 @api_view(http_method_names=['POST', 'DELETE'])
 def delete_near_contract(request):
-    pass
+    '''
+    delete near token
+    :param request: contain contract_id
+    :return: id
+    '''
+    token = request.META['HTTP_TOKEN']
+    if not token:
+        raise ValidationError({'result': 'Token not found'}, code=404)
+    user = get_user_for_token(token)
+    contract = Contract.objects.get(id=int(request.data['contract_id']))
+    log_userinfo('delete_cost_near_contract', token, user, int(request.data['contract_id']))
+    if contract.user != user:
+        raise ValidationError({'result': 'Wrong token'}, code=404)
+    if contract.contract_type != 40:
+        raise ValidationError({'result': 'Wrong contract id'}, code=404)
+    contract.invisible = True
+    contract.save()
+    return Response('Contract with id {id} deleted'.format(id=contract.id))
 
 
 @api_view(http_method_names=['GET'])
