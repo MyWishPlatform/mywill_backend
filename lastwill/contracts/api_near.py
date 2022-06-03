@@ -118,12 +118,16 @@ def deploy_near_contract(request):
         contract_details.deploy()
     except Exception:
         traceback.print_exc()
+        contract.state = 'POSTPONED'
+        contract.save()
         return HttpResponse(status=500)
     # проверяем успешность деплоя
     try:
         contract_details.initialized()
     except Exception:
         traceback.print_exc()
+        contract.state = 'POSTPONED'
+        contract.save()
         return HttpResponse(status=500)
     return Response({'id': contract.id, 'state': contract.state})
 
