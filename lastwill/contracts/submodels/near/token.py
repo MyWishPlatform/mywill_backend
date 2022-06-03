@@ -241,9 +241,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         burn_keys - функция для сжигания ключей после деплоя контракта
 
         Raises:
-            Exception:
-                - если завалится парсинг ключа из json файла
-                - если сжигание ключей не пройдет
+            ValidationError: завалился парсинг ключа из json файла
+            ValidationError: не получилось сжечь ключи
         """
         try:
             keys = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
@@ -274,8 +273,15 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         print(f'Near Account {self.deploy_address} keys burnt\nTx_hash: {tx_burn_hash}', flush=True)
 
     def check_contract(self):
-        # call ft_metadata and compare
-        # also check access keys
+        """
+        check_contract - функция проверки валидность контракта
+        и успешность транзакции сжигания ключей
+
+        Raises:
+            ValidationError: получен неверный ключ
+            ValidationError: контракт не совпадает
+            ValidationError: ключи не сожглись
+        """
         try:
             keys = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{self.deploy_address}.json',
                        stdout=PIPE,
