@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres
+    env_file: .env
+    volumes:
+      - ./.docker/postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      mywill_backend:
+  rabbitmq:
+    image: rabbitmq:3.8.11
+    env_file: .env
+    restart: unless-stopped
+    networks:
+      mywill_backend:
+  scanner:
+    env_file: .env
+    image: myw1sh/mywish_scanner
+    depends_on:
+      - db
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      mywill_backend:
+    ports:
+      - "${SCANNER_EXPOSE_PORT?8002}:${SCANNER_PORT?8002}"
+  signer:
+    env_file: .env
+    image: myw1sh/mywish_signer
+    depends_on:
+      - db
+    volumes:
+      - ./.docker/postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+  web:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - .:/app
+    ports:
+      - "${DOCKER_EXPOSE_PORT?8000}:${DJANGO_PORT?8000}"
+    restart: unless-stopped
+    command: "python manage.py runserver 0.0.0.0:${DJANGO_PORT?8000}"
+    #command: "gunicorn -c gunicorn.conf.py lastwill.wsgi:application"
+    networks:
+      mywill_backend:
+  receiver:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+      - web
+      - scanner
+    command: python receiver.py
+    networks:
+      - mywill_backend
+  celery:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - web
+      - rabbitmq
+    restart: unless-stopped
+    command: celery -A lastwill worker -B -l INFO
+    networks:
+      mywill_backend:
+  bot:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - web
+      - celery
+    restart: unless-stopped
+    command: python lastwill/telegram_bot/start_bot.py
+    networks:
+      mywill_backend:
+  checker:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - receiver
+      - web
+    restart: unless-stopped
+    command: "python checker.py"
+    networks:
+      mywill_backend:
+
+networks:
+  mywill_backend:

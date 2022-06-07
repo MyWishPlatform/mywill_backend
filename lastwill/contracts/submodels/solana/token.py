@@ -33,7 +33,8 @@ class SolanaContract(EthContract):
 
 
 class SolanaTokenLogo(models.Model):
-    logo = models.ImageField(upload_to=get_path)
+    # logo = models.ImageField(upload_to=get_path)
+    logo = models.ImageField(upload_to='')
     user_id = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE)
 
 
