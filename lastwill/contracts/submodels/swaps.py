@@ -1,14 +1,15 @@
 import random
-import string
 import smtplib
+import string
+
 from ethereum.utils import checksum_encode
 
-from lastwill.contracts.submodels.common import *
-from lastwill.settings import SITE_PROTOCOL, SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL
-from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 #from lastwill.swaps_common.models import UnifiedSwapsTable
 from email_messages import *
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS)
+from lastwill.contracts.submodels.common import *
+from lastwill.settings import (EMAIL_HOST_PASSWORD_SWAPS, EMAIL_HOST_USER_SWAPS, RUBIC_EXC_URL, RUBIC_FIN_URL,
+                               SITE_PROTOCOL, SWAPS_URL)
 
 
 def sendEMail(sub, text, mail):
@@ -17,10 +18,8 @@ def sendEMail(sub, text, mail):
     server.ehlo()
     server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
     message = "\r\n".join([
-        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
-        "To: {to}".format(to=mail),
-        "Subject: {sub}".format(sub=sub),
-        "",
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS), "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub), "",
         str(text)
     ])
     server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
@@ -36,9 +35,7 @@ def sendEMail(sub, text, mail):
 class InvestAddresses(models.Model):
     contract = models.ForeignKey(Contract)
     address = models.CharField(max_length=50)
-    amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
 
 
 @contract_details('SWAPS contract')
@@ -52,13 +49,11 @@ class ContractDetailsSWAPS(CommonDetails):
     owner_address = models.CharField(max_length=50, null=True, default=None)
     unique_link = models.CharField(max_length=50)
 
-    eth_contract = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='swaps_details',
-        on_delete=models.SET_NULL
-    )
+    eth_contract = models.ForeignKey(EthContract,
+                                     null=True,
+                                     default=None,
+                                     related_name='swaps_details',
+                                     on_delete=models.SET_NULL)
     temp_directory = models.CharField(max_length=36)
 
     base_amount_contributed = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0, null=True)
@@ -96,8 +91,7 @@ class ContractDetailsSWAPS(CommonDetails):
         return result
 
     def get_arguments(self, eth_contract_attr_name):
-        return [
-        ]
+        return []
 
     def compile(self, eth_contract_attr_name='eth_contract'):
         print('standalone token contract compile')
@@ -105,14 +99,16 @@ class ContractDetailsSWAPS(CommonDetails):
             print('already compiled')
             return
         dest, preproc_config = create_directory(self, sour_path='lastwill/swaps/*')
-        preproc_params = {"constants": {
-            "D_OWNER": checksum_encode(self.owner_address),
-            "D_BASE_ADDRESS": checksum_encode(self.base_address),
-            "D_BASE_LIMIT": str(int(self.base_limit)),
-            "D_QUOTE_ADDRESS": checksum_encode(self.quote_address),
-            "D_QUOTE_LIMIT": str(int(self.quote_limit)),
-            "D_EXPIRATION_TS": str(int(time.mktime(self.stop_date.timetuple())))
-        }}
+        preproc_params = {
+            "constants": {
+                "D_OWNER": checksum_encode(self.owner_address),
+                "D_BASE_ADDRESS": checksum_encode(self.base_address),
+                "D_BASE_LIMIT": str(int(self.base_limit)),
+                "D_QUOTE_ADDRESS": checksum_encode(self.quote_address),
+                "D_QUOTE_LIMIT": str(int(self.quote_limit)),
+                "D_EXPIRATION_TS": str(int(time.mktime(self.stop_date.timetuple())))
+            }
+        }
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile'.format(dest=dest)):
@@ -154,15 +150,11 @@ class ContractDetailsSWAPS(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
-                protocol=SITE_PROTOCOL,
-                unique_link=self.unique_link, url=SWAPS_URL
-            )
-            sendEMail(
-                swaps_deploed_subject,
-                swaps_deploed_message.format(swaps_link=swaps_link),
-                [self.contract.user.email]
-            )
+            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(protocol=SITE_PROTOCOL,
+                                                                          unique_link=self.unique_link,
+                                                                          url=SWAPS_URL)
+            sendEMail(swaps_deploed_subject, swaps_deploed_message.format(swaps_link=swaps_link),
+                      [self.contract.user.email])
         return res
 
     def finalized(self, message):
@@ -172,7 +164,6 @@ class ContractDetailsSWAPS(CommonDetails):
     def cancelled(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
-
 
     def deposit_swaps(self, message):
         msg_amount = message['amount']
@@ -222,29 +213,20 @@ class ContractDetailsSWAPS2(CommonDetails):
 
     order_id = models.IntegerField(null=True, default=None)
 
-    eth_contract = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='swaps2_details',
-        on_delete=models.SET_NULL
-    )
+    eth_contract = models.ForeignKey(EthContract,
+                                     null=True,
+                                     default=None,
+                                     related_name='swaps2_details',
+                                     on_delete=models.SET_NULL)
     temp_directory = models.CharField(max_length=36)
 
-    min_base_wei = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
-    min_quote_wei = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
+    min_base_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+    min_quote_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
     @postponable
     @check_transaction
     def msg_deployed(self, message):
-        link = ''.join(
-            random.choice(string.ascii_lowercase + string.digits) for _ in
-            range(6)
-        )
+        link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
         self.unique_link = link
         self.save()
         self.eth_contract = EthContract()
@@ -255,15 +237,11 @@ class ContractDetailsSWAPS2(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(
-                protocol=SITE_PROTOCOL,
-                unique_link=self.unique_link, url=SWAPS_URL
-            )
-            sendEMail(
-                swaps_deploed_subject,
-                swaps_deploed_message.format(swaps_link=swaps_link),
-                [self.contract.user.email]
-            )
+            swaps_link = '{protocol}://{url}/public/{unique_link}'.format(protocol=SITE_PROTOCOL,
+                                                                          unique_link=self.unique_link,
+                                                                          url=SWAPS_URL)
+            sendEMail(swaps_deploed_subject, swaps_deploed_message.format(swaps_link=swaps_link),
+                      [self.contract.user.email])
         save_to_common_list(self)
         return
 
@@ -288,4 +266,3 @@ class ContractDetailsSWAPS2(CommonDetails):
         #result = int(0.5 * NET_DECIMALS['ETH'])
         result = int(CONTRACT_PRICE_USDT['ETH_SWAPS'] * NET_DECIMALS['USDT'])
         return result
-

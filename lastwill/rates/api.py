@@ -1,7 +1,9 @@
+import sys
 import time
 import traceback
-import sys
+
 from celery import shared_task
+
 from lastwill.rates.models import Rate
 
 

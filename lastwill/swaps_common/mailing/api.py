@@ -10,16 +10,7 @@ def save_swaps_mail(request):
     telegram = request.data['telegram'] if 'telegram' in request.data else None
     name = request.data['email'] if 'email' in request.data else None
 
-    mail = SwapsMailing(
-            email=email,
-            telegram_name=telegram,
-            name=name
-    )
+    mail = SwapsMailing(email=email, telegram_name=telegram, name=name)
     mail.save()
 
-    return Response({
-        'id': mail.id,
-        'email': mail.email,
-        'telegram': mail.telegram_name,
-        'name': mail.name
-    })
+    return Response({'id': mail.id, 'email': mail.email, 'telegram': mail.telegram_name, 'name': mail.name})

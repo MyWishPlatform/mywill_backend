@@ -1,10 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    Promo,
-    User2Promo,
-    Promo2ContractType
-)
+from .models import Promo, Promo2ContractType, User2Promo
 
 
 # promo codes

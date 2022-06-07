@@ -2,25 +2,17 @@ import re
 from decimal import Decimal
 
 from django.db.models import Q
-from rest_framework.generics import (
-    ListAPIView,
-    CreateAPIView,
-    UpdateAPIView,
-    get_object_or_404,
-)
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import (CreateAPIView, ListAPIView, UpdateAPIView, get_object_or_404)
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_200_OK,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
+from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR)
+from rest_framework.viewsets import ModelViewSet
 
+from lastwill.swaps_common.tokentable.models import CoinGeckoToken
+
+from .models import PanamaTransaction
+from .serializers import UserTransactionSerializer
 from .services import create_swap
 from .status_request import get_status_by_id
-from .models import PanamaTransaction
-from lastwill.swaps_common.tokentable.models import CoinGeckoToken
-from .serializers import UserTransactionSerializer
 
 
 class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
@@ -50,28 +42,20 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
             from_amount = request.data['fromAmount']
             wallet_from_address = request.data['walletFromAddress']
             # response = create_swap(network, tx_hash)
-            response = create_swap(
-                from_network=network,
-                tx_id=tx_id,
-                from_amount=from_amount,
-                wallet_address=wallet_from_address
-            )
+            response = create_swap(from_network=network,
+                                   tx_id=tx_id,
+                                   from_amount=from_amount,
+                                   wallet_address=wallet_from_address)
 
             return Response(*response)
         elif swap_type == PanamaTransaction.SWAP_PANAMA:
             try:
                 transaction_id = request.data.get("transaction_id")
             except KeyError:
-                return Response(
-                    data='No wallet address has been passed.',
-                    status=HTTP_400_BAD_REQUEST
-                )
+                return Response(data='No wallet address has been passed.', status=HTTP_400_BAD_REQUEST)
 
             if PanamaTransaction.objects.filter(transaction_id=transaction_id).exists():
-                return Response(
-                    data='This transaction has been exists in database.',
-                    status=HTTP_400_BAD_REQUEST
-                )
+                return Response(data='This transaction has been exists in database.', status=HTTP_400_BAD_REQUEST)
 
             transactionFullInfo = get_status_by_id(transaction_id)
 
@@ -139,9 +123,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
         queryset = self.filter_queryset(self.get_queryset())
 
         if wallet_address:
-            queryset = queryset.filter(
-                wallet_from_address = wallet_address.lower()
-            )
+            queryset = queryset.filter(wallet_from_address=wallet_address.lower())
         else:
             return Response([])
 
@@ -163,10 +145,7 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
             else:
                 token["code"] = 1  # yellow
 
-            token["status"] = re.sub(
-                r"(\w)([A-Z])", r"\1 \2",
-                token.get("status")
-            ).capitalize()
+            token["status"] = re.sub(r"(\w)([A-Z])", r"\1 \2", token.get("status")).capitalize()
 
             if tokenInfo is None:
                 tokenInfo=CoinGeckoToken.objects \
@@ -176,11 +155,10 @@ class UserTransactionsView(ListAPIView, CreateAPIView, UpdateAPIView):
                     ) \
                     .last()
             if tokenInfo is None:
-                token["image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
+                token[
+                    "image_link"] = 'https://raw.githubusercontent.com/MyWishPlatform/etherscan_top_tokens_images/master/fa-empire.png'
             else:
-                token["image_link"] = request.build_absolute_uri(
-                    tokenInfo.image_file.url
-                )
+                token["image_link"] = request.build_absolute_uri(tokenInfo.image_file.url)
             # token["actualFromAmount"] = str(
             #     Decimal(token.get("actualFromAmount")).normalize()
             # )

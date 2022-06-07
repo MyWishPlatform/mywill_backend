@@ -1,8 +1,8 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
-from lastwill.profile.models import SubSite
 from lastwill.consts import MAX_WEI_DIGITS
+from lastwill.profile.models import SubSite
 
 
 class InternalPayment(models.Model):
@@ -14,7 +14,7 @@ class InternalPayment(models.Model):
     original_delta = models.CharField(max_length=66, null=True, default='')
     site = models.ForeignKey(SubSite)
     fake = models.BooleanField(default=False)
-    
+
     def __str__(self):
         return f"{self.user.__str__()} from {self.site.site_name} payment"
 
@@ -37,4 +37,3 @@ class FreezeBalance(models.Model):
 
     def __str__(self):
         return f"ID {self.id}"
-

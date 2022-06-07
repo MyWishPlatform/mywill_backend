@@ -1,15 +1,14 @@
 import datetime
 
-from django.db import models
-
 from django.core.mail import send_mail
+from django.db import models
 from django.utils import timezone
+from lxml.html import etree, fromstring, parse
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.submodels.common import *
 from email_messages import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
-from lxml.html import parse, fromstring, etree
+from lastwill.consts import CONTRACT_PRICE_USDT, NET_DECIMALS
+from lastwill.contracts.submodels.common import *
 
 
 def get_parsing_tokenholdings(address):
@@ -52,23 +51,14 @@ def get_tokenholdings_page(address, page):
             except IndexError:
                 name = 'Erc20 ({sym})'.format(sym=symbol)
             token_addr = el[1][1][0].text_content()
-            res.append(
-                {
-                    'tokenInfo':
-                        {
-                            'address': token_addr,
-                            'symbol': symbol,
-                            'name': name
-                        },
-                    'balance': amount
-                }
-            )
+            res.append({'tokenInfo': {'address': token_addr, 'symbol': symbol, 'name': name}, 'balance': amount})
         return res
     else:
         return []
 
 
 class AbstractContractDetailsLostKey(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -95,7 +85,7 @@ class AbstractContractDetailsLostKey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            2 ** 256 - 1,
+            2**256 - 1,
             0,
         ]
 
@@ -106,19 +96,14 @@ class AbstractContractDetailsLostKey(CommonDetails):
     def min_cost(cls):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
         now = datetime.datetime.now()
-        cost = cls.calc_cost({
-            'check_interval': 1,
-            'heirs': [],
-            'active_to': now
-        }, network)
+        cost = cls.calc_cost({'check_interval': 1, 'heirs': [], 'active_to': now}, network)
         return cost
 
     @staticmethod
     def calc_cost(kwargs, network):
         if NETWORKS[network.name]['is_free']:
             return 0
-        heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(
-            kwargs['heirs'])
+        heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         active_to = kwargs['active_to']
         if isinstance(active_to, str):
             if 'T' in active_to:
@@ -135,9 +120,7 @@ class AbstractContractDetailsLostKey(CommonDetails):
         DBg = 9646
         B = heirs_num
         Cc = 124852
-        DxC = max(abs((
-                              datetime.date.today() - active_to).total_seconds() / check_interval),
-                  1)
+        DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
         # return 2 * int(
         #     Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (
@@ -149,8 +132,7 @@ class AbstractContractDetailsLostKey(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         super().msg_deployed(message)
-        self.next_check = timezone.now() + datetime.timedelta(
-            seconds=self.check_interval)
+        self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
     @check_transaction
@@ -178,22 +160,12 @@ class AbstractContractDetailsLostKey(CommonDetails):
             if heir.email:
                 send_mail(
                     heir_subject,
-                    heir_message.format(
-                        user_address=heir.address,
-                        link_tx=link.format(tx=message['transactionHash'])
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [heir.email]
-                )
+                    heir_message.format(user_address=heir.address, link_tx=link.format(tx=message['transactionHash'])),
+                    DEFAULT_FROM_EMAIL, [heir.email])
         self.contract.state = 'TRIGGERED'
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                carry_out_subject,
-                carry_out_message,
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+            send_mail(carry_out_subject, carry_out_message, DEFAULT_FROM_EMAIL, [self.contract.user.email])
 
     def get_gaslimit(self):
         Cg = 3200000
@@ -212,6 +184,7 @@ class ContractDetailsLostKey(AbstractContractDetailsLostKey):
 
 
 class AbstractContractDetailsLostKeyTokens(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -221,13 +194,11 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     temp_directory = models.CharField(max_length=36)
-    eth_contract = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='eth_lostkey_details',
-        on_delete=models.SET_NULL
-    )
+    eth_contract = models.ForeignKey(EthContract,
+                                     null=True,
+                                     default=None,
+                                     related_name='eth_lostkey_details',
+                                     on_delete=models.SET_NULL)
     email = models.CharField(max_length=256, null=True, default=None)
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
@@ -238,18 +209,13 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
         pass
 
     def get_arguments(self, *args, **kwargs):
-        return [
-        ]
+        return []
 
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
         now = datetime.datetime.now()
-        cost = cls.calc_cost({
-            'check_interval': 1,
-            'heirs': [],
-            'active_to': now
-        }, network)
+        cost = cls.calc_cost({'check_interval': 1, 'heirs': [], 'active_to': now}, network)
         return cost
 
     @staticmethod
@@ -275,19 +241,14 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
         triggerGas = 32000
         triggerGasPerHeir = 42000
         triggerGasPerToken = 18000
-        heirsCount = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(
-            kwargs['heirs'])
+        heirsCount = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
 
-        constructPrice = gasPrice * (
-                constructGas + heirsCount * constructGasPerHeir)
+        constructPrice = gasPrice * (constructGas + heirsCount * constructGasPerHeir)
 
-        checkCount = max(abs(
-            (datetime.date.today() - active_to).total_seconds() / check_interval
-        ), 1)
+        checkCount = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         checkPrice = checkGas * gasPrice * checkCount
 
-        triggerPrice = gasPrice * (
-                triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
+        triggerPrice = gasPrice * (triggerGas + triggerGasPerHeir * heirsCount + triggerGasPerToken * 400 * 2)
 
         # return constructPrice + checkPrice + triggerPrice
         return int(CONTRACT_PRICE_USDT['ETH_LOSTKEY_TOKENS'] * NET_DECIMALS['USDT'])
@@ -296,8 +257,7 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
     @check_transaction
     def msg_deployed(self, message):
         super().msg_deployed(message)
-        self.next_check = timezone.now() + datetime.timedelta(
-            seconds=self.check_interval)
+        self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
 
     @check_transaction
@@ -325,22 +285,12 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
             if heir.email:
                 send_mail(
                     heir_subject,
-                    heir_message.format(
-                        user_address=heir.address,
-                        link_tx=link.format(tx=message['transactionHash'])
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [heir.email]
-                )
+                    heir_message.format(user_address=heir.address, link_tx=link.format(tx=message['transactionHash'])),
+                    DEFAULT_FROM_EMAIL, [heir.email])
         self.contract.state = 'TRIGGERED'
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                carry_out_subject,
-                carry_out_message,
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+            send_mail(carry_out_subject, carry_out_message, DEFAULT_FROM_EMAIL, [self.contract.user.email])
 
     def get_gaslimit(self):
         Cg = 3200000
@@ -357,10 +307,9 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(
-            self, sour_path='lastwill/eth-lost-key-token/*',
-            config_name='c-preprocessor-config.json'
-        )
+        dest, preproc_config = create_directory(self,
+                                                sour_path='lastwill/eth-lost-key-token/*',
+                                                config_name='c-preprocessor-config.json')
         heirs = self.contract.heir_set.all()
         heirs_list = ','.join(map(lambda h: 'address(%s)' % h.address, heirs))
         heirs_percents = ','.join(map(lambda h: 'uint(%s)' % h.percentage, heirs))
@@ -376,8 +325,7 @@ class AbstractContractDetailsLostKeyTokens(CommonDetails):
             f.write(json.dumps(preproc_params))
         if os.system('cd {dest} && yarn compile'.format(dest=dest)):
             raise Exception('compiler for test error while deploying')
-        if os.system('cd {dest} && yarn test'.format(
-                dest=dest)):
+        if os.system('cd {dest} && yarn test'.format(dest=dest)):
             raise Exception('testing error')
 
         preproc_params["constants"]["D_TARGET"] = self.user_address

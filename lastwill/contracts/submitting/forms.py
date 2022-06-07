@@ -1,7 +1,8 @@
 from django import forms
-from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS
-from lastwill.contracts.serializers import ContractDetailsSWAPSSerializer
 from django.forms.widgets import TextInput
+
+from lastwill.contracts.serializers import ContractDetailsSWAPSSerializer
+from lastwill.contracts.submodels.swaps import ContractDetailsSWAPS
 
 
 class CommonSerializedContractForm(forms.ModelForm):
@@ -31,18 +32,12 @@ class ContractFormSWAPS(CommonSerializedContractForm):
 
     class Meta:
         model = ContractDetailsSWAPS
-        fields = ['base_address',
-                  'base_limit',
-                  'quote_address',
-                  'quote_limit',
-                  'stop_date',
-                  'public',
-                  'owner_address',
-                  'unique_link'
-                  ]
+        fields = [
+            'base_address', 'base_limit', 'quote_address', 'quote_limit', 'stop_date', 'public', 'owner_address',
+            'unique_link'
+        ]
 
     def clean_stop_date(self):
-            stop_date = self.cleaned_data['stop_date']
-            stop_date = str(stop_date.replace(tzinfo=None))[:-3]
-            return stop_date
-
+        stop_date = self.cleaned_data['stop_date']
+        stop_date = str(stop_date.replace(tzinfo=None))[:-3]
+        return stop_date

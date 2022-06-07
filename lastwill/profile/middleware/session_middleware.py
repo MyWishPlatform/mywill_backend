@@ -1,9 +1,9 @@
 import time
 
 from django.conf import settings
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.utils.cache import patch_vary_headers
 from django.utils.http import cookie_date
-from django.contrib.sessions.middleware import SessionMiddleware
 
 
 class CrossDomainSessionMiddleware:
@@ -33,6 +33,7 @@ class CrossDomainSessionMiddleware:
 
 
 class SessionHostDomainMiddleware(SessionMiddleware):
+
     def process_response(self, request, response):
         """
         If request.session was modified, or if the configuration is to save the
@@ -60,9 +61,11 @@ class SessionHostDomainMiddleware(SessionMiddleware):
                     request.session.save()
                     host = request.get_host().split(':')[0]
                     response.set_cookie(settings.SESSION_COOKIE_NAME,
-                            request.session.session_key, max_age=max_age,
-                            expires=expires, domain=host,
-                            path=settings.SESSION_COOKIE_PATH,
-                            secure=settings.SESSION_COOKIE_SECURE or None,
-                            httponly=settings.SESSION_COOKIE_HTTPONLY or None)
+                                        request.session.session_key,
+                                        max_age=max_age,
+                                        expires=expires,
+                                        domain=host,
+                                        path=settings.SESSION_COOKIE_PATH,
+                                        secure=settings.SESSION_COOKIE_SECURE or None,
+                                        httponly=settings.SESSION_COOKIE_HTTPONLY or None)
         return response
