@@ -1,45 +1,38 @@
 import datetime
 
-from ethereum import abi
-
-from django.db import models
-from django.db import transaction
-from django.core.mail import send_mail, EmailMessage
 from django.contrib.postgres.fields import JSONField
+from django.core.mail import EmailMessage, send_mail
+from django.db import models, transaction
 from django.utils import timezone
+from ethereum import abi
 from rest_framework.exceptions import ValidationError
 
+from email_messages import *
+from lastwill.consts import (AUTHIO_PRICE_USDT, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES,
+                             NET_DECIMALS, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT)
 from lastwill.contracts.submodels.common import *
 from lastwill.emails_api import send_verification_mail
-from lastwill.settings import AUTHIO_EMAIL, SUPPORT_EMAIL, MW_COPYRIGHT
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, \
-    CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT, WHITELABEL_PRICE_USDT
-from email_messages import *
+from lastwill.settings import AUTHIO_EMAIL, MW_COPYRIGHT, SUPPORT_EMAIL
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
+from mailings_tasks import send_promo_mainnet, send_testnet_gift_emails
 
 
 class AbstractContractDetailsICO(CommonDetails):
+
     class Meta:
         abstract = True
 
     sol_path = 'lastwill/contracts/contracts/ICO.sol'
 
-    soft_cap = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
-    hard_cap = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    soft_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
+    hard_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
     is_transferable_at_once = models.BooleanField(default=False)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
-    rate = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    rate = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     decimals = models.IntegerField()
     platform_as_admin = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
@@ -54,30 +47,22 @@ class AbstractContractDetailsICO(CommonDetails):
     verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
     verification_date_payment = models.DateField(null=True, default=None)
 
-    eth_contract_token = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='ico_details_token',
-        on_delete=models.SET_NULL
-    )
-    eth_contract_crowdsale = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='ico_details_crowdsale',
-        on_delete=models.SET_NULL
-    )
+    eth_contract_token = models.ForeignKey(EthContract,
+                                           null=True,
+                                           default=None,
+                                           related_name='ico_details_token',
+                                           on_delete=models.SET_NULL)
+    eth_contract_crowdsale = models.ForeignKey(EthContract,
+                                               null=True,
+                                               default=None,
+                                               related_name='ico_details_crowdsale',
+                                               on_delete=models.SET_NULL)
 
     reused_token = models.BooleanField(default=False)
     token_type = models.CharField(max_length=32, default='ERC20')
 
-    min_wei = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
-    max_wei = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
+    min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+    max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -114,53 +99,38 @@ class AbstractContractDetailsICO(CommonDetails):
         amount_bonuses = add_amount_bonuses(self)
         time_bonuses = add_time_bonuses(self)
         preproc_params = {'constants': {}}
-        preproc_params['constants'] = add_token_params(
-            preproc_params['constants'], self, token_holders,
-            not self.is_transferable_at_once,
-            self.continue_minting
-        )
-        preproc_params['constants'] = add_crowdsale_params(
-            preproc_params['constants'], self, time_bonuses, amount_bonuses
-        )
+        preproc_params['constants'] = add_token_params(preproc_params['constants'], self, token_holders,
+                                                       not self.is_transferable_at_once, self.continue_minting)
+        preproc_params['constants'] = add_crowdsale_params(preproc_params['constants'], self, time_bonuses,
+                                                           amount_bonuses)
         if self.min_wei:
-            preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(
-                int(self.min_wei))
+            preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(int(self.min_wei))
         if self.max_wei:
-            preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(
-                int(self.max_wei))
+            preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(int(self.max_wei))
 
         test_crowdsale_params(preproc_config, preproc_params, dest)
         address = NETWORKS[self.contract.network.name]['address']
-        preproc_params = add_real_params(
-            preproc_params, self.admin_address,
-            address, self.cold_wallet_address
-        )
+        preproc_params = add_real_params(preproc_params, self.admin_address, address, self.cold_wallet_address)
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        if os.system(
-                "/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
-                    dest=dest)
-        ):
+        if os.system("/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(dest=dest)):
             raise Exception('compiler error while deploying')
-        with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json'),
-                  'rb') as f:
+        with open(path.join(dest, 'build/contracts/TemplateCrowdsale.json'), 'rb') as f:
             crowdsale_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/TemplateCrowdsale.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        self.eth_contract_crowdsale = create_ethcontract_in_compile(
-            crowdsale_json['abi'], crowdsale_json['bytecode'][2:],
-            crowdsale_json['compiler']['version'], self.contract, source_code
-        )
+        self.eth_contract_crowdsale = create_ethcontract_in_compile(crowdsale_json['abi'],
+                                                                    crowdsale_json['bytecode'][2:],
+                                                                    crowdsale_json['compiler']['version'],
+                                                                    self.contract, source_code)
         if not self.reused_token:
-            with open(path.join(dest, 'build/contracts/MainToken.json'),
-                      'rb') as f:
+            with open(path.join(dest, 'build/contracts/MainToken.json'), 'rb') as f:
                 token_json = json.loads(f.read().decode('utf-8-sig'))
             with open(path.join(dest, 'build/MainToken.sol'), 'rb') as f:
                 source_code = f.read().decode('utf-8-sig')
-            self.eth_contract_token = create_ethcontract_in_compile(
-                token_json['abi'], token_json['bytecode'][2:],
-                token_json['compiler']['version'], self.contract, source_code
-            )
+            self.eth_contract_token = create_ethcontract_in_compile(token_json['abi'], token_json['bytecode'][2:],
+                                                                    token_json['compiler']['version'], self.contract,
+                                                                    source_code)
         self.save()
 
     @blocking
@@ -196,15 +166,15 @@ class AbstractContractDetailsICO(CommonDetails):
             gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
             print('nonce', nonce)
             print('transferOwnership message signed')
-            signed_data = sign_transaction(
-                address, nonce, 1000000,
-                dest=self.eth_contract_token.address,
-                contract_data=binascii.hexlify(tr.encode_function_call(
-                    'transferOwnership', [self.eth_contract_crowdsale.address]
-                )).decode(),
-                gas_price=int(gas_price * 1.2),
-                chain_id=chain_id
-            )
+            signed_data = sign_transaction(address,
+                                           nonce,
+                                           1000000,
+                                           dest=self.eth_contract_token.address,
+                                           contract_data=binascii.hexlify(
+                                               tr.encode_function_call('transferOwnership',
+                                                                       [self.eth_contract_crowdsale.address])).decode(),
+                                           gas_price=int(gas_price * 1.2),
+                                           chain_id=chain_id)
             self.eth_contract_token.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
             self.eth_contract_token.save()
             print('transferOwnership message sended')
@@ -251,16 +221,13 @@ class AbstractContractDetailsICO(CommonDetails):
         gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         print('nonce', nonce)
         print('init message signed')
-        signed_data = sign_transaction(
-            address, nonce,
-            gas_limit,
-            dest=self.eth_contract_crowdsale.address,
-            contract_data=binascii.hexlify(
-                tr.encode_function_call('init', [])
-            ).decode(),
-            gas_price=int(gas_price * 1.2),
-            chain_id=chain_id
-        )
+        signed_data = sign_transaction(address,
+                                       nonce,
+                                       gas_limit,
+                                       dest=self.eth_contract_crowdsale.address,
+                                       contract_data=binascii.hexlify(tr.encode_function_call('init', [])).decode(),
+                                       gas_price=int(gas_price * 1.2),
+                                       chain_id=chain_id)
         self.eth_contract_crowdsale.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract_crowdsale.save()
         print('init message sended')
@@ -286,18 +253,9 @@ class AbstractContractDetailsICO(CommonDetails):
         if self.contract.user.email:
             send_mail(
                 ico_subject,
-                ico_text.format(
-                    link1=network_link.format(
-                        address=self.eth_contract_token.address,
-                    ),
-                    link2=network_link.format(
-                        address=self.eth_contract_crowdsale.address
-                    ),
-                    network_name=network_name
-                ),
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+                ico_text.format(link1=network_link.format(address=self.eth_contract_token.address,),
+                                link2=network_link.format(address=self.eth_contract_crowdsale.address),
+                                network_name=network_name), DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
@@ -306,7 +264,10 @@ class AbstractContractDetailsICO(CommonDetails):
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
-                addresses=(self.eth_contract_token.address, self.eth_contract_crowdsale.address,),
+                addresses=(
+                    self.eth_contract_token.address,
+                    self.eth_contract_crowdsale.address,
+                ),
                 compiler=self.eth_contract_token.compiler_version,
                 files={
                     'token.sol': self.eth_contract_token.source_code,
@@ -344,6 +305,7 @@ class ContractDetailsICO(AbstractContractDetailsICO):
 
 
 class AbstractContractDetailsToken(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -352,13 +314,11 @@ class AbstractContractDetailsToken(CommonDetails):
     admin_address = models.CharField(max_length=50)
     decimals = models.IntegerField()
     token_type = models.CharField(max_length=32, default='ERC20')
-    eth_contract_token = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='token_details_token',
-        on_delete=models.SET_NULL
-    )
+    eth_contract_token = models.ForeignKey(EthContract,
+                                           null=True,
+                                           default=None,
+                                           related_name='token_details_token',
+                                           on_delete=models.SET_NULL)
     future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
@@ -410,10 +370,8 @@ class AbstractContractDetailsToken(CommonDetails):
         dest, preproc_config = create_directory(self)
         token_holders = self.contract.tokenholder_set.all()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
-        preproc_params['constants'] = add_token_params(
-            preproc_params['constants'], self, token_holders,
-            False, self.future_minting
-        )
+        preproc_params['constants'] = add_token_params(preproc_params['constants'], self, token_holders, False,
+                                                       self.future_minting)
         test_token_params(preproc_config, preproc_params, dest)
         preproc_params['constants']['D_CONTRACTS_OWNER'] = self.admin_address
         with open(preproc_config, 'w') as f:
@@ -427,10 +385,9 @@ class AbstractContractDetailsToken(CommonDetails):
             source_code = f.read().decode('utf-8-sig')
         if not self.white_label:
             source_code = MW_COPYRIGHT + source_code
-        self.eth_contract_token = create_ethcontract_in_compile(
-            token_json['abi'], token_json['bytecode'][2:],
-            token_json['compiler']['version'], self.contract, source_code
-        )
+        self.eth_contract_token = create_ethcontract_in_compile(token_json['abi'], token_json['bytecode'][2:],
+                                                                token_json['compiler']['version'], self.contract,
+                                                                source_code)
         self.save()
 
     @blocking
@@ -460,29 +417,22 @@ class AbstractContractDetailsToken(CommonDetails):
                 if th.freeze_date:
                     mint_info = mint_info + str(
                         datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
-            mail = EmailMessage(
-                subject=authio_subject,
-                body=authio_message.format(
-                    address=self.eth_contract_token.address,
-                    email=self.authio_email,
-                    token_name=self.token_name,
-                    token_short_name=self.token_short_name,
-                    token_type=self.token_type,
-                    decimals=self.decimals,
-                    mint_info=mint_info if mint_info else 'No',
-                    admin_address=self.admin_address,
-                    network=self.contract.network.name,
-                ),
-                from_email=DEFAULT_FROM_EMAIL,
-                to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
-            )
+            mail = EmailMessage(subject=authio_subject,
+                                body=authio_message.format(
+                                    address=self.eth_contract_token.address,
+                                    email=self.authio_email,
+                                    token_name=self.token_name,
+                                    token_short_name=self.token_short_name,
+                                    token_type=self.token_type,
+                                    decimals=self.decimals,
+                                    mint_info=mint_info if mint_info else 'No',
+                                    admin_address=self.admin_address,
+                                    network=self.contract.network.name,
+                                ),
+                                from_email=DEFAULT_FROM_EMAIL,
+                                to=[AUTHIO_EMAIL, SUPPORT_EMAIL])
             mail.send()
-            send_mail(
-                authio_google_subject,
-                authio_google_message,
-                DEFAULT_FROM_EMAIL,
-                [self.authio_email]
-            )
+            send_mail(authio_google_subject, authio_google_message, DEFAULT_FROM_EMAIL, [self.authio_email])
         if self.verification:
             send_verification_mail(
                 network=self.contract.network.name,
@@ -496,9 +446,7 @@ class AbstractContractDetailsToken(CommonDetails):
         return res
 
     def ownershipTransferred(self, message):
-        if self.eth_contract_token.original_contract.state not in (
-                'UNDER_CROWDSALE', 'ENDED'
-        ):
+        if self.eth_contract_token.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
             self.eth_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.eth_contract_token.original_contract.save()
 
@@ -506,8 +454,7 @@ class AbstractContractDetailsToken(CommonDetails):
         if self.eth_contract_token.original_contract.state != 'ENDED':
             self.eth_contract_token.original_contract.state = 'ENDED'
             self.eth_contract_token.original_contract.save()
-        if (self.eth_contract_token.original_contract.id !=
-                self.eth_contract_token.contract.id and
+        if (self.eth_contract_token.original_contract.id != self.eth_contract_token.contract.id and
                 self.eth_contract_token.contract.state != 'ENDED'):
             self.eth_contract_token.contract.state = 'ENDED'
             self.eth_contract_token.contract.save()

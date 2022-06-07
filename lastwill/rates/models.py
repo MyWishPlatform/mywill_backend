@@ -1,6 +1,7 @@
 import requests
 from django.db import models
-from lastwill.settings import COINGECKO_API_URL, COINGECKO_SYMBOLS, TEMP_SYMBOLS
+
+from lastwill.settings import (COINGECKO_API_URL, COINGECKO_SYMBOLS, TEMP_SYMBOLS)
 
 
 class RateException(Exception):

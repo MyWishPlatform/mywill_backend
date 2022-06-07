@@ -1,7 +1,7 @@
-import threading
-import traceback
 import sys
+import threading
 import time
+import traceback
 
 import telebot
 from django.db import IntegrityError
@@ -11,6 +11,7 @@ from lastwill.telegram_bot.models import BotSub
 
 
 class Bot(threading.Thread):
+
     def __init__(self, token):
         super().__init__()
         self.bot = telebot.TeleBot(token)

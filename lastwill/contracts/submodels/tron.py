@@ -1,24 +1,21 @@
 import datetime
-import base58
 import fcntl
 
-from django.db import models
-from django.db import transaction
-from django.core.mail import send_mail, EmailMessage
+import base58
+from django.core.mail import EmailMessage, send_mail
+from django.db import models, transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+from tronapi import HttpProvider, Tron
 
-from lastwill.contracts.submodels.common import *
+from lastwill.consts import (CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT)
 from lastwill.contracts.submodels.airdrop import AirdropAddress
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
+from lastwill.contracts.submodels.common import *
 from lastwill.emails_api import send_verification_mail
 from lastwill.settings import TRON_NODE
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
-
-from tronapi import Tron, HttpProvider
+from mailings_tasks import send_promo_mainnet, send_testnet_gift_emails
 from tron_wif.hex2wif import hex2tronwif
-
 
 
 def convert_address_to_hex(address):
@@ -42,11 +39,7 @@ def generate_tron_url(network):
 
 def instantiate_tronapi(pk, net):
     node_url = generate_tron_url(network=net)
-    tron = Tron(full_node=node_url,
-                solidity_node=node_url,
-                event_server=node_url,
-                private_key=pk
-                )
+    tron = Tron(full_node=node_url, solidity_node=node_url, event_server=node_url, private_key=pk)
     tron.private_key = pk
     tron.default_address = tron.address.from_private_key(tron.private_key).base58
     return tron
@@ -63,13 +56,11 @@ class ContractDetailsTRONToken(CommonDetails):
     admin_address = models.CharField(max_length=50)
     decimals = models.IntegerField()
     token_type = models.CharField(max_length=32, default='ERC20')
-    tron_contract_token = models.ForeignKey(
-        TRONContract,
-        null=True,
-        default=None,
-        related_name='token_details',
-        on_delete=models.SET_NULL
-    )
+    tron_contract_token = models.ForeignKey(TRONContract,
+                                            null=True,
+                                            default=None,
+                                            related_name='token_details',
+                                            on_delete=models.SET_NULL)
     future_minting = models.BooleanField(default=False)
     temp_directory = models.CharField(max_length=36)
 
@@ -133,10 +124,8 @@ class ContractDetailsTRONToken(CommonDetails):
                 th.address = convert_address_to_hex(th.address)
                 th.save()
         preproc_params = {"constants": {"D_ONLY_TOKEN": True}}
-        preproc_params['constants'] = add_token_params(
-            preproc_params['constants'], self, token_holders,
-            False, self.future_minting
-        )
+        preproc_params['constants'] = add_token_params(preproc_params['constants'], self, token_holders, False,
+                                                       self.future_minting)
         owner = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(
             self.admin_address)
         preproc_params['constants']['D_CONTRACTS_OWNER'] = owner
@@ -170,20 +159,17 @@ class ContractDetailsTRONToken(CommonDetails):
     def deploy(self, eth_contract_attr_name='eth_contract_token'):
         self.compile()
         print('deploy tron token')
-        
+
         # temporary fix
         write_flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL)
         write_blocking = write_flags & os.O_NONBLOCK
         if write_blocking != 0:
-            print('Blocking write mode detected. Resetting blocking flag, previous was:',
-                write_blocking, flush=True
-            )
+            print('Blocking write mode detected. Resetting blocking flag, previous was:', write_blocking, flush=True)
         fcntl.fcntl(1, fcntl.F_SETFL, 0)
-        
+
         abi = json.dumps(self.tron_contract_token.abi)
 
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
-
 
         contract = tron.trx.contract(
             abi=str(abi),
@@ -192,21 +178,19 @@ class ContractDetailsTRONToken(CommonDetails):
 
         print('contract: ', contract, flush=True)
 
-        res = contract.deploy(
-            consume_user_resource_percent=0,
-            fee_limit=1000000000,
-            call_value=0,
-            bandwidth_limit=1000000,
-            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            origin_energy_limit=100000000
-        )
+        res = contract.deploy(consume_user_resource_percent=0,
+                              fee_limit=1000000000,
+                              call_value=0,
+                              bandwidth_limit=1000000,
+                              owner_address='41' +
+                              convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+                              origin_energy_limit=100000000)
         # fcntl.fcntl(1, fcntl.F_SETFL, 0)
 
         print('deployed contract. address: {}, tx: {}'.format(res['txID'], res['contract_address']), flush=True)
 
         self.tron_contract_token.address = res['contract_address']
         self.tron_contract_token.save()
-
 
         sign = tron.trx.sign(res)
         print('signed tx: ', sign['signature'], flush=True)
@@ -222,7 +206,6 @@ class ContractDetailsTRONToken(CommonDetails):
             return
 
         raise ValidationError({'result': 1}, code=400)
-
 
     def msg_deployed(self, message, eth_contract_attr_name='eth_contract'):
         self.contract.state = 'ACTIVE'
@@ -252,9 +235,7 @@ class ContractDetailsTRONToken(CommonDetails):
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
-        if self.tron_contract_token.original_contract.state not in (
-                'UNDER_CROWDSALE', 'ENDED'
-        ):
+        if self.tron_contract_token.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
             self.tron_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.tron_contract_token.original_contract.save()
 
@@ -263,8 +244,7 @@ class ContractDetailsTRONToken(CommonDetails):
             self.tron_contract_token.original_contract.state = 'ENDED'
 
             self.tron_contract_token.original_contract.save()
-        if (self.tron_contract_token.original_contract.id !=
-                self.tron_contract_token.contract.id and
+        if (self.tron_contract_token.original_contract.id != self.tron_contract_token.contract.id and
                 self.tron_contract_token.contract.state != 'ENDED'):
             self.tron_contract_token.contract.state = 'ENDED'
             self.tron_contract_token.contract.save()
@@ -283,13 +263,11 @@ class ContractDetailsGameAssets(CommonDetails):
     admin_address = models.CharField(max_length=50)
     temp_directory = models.CharField(max_length=36)
     uri = models.CharField(max_length=2000)
-    tron_contract_token = models.ForeignKey(
-        TRONContract,
-        null=True,
-        default=None,
-        related_name='game_asset_details',
-        on_delete=models.SET_NULL
-    )
+    tron_contract_token = models.ForeignKey(TRONContract,
+                                            null=True,
+                                            default=None,
+                                            related_name='game_asset_details',
+                                            on_delete=models.SET_NULL)
 
     verification = models.BooleanField(default=False)
     verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
@@ -337,8 +315,8 @@ class ContractDetailsGameAssets(CommonDetails):
         dest, preproc_config = create_directory(self, sour_path='lastwill/game-assets-contract/*')
         owner = '0x' + self.admin_address[2:] if self.admin_address.startswith('41') else convert_address_to_hex(
             self.admin_address)
-        preproc_params = {"constants":
-            {
+        preproc_params = {
+            "constants": {
                 "D_NAME": self.token_name,
                 "D_SYMBOL": self.token_short_name,
                 "D_OWNER": owner,
@@ -381,14 +359,13 @@ class ContractDetailsGameAssets(CommonDetails):
 
         print('contract: ', contract, flush=True)
 
-        res = contract.deploy(
-            consume_user_resource_percent=0,
-            fee_limit=1000000000,
-            call_value=0,
-            bandwidth_limit=1000000,
-            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            origin_energy_limit=100000000
-        )
+        res = contract.deploy(consume_user_resource_percent=0,
+                              fee_limit=1000000000,
+                              call_value=0,
+                              bandwidth_limit=1000000,
+                              owner_address='41' +
+                              convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+                              origin_energy_limit=100000000)
 
         print('deployed contract. address: {}, tx: {}'.format(res['txID'], res['contract_address']), flush=True)
 
@@ -437,9 +414,7 @@ class ContractDetailsGameAssets(CommonDetails):
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     def ownershipTransferred(self, message):
-        if self.tron_contract_token.original_contract.state not in (
-                'UNDER_CROWDSALE', 'ENDED'
-        ):
+        if self.tron_contract_token.original_contract.state not in ('UNDER_CROWDSALE', 'ENDED'):
             self.tron_contract_token.original_contract.state = 'UNDER_CROWDSALE'
             self.tron_contract_token.original_contract.save()
 
@@ -447,8 +422,7 @@ class ContractDetailsGameAssets(CommonDetails):
         if self.tron_contract_token.original_contract.state != 'ENDED':
             self.tron_contract_token.original_contract.state = 'ENDED'
             self.tron_contract_token.original_contract.save()
-        if (self.tron_contract_token.original_contract.id !=
-                self.tron_contract_token.contract.id and
+        if (self.tron_contract_token.original_contract.id != self.tron_contract_token.contract.id and
                 self.tron_contract_token.contract.state != 'ENDED'):
             self.tron_contract_token.contract.state = 'ENDED'
             self.tron_contract_token.contract.save()
@@ -466,23 +440,18 @@ class ContractDetailsTRONAirdrop(CommonDetails):
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
     temp_directory = models.CharField(max_length=36)
-    tron_contract = models.ForeignKey(
-        TRONContract,
-        null=True,
-        default=None,
-        related_name='tron_airdrop_details',
-        on_delete=models.SET_NULL
-    )
+    tron_contract = models.ForeignKey(TRONContract,
+                                      null=True,
+                                      default=None,
+                                      related_name='tron_airdrop_details',
+                                      on_delete=models.SET_NULL)
 
     verification = models.BooleanField(default=False)
     verification_status = models.CharField(max_length=100, default='NOT_VERIFIED')
     verification_date_payment = models.DateField(null=True, default=None)
 
     def get_arguments(self, *args, **kwargs):
-        return [
-            self.admin_address,
-            self.token_address
-        ]
+        return [self.admin_address, self.token_address]
 
     def predeploy_validate(self):
         pass
@@ -562,14 +531,13 @@ class ContractDetailsTRONAirdrop(CommonDetails):
 
         print('contract: ', contract, flush=True)
 
-        res = contract.deploy(
-            consume_user_resource_percent=0,
-            fee_limit=1000000000,
-            call_value=0,
-            bandwidth_limit=1000000,
-            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            origin_energy_limit=100000000
-        )
+        res = contract.deploy(consume_user_resource_percent=0,
+                              fee_limit=1000000000,
+                              call_value=0,
+                              bandwidth_limit=1000000,
+                              owner_address='41' +
+                              convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+                              origin_energy_limit=100000000)
 
         print('deployed contract. address: {}, tx: {}'.format(res['txID'], res['contract_address']), flush=True)
 
@@ -591,19 +559,10 @@ class ContractDetailsTRONAirdrop(CommonDetails):
 
         raise ValidationError({'result': 1}, code=400)
 
-
     def airdrop(self, message):
         message['airdroppedAddresses'] = replace_0x(message['airdroppedAddresses'])
-        new_state = {
-            'COMMITTED': 'sent',
-            'PENDING': 'processing',
-            'REJECTED': 'added'
-        }[message['status']]
-        old_state = {
-            'COMMITTED': 'processing',
-            'PENDING': 'added',
-            'REJECTED': 'processing'
-        }[message['status']]
+        new_state = {'COMMITTED': 'sent', 'PENDING': 'processing', 'REJECTED': 'added'}[message['status']]
+        old_state = {'COMMITTED': 'processing', 'PENDING': 'added', 'REJECTED': 'processing'}[message['status']]
 
         ids = []
         for js in message['airdroppedAddresses']:
@@ -618,24 +577,20 @@ class ContractDetailsTRONAirdrop(CommonDetails):
             ).exclude(id__in=ids).first()
             if addr is None and message['status'] == 'COMMITTED':
                 old_state = 'added'
-                addr = AirdropAddress.objects.filter(
-                    address=address,
-                    amount=amount,
-                    contract=self.contract,
-                    active=True,
-                    state=old_state
-                ).exclude(id__in=ids).first()
+                addr = AirdropAddress.objects.filter(address=address,
+                                                     amount=amount,
+                                                     contract=self.contract,
+                                                     active=True,
+                                                     state=old_state).exclude(id__in=ids).first()
             if addr is None:
                 continue
 
             ids.append(addr.id)
 
         if len(message['airdroppedAddresses']) != len(ids):
-            print('=' * 40, len(message['airdroppedAddresses']), len(ids),
-                  flush=True)
+            print('=' * 40, len(message['airdroppedAddresses']), len(ids), flush=True)
         AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
-        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
-                                                   active=True).count() == 0:
+        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'), active=True).count() == 0:
             self.contract.state = 'ENDED'
             self.contract.save()
 
@@ -665,6 +620,7 @@ class ContractDetailsTRONAirdrop(CommonDetails):
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
+
 @contract_details('Tron Lost key contract')
 class ContractDetailsTRONLostkey(CommonDetails):
     user_address = models.CharField(max_length=50, null=True, default=None)
@@ -673,13 +629,11 @@ class ContractDetailsTRONLostkey(CommonDetails):
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
     temp_directory = models.CharField(max_length=36)
-    tron_contract = models.ForeignKey(
-        TRONContract,
-        null=True,
-        default=None,
-        related_name='tron_lostkey_details',
-        on_delete=models.SET_NULL
-    )
+    tron_contract = models.ForeignKey(TRONContract,
+                                      null=True,
+                                      default=None,
+                                      related_name='tron_lostkey_details',
+                                      on_delete=models.SET_NULL)
     email = models.CharField(max_length=256, null=True, default=None)
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
@@ -695,19 +649,14 @@ class ContractDetailsTRONLostkey(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            False if self.contract.network.name in
-                     ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
+            False if self.contract.network.name in ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
         ]
 
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='TRON_MAINNET')
         now = datetime.datetime.now()
-        cost = cls.calc_cost({
-            'check_interval': 1,
-            'heirs': [],
-            'active_to': now
-        }, network)
+        cost = cls.calc_cost({'check_interval': 1, 'heirs': [], 'active_to': now}, network)
         return cost
 
     @staticmethod
@@ -722,9 +671,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         elif isinstance(active_to, datetime.datetime):
             active_to = active_to.date()
         check_interval = int(kwargs['check_interval'])
-        checkCount = max(abs(
-            (datetime.date.today() - active_to).total_seconds() / check_interval
-        ), 1)
+        checkCount = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
 
         heirs_num = int(kwargs['heirs_num']) if 'heirs_num' in kwargs else len(kwargs['heirs'])
         constructEnergy = 1171716
@@ -740,21 +687,13 @@ class ContractDetailsTRONLostkey(CommonDetails):
         triggerEnergyPerHeir = 40000
         triggerEnergyPerToken = 40000
         tokensCount = 20
-        constructPrice = (
-                constructEnergy * energyPrice
-                + constructNet * netPrice
-                + heirs_num * (
-                        heirConstructAdditionEnergy * energyPrice
-                        + heirConstructAdditionNet * netPrice
-                )
-        )
+        constructPrice = (constructEnergy * energyPrice + constructNet * netPrice + heirs_num *
+                          (heirConstructAdditionEnergy * energyPrice + heirConstructAdditionNet * netPrice))
         checkPrice = ((checkEnergy * energyPrice + checkNet * netPrice)) * checkCount
-        triggerPrice = (
-                triggerEnergy * energyPrice + triggerNet
-                + netPrice + triggerEnergyPerHeir * energyPrice * heirs_num
-                + triggerEnergyPerToken * energyPrice * tokensCount
-        )
-        tron_cost = (constructPrice + checkPrice + triggerPrice) * 200 / 10 ** 6
+        triggerPrice = (triggerEnergy * energyPrice + triggerNet + netPrice +
+                        triggerEnergyPerHeir * energyPrice * heirs_num +
+                        triggerEnergyPerToken * energyPrice * tokensCount)
+        tron_cost = (constructPrice + checkPrice + triggerPrice) * 200 / 10**6
         result = int(CONTRACT_PRICE_USDT['TRON_LOSTKEY'] * NET_DECIMALS['USDT'])
         return result
 
@@ -777,8 +716,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
-        self.next_check = timezone.now() + datetime.timedelta(
-            seconds=self.check_interval)
+        self.next_check = timezone.now() + datetime.timedelta(seconds=self.check_interval)
         self.save()
         self.tron_contract.address = message['address']
         self.tron_contract.save()
@@ -788,13 +726,8 @@ class ContractDetailsTRONLostkey(CommonDetails):
             send_mail(
                 tron_deploy_subject,
                 tron_deploy_text.format(
-                    contract_type_name=self.contract.get_all_details_model()[
-                        self.contract.contract_type]['name'],
-                    network_name=network_name
-                ),
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+                    contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]['name'],
+                    network_name=network_name), DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
@@ -824,24 +757,13 @@ class ContractDetailsTRONLostkey(CommonDetails):
         heirs = Heir.objects.filter(contract=self.contract)
         for heir in heirs:
             if heir.email:
-                send_mail(
-                    heir_subject,
-                    heir_message.format(
-                        user_address=heir.address,
-                        link_tx=message['transactionHash']
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [heir.email]
-                )
+                send_mail(heir_subject,
+                          heir_message.format(user_address=heir.address, link_tx=message['transactionHash']),
+                          DEFAULT_FROM_EMAIL, [heir.email])
         self.contract.state = 'TRIGGERED'
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                carry_out_subject,
-                carry_out_message,
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+            send_mail(carry_out_subject, carry_out_message, DEFAULT_FROM_EMAIL, [self.contract.user.email])
 
     def get_gaslimit(self):
         Cg = 1270525
@@ -853,18 +775,16 @@ class ContractDetailsTRONLostkey(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(
-            self, sour_path='lastwill/tron-lost-key-token/*',
-            config_name='c-preprocessor-config.json'
-        )
+        dest, preproc_config = create_directory(self,
+                                                sour_path='lastwill/tron-lost-key-token/*',
+                                                config_name='c-preprocessor-config.json')
         owner = '0x' + self.user_address[2:] if self.user_address.startswith('41') else convert_address_to_hex(
             self.user_address)
         heirs = self.contract.heir_set.all()
-        heirs_list = ','.join(map(
-            lambda h: 'address(%s)' % '0x' + h.address[2:] if h.address.startswith(
-                '41') else 'address(%s)' % convert_address_to_hex(h.address),
-            heirs
-        ))
+        heirs_list = ','.join(
+            map(
+                lambda h: 'address(%s)' % '0x' + h.address[2:]
+                if h.address.startswith('41') else 'address(%s)' % convert_address_to_hex(h.address), heirs))
         heirs_percents = ','.join(map(lambda h: 'uint(%s)' % h.percentage, heirs))
         preproc_params = {'constants': {}}
         preproc_params["constants"]["D_TARGET"] = "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
@@ -910,14 +830,13 @@ class ContractDetailsTRONLostkey(CommonDetails):
 
         print('contract: ', contract, flush=True)
 
-        res = contract.deploy(
-            consume_user_resource_percent=0,
-            fee_limit=1000000000,
-            call_value=0,
-            bandwidth_limit=1000000,
-            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
-            origin_energy_limit=100000000
-        )
+        res = contract.deploy(consume_user_resource_percent=0,
+                              fee_limit=1000000000,
+                              call_value=0,
+                              bandwidth_limit=1000000,
+                              owner_address='41' +
+                              convert_address_to_hex(NETWORKS[self.contract.network.name]['address'])[2:],
+                              origin_energy_limit=100000000)
 
         print('deployed contract. address: {}, tx: {}'.format(res['txID'], res['contract_address']), flush=True)
 
@@ -939,7 +858,6 @@ class ContractDetailsTRONLostkey(CommonDetails):
 
         raise ValidationError({'result': 1}, code=400)
 
-
     @blocking
     def check_contract(self):
         tron = instantiate_tronapi(NETWORKS[self.contract.network.name]['private_key'], self.contract.network.name)
@@ -948,9 +866,7 @@ class ContractDetailsTRONLostkey(CommonDetails):
             contract_address=self.tron_contract.address,
             function_selector='check()',
             fee_limit=1000000000,
-            owner_address='41' + convert_address_to_hex(
-                NETWORKS[self.contract.network.name]['check_address'])[2:]
-        )
+            owner_address='41' + convert_address_to_hex(NETWORKS[self.contract.network.name]['check_address'])[2:])
 
         print('building tx: ', tx_builder, flush=True)
         tx = None

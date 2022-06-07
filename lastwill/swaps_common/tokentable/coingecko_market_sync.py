@@ -14,14 +14,12 @@
     - Подгружаются иконки к каждому НЕ скрытому токену. По-умолчанию в качестве иконки токену устанавливается fa-empire.png.
 
 """
-from requests import get
 from time import sleep
 
 from django.core.files.base import ContentFile
+from requests import get
 
-from lastwill.swaps_common.tokentable.models import (
-    CoinGeckoToken,
-)
+from lastwill.swaps_common.tokentable.models import CoinGeckoToken
 
 
 def push_request_to_coingecko(url, params=None):
@@ -62,7 +60,9 @@ def get_actual_tokens():
     return response
 
 
-def get_coingecko_token_id(tokens, exclude_token=['thorecoin', ]):
+def get_coingecko_token_id(tokens, exclude_token=[
+    'thorecoin',
+]):
     """
     Возвращает список идентификаторов крипто-токенов из CoinGecko.com.
 
@@ -80,12 +80,7 @@ def get_coingecko_token_id(tokens, exclude_token=['thorecoin', ]):
     return coingecko_id_list
 
 
-def get_token_market_data(
-    tokens,
-    start=0,
-    stop_slice=300,
-    timeout=5
-):
+def get_token_market_data(tokens, start=0, stop_slice=300, timeout=5):
     """
     Возвращает актуальные данные по крипто-токенам из CoinGecko.com.
 
@@ -121,9 +116,7 @@ def get_token_market_data(
             response = push_request_to_coingecko(target_url, params)
 
             if 'error' in response:
-                raise Exception(
-                    f'\nSending the request has been failed!\nError message: "{response["error"]}".'
-                )
+                raise Exception(f'\nSending the request has been failed!\nError message: "{response["error"]}".')
 
             result += response
             start = stop_slice
@@ -243,17 +236,11 @@ def format_marketdata():
                         'token_rank': token_rank,
                         'token_usd_price': token_usd_price,
                     }
-                    result.update(
-                        {
-                            token_data.get('token_short_title'): token_data
-                        }
-                    )
+                    result.update({token_data.get('token_short_title'): token_data})
 
                     del item
     except Exception as exception_error:
-        print(
-            'Error in format_marketdata: {}'.format(exception_error)
-        )
+        print('Error in format_marketdata: {}'.format(exception_error))
         return 0
 
     return result
@@ -302,11 +289,7 @@ def get_actual_coingecko_token_list(actual_tokens: dict) -> list:
             )
             actual_token_list.append(current_token)
     except (KeyError, Exception) as exception_error:
-        print(
-            'Error in get_actual_coingecko_token_list: {}.'.format(
-                exception_error
-            )
-        )
+        print('Error in get_actual_coingecko_token_list: {}.'.format(exception_error))
         return 0
 
     return actual_token_list
@@ -337,15 +320,9 @@ def refresh_token_visibility(actual_coingecko_token_list: list):
     # в БД. Нужно собрать записи, которые не попали по фильру и одним запросом
     # обновить им поле is_displayed на False.
     for _, token in enumerate(current_tokens):
-        if not (
-            token.title,
-            token.short_title
-        ) in actual_coingecko_token_list:
+        if not (token.title, token.short_title) in actual_coingecko_token_list:
             # token.update(is_displayed=False)
-            current_tokens.filter(
-                title=token.title,
-                short_title=token.short_title
-            ).update(is_displayed=False)
+            current_tokens.filter(title=token.title, short_title=token.short_title).update(is_displayed=False)
 
     return 1
 
@@ -363,9 +340,7 @@ def sync_data_with_db():
 
     actual_cg_tokens = get_current_coingecko_tokens()
 
-    print(
-        f'Total coingecko tokens has been founded: {len(data_for_sync)}.'
-    )
+    print(f'Total coingecko tokens has been founded: {len(data_for_sync)}.')
 
     counter = 0
     # TODO: Продумать вариант с сохранением объектов порционно, а не всем
@@ -378,25 +353,20 @@ def sync_data_with_db():
             token = data_for_sync.get(token_short_title)
 
             try:
-                cg_token = actual_cg_tokens.get(
-                    title=token_title,
-                    short_title=token_short_title
-                )
+                cg_token = actual_cg_tokens.get(title=token_title, short_title=token_short_title)
                 cg_token.platform = token.get('platform', '')
                 cg_token.address = token.get('address', '')
-                cg_token.source_image_link=token.get('token_image_link', '')
+                cg_token.source_image_link = token.get('token_image_link', '')
                 cg_token.token_rank = token.get('token_rank', 0)
                 cg_token.token_usd_price = token.get('token_usd_price', 0)
 
                 cg_token.save()
 
-                print(
-                    '{}. Token "{} ({})" has been updated successfully.'.format(
-                        counter,
-                        token.get('token_title'),
-                        token.get('token_short_title'),
-                    )
-                )
+                print('{}. Token "{} ({})" has been updated successfully.'.format(
+                    counter,
+                    token.get('token_title'),
+                    token.get('token_short_title'),
+                ))
             except CoinGeckoToken.DoesNotExist:
                 CoinGeckoToken.objects.create(
                     title=token.get('token_title'),
@@ -408,33 +378,23 @@ def sync_data_with_db():
                     usd_price=token.get('token_usd_price', 0),
                 )
 
-                print(
-                    '{}. Token "{} ({})" has been added successfully.'.format(
-                        counter,
-                        token.get('token_title'),
-                        token.get('token_short_title'),
-                    )
-                )
+                print('{}. Token "{} ({})" has been added successfully.'.format(
+                    counter,
+                    token.get('token_title'),
+                    token.get('token_short_title'),
+                ))
     except (TypeError, Exception) as exception_error:
-        print(
-            'Error in sync_data_with_db: {}'.format(exception_error)
-        )
+        print('Error in sync_data_with_db: {}'.format(exception_error))
         return 0
 
-    print(
-        'Total tokens has been refreshed: {}.\nToken market data has been synced at {}.'.format(
-            counter,
-            get_current_coingecko_tokens().last().updated_at
-        )
-    )
+    print('Total tokens has been refreshed: {}.\nToken market data has been synced at {}.'.format(
+        counter,
+        get_current_coingecko_tokens().last().updated_at))
 
     return 1
 
 
-def add_icon_to_token(
-    token_queryset=get_current_coingecko_tokens(),
-    timeout=0
-):
+def add_icon_to_token(token_queryset=get_current_coingecko_tokens(), timeout=0):
     """
         Скачивает и добавляет иконку токену.
     """
@@ -446,17 +406,10 @@ def add_icon_to_token(
                             .split('?')[0]
 
         if token.image_file.url.split('/')[-1] == 'fa-empire.png' and not icon_url == 'missing_large.png':
-            token.image_file.save(
-                name='cg_logo_{0}_{1}'.format(
-                    token.short_title,
-                    icon_name
-                ),
-                content=ContentFile(get(icon_url).content)
-            )
+            token.image_file.save(name='cg_logo_{0}_{1}'.format(token.short_title, icon_name),
+                                  content=ContentFile(get(icon_url).content))
 
-        print(
-            f'{counter}. Token "{token.short_title}" icon has been added successfully.'
-        )
+        print(f'{counter}. Token "{token.short_title}" icon has been added successfully.')
 
         if timeout:
             sleep(timeout)

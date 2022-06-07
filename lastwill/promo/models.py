@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from lastwill.consts import MAX_WEI_DIGITS
 
@@ -32,7 +32,6 @@ class Promo2ContractType(models.Model):
     promo = models.ForeignKey(Promo)
     contract_type = models.IntegerField()
     discount = models.IntegerField()
-    
+
     def __str__(self):
         return f"{self.promo.promo_str}"
-

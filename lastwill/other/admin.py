@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Sentence, ExternalService
+from .models import ExternalService, Sentence
 
 
 # other - emails etc.

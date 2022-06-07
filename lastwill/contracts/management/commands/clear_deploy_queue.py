@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
+
 from lastwill.deploy.models import *
+
 
 class Command(BaseCommand):
     help = 'Clear queue of all Deploy addresses'

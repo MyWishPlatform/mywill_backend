@@ -27,7 +27,7 @@ class TokensCoinMarketCap(models.Model):
     token_price = models.CharField(max_length=100, null=True, default=None)
     updated_at = models.DateTimeField(auto_now=True)
     is_native = models.BooleanField(default=False)
-    is_displayed=models.BooleanField(default=True)
+    is_displayed = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ['token_name', 'token_short_name']
@@ -66,36 +66,25 @@ class CoinGeckoToken(models.Model):
         blank=True,
     )
     decimals = models.PositiveIntegerField(default=18)
-    source_image_link = models.URLField(
-        max_length=512,
-        default='',
-        blank=True
-    )
+    source_image_link = models.URLField(max_length=512, default='', blank=True)
     image_file = models.ImageField(
         upload_to=f'token_images/',
         default='token_images/fa-empire.png',
         blank=True,
     )
     rank = models.IntegerField(default=0, blank=True)
-    usd_price = models.DecimalField(
-        max_digits=255,
-        decimal_places=15,
-        default=0,
-        blank=True
-    )
-    created_at=models.DateTimeField(auto_now_add=True)
-    updated_at=models.DateTimeField(auto_now=True)
-    is_native=models.BooleanField(default=False)
-    is_displayed=models.BooleanField(default=True)
-    used_in_iframe=models.BooleanField(default=False)
+    usd_price = models.DecimalField(max_digits=255, decimal_places=15, default=0, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_native = models.BooleanField(default=False)
+    is_displayed = models.BooleanField(default=True)
+    used_in_iframe = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'coingecko_tokens'
-        indexes = (
-            models.Index(
-                fields=['id', ]
-            ),
-        )
+        indexes = (models.Index(fields=[
+            'id',
+        ]),)
         unique_together = ['short_title', 'address', 'platform']
 
     def save(self, *args, **kwargs):

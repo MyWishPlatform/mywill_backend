@@ -1,7 +1,7 @@
-from neo.Wallets.Wallet import Wallet
 from neo.Implementations.Wallets.peewee.UserWallet import UserWallet
-from neo.SmartContract.Contract import Contract as WalletContract
 from neo.Settings import settings
+from neo.SmartContract.Contract import Contract as WalletContract
+from neo.Wallets.Wallet import Wallet
 
 
 class MyWallet(UserWallet):
@@ -29,8 +29,11 @@ class MyWallet(UserWallet):
     def IsSynced(self):
         return True
 
-    def FindUnspentCoinsByAssetAndTotal(
-            self, asset_id, amount, from_addr=None,
-            use_standard=False, watch_only_val=0, reverse=False
-    ):
+    def FindUnspentCoinsByAssetAndTotal(self,
+                                        asset_id,
+                                        amount,
+                                        from_addr=None,
+                                        use_standard=False,
+                                        watch_only_val=0,
+                                        reverse=False):
         return []

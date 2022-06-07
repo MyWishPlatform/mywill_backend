@@ -1,6 +1,7 @@
-from lastwill.contracts.submodels.lastwill import AbstractContractDetailsLastwill
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS)
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.contracts.submodels.lastwill import \
+    AbstractContractDetailsLastwill
 
 
 @contract_details('Binance Will contract')

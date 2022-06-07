@@ -19,11 +19,7 @@ class PanamaTransaction(models.Model):
         (SWAP_POLYGON, SWAP_POLYGON.capitalize()),
     )
 
-    type = models.CharField(
-        max_length=50,
-        verbose_name='Type',
-        choices=SWAP_TYPES
-    )
+    type = models.CharField(max_length=50, verbose_name='Type', choices=SWAP_TYPES)
     from_network = models.CharField(
         max_length=4,
         verbose_name='From network',
@@ -50,9 +46,7 @@ class PanamaTransaction(models.Model):
         max_length=ETH_TOKEN_ADDRESS_LENGTH,
         verbose_name='BSC symbol',
     )
-    update_time = models.DateTimeField(
-        verbose_name='Update time',
-    )
+    update_time = models.DateTimeField(verbose_name='Update time',)
     status = models.CharField(
         max_length=20,
         verbose_name='Status',

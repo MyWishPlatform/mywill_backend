@@ -1,34 +1,20 @@
 from django.contrib.admin import ModelAdmin, register
 
-from lastwill.swaps_common.tokentable.models import (
-    Tokens,
-    TokensCoinMarketCap,
-    CoinGeckoToken,
-    TokensUpdateTime
-)
-
 # New import 28.04.2022
 from lastwill.contracts.models import (
-    Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
-    NeoContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
-    ContractDetailsToken, ContractDetailsICO,
-    ContractDetailsAirdrop, AirdropAddress, TRONContract,
-    ContractDetailsLastwill, ContractDetailsLostKey,
-    ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
-    InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
-    ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
-    ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
-    ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
-    ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
-    ContractDetailsWavesSTO, CurrencyStatisticsCache,
-    ContractDetailsTokenProtector, ApprovedToken,
-    ContractDetailsBinanceLostKeyTokens, ContractDetailsBinanceToken, ContractDetailsBinanceDelayedPayment,
-    ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
-    ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
-    ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
-    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
-    ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ProtectorChecker
-)
+    AirdropAddress, ApprovedToken, Contract, ContractDetailsAirdrop, ContractDetailsBinanceAirdrop,
+    ContractDetailsBinanceDelayedPayment, ContractDetailsBinanceICO, ContractDetailsBinanceInvestmentPool,
+    ContractDetailsBinanceLastwill, ContractDetailsBinanceLostKey, ContractDetailsBinanceLostKeyTokens,
+    ContractDetailsBinanceToken, ContractDetailsDelayedPayment, ContractDetailsEOSAccount, ContractDetailsEOSAirdrop,
+    ContractDetailsEOSICO, ContractDetailsEOSToken, ContractDetailsEOSTokenSA, ContractDetailsGameAssets,
+    ContractDetailsHecoChainICO, ContractDetailsHecoChainToken, ContractDetailsICO, ContractDetailsInvestmentPool,
+    ContractDetailsLastwill, ContractDetailsLostKey, ContractDetailsLostKeyTokens, ContractDetailsMaticAirdrop,
+    ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMoonriverToken, ContractDetailsNeo,
+    ContractDetailsNeoICO, ContractDetailsSolanaToken, ContractDetailsToken, ContractDetailsTokenProtector,
+    ContractDetailsTRONAirdrop, ContractDetailsTRONLostkey, ContractDetailsTRONToken, ContractDetailsWavesSTO,
+    ContractDetailsXinFinToken, CurrencyStatisticsCache, EOSAirdropAddress, EOSContract, EOSTokenHolder, EthContract,
+    Heir, InvestAddress, NeoContract, ProtectorChecker, SolanaContract, TokenHolder, TRONContract, WhitelistAddress)
+from lastwill.swaps_common.tokentable.models import (CoinGeckoToken, Tokens, TokensCoinMarketCap, TokensUpdateTime)
 
 
 @register(Tokens)
@@ -56,9 +42,7 @@ class TokensModelAdmin(ModelAdmin):
         'token_short_name',
         'address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(TokensCoinMarketCap)
@@ -95,9 +79,7 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
         'token_platform',
         'token_address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(CoinGeckoToken)
@@ -144,9 +126,7 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         '=short_title',
         '=address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(TokensUpdateTime)
@@ -159,15 +139,9 @@ class TokensUpdateTimeModelAdmin(ModelAdmin):
         'id',
         'last_time_updated',
     )
-    list_filter = (
-        'last_time_updated',
-    )
-    search_fields = (
-        'id',
-    )
-    ordering = (
-        'id',
-    )
+    list_filter = ('last_time_updated',)
+    search_fields = ('id',)
+    ordering = ('id',)
 
 
 #######################
@@ -175,7 +149,6 @@ class TokensUpdateTimeModelAdmin(ModelAdmin):
 # New code 28.04.2022 #
 #                     #
 #######################
-
 
 
 # contracts
@@ -444,4 +417,3 @@ class ContractDetailsMoonriverTokenAdmin(ModelAdmin):
 @register(ContractDetailsSolanaToken)
 class ContractDetailsSolanaTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
-

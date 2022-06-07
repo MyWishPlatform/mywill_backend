@@ -1,19 +1,6 @@
 from django.db import models
 
 from .submodels.airdrop import *
-from .submodels.lastwill import *
-from .submodels.lostkey import *
-from .submodels.deffered import *
-from .submodels.ico import *
-from .submodels.neo import *
-from .submodels.common import *
-from .submodels.investment_pool import *
-from .submodels.eos import *
-from .submodels.eos_token_standalone import *
-from .submodels.tron import *
-from .submodels.swaps import *
-from .submodels.waves import *
-from .submodels.token_protector import *
 from .submodels.binance.airdrop import *
 from .submodels.binance.deffered import *
 from .submodels.binance.ico import *
@@ -22,14 +9,27 @@ from .submodels.binance.lastwill import *
 from .submodels.binance.lost_key import *
 from .submodels.binance.lost_key_tokens import *
 from .submodels.binance.token import *
-from .submodels.matic.token import *
-from .submodels.matic.ico import *
-from .submodels.matic.airdrop import *
-from .submodels.xinfin.token import *
-from .submodels.heco_chain.token import *
+from .submodels.common import *
+from .submodels.deffered import *
+from .submodels.eos import *
+from .submodels.eos_token_standalone import *
 from .submodels.heco_chain.ico import *
+from .submodels.heco_chain.token import *
+from .submodels.ico import *
+from .submodels.investment_pool import *
+from .submodels.lastwill import *
+from .submodels.lostkey import *
+from .submodels.matic.airdrop import *
+from .submodels.matic.ico import *
+from .submodels.matic.token import *
 from .submodels.moonriver.token import *
+from .submodels.neo import *
 from .submodels.solana.token import *
+from .submodels.swaps import *
+from .submodels.token_protector import *
+from .submodels.tron import *
+from .submodels.waves import *
+from .submodels.xinfin.token import *
 
 
 class CurrencyStatisticsCache(models.Model):
@@ -56,5 +56,3 @@ class CurrencyStatisticsCache(models.Model):
 
     def __str__(self):
         return f"Statistics id {self.id} on {self.updated_at}"
-
-

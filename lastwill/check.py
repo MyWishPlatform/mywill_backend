@@ -1,9 +1,10 @@
 import re
-import base58
 from string import ascii_letters, digits
+from typing import Union
+
+import base58
 from rest_framework.serializers import ValidationError
 from solana.publickey import PublicKey
-from typing import Union
 
 
 def die(message):
@@ -36,7 +37,7 @@ def is_solana_address(string: str) -> Union[bool, Exception]:
 
 
 def is_email(string):
-    # django.core.validators.validate_email does not eat emails without a dot 
+    # django.core.validators.validate_email does not eat emails without a dot
     # like user@localserver user@[IPv6:2001:db8::1] but angular does
     # EmailValidator has whitelist for domains, but not regex so whitelist=['.*'] does not work
     # so there custom simplified check

@@ -1,5 +1,6 @@
-from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
+
+from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 
 class OrderBookSwapsModelSerializer(ModelSerializer):

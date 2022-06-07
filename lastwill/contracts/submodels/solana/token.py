@@ -1,14 +1,16 @@
+from time import sleep
+
+from solana.keypair import Keypair
+from solana.publickey import PublicKey
+from solana.rpc.core import RPCException
 from spl.token.client import Token
 from spl.token.constants import TOKEN_PROGRAM_ID
 from spl.token.instructions import get_associated_token_address
-from solana.rpc.core import RPCException
-from solana.keypair import Keypair
-from solana.publickey import PublicKey
-from lastwill.settings import DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
-from lastwill.contracts.submodels.common import *
+
 from email_messages import solana_token_text
-from time import sleep
+from lastwill.consts import (CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT)
+from lastwill.contracts.submodels.common import *
+from lastwill.settings import DEFAULT_FROM_EMAIL, SOLANA_KEYPAIR
 
 
 def confirm_solana_tx(response, network):
@@ -86,8 +88,8 @@ class ContractDetailsSolanaToken(CommonDetails):
         key = Keypair.from_secret_key(bytes(SOLANA_KEYPAIR[0:32]))
         balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(conn)
         token, txn, payer, mint_account, opts = Token._create_mint_args(conn, key, key.public_key, self.decimals,
-                                                                        TOKEN_PROGRAM_ID,
-                                                                        owner, True, balance_needed, Token)
+                                                                        TOKEN_PROGRAM_ID, owner, True, balance_needed,
+                                                                        Token)
 
         response = conn.send_transaction(txn, payer, mint_account, opts=opts)
         print(f'tx hash = ', response["result"])
@@ -122,8 +124,7 @@ class ContractDetailsSolanaToken(CommonDetails):
                     holder_addr = PublicKey(th.address)
                     try:
                         associated_address, txn, payer, opts = tok_int._create_associated_token_account_args(
-                            holder_addr,
-                            skip_confirmation=True)
+                            holder_addr, skip_confirmation=True)
                         response = conn.send_transaction(txn, payer, opts=opts)
                         print(f'tx hash = ', response["result"])
                         confirm_solana_tx(response, self.contract.network)
@@ -153,12 +154,8 @@ class ContractDetailsSolanaToken(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                common_subject,
-                solana_token_text.format(addr=self.solana_contract.address),
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+            send_mail(common_subject, solana_token_text.format(addr=self.solana_contract.address), DEFAULT_FROM_EMAIL,
+                      [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
