@@ -23,7 +23,7 @@ def create_near_contract(request):
     '''
     view for create near token
     :param request: (admin_address, token_name, decimals,
-    token_short_name, maximum_supply, future_minting, network_id)
+    token_short_name, maximum_supply, network_id)
     :return: ok
     '''
     token = request.META['HTTP_TOKEN']
@@ -36,15 +36,18 @@ def create_near_contract(request):
     log_action_name = 'create_near_token'
     log_userinfo(log_action_name, token, user)
     network = Network.objects.get(id=int(request.data['network_id']))
-    check.is_near_address(request.data['admin_address'])
+    if int(request.data['network_id']) == 40:
+        check.is_near_address_testnet(request.data['admin_address'])
+    else:
+        check.is_near_address(request.data['admin_address'])
     if int(request.data['decimals']) < 0 or int(request.data['decimals']) > 64:
         raise ValidationError({'result': 'Wrong decimals'}, code=404)
-    # if request.data['token_type'] not in ['ERC20', 'ERC223']:
-    #     raise ValidationError({'result': 'Wrong token type'}, code=404)
+    if request.data['token_type'] not in ['NEP-141']:
+        raise ValidationError({'result': 'Wrong token type'}, code=404)
     validate_token_name(request.data['token_name'])
     validate_token_short_name(request.data['token_short_name'])
-    if request.data['future_minting'] not in [True, False]:
-        raise ValidationError({'result': 'Wrong future minting'}, code=404)
+    # if request.data['future_minting'] not in [True, False]:
+    #     raise ValidationError({'result': 'Wrong future minting'}, code=404)
     token_params = {
         'decimals': int(request.data['decimals']),
         'token_name': request.data['token_name'],
@@ -69,7 +72,7 @@ def create_near_contract(request):
         'network': contract.network.name,
         'network_id': contract.network.id,
         'decimals': contract_details.decimals,
-        'future_minting': contract_details.future_minting
+        'future_minting': contract_details.future_minting,
     }
     return Response(answer)
 

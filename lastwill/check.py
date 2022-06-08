@@ -65,3 +65,6 @@ def is_eos_public(string):
     
 def is_near_address(string):
     re.match('^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$', string) or re.match('^[a-fA-F\d]{64}$') or die('{} is not a valid near address'.format(string))
+
+def is_near_address_testnet(string):
+    re.match('^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$', string) and string[-8:] == '.testnet' or re.match('^[a-fA-F\d]{64}$') or die('{} is not a valid near address'.format(string))

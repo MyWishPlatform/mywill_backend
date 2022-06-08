@@ -20,7 +20,7 @@ from lastwill.contracts.submodels.near.token import ContractDetailsNearToken
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
-    NeoContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    NeoContract, NearContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
     ContractDetailsToken, ContractDetailsICO,
     ContractDetailsAirdrop, AirdropAddress, TRONContract,
     ContractDetailsLastwill, ContractDetailsLostKey,
@@ -2089,7 +2089,7 @@ class ContractDetailsSolanaTokenSerializer(ContractDetailsSolanaSerializer):
 class NearContractSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = EOSContract
+        model = NearContract
         fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version', 'constructor_arguments')
 
 

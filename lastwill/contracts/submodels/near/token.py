@@ -93,7 +93,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     # адрес аккаунта контракта
     deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS_NEAR, decimal_places=0, null=True)
-    token_type = models.CharField(max_length=32, default='NEP141')
+    token_type = models.CharField(max_length=32, default='NEP-141')
+    future_minting = models.BooleanField(default=True)
     near_contract = models.ForeignKey(NearContract,
                                       null=True,
                                       default=None,
@@ -364,4 +365,4 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         return
 
     def get_arguments(self, eth_contract_attr_name='near_contract'):
-        super().get_arguments('near_contract')
+        super().get_arguments(eth_contract_attr_name)
