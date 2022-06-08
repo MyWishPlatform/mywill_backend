@@ -21,6 +21,7 @@ MAIL_NETWORK = {
     'HECOCHAIN_TESTNET': 'HecoChainTest',
     'MOONRIVER_MAINNET': 'Moonriver',
     'SOLANA_TESTNET': 'Solana Testnet',
+    'NEAR_TESTNET': 'Near Testnet'
 }
 
 API_NETWORK = {
@@ -43,6 +44,7 @@ API_NETWORK = {
     'HECOCHAIN_TESTNET': 'HECOCHAIN_TESTNET',
     'MOONRIVER_MAINNET': 'MOONRIVER_MAINNET',
     'SOLANA_TESTNET': 'SOLANA_TESTNET',
+    'NEAR_TESTNET': 'NEAR_TESTNET',
 }
 
 NETWORK_SUBSITE = {
@@ -65,6 +67,7 @@ NETWORK_SUBSITE = {
     'HECOCHAIN_TESTNET': 1,
     'MOONRIVER_MAINNET': 1,
     'SOLANA_TESTNET': 1,
+    'NEAR_TESTNET': 1,
 
 }
 
@@ -299,10 +302,13 @@ AVAILABLE_CONTRACT_TYPES = {
     38: [
         {'contract_type': 39, 'contract_name': 'Token'}
     ],
+    40: [
+        {'contract_type': 40, 'contract_name': 'Token'}
+    ],
 }
 
 NETWORK_TYPES = {
-    'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36, 38],
+    'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36, 38, 40],
     'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37]
 }
 

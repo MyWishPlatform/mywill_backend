@@ -58,7 +58,7 @@ def create_near_contract(request):
     contract = Contract(state='CREATED', name='Contract', contract_type=40, network=network, cost=0, user=user)
     contract.save()
 
-    contract_details = ContractDetailsTokenSerializer().create(contract, token_params)
+    contract_details = ContractDetailsNearTokenSerializer().create(contract, token_params)
     answer = {
         'state': contract.state,
         'admin_address': contract_details.admin_address,
@@ -228,7 +228,7 @@ def get_near_contracts(request):
             'network': c.network.name,
             'network_id': c.network.id,
             'name': c.name,
-            'details': ContractDetailsEOSAccountSerializer(c.get_details()).data
+            'details': ContractDetailsNearTokenSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
     log_userinfo('get_near_contracts', token, user)
