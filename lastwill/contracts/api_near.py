@@ -28,7 +28,6 @@ def check_account_exists(admin_address: str):
     except near_api.providers.JsonProviderError:
         raise ValidationError('Admin address account does not exist')
     
-    
 
 @api_view(http_method_names=['POST'])
 def create_near_contract(request):

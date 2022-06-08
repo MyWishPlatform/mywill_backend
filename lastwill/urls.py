@@ -90,6 +90,13 @@ from lastwill.contracts.api_eth import (
     get_source_code_eth_token,
     show_eth_token
 )
+from lastwill.contracts.api_near import (
+    create_near_contract, 
+    delete_near_contract, 
+    deploy_near_contract, 
+    get_near_contracts, 
+    show_near_contract
+)
 from lastwill.main.views import (
     balance,
     eth2rub,
@@ -250,6 +257,11 @@ urlpatterns = [
     url(r'^api/deploy_eth_token/$', deploy_eth_token),
     url(r'^api/calculate_cost_eth_token/$', calculate_cost_eth_token_contract),
     url(r'^api/delete_eth_token/$', delete_eth_token_contract),
+    url(r'^api/create_near_token/$', create_near_contract),
+    url(r'^api/deploy_near_token/$', deploy_near_contract),
+    url(r'^api/show_near_token/$', show_near_contract),
+    url(r'^api/delete_near_token/$', delete_near_contract),
+    url(r'^api/get_near_tokens/$', get_near_contracts),
     url(r'^api/delete_all_api_tokens/$', delete_api_tokens),
     url(r'^api/get_source_code_eth_token/$', get_source_code_eth_token),
     url(r'^api/get_contract_price/$', get_contract_price),
