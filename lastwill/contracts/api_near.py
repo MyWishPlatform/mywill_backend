@@ -1,3 +1,5 @@
+import near_api
+
 from http import HTTPStatus
 from xmlrpc.client import ResponseError
 
@@ -15,8 +17,18 @@ from lastwill.contracts.api_eth import *
 from lastwill.contracts.models import *
 from lastwill.deploy.models import *
 from lastwill.profile.models import *
+from lastwill.contracts.submodels.near import init_account
 from lastwill.settings import MY_WISH_URL
 
+
+def check_account_exists(admin_address: str):
+    mywish_account = init_account()
+    try:
+        mywish_account._provider.get_account(admin_address)
+    except near_api.providers.JsonProviderError:
+        raise ValidationError('Admin address account does not exist')
+    
+    
 
 @api_view(http_method_names=['POST'])
 def create_near_contract(request):
@@ -38,8 +50,10 @@ def create_near_contract(request):
     network = Network.objects.get(id=int(request.data['network_id']))
     if int(request.data['network_id']) == 40:
         check.is_near_address_testnet(request.data['admin_address'])
+        check_account_exists(request.data['admin_address'])
     else:
         check.is_near_address(request.data['admin_address'])
+        check_account_exists(request.data['admin_address'])
     if int(request.data['decimals']) < 0 or int(request.data['decimals']) > 64:
         raise ValidationError({'result': 'Wrong decimals'}, code=404)
     if request.data['token_type'] not in ['NEP-141']:
