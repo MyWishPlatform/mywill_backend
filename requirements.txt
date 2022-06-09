@@ -124,6 +124,7 @@ neo-python-rpc==0.2.1
 neocore==0.5.6
 netaddr==0.8.0
 newtulipy==0.4.2
+numpy==1.21.4
 oauthlib==3.1.0
 orderedmultidict==1.0.1
 parsimonious==0.8.1
