@@ -10,7 +10,7 @@ from lastwill.swaps_common.tokentable.models import (
 # New import 28.04.2022
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
-    NeoContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    NeoContract, NearContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
     ContractDetailsToken, ContractDetailsICO,
     ContractDetailsAirdrop, AirdropAddress, TRONContract,
     ContractDetailsLastwill, ContractDetailsLostKey,
@@ -26,6 +26,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
+    ContractDetailsNearToken,
     ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
     ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ProtectorChecker
 )
@@ -220,6 +221,10 @@ class NeoContractAdmin(ModelAdmin):
 class SolanaContractAdmin(ModelAdmin):
     list_display = '__str__', 'address'
 
+@register(NearContract)
+class NearContractAdmin(ModelAdmin):
+    list_display = '__str__', 'address'
+
 
 @register(ContractDetailsToken)
 class ContractDetailsTokenAdmin(ModelAdmin):
@@ -329,6 +334,10 @@ class ContractDetailsEOSTokenSAAdmin(ModelAdmin):
 @register(ContractDetailsTRONToken)
 class ContractDetailsTRONTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+@register(ContractDetailsNearToken)
+class ContractDetailsNearTokenAdmin(ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'deploy_address', 'white_label'
 
 
 @register(ContractDetailsGameAssets)

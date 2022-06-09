@@ -29,6 +29,7 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 """
 # макси кол-во токенов U128 - 1
 # https://nomicon.io/Standards/Tokens/FungibleToken/Core#reference-level-explanation
+# не умещается (((((( заменил на BigIntegerField на 2**64
 MAX_WEI_DIGITS_NEAR = 2**128 - 1
 # длина всех адресов 64
 # https://nomicon.io/DataStructures/Account
@@ -104,7 +105,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     admin_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
     # адрес аккаунта контракта
     deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
-    maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS_NEAR, decimal_places=0, null=True)
+    maximum_supply = models.BigIntegerField()
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
     eth_contract_token = models.ForeignKey(
