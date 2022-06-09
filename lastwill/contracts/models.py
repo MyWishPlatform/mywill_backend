@@ -30,6 +30,7 @@ from .submodels.heco_chain.token import *
 from .submodels.heco_chain.ico import *
 from .submodels.moonriver.token import *
 from .submodels.solana.token import *
+from .submodels.near.token import *
 
 
 class CurrencyStatisticsCache(models.Model):

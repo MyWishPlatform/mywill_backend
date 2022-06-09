@@ -79,12 +79,24 @@ def generate_account_name():
     return result
 
 
-class NearContract(EthContract):
+class NearContract(models.Model):
     contract = models.ForeignKey(Contract, null=True, default=None)
-    original_contract = models.ForeignKey(Contract, null=True, default=None, related_name='orig_ethcontract')
-    # адрес контракта
+    original_contract = models.ForeignKey(
+        Contract, null=True, default=None, related_name='orig_nearcontract'
+    )
     address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
+    tx_hash = models.CharField(max_length=90, null=True, default=None)
 
+    source_code = models.TextField()
+    bytecode = models.TextField()
+    abi = JSONField(default={})
+    compiler_version = models.CharField(
+        max_length=200, null=True, default=None
+    )
+    constructor_arguments = models.TextField()
+
+    def __str__(self):
+        return self.contract.__str__()
 
 @contract_details('Near Token contract')
 class ContractDetailsNearToken(AbstractContractDetailsToken):
@@ -95,11 +107,13 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS_NEAR, decimal_places=0, null=True)
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
-    near_contract = models.ForeignKey(NearContract,
-                                      null=True,
-                                      default=None,
-                                      related_name='near_token_details',
-                                      on_delete=models.SET_NULL)
+    eth_contract_token = models.ForeignKey(
+                                        NearContract,
+                                        null=True,
+                                        default=None,
+                                        related_name='near_token_details_token',
+                                        on_delete=models.SET_NULL
+                                    )
 
     @blocking
     @postponable
@@ -162,7 +176,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         near_contract.bytecode = bytecode
         near_contract.contract = self.contract
         near_contract.save()
-        self.near_contract = near_contract
+        self.eth_contract_token = near_contract
         self.save()
 
     @blocking
@@ -224,7 +238,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         print(args, flush=True)
 
         try:
-            tx_deploy_hash = near_account.deploy_and_init_contract(contract_code=self.near_contract.bytecode,
+            tx_deploy_hash = near_account.deploy_and_init_contract(contract_code=self.eth_contract_token.bytecode,
                                                                    args=args,
                                                                    gas=near_api.account.DEFAULT_ATTACHED_GAS,
                                                                    init_method_name="new")
@@ -233,8 +247,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         else:
             tx_deploy_hash = tx_deploy_hash['transaction_outcome']['id']
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
-        self.near_contract.tx_hash = tx_deploy_hash
-        self.near_contract.save()
+        self.eth_contract_token.tx_hash = tx_deploy_hash
+        self.eth_contract_token.save()
         self.contract.state = 'DONE'
         self.contract.save()
 

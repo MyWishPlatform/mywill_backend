@@ -17,7 +17,7 @@ from lastwill.contracts.api_eth import *
 from lastwill.contracts.models import *
 from lastwill.deploy.models import *
 from lastwill.profile.models import *
-from lastwill.contracts.submodels.near import init_account
+from lastwill.contracts.submodels.near.token import init_account
 from lastwill.settings import MY_WISH_URL
 
 
