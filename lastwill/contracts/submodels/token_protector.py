@@ -19,7 +19,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     reserve_address = models.CharField(max_length=50)
     end_timestamp = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
     temp_directory = models.CharField(max_length=36)
     approving_time = models.IntegerField(null=True, default=None)
     month_mail_sent = models.BooleanField(default=False)

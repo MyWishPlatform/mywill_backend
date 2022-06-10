@@ -90,7 +90,7 @@ class OrderBookSwaps(models.Model):
 
     name = models.CharField(max_length=512, null=True, default='')
     memo_contract = models.CharField(max_length=70, null=True, default=_get_memo)
-    network = models.ForeignKey(Network, on_delete=models.PROTECT, related_name='orders', default=1)
+    network = models.ForeignKey(Network, related_name='orders', default=1, on_delete=models.PROTECT)
     contract_address = models.CharField(max_length=255, verbose_name='Contract address', default='')
     # base_coin_id = models.IntegerField(default=0)
     base_address = models.CharField(max_length=50, null=True, default='')
@@ -138,7 +138,7 @@ class OrderBookSwaps(models.Model):
     state_changed_at = models.DateTimeField(auto_now_add=True)
     whitelist = models.BooleanField(default=False)
     whitelist_address = models.CharField(max_length=50, null=True)
-    swap_ether_contract = models.ForeignKey(Contract, null=True)
+    swap_ether_contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
     is_exchange = models.BooleanField(default=False)
     notification = models.BooleanField(default=False)
     notification_email = models.CharField(max_length=50, null=True, default='')
