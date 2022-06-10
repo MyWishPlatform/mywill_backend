@@ -1,5 +1,5 @@
 from django.middleware import csrf
-from django.shortcuts import redirect, render_to_response
+from django.shortcuts import redirect, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -9,7 +9,7 @@ from lastwill.rates.api import rate
 
 def index(request):
     csrf_token = csrf.get_token(request)
-    return render_to_response('index.html', {'csrf_token': csrf_token, 'request': request})
+    return render(request, 'index.html', {'csrf_token': csrf_token, 'request': request})
 
 
 @api_view()

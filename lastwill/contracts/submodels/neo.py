@@ -45,7 +45,7 @@ class ContractDetailsNeo(CommonDetails):
 
     temp_directory = models.CharField(max_length=36, default='')
     parameter_list = JSONField(default={})
-    neo_contract = models.ForeignKey(NeoContract, null=True, default=None)
+    neo_contract = models.ForeignKey(NeoContract, null=True, default=None, on_delete=models.CASCADE)
     storage_area = models.BooleanField(default=False)
     token_name = models.CharField(max_length=50)
     token_short_name = models.CharField(max_length=10)
