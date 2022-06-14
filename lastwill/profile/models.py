@@ -4,7 +4,7 @@ from lastwill.consts import MAX_WEI_DIGITS
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
     eos_balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
     internal_address = models.CharField(max_length=50, null=True, default=None)
@@ -33,8 +33,8 @@ class SubSite(models.Model):
 
 
 class UserSiteBalance(models.Model):
-    user = models.ForeignKey(User)
-    subsite = models.ForeignKey(SubSite)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subsite = models.ForeignKey(SubSite, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
     eth_address = models.CharField(max_length=50, null=True, default=None)
     btc_address = models.CharField(max_length=50, null=True, default=None)
@@ -46,7 +46,7 @@ class UserSiteBalance(models.Model):
 
 
 class APIToken(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     token = models.CharField(max_length=36)
     comment = models.CharField(max_length=50, null=True, default=None)
     active = models.BooleanField(default=True)

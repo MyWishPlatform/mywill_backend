@@ -80,7 +80,7 @@ class AbstractContractDetailsLostKey(CommonDetails):
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
     transfer_threshold_wei = models.IntegerField(default=0)
     transfer_delay_seconds = models.IntegerField(default=0)
 

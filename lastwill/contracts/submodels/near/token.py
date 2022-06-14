@@ -81,9 +81,9 @@ def generate_account_name():
 
 
 class NearContract(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None)
+    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.SET_NULL)
     original_contract = models.ForeignKey(
-        Contract, null=True, default=None, related_name='orig_nearcontract'
+        Contract, null=True, default=None, related_name='orig_nearcontract', on_delete=models.SET_NULL
     )
     address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
     tx_hash = models.CharField(max_length=90, null=True, default=None)

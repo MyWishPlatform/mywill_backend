@@ -462,7 +462,7 @@ class ContractDetailsGameAssets(CommonDetails):
 
 @contract_details('Tron Airdrop contract')
 class ContractDetailsTRONAirdrop(CommonDetails):
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
     temp_directory = models.CharField(max_length=36)

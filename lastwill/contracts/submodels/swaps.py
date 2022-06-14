@@ -34,7 +34,7 @@ def sendEMail(sub, text, mail):
 
 
 class InvestAddresses(models.Model):
-    contract = models.ForeignKey(Contract)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     address = models.CharField(max_length=50)
     amount = models.DecimalField(
         max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True

@@ -19,7 +19,7 @@ class AbstractContractDetailsDelayedPayment(CommonDetails):
     user_address = models.CharField(max_length=50)
     recepient_address = models.CharField(max_length=50)
     recepient_email = models.CharField(max_length=200, null=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
 
     def predeploy_validate(self):
         now = timezone.now()

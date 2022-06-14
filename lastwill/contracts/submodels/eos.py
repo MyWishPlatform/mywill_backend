@@ -592,7 +592,7 @@ class ContractDetailsEOSICO(CommonDetails):
 
 
 class EOSAirdropAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     address = models.CharField(max_length=50, default=None)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
@@ -606,10 +606,10 @@ class EOSAirdropAddress(models.Model):
 
 class ContractDetailsEOSAirdrop(CommonDetails):
 
-    contract = models.ForeignKey(Contract, null=True)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
-    eos_contract = models.ForeignKey(EOSContract, null=True, default=None)
+    eos_contract = models.ForeignKey(EOSContract, null=True, default=None, on_delete=models.SET_NULL)
     token_short_name = models.CharField(max_length=64)
     address_count = models.IntegerField()
     memo = models.CharField(max_length=50, default='')

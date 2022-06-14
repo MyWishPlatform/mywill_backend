@@ -3,6 +3,7 @@ templates/.DS_Store
 templates/account/.DS_Store
 .DS_Store
 .idea/
+*.docker/
 **env/
 *env
 **__pycache__**
