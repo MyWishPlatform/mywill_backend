@@ -27,6 +27,6 @@ RUN apt -y install ./eosio_2.1.0-1-ubuntu-20.04_amd64.deb
 # npm для установки тулзы командной строки для near
 RUN apt -y install npm
 
-RUN npm install near-cli
+RUN npm install -g near-cli
 
 COPY . /app

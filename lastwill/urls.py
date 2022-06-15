@@ -17,6 +17,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.urls import re_path
 # from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
@@ -177,7 +178,7 @@ router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
 
 
 urlpatterns = [
-    url(r'^admin/', include(admin.site.urls)),
+    re_path(r'^admin/', admin.site.urls),
     url(r'^', include('django.contrib.auth.urls')),
     url(r'^reset', index),
     url(r'^api/', include(router.urls)),
