@@ -11,6 +11,7 @@ import near_api
 from django.forms import ValidationError
 from numpy import uint8
 
+from lastwill.consts import (CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT)
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 """
@@ -26,6 +27,10 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 
 пусть константы пока будут тут,
 чтобы было проще исправлять
+
+TODO:
+- использовать константы из consts.py и settings_local.py 
+- добавить логику обработки mainnet (сейчас хардкод testnet)
 """
 # макси кол-во токенов U128 - 1
 # https://nomicon.io/Standards/Tokens/FungibleToken/Core#reference-level-explanation
@@ -82,22 +87,23 @@ def generate_account_name():
 
 class NearContract(models.Model):
     contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.SET_NULL)
-    original_contract = models.ForeignKey(
-        Contract, null=True, default=None, related_name='orig_nearcontract', on_delete=models.SET_NULL
-    )
+    original_contract = models.ForeignKey(Contract,
+                                          null=True,
+                                          default=None,
+                                          related_name='orig_nearcontract',
+                                          on_delete=models.SET_NULL)
     address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
     tx_hash = models.CharField(max_length=90, null=True, default=None)
 
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
-    compiler_version = models.CharField(
-        max_length=200, null=True, default=None
-    )
+    compiler_version = models.CharField(max_length=200, null=True, default=None)
     constructor_arguments = models.TextField()
 
     def __str__(self):
         return self.contract.__str__()
+
 
 @contract_details('Near Token contract')
 class ContractDetailsNearToken(AbstractContractDetailsToken):
@@ -108,13 +114,28 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     maximum_supply = models.BigIntegerField()
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
-    eth_contract_token = models.ForeignKey(
-                                        NearContract,
-                                        null=True,
-                                        default=None,
-                                        related_name='near_token_details_token',
-                                        on_delete=models.SET_NULL
-                                    )
+    eth_contract_token = models.ForeignKey(NearContract,
+                                           null=True,
+                                           default=None,
+                                           related_name='near_token_details_token',
+                                           on_delete=models.SET_NULL)
+
+    @classmethod
+    def min_cost(cls):
+        network = Network.objects.get(name='NEAR_MAINNET')
+        cost = cls.calc_cost({}, network)
+        return cost
+
+    @staticmethod
+    def calc_cost(kwargs, network):
+        if NETWORKS[network.name]['is_free']:
+            return 0
+        price = CONTRACT_PRICE_USDT['NEAR_TOKEN']
+        if 'verification' in kwargs and kwargs['verification']:
+            price += VERIFICATION_PRICE_USDT
+        if 'white_label' in kwargs and kwargs['white_label']:
+            price += WHITELABEL_PRICE_USDT
+        return price * NET_DECIMALS['USDT']
 
     @blocking
     @postponable
@@ -201,7 +222,22 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
             print('launch message ignored because already deployed', flush=True)
             take_off_blocking(self.contract.network.name)
             return
-        mywish_account = init_account()
+
+        try:
+            private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/mywish.testnet.json',
+                              stdout=PIPE,
+                              stderr=STDOUT,
+                              check=True,
+                              shell=True)
+        except Exception:
+            print(f'Error getting private key from Near Account json mywish.testnet')
+            traceback.print_exc()
+        else:
+            private_key = private_key.stdout.decode('utf-8').split('"')[11].split(':')[1]
+            if len(private_key) != 88:
+                raise Exception(f"Wrong private key provided for account mywish.testnet")
+        mywish_account = init_account(private_key=private_key)
+
         # sending await transfer to new user account
         self.new_account()
         try:

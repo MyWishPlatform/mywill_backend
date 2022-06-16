@@ -1,8 +1,7 @@
-import near_api
-
 from http import HTTPStatus
 from xmlrpc.client import ResponseError
 
+import near_api
 from django.db.models import F
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -15,9 +14,9 @@ from lastwill.consts import *
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.api_eth import *
 from lastwill.contracts.models import *
+from lastwill.contracts.submodels.near.token import init_account
 from lastwill.deploy.models import *
 from lastwill.profile.models import *
-from lastwill.contracts.submodels.near.token import init_account
 from lastwill.settings import MY_WISH_URL
 
 
@@ -27,7 +26,7 @@ def check_account_exists(admin_address: str):
         mywish_account._provider.get_account(admin_address)
     except near_api.providers.JsonProviderError:
         raise ValidationError('Admin address account does not exist')
-    
+
 
 @api_view(http_method_names=['POST'])
 def create_near_contract(request):
