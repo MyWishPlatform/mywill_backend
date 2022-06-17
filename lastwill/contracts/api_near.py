@@ -36,9 +36,6 @@ def create_near_contract(request):
     token_short_name, maximum_supply, network_id)
     :return: ok
     '''
-    token = request.META['HTTP_TOKEN']
-    if not token:
-        raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     # потом добавить, если будем пилить мейннет
     if int(request.data['network_id']) not in [40]:
@@ -96,9 +93,6 @@ def deploy_near_contract(request):
     :param request: contain contract id
     :return: id, state
     '''
-    token = request.META['HTTP_TOKEN']
-    if not token:
-        raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
     log_action_name = 'deploy_eth_token'
@@ -154,9 +148,6 @@ def show_near_contract(request):
     :param request: contain contract id
     :return:
     '''
-    token = request.META['HTTP_TOKEN']
-    if not token:
-        raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     log_action_name = 'show_near_token'
     log_userinfo(log_action_name, token, user)
@@ -196,9 +187,6 @@ def delete_near_contract(request):
     :param request: contain contract_id
     :return: id
     '''
-    token = request.META['HTTP_TOKEN']
-    if not token:
-        raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     contract = Contract.objects.get(id=int(request.data['contract_id']))
     log_userinfo('delete_cost_near_contract', token, user, int(request.data['contract_id']))
@@ -218,11 +206,8 @@ def get_near_contracts(request):
     :param request: token, network_id
     :return: balance
     '''
-    token = request.META['HTTP_TOKEN']
     log_action_name = 'get_near_contracts'
     log_userinfo(log_action_name, token)
-    if not token:
-        raise ValidationError({'result': 'Token not found'}, code=404)
     user = get_user_for_token(token)
     if 'limit' in request.data:
         limit = int(request.data['limit'])
