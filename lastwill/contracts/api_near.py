@@ -36,12 +36,12 @@ def create_near_contract(request):
     token_short_name, maximum_supply, network_id)
     :return: ok
     '''
-    user = get_user_for_token(token)
+    if request.user.is_anonymous:
+        return HttpResponse(status=403)
+    user = request.user
     # потом добавить, если будем пилить мейннет
     if int(request.data['network_id']) not in [40]:
         raise ValidationError({'result': 'Wrong network id'}, code=404)
-    log_action_name = 'create_near_token'
-    log_userinfo(log_action_name, token, user)
     network = Network.objects.get(id=int(request.data['network_id']))
     if int(request.data['network_id']) == 40:
         check.is_near_address_testnet(request.data['admin_address'])
@@ -93,11 +93,10 @@ def deploy_near_contract(request):
     :param request: contain contract id
     :return: id, state
     '''
-    user = get_user_for_token(token)
+    if request.user.is_anonymous:
+        return HttpResponse(status=403)
+    user = request.user
     contract = Contract.objects.get(id=int(request.data.get('contract_id')))
-    log_action_name = 'deploy_eth_token'
-    contract_id = int(request.data.get('contract_id'))
-    log_userinfo(log_action_name, token, user, contract_id)
     if contract.user != user:
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.invisible:
@@ -105,7 +104,6 @@ def deploy_near_contract(request):
     if contract.state != 'CREATED':
         raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     contract_details = contract.get_details()
-    log_additions(log_action_name, request.data)
     contract_details.predeploy_validate()
     # for MAINNET
     # if contract.network.id == 40:
@@ -148,9 +146,9 @@ def show_near_contract(request):
     :param request: contain contract id
     :return:
     '''
-    user = get_user_for_token(token)
-    log_action_name = 'show_near_token'
-    log_userinfo(log_action_name, token, user)
+    if request.user.is_anonymous:
+        return HttpResponse(status=403)
+    user = request.user
     contract = get_object_or_404(Contract, id=int(request.data['contract_id']))
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
@@ -172,7 +170,6 @@ def show_near_contract(request):
         'token_type': contract_details.token_type,
         'future_minting': contract_details.future_minting
     }
-    log_additions(log_action_name, {'contract_id': int(request.data['contract_id'])})
     if contract_details.near_contract_token and contract_details.near_contract_token.tx_hash:
         answer['tx_hash'] = contract_details.near_contract_token.tx_hash
     if contract_details.near_contract_token and contract_details.near_contract_token.address:
@@ -187,9 +184,10 @@ def delete_near_contract(request):
     :param request: contain contract_id
     :return: id
     '''
-    user = get_user_for_token(token)
+    if request.user.is_anonymous:
+        return HttpResponse(status=403)
+    user = request.user
     contract = Contract.objects.get(id=int(request.data['contract_id']))
-    log_userinfo('delete_cost_near_contract', token, user, int(request.data['contract_id']))
     if contract.user != user:
         raise ValidationError({'result': 'Wrong token'}, code=404)
     if contract.contract_type != 40:
@@ -206,14 +204,13 @@ def get_near_contracts(request):
     :param request: token, network_id
     :return: balance
     '''
-    log_action_name = 'get_near_contracts'
-    log_userinfo(log_action_name, token)
-    user = get_user_for_token(token)
+    if request.user.is_anonymous:
+        return HttpResponse(status=403)
+    user = request.user
     if 'limit' in request.data:
         limit = int(request.data['limit'])
     else:
         limit = 8
-    log_additions(log_action_name, limit)
     contracts = Contract.objects.filter(contract_type=40,
                                         user=user,
                                         network__name__in=['NEAR_MAINNET', 'NEAR_TESTNET'],
@@ -231,5 +228,4 @@ def get_near_contracts(request):
             'details': ContractDetailsNearTokenSerializer(c.get_details()).data
         }
         answer['contracts'].append(contract_info)
-    log_userinfo('get_near_contracts', token, user)
     return JsonResponse(answer)
