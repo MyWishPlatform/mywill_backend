@@ -763,7 +763,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             address = kwargs['admin_address'].replace('xdc', '0x')
             kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
-        return super().create(kwargs)
+        return super().create(**kwargs)
 
     def validate(self, details):
         now = timezone.now().timestamp() + 600
@@ -2090,10 +2090,10 @@ class NearContractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NearContract
-        fields = ('id', 'address', 'source_code', 'abi', 'bytecode', 'compiler_version', 'constructor_arguments')
+        fields = ('id', 'address')
 
 
-class ContractDetailsNearTokenSerializer(ContractDetailsTokenSerializer):
+class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContractDetailsNearToken
@@ -2118,9 +2118,15 @@ class ContractDetailsNearTokenSerializer(ContractDetailsTokenSerializer):
         return res
 
     def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        return super().create(kwargs)
+        return super().create(**kwargs)
 
     def update(self, contract, details, contract_details):
         kwargs = contract_details.copy()

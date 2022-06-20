@@ -55,21 +55,21 @@ def create_near_contract(request):
         raise ValidationError({'result': 'Wrong token type'}, code=404)
     validate_token_name(request.data['token_name'])
     validate_token_short_name(request.data['token_short_name'])
-    # if request.data['future_minting'] not in [True, False]:
-    #     raise ValidationError({'result': 'Wrong future minting'}, code=404)
+    if request.data['future_minting'] not in [True, False]:
+        raise ValidationError({'result': 'Wrong future minting'}, code=404)
     token_params = {
         'decimals': int(request.data['decimals']),
         'token_name': request.data['token_name'],
         'token_short_name': request.data['token_short_name'],
         'admin_address': request.data['admin_address'],
         'future_minting': request.data['future_minting'],
-        'maximum_supply': request.data['maximum_supply']
+        'maximum_supply': request.data['maximum_supply'],
+        'token_holders': []
     }
-    log_additions(log_action_name, token_params)
     Contract.get_details_model(40).calc_cost(token_params, network)
+    # Add consts to price etc.
     contract = Contract(state='CREATED', name='Contract', contract_type=40, network=network, cost=0, user=user)
     contract.save()
-
     contract_details = ContractDetailsNearTokenSerializer().create(contract, token_params)
     answer = {
         'state': contract.state,
