@@ -2097,7 +2097,7 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContractDetailsNearToken
-        fields = ('token_name', 'token_short_name', 'owner_address', 'decimals', 'maximum_supply', 'future_minting')
+        fields = ('token_name', 'token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'future_minting')
 
     def validate(self, details):
         check.is_near_address(details['owner_address'])
@@ -2126,7 +2126,7 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        return super().create(**kwargs)
+        return super().create(kwargs)
 
     def update(self, contract, details, contract_details):
         kwargs = contract_details.copy()

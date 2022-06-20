@@ -45,7 +45,7 @@ class AbstractContractDetailsLastwill(CommonDetails):
     def contractPayment(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
-        ContractDetailsLastwill.objects.select_for_update().filter(
+        ContractDetailsLastwill.objects.select_related().filter(
             id=self.id
         ).update(btc_duty=F('btc_duty') + message['value'])
         queues = {
@@ -246,7 +246,7 @@ class AbstractContractDetailsLastwill(CommonDetails):
     def fundsAdded(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
-        ContractDetailsLastwill.objects.select_for_update().filter(
+        ContractDetailsLastwill.objects.select_related().filter(
             id=self.id
         ).update(btc_duty=F('btc_duty') - message['value'])
         take_off_blocking(self.contract.network.name)
