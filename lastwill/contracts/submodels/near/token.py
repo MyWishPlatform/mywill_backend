@@ -106,11 +106,13 @@ class NearContract(models.Model):
 
 
 @contract_details('Near Token contract')
-class ContractDetailsNearToken(AbstractContractDetailsToken):
+class ContractDetailsNearToken(CommonDetails):
     # адрес владельца контракта
     admin_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
     # адрес аккаунта контракта
     deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
+    token_name = models.CharField(max_length=512)
+    token_short_name = models.CharField(max_length=64)
     maximum_supply = models.BigIntegerField()
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
