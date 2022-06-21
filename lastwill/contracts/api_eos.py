@@ -280,7 +280,7 @@ def deploy_eos_account(request):
             promo = request.data['promo'].upper()
             user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=EOSISH_URL).balance
             eos_cost = check_promocode_in_api(promo, 10, user, user_balance, contract.id, eos_cost)
-        if not UserSiteBalance.objects.select_related().filter(
+        if not UserSiteBalance.objects.select_for_update().filter(
                 user=user, subsite__site_name=EOSISH_URL, balance__gte=eos_cost
         ).update(balance=F('balance') - eos_cost):
             raise ValidationError({'result': 'You have not money'}, code=400)

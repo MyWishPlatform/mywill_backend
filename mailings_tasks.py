@@ -32,7 +32,7 @@ def send_testnet_gift_emails(profile_id):
         if 'MAINNET' in contract.network.name:
             return
     try:
-        profile = Profile.objects.select_related().get(id=profile_id)
+        profile = Profile.objects.select_for_update().get(id=profile_id)
         if not profile.wish_bonus_received:
             user = profile.user
             site = SubSite.objects.get(id=1)
