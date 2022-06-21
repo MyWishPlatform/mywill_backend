@@ -2114,7 +2114,7 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
 
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
-        res['near_contract'] = NearContractSerializer().to_representation(contract_details.near_contract)
+        res['near_contract_token'] = NearContractSerializer().to_representation(contract_details.near_contract)
         return res
 
     def create(self, contract, contract_details):

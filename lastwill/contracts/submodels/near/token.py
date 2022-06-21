@@ -114,10 +114,9 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
     maximum_supply = models.BigIntegerField()
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
-    eth_contract_token = models.ForeignKey(NearContract,
+    near_contract = models.ForeignKey(NearContract,
                                            null=True,
                                            default=None,
-                                           related_name='near_token_details_token',
                                            on_delete=models.SET_NULL)
 
     @classmethod
@@ -198,7 +197,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         near_contract.bytecode = bytecode
         near_contract.contract = self.contract
         near_contract.save()
-        self.eth_contract_token = near_contract
+        self.near_contract = near_contract
         self.save()
 
     @blocking
@@ -275,7 +274,7 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         print(args, flush=True)
 
         try:
-            tx_deploy_hash = near_account.deploy_and_init_contract(contract_code=self.eth_contract_token.bytecode,
+            tx_deploy_hash = near_account.deploy_and_init_contract(contract_code=self.near_contract.bytecode,
                                                                    args=args,
                                                                    gas=near_api.account.DEFAULT_ATTACHED_GAS,
                                                                    init_method_name="new")
@@ -284,8 +283,8 @@ class ContractDetailsNearToken(AbstractContractDetailsToken):
         else:
             tx_deploy_hash = tx_deploy_hash['transaction_outcome']['id']
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
-        self.eth_contract_token.tx_hash = tx_deploy_hash
-        self.eth_contract_token.save()
+        self.near_contract.tx_hash = tx_deploy_hash
+        self.near_contract.save()
         self.contract.state = 'DONE'
         self.contract.save()
 
