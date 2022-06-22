@@ -16,7 +16,7 @@ lastwill/static_collect/
 mywill_frontend/
 mywill_sign/
 test**
-**/migrations/????_**.py
+# **/migrations/????_**.py
 */*/test_addresses.json
 emails.csv
 promo_file.csv
