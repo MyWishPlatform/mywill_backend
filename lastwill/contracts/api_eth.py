@@ -296,9 +296,15 @@ def deploy_eth_token(request):
             promo = request.data['promo'].upper()
             user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=MY_WISH_URL).balance
             wish_cost = check_promocode_in_api(promo, 15, user, user_balance, contract.id, wish_cost)
-        if not UserSiteBalance.objects.select_for_update().filter(
-                user=user, subsite__site_name=MY_WISH_URL, balance__gte=wish_cost
-        ).update(balance=F('balance') - wish_cost):
+        try:
+            with transaction.atomic():
+                UserSiteBalance.objects.select_for_update().filter(
+                    user=user, subsite__site_name=MY_WISH_URL, balance__gte=wish_cost
+                ).update(balance=F('balance') - wish_cost)
+        except (IntegrityError, RuntimeError) as _:
+            from traceback import print_exc
+            print_exc()
+        except Exception:    
             raise ValidationError({'result': 'You have not money'}, code=400)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.deploy_started_at = datetime.datetime.now()

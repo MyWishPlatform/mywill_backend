@@ -126,29 +126,33 @@ def freeze_payments(amount, network):
         value = amount * 0.15 * NET_DECIMALS['EOSISH'] / NET_DECIMALS['ETH']
         value *= rate('WISH', 'EOSISH').value
         # value = float(':.4f'.format(value)
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            eosish=F('eosish') + value
-        )
+        with transaction.atomic():
+            FreezeBalance.objects.select_for_update().filter(id=1).update(
+                eosish=F('eosish') + value
+            )
         print('FREEZE', value, 'EOSISH', flush=True)
     elif network == 'TRON_MAINNET':
         # elif currency in ('TRON', 'TRONISH'):
         value = amount * 0.10 * NET_DECIMALS['TRX'] / NET_DECIMALS['ETH']
         value *= rate('WISH', 'TRONISH').value
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            tronish=F('tronish') + int(value)
-        )
+        with transaction.atomic():
+            FreezeBalance.objects.select_for_update().filter(id=1).update(
+                tronish=F('tronish') + int(value)
+            )
         wish_value = amount * 0.10
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            wish=F('wish') + wish_value
-        )
+        with transaction.atomic():
+            FreezeBalance.objects.select_for_update().filter(id=1).update(
+                wish=F('wish') + wish_value
+            )
         print('FREEZE', int(value), 'TRONISH', flush=True)
         # print('FREEZE', wish_value, 'WISH', flush=True)
     # elif currency in ('BNB', 'BWISH'):
     else:
         value = amount * 0.10
-        FreezeBalance.objects.select_for_update().filter(id=1).update(
-            bwish=F('bwish') + value
-        )
+        with transaction.atomic():
+            FreezeBalance.objects.select_for_update().filter(id=1).update(
+                bwish=F('bwish') + value
+            )
         print('FREEZE', value, 'BWISH', flush=True)
     # if network == 'ETHEREUM_MAINNET':
     #    value = amount * 0.10
@@ -160,16 +164,23 @@ def freeze_payments(amount, network):
 
 @transaction.atomic
 def positive_payment(user, value, site_id, currency, amount):
-    UserSiteBalance.objects.select_for_update().filter(
-        user=user, subsite__id=site_id).update(
-        balance=F('balance') + value)
+    with transaction.atomic():
+        UserSiteBalance.objects.select_for_update().filter(
+            user=user, subsite__id=site_id).update(
+            balance=F('balance') + value)
 
 
 @transaction.atomic
 def negative_payment(user, value, site_id, network):
-    if not UserSiteBalance.objects.select_for_update().filter(
-            user=user, subsite__id=site_id, balance__gte=value
-    ).update(balance=F('balance') - value):
+    try:
+        with transaction.atomic():
+            UserSiteBalance.objects.select_for_update().filter(
+                    user=user, subsite__id=site_id, balance__gte=value
+            ).update(balance=F('balance') - value)
+    except (IntegrityError, RuntimeError) as _:
+        from traceback import print_exc
+        print_exc()
+    except Exception:
         raise ValidationError({'result': 3}, code=400)
     if not NETWORKS[network]['is_free']:
         freeze_payments(value, network)

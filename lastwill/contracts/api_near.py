@@ -102,7 +102,7 @@ def deploy_near_contract(request):
         raise ValidationError({'result': 'Wrong contract_id'}, code=404)
     if contract.invisible:
         raise ValidationError({'result': 'Contract is deleted'}, code=404)
-    if contract.state != 'CREATED':
+    if contract.state not in ['CREATED', 'WAITING_FOR_DEPLOYMENT']:
         raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     contract_details = contract.get_details()
     contract_details.predeploy_validate()

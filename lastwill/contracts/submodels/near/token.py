@@ -120,8 +120,8 @@ class ContractDetailsNearToken(CommonDetails):
             price += WHITELABEL_PRICE_USDT
         return price * NET_DECIMALS['USDT']
 
-    @blocking
     @postponable
+    @blocking
     def new_account(self):
         """
         new_account - создает implicit аккаунт для пользователя,
@@ -272,6 +272,8 @@ class ContractDetailsNearToken(CommonDetails):
         self.near_contract.save()
         self.contract.state = 'DONE'
         self.contract.save()
+
+        self.initialized()
 
     def burn_keys(self):
         """

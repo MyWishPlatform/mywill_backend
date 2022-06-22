@@ -2132,7 +2132,7 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
             TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
-        return super().create(**kwargs)
+        return super().create(kwargs)
 
     def update(self, contract, details, contract_details):
         contract.tokenholder_set.all().delete()
