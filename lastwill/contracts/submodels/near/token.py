@@ -85,24 +85,8 @@ def generate_account_name():
     return result
 
 
-class NearContract(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.SET_NULL)
-    original_contract = models.ForeignKey(Contract,
-                                          null=True,
-                                          default=None,
-                                          related_name='orig_nearcontract',
-                                          on_delete=models.SET_NULL)
-    address = models.CharField(max_length=ADDRESS_LENGTH_NEAR, null=True, default=None)
-    tx_hash = models.CharField(max_length=90, null=True, default=None)
-
-    source_code = models.TextField()
-    bytecode = models.TextField()
-    abi = JSONField(default={})
-    compiler_version = models.CharField(max_length=200, null=True, default=None)
-    constructor_arguments = models.TextField()
-
-    def __str__(self):
-        return self.contract.__str__()
+class NearContract(EthContract):
+    pass
 
 
 @contract_details('Near Token contract')
@@ -113,13 +97,11 @@ class ContractDetailsNearToken(CommonDetails):
     deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
+    decimals = models.IntegerField()
     maximum_supply = models.BigIntegerField()
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
-    near_contract = models.ForeignKey(NearContract,
-                                           null=True,
-                                           default=None,
-                                           on_delete=models.SET_NULL)
+    near_contract = models.ForeignKey(NearContract, null=True, default=None, on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):
@@ -198,6 +180,7 @@ class ContractDetailsNearToken(CommonDetails):
         near_contract = NearContract()
         near_contract.bytecode = bytecode
         near_contract.contract = self.contract
+        near_contract.original_contract = self.contract
         near_contract.save()
         self.near_contract = near_contract
         self.save()

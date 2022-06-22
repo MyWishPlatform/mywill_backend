@@ -2097,10 +2097,10 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContractDetailsNearToken
-        fields = ('token_name', 'token_short_name', 'owner_address', 'decimals', 'maximum_supply', 'future_minting')
+        fields = ('token_type', 'token_name', 'token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'future_minting')
 
     def validate(self, details):
-        check.is_near_address(details['owner_address'])
+        check.is_near_address(details['admin_address'])
         details['decimals'] = int(details['decimals'])
         if details['decimals'] < 0 or details['decimals'] > 24:
             raise ValidationError
@@ -2115,6 +2115,12 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         res['near_contract_token'] = NearContractSerializer().to_representation(contract_details.near_contract)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th)
+            for th in
+            contract_details.contract.tokenholder_set.order_by('id').all()
+        ]
         return res
 
     def create(self, contract, contract_details):
@@ -2129,6 +2135,13 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
         return super().create(**kwargs)
 
     def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
         kwargs = contract_details.copy()
         kwargs['contract'] = contract
         return super().update(details, kwargs)

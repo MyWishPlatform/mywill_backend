@@ -59,6 +59,7 @@ def create_near_contract(request):
         raise ValidationError({'result': 'Wrong future minting'}, code=404)
     token_params = {
         'decimals': int(request.data['decimals']),
+        'token_type': request.data['token_name'],
         'token_name': request.data['token_name'],
         'token_short_name': request.data['token_short_name'],
         'admin_address': request.data['admin_address'],
