@@ -272,7 +272,6 @@ class ContractDetailsNearToken(CommonDetails):
         else:
             tx_deploy_hash = tx_deploy_hash['transaction_outcome']['id']
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
-        self.near_contract.address = self.deploy_address
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
         self.contract.state = 'ACTIVE'
