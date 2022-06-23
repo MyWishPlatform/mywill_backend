@@ -2100,8 +2100,8 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
         fields = ('token_type', 'token_name', 'token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'future_minting')
 
     def validate(self, details):
-        if not check.is_near_address(details['admin_address']):
-            raise ValidationError
+        # if not check.is_near_address(details['admin_address']):
+        #     raise ValidationError
         details['decimals'] = int(details['decimals'])
         if details['decimals'] < 0 or details['decimals'] > 24:
             raise ValidationError

@@ -36,6 +36,8 @@ services:
     restart: unless-stopped
   web:
     env_file: .env
+    environment:
+      - REDIS_HOST=redis
     build:
       context: .
       dockerfile: Dockerfile
@@ -51,6 +53,14 @@ services:
     #command: "gunicorn -c gunicorn.conf.py lastwill.wsgi:application"
     networks:
       mywill_backend:
+  redis:
+    env_file: .env
+    image: redis
+    restart: unless-stopped
+    networks:
+      mywill_backend:
+    ports:
+      - "${REDIS_EXPOSE_PORT?8000}:${REDIS_PORT?8000}"
   receiver:
     env_file: .env
     build:
@@ -100,6 +110,7 @@ services:
     command: "python checker.py"
     networks:
       mywill_backend:
+
 
 networks:
   mywill_backend:

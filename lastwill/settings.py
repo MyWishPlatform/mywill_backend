@@ -294,7 +294,7 @@ except ImportError as exc:
 
 
 # REDIS settings
-REDIS_HOST = '127.0.0.1'
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = '6379'
 BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600, }
