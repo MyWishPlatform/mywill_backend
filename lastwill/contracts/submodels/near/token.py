@@ -305,7 +305,7 @@ class ContractDetailsNearToken(CommonDetails):
         near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         try:
-            near_account.delete_access_key(public_key=public_key)
+            near_account.delete_access_key(public_key=near_account.signer.public_key)
         except Exception:
             traceback.print_exc()
 
@@ -336,8 +336,7 @@ class ContractDetailsNearToken(CommonDetails):
         near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         try:
-            result = near_account.function_call(self,
-                                                contract_id=self.deploy_address,
+            result = near_account.function_call(contract_id=self.deploy_address,
                                                 method_name='ft_metadata',
                                                 args={},
                                                 gas=near_api.account.DEFAULT_ATTACHED_GAS)
@@ -348,15 +347,6 @@ class ContractDetailsNearToken(CommonDetails):
             if not (result['name'] == self.token_name and result['symbol'] == self.token_short_name and
                     result['decimals'] == self.decimals):
                 raise ValidationError(f"Contract metadata is corrupted on account {self.deploy_address}")
-
-        try:
-            result = near_account._provider.get_access_key_list(account_id=self.deploy_address)
-        except Exception:
-            print(f'Error function call ft_metadata() for {near_account.account_id}')
-            traceback.print_exc()
-        else:
-            if not (result['keys'] == ''):
-                raise ValidationError(f"There are existing keys on account {self.deploy_address}")
 
         print(f'Contract {self.deploy_address} checked successfully', flush=True)
 
