@@ -142,7 +142,11 @@ class ContractDetailsNearToken(CommonDetails):
             print('Error generating key for Near Account', flush=True)
             traceback.print_exc()
         else:
-            public_key = public_key.stdout.decode('utf-8').split()[4].split(':')[1]
+            try:
+                public_key = public_key.stdout.decode('utf-8').split()[4].split(':')[1]
+            except IndexError:
+                # срабатывает когда ключ уже сгенерирован
+                public_key = public_key.stdout.decode('utf-8').split()[3].split(':')[1]
         implicit_account_name = base58.b58decode(public_key).hex()
         try:
             run(f'mv ~/.near-credentials/{NEAR_NETWORK_TYPE}/{account_name}.json ~/.near-credentials/{NEAR_NETWORK_TYPE}/{implicit_account_name}.json',
@@ -270,7 +274,7 @@ class ContractDetailsNearToken(CommonDetails):
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
-        self.contract.state = 'DONE'
+        self.contract.state = 'DEPLOYED'
         self.contract.save()
 
         self.initialized()
@@ -364,7 +368,6 @@ class ContractDetailsNearToken(CommonDetails):
 
     @postponable
     @blocking
-    @check_transaction
     def initialized(self):
         """
         initialized - финальная функция,
@@ -374,14 +377,14 @@ class ContractDetailsNearToken(CommonDetails):
         затем отправляет сообщение пользователю и боту
         об успешности операции
         """
-        if self.contract.state not in ('DONE'):
+        if self.contract.state not in ('ACTIVE'):
             take_off_blocking(self.contract.network.name)
             return
 
         self.burn_keys()
         self.check_contract()
 
-        self.contract.state = 'ACTIVE' if self.future_minting else 'ENDED'
+        self.contract.state = 'DONE' if self.future_minting else 'ENDED'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
@@ -396,7 +399,6 @@ class ContractDetailsNearToken(CommonDetails):
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
 
     @postponable
-    @check_transaction
     def msg_deployed(self, message):
         # deprecated
         return
