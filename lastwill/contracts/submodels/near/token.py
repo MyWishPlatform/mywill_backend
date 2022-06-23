@@ -274,7 +274,7 @@ class ContractDetailsNearToken(CommonDetails):
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
-        self.contract.state = 'DEPLOYED'
+        self.contract.state = 'ACTIVE'
         self.contract.save()
 
     def burn_keys(self):
@@ -305,13 +305,9 @@ class ContractDetailsNearToken(CommonDetails):
         near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         try:
-            tx_burn_hash = near_account.delete_access_key(public_key=public_key)
+            near_account.delete_access_key(public_key=public_key)
         except Exception:
             traceback.print_exc()
-        else:
-            tx_burn_hash = tx_burn_hash['transaction_outcome']['id']
-
-        print(f'Near Account {self.deploy_address} keys burnt\nTx_hash: {tx_burn_hash}', flush=True)
 
     def check_contract(self):
         """
