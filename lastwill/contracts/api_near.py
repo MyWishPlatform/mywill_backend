@@ -122,7 +122,51 @@ def deploy_near_contract(request):
     contract.deploy_started_at = datetime.datetime.now()
     contract.save()
     
-    answer = {
+    # деплоим напрямую, сканера нет
+    try:
+        contract_details.deploy()
+    except Exception:
+        traceback.print_exc()
+        contract.state = 'POSTPONED'
+        contract.save()
+        return JsonResponse({
+            'state': contract.state,
+            'admin_address': contract_details.admin_address,
+            'deploy_address': contract_details.deploy_address,
+            'token_short_name': contract_details.token_short_name,
+            'token_name': contract_details.token_name,
+            'contract_id': contract.id,
+            'created_date': contract.created_date,
+            'network': contract.network.name,
+            'network_id': contract.network.id,
+            'token_type': contract_details.token_type,
+            'decimals': contract_details.decimals,
+            'future_minting': contract_details.future_minting,
+            'total_supply': contract_details.maximum_supply,
+        })
+    # проверяем успешность деплоя
+    try:
+        contract_details.initialized()
+    except Exception:
+        traceback.print_exc()
+        contract.state = 'POSTPONED'
+        contract.save()
+        return JsonResponse({
+            'state': contract.state,
+            'admin_address': contract_details.admin_address,
+            'deploy_address': contract_details.deploy_address,
+            'token_short_name': contract_details.token_short_name,
+            'token_name': contract_details.token_name,
+            'contract_id': contract.id,
+            'created_date': contract.created_date,
+            'network': contract.network.name,
+            'network_id': contract.network.id,
+            'token_type': contract_details.token_type,
+            'decimals': contract_details.decimals,
+            'future_minting': contract_details.future_minting,
+            'total_supply': contract_details.maximum_supply,
+        })
+    return JsonResponse({
         'state': contract.state,
         'admin_address': contract_details.admin_address,
         'deploy_address': contract_details.deploy_address,
@@ -137,25 +181,7 @@ def deploy_near_contract(request):
         'future_minting': contract_details.future_minting,
         'total_supply': contract_details.maximum_supply,
         'tx_hash': contract_details.near_contract.tx_hash,
-    }
-    
-    # деплоим напрямую, сканера нет
-    try:
-        contract_details.deploy()
-    except Exception:
-        traceback.print_exc()
-        contract.state = 'POSTPONED'
-        contract.save()
-        return JsonResponse(answer)
-    # проверяем успешность деплоя
-    try:
-        contract_details.initialized()
-    except Exception:
-        traceback.print_exc()
-        contract.state = 'POSTPONED'
-        contract.save()
-        return JsonResponse(answer)
-    return JsonResponse(answer)
+    })
 
 
 @api_view(http_method_names=['GET'])
