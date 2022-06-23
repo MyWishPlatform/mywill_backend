@@ -372,7 +372,7 @@ class ContractDetailsNearToken(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            send_mail(common_subject, solana_token_text.format(addr=self.solana_contract.address), DEFAULT_FROM_EMAIL,
+            send_mail(common_subject, near_token_text.format(addr=self.deploy_address), DEFAULT_FROM_EMAIL,
                       [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)

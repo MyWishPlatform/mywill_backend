@@ -367,6 +367,18 @@ Best wishes,
 MyWish Team.
 '''
 
+near_token_text = '''Hello,
+
+We are happy to inform you that your contract was successfully created and deployed to Near Testnet network.
+Token contract address: {addr}
+Link: https://testnet.nearblocks.io/address/{addr}
+
+Please contact support@mywish.io if you have any questions.
+
+Best wishes,
+MyWish Team.
+'''
+
 with open('email_templates/testnet_email.html', encoding='utf-8') as t, \
     open('email_templates/mainnet_email.html', encoding='utf-8') as m:
 
