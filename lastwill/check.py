@@ -1,4 +1,5 @@
 import re
+import requests
 import base58
 from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
@@ -64,7 +65,24 @@ def is_eos_public(string):
     all(x in ascii_letters + digits for x in string) or die('{} is not a valid public key'.format(string))
     
 def is_near_address(string):
-    re.match('^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$', string) or re.match('^[a-fA-F\d]{64}$') or die('{} is not a valid near address'.format(string))
-
-def is_near_address_testnet(string):
-    re.match('^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$', string) and string[-8:] == '.testnet' or re.match('^[a-fA-F\d]{64}$') or die('{} is not a valid near address'.format(string))
+    # TODO: add mainnet network
+    data = {
+        "jsonrpc": "2.0",
+        "id": "dontcare",
+        "method": "query",
+        "params": {
+            "request_type": "view_account",
+            "finality": "final",
+            "account_id": string
+        }
+    }
+    r = requests.post(f'https://rpc.testnet.near.org', json=data)
+    if r.status_code == 200:
+        try:
+            r.json()['error']
+        except KeyError:
+            return True
+        else:
+            return False
+    else:
+        return False
