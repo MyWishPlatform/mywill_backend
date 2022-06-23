@@ -277,8 +277,6 @@ class ContractDetailsNearToken(CommonDetails):
         self.contract.state = 'DEPLOYED'
         self.contract.save()
 
-        self.initialized()
-
     def burn_keys(self):
         """
         burn_keys - функция для сжигания ключей после деплоя контракта
