@@ -1,9 +1,11 @@
 import re
 import requests
 import base58
+import near_api
 from string import ascii_letters, digits
 from rest_framework.serializers import ValidationError
 from solana.publickey import PublicKey
+from lastwill.contracts.submodels.near.token import init_account
 from typing import Union
 
 
@@ -64,25 +66,11 @@ def is_eos_address(string):
 def is_eos_public(string):
     all(x in ascii_letters + digits for x in string) or die('{} is not a valid public key'.format(string))
     
-def is_near_address(string):
-    # TODO: add mainnet network
-    data = {
-        "jsonrpc": "2.0",
-        "id": "dontcare",
-        "method": "query",
-        "params": {
-            "request_type": "view_account",
-            "finality": "final",
-            "account_id": string
-        }
-    }
-    r = requests.post(f'https://rpc.testnet.near.org', json=data)
-    if r.status_code == 200:
-        try:
-            r.json()['error']
-        except KeyError:
-            return True
-        else:
-            return False
-    else:
+    
+def is_near_address(admin_address: str):
+    mywish_account = init_account()
+    try:
+        mywish_account._provider.get_account(admin_address)
+    except near_api.providers.JsonProviderError:
         return False
+    return True

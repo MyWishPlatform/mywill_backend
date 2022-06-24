@@ -162,17 +162,7 @@ class ContractDetailsNearToken(CommonDetails):
         self.save()
 
     def compile(self):
-        # if self.temp_directory:
-        #     print('Near Token is already compiled', flush=True)
-        #     return
         dest = path.join(CONTRACTS_DIR, 'lastwill/near-contract/')
-        # try:
-        #     # https://docs.python.org/3/library/subprocess.html
-        #     result = run(['cd', f'{dest}', '&&', 'make'], stdout=PIPE, stderr=STDOUT, check=True)
-        #     print('Near Token compiled successfully', flush=True)
-        # except Exception:
-        #     print('Near Token compilation error', flush=True)
-        #     traceback.print_exc()
         with open(path.join(dest, 'near.token.wasm'), 'rb') as f:
             # код контракта представляет из себя побайтовый массив uint8
             bytecode = []
