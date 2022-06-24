@@ -253,6 +253,7 @@ urlpatterns = [
     url(r'^api/calculate_cost_eth_token/$', calculate_cost_eth_token_contract),
     url(r'^api/delete_eth_token/$', delete_eth_token_contract),
     url(r'^api/deploy_near_token/$', deploy_near_contract),
+    url(r'^api/deploy_near_token/(?P<id>\d+)/$', deploy_near_contract),
     url(r'^api/delete_all_api_tokens/$', delete_api_tokens),
     url(r'^api/get_source_code_eth_token/$', get_source_code_eth_token),
     url(r'^api/get_contract_price/$', get_contract_price),

@@ -25,7 +25,7 @@ from lastwill.settings import MY_WISH_URL
 
 @login_required
 @api_view(http_method_names=['POST', 'GET'])
-def deploy_near_contract(request, id):
+def deploy_near_contract(request, id=None):
     '''
     view for deploy near token
     :param request: contain contract id
