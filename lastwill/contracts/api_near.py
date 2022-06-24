@@ -24,15 +24,36 @@ from lastwill.settings import MY_WISH_URL
 
 
 @login_required
-@api_view(http_method_names=['POST'])
-def deploy_near_contract(request):
+@api_view(http_method_names=['POST', 'GET'])
+def deploy_near_contract(request, id):
     '''
     view for deploy near token
     :param request: contain contract id
     :return: id, state
     '''
-    if request.user.is_anonymous:
-        return HttpResponse(status=403)
+    # Костыль для быстрого ответа фронту
+    if request.method == 'GET':
+        try:
+            contract = Contract.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return HttpResponse(status=404)
+        if contract.invisible:
+            raise ValidationError({'result': 'Contract is deleted'}, code=404)
+        contract_details = contract.get_details()
+        response = {
+            'state': contract.state,
+            'admin_address': contract_details.admin_address,
+            'deploy_address': contract_details.deploy_address,
+            'token_short_name': contract_details.token_short_name,
+            'token_name': contract_details.token_name,
+            'contract_id': contract.id,
+            'token_type': contract_details.token_type,
+            'decimals': contract_details.decimals,
+            'future_minting': contract_details.future_minting,
+            'total_supply': contract_details.maximum_supply,
+        }
+        return JsonResponse(response)
+
     user = request.user
     try:
         contract = Contract.objects.get(id=int(request.data.get('contract_id')))

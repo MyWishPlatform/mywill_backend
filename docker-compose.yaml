@@ -38,6 +38,7 @@ services:
     env_file: .env
     environment:
       - REDIS_HOST=redis
+      - PIKA_PORT=8002
     build:
       context: .
       dockerfile: Dockerfile

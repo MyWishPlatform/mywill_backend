@@ -219,8 +219,8 @@ def test_neo_ico_params(config, params, dest):
 
 def send_in_queue(contract_id, type, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost',
-        5672,
+        os.environ.get('PIKA_HOST', 'localhost'),
+        os.environ.get('PIKA_PORT', 5672),
         'mywill',
         pika.PlainCredentials('java', 'java'),
     ))
