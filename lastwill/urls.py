@@ -91,13 +91,7 @@ from lastwill.contracts.api_eth import (
     get_source_code_eth_token,
     show_eth_token
 )
-from lastwill.contracts.api_near import (
-    create_near_contract, 
-    delete_near_contract, 
-    deploy_near_contract, 
-    get_near_contracts, 
-    show_near_contract
-)
+from lastwill.contracts.api_near import deploy_near_contract
 from lastwill.main.views import (
     balance,
     eth2rub,
