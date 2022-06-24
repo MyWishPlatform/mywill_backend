@@ -763,7 +763,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
             address = kwargs['admin_address'].replace('xdc', '0x')
             kwargs['admin_address'] = address.lower()
         kwargs['contract'] = contract
-        return super().create(**kwargs)
+        return super().create(kwargs)
 
     def validate(self, details):
         now = timezone.now().timestamp() + 600
