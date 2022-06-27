@@ -11,7 +11,8 @@ import near_api
 from django.forms import ValidationError
 from numpy import uint8
 
-from lastwill.consts import (CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT)
+from lastwill.consts import (
+    CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT)
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 """
@@ -59,12 +60,13 @@ def init_account(network: str = NEAR_NETWORK_URL,
     """
     init_account - функция инициализации аккаунта в near-api-py
     (получает информацию о существующем аккаунте и импортирует его в соответствующий класс)
-    
+
     Returns:
         near_api.account.Account : класс аккаунта из модуля
     """
     provider = near_api.providers.JsonProvider(network)
-    signer = near_api.signer.Signer(account_id, near_api.signer.KeyPair(private_key))
+    signer = near_api.signer.Signer(
+        account_id, near_api.signer.KeyPair(private_key))
     near_account = near_api.account.Account(provider, signer, account_id)
     return near_account
 
@@ -101,7 +103,8 @@ class ContractDetailsNearToken(CommonDetails):
     maximum_supply = models.BigIntegerField()
     token_type = models.CharField(max_length=32, default='NEP-141')
     future_minting = models.BooleanField(default=True)
-    near_contract = models.ForeignKey(NearContract, null=True, default=None, on_delete=models.SET_NULL)
+    near_contract = models.ForeignKey(
+        NearContract, null=True, default=None, on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):
@@ -126,27 +129,30 @@ class ContractDetailsNearToken(CommonDetails):
         """
         new_account - создает implicit аккаунт для пользователя,
         на который будет задеплоен контракт
-        
+
         создание аккаунта будет проводиться через near-cli
         https://docs.near.org/docs/roles/integrator/implicit-accounts
-        
+
         ключи аккаунта хранятся в ~/.near-credentials/{network-type}/{self.admin_address}.json
         """
         if os.system(f"/bin/bash -c 'export NEAR_ENV={NEAR_NETWORK_TYPE}'"):
             raise Exception('Error setting the Near Network env')
         try:
             account_name = generate_account_name()
-            public_key = run(['near', 'generate-key', f'{account_name}'], stdout=PIPE, stderr=STDOUT, check=True)
+            public_key = run(
+                ['near', 'generate-key', f'{account_name}'], stdout=PIPE, stderr=STDOUT, check=True)
             print(f'Public key: {public_key}', flush=True)
         except Exception:
             print('Error generating key for Near Account', flush=True)
             traceback.print_exc()
         else:
             try:
-                public_key = public_key.stdout.decode('utf-8').split()[4].split(':')[1]
+                public_key = public_key.stdout.decode(
+                    'utf-8').split()[4].split(':')[1]
             except IndexError:
                 # срабатывает когда ключ уже сгенерирован
-                public_key = public_key.stdout.decode('utf-8').split()[3].split(':')[1]
+                public_key = public_key.stdout.decode(
+                    'utf-8').split()[3].split(':')[1]
         implicit_account_name = base58.b58decode(public_key).hex()
         try:
             run(f'mv ~/.near-credentials/{NEAR_NETWORK_TYPE}/{account_name}.json ~/.near-credentials/{NEAR_NETWORK_TYPE}/{implicit_account_name}.json',
@@ -184,12 +190,12 @@ class ContractDetailsNearToken(CommonDetails):
     def deploy(self):
         """
         deploy - функция создания аккаунта и деплоя контракта
-        
+
         для создания аккаунта нужен трансфер на 182 * 10**19 монет
         для создания, деплоя и инициализации нужно 222281 * 10 ** 19 монет
         для удаления ключей нужно 40601225 * 10**12 ~ 5 * 10**19 монет
         буду отправлять 24 * 10**23, чтобы гарантированно хватило
-        
+
         Raises:
             Exception:
                 - если не получилось создать аккаунт с помощью transfer()
@@ -211,15 +217,18 @@ class ContractDetailsNearToken(CommonDetails):
             print(f'Error getting private key from Near Account json mywish.testnet')
             traceback.print_exc()
         else:
-            private_key = private_key.stdout.decode('utf-8').split('"')[11].split(':')[1]
+            private_key = private_key.stdout.decode(
+                'utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
-                raise Exception(f"Wrong private key provided for account mywish.testnet")
+                raise Exception(
+                    f"Wrong private key provided for account mywish.testnet")
         mywish_account = init_account(private_key=private_key)
 
         # sending await transfer to new user account
         self.new_account()
         try:
-            tx_account_hash = mywish_account.send_money(self.deploy_address, 24 * 10**23)
+            tx_account_hash = mywish_account.send_money(
+                self.deploy_address, 24 * 10**23)
             print(f'account creation:\n{tx_account_hash}\n', flush=True)
         except Exception:
             traceback.print_exc()
@@ -231,13 +240,17 @@ class ContractDetailsNearToken(CommonDetails):
                               check=True,
                               shell=True)
         except Exception:
-            print(f'Error getting private key from Near Account json {self.deploy_address}')
+            print(
+                f'Error getting private key from Near Account json {self.deploy_address}')
             traceback.print_exc()
         else:
-            private_key = private_key.stdout.decode('utf-8').split('"')[11].split(':')[1]
+            private_key = private_key.stdout.decode(
+                'utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
-                raise Exception(f"Wrong private key provided for account {self.deploy_address}")
-        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+                raise Exception(
+                    f"Wrong private key provided for account {self.deploy_address}")
+        near_account = init_account(
+            network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         self.compile()
         args = {
@@ -264,7 +277,7 @@ class ContractDetailsNearToken(CommonDetails):
         print(f'tx_hash: {tx_deploy_hash}', flush=True)
         self.near_contract.tx_hash = tx_deploy_hash
         self.near_contract.save()
-        self.contract.state = 'ACTIVE'
+        self.contract.state = 'WAITING_ACTIVATION'
         self.contract.save()
 
     def burn_keys(self):
@@ -285,17 +298,23 @@ class ContractDetailsNearToken(CommonDetails):
             print('Error getting keys from Near Account json')
             traceback.print_exc()
         else:
-            private_key = keys.stdout.decode('utf-8').split('"')[11].split(':')[1]
-            public_key = keys.stdout.decode('utf-8').split('"')[7].split(':')[1]
+            private_key = keys.stdout.decode(
+                'utf-8').split('"')[11].split(':')[1]
+            public_key = keys.stdout.decode(
+                'utf-8').split('"')[7].split(':')[1]
             if len(private_key) != 88:
-                raise ValidationError(f"Wrong private key provided for account {self.deploy_address}")
+                raise ValidationError(
+                    f"Wrong private key provided for account {self.deploy_address}")
             if len(public_key) != 44:
-                raise ValidationError(f"Wrong public key provided for account {self.deploy_address}")
+                raise ValidationError(
+                    f"Wrong public key provided for account {self.deploy_address}")
 
-        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+        near_account = init_account(
+            network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         try:
-            near_account.delete_access_key(public_key=near_account.signer.public_key)
+            near_account.delete_access_key(
+                public_key=near_account.signer.public_key)
         except Exception:
             traceback.print_exc()
 
@@ -319,11 +338,14 @@ class ContractDetailsNearToken(CommonDetails):
             print('Error getting keys from Near Account json')
             traceback.print_exc()
         else:
-            private_key = keys.stdout.decode('utf-8').split('"')[11].split(':')[1]
+            private_key = keys.stdout.decode(
+                'utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
-                raise ValidationError(f"Wrong private key provided for account {self.deploy_address}")
+                raise ValidationError(
+                    f"Wrong private key provided for account {self.deploy_address}")
 
-        near_account = init_account(network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+        near_account = init_account(
+            network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
 
         try:
             result = near_account.function_call(contract_id=self.deploy_address,
@@ -331,14 +353,17 @@ class ContractDetailsNearToken(CommonDetails):
                                                 args={},
                                                 gas=near_api.account.DEFAULT_ATTACHED_GAS)
         except Exception:
-            print(f'Error function call ft_metadata() for {near_account.account_id}')
+            print(
+                f'Error function call ft_metadata() for {near_account.account_id}')
             traceback.print_exc()
         else:
             if not (result['name'] == self.token_name and result['symbol'] == self.token_short_name and
                     result['decimals'] == self.decimals):
-                raise ValidationError(f"Contract metadata is corrupted on account {self.deploy_address}")
+                raise ValidationError(
+                    f"Contract metadata is corrupted on account {self.deploy_address}")
 
-        print(f'Contract {self.deploy_address} checked successfully', flush=True)
+        print(
+            f'Contract {self.deploy_address} checked successfully', flush=True)
 
     @postponable
     @blocking
@@ -347,18 +372,18 @@ class ContractDetailsNearToken(CommonDetails):
         initialized - финальная функция,
         которая сжигает ключи и 
         проверяет, что контракт был успешно задеплоен
-        
+
         затем отправляет сообщение пользователю и боту
         об успешности операции
         """
-        if self.contract.state not in ('ACTIVE'):
+        if self.contract.state not in ('WAITING_ACTIVATION'):
             take_off_blocking(self.contract.network.name)
             return
 
         self.burn_keys()
         self.check_contract()
 
-        self.contract.state = 'DONE' if self.future_minting else 'ENDED'
+        self.contract.state = 'ACTIVE' if self.future_minting else 'DONE'
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
@@ -376,6 +401,3 @@ class ContractDetailsNearToken(CommonDetails):
     def msg_deployed(self, message):
         # deprecated
         return
-
-    def get_arguments(self, eth_contract_attr_name='near_contract'):
-        super().get_arguments(eth_contract_attr_name)
