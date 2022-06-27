@@ -182,7 +182,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SIGNER='https://sign.mywish.io/sign/'
+SIGNER = 'https://sign.mywish.io/sign/'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
@@ -200,10 +200,10 @@ CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 # MESSAGE_QUEUE = 'notification'
 
 REST_AUTH_SERIALIZERS = {
-        'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
-        'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
-        'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
-        'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
+    'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
+    'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
+    'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
+    'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
 }
 
 OLD_PASSWORD_FIELD_ENABLED = True
@@ -218,33 +218,34 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
-
-
 LOGGING = {
-  'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-  'handlers': {
-      'logstash': {
-          'level': 'DEBUG',
-          'class': 'logstash.LogstashHandler',
-          'host': 'kibana.mywish.io',
-          'port': 5045,
-          'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-          'fqdn': False, # Fully qualified domain name. Default value: false.
-          'tags': ['tag1', 'tag2'], # list of tags. Default: None.
-      },
-  },
-  'loggers': {
-      'django.request': {
-          'handlers': ['logstash'],
-          'level': 'DEBUG',
-          'propagate': True,
-      },
-  },
-  'lastwill.swaps_common': {
-    'level': 'DEBUG',
-    'handlers': ['console', 'file'],
-    'propagate': False
-  },
+    # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+    'version': 1,
+    'handlers': {
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.LogstashHandler',
+            'host': 'kibana.mywish.io',
+            'port': 5045,
+            # 'type' field in logstash message. Default value: 'logstash'.
+            'message_type': 'logstash',
+            # Fully qualified domain name. Default value: false.
+            'fqdn': False,
+            'tags': ['tag1', 'tag2'],  # list of tags. Default: None.
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['logstash'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+    'lastwill.swaps_common': {
+        'level': 'DEBUG',
+        'handlers': ['console', 'file'],
+        'propagate': False
+    },
 }
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
@@ -400,7 +401,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'MATIC_MAINNET',
             'testnet': 'MATIC_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'ico': 32,
             'token': 33,
             'airdrop': 34,
@@ -411,7 +412,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'TRON_MAINNET',
             'testnet': 'TRON_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'token': 15,
             'game_asset': 16,
             'airdrop': 17,
@@ -422,7 +423,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'EOS_MAINNET',
             'testnet': 'EOS_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'token': 10,
             'account': 11,
             'ico': 12,

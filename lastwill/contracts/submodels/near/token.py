@@ -33,30 +33,12 @@ TODO:
 - использовать константы из consts.py и settings_local.py 
 - добавить логику обработки mainnet (сейчас хардкод testnet)
 """
-# макси кол-во токенов U128 - 1
-# https://nomicon.io/Standards/Tokens/FungibleToken/Core#reference-level-explanation
-# не умещается (((((( заменил на BigIntegerField на 2**64
-MAX_WEI_DIGITS_NEAR = 2**128 - 1
-# длина всех адресов 64
-# https://nomicon.io/DataStructures/Account
-ADDRESS_LENGTH_NEAR = 64
 # регулярка для валидации имени аккаунта
 # https://docs.near.org/docs/concepts/account#account-id-rules
 ACCOUNT_NAME_REGEX = '^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$'
-# сеть Near
-NEAR_NETWORK_TYPE = "testnet"
-NEAR_NETWORK_URL = "https://rpc.testnet.near.org"
-# исходя из того что с лишнего газа будет сдача,
-# можно просто стандартное кол-во ставить 300 TGas
-NEAR_GAS_PER_TRANSACTION = 300 * 10**12
-# данные нашего аккаунта в Near сети
-MYWISH_ACCOUNT_NAME = "mywish.testnet"
-MYWISH_PRIVATE_KEY = ""
 
 
-def init_account(network: str = NEAR_NETWORK_URL,
-                 account_id: str = MYWISH_ACCOUNT_NAME,
-                 private_key: str = MYWISH_PRIVATE_KEY):
+def init_account(network: str, account_id: str, private_key: str):
     """
     init_account - функция инициализации аккаунта в near-api-py
     (получает информацию о существующем аккаунте и импортирует его в соответствующий класс)
@@ -94,9 +76,9 @@ class NearContract(EthContract):
 @contract_details('Near Token contract')
 class ContractDetailsNearToken(CommonDetails):
     # адрес владельца контракта
-    admin_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
+    admin_address = models.CharField(max_length=64)
     # адрес аккаунта контракта
-    deploy_address = models.CharField(max_length=ADDRESS_LENGTH_NEAR)
+    deploy_address = models.CharField(max_length=64)
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     decimals = models.IntegerField()
@@ -125,7 +107,7 @@ class ContractDetailsNearToken(CommonDetails):
 
     @postponable
     @blocking
-    def new_account(self):
+    def new_account(self, NEAR_NETWORK_TYPE: str):
         """
         new_account - создает implicit аккаунт для пользователя,
         на который будет задеплоен контракт
@@ -135,8 +117,6 @@ class ContractDetailsNearToken(CommonDetails):
 
         ключи аккаунта хранятся в ~/.near-credentials/{network-type}/{self.admin_address}.json
         """
-        if os.system(f"/bin/bash -c 'export NEAR_ENV={NEAR_NETWORK_TYPE}'"):
-            raise Exception('Error setting the Near Network env')
         try:
             account_name = generate_account_name()
             public_key = run(
@@ -207,25 +187,37 @@ class ContractDetailsNearToken(CommonDetails):
             take_off_blocking(self.contract.network.name)
             return
 
+        if not 'MAINNET' in self.contract.network.name:
+            NEAR_NETWORK_TYPE = 'testnet'
+            NEAR_NETWORK_URL = NETWORKS[self.near_contract.contract.network.name]['node_url']
+            NEAR_ADDRESS = NETWORKS[self.near_contract.contract.network.name]['address']
+        else:
+            NEAR_NETWORK_TYPE = 'mainnet'
+            NEAR_NETWORK_URL = NETWORKS[self.near_contract.contract.network.name]['node_url']
+            NEAR_ADDRESS = NETWORKS[self.near_contract.contract.network.name]['address']
+
         try:
-            private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/mywish.testnet.json',
+            private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{NEAR_ADDRESS}.json',
                               stdout=PIPE,
                               stderr=STDOUT,
                               check=True,
                               shell=True)
         except Exception:
-            print(f'Error getting private key from Near Account json mywish.testnet')
+            print(
+                f'Error getting private key from Near Account json {NEAR_ADDRESS}')
             traceback.print_exc()
         else:
             private_key = private_key.stdout.decode(
                 'utf-8').split('"')[11].split(':')[1]
             if len(private_key) != 88:
                 raise Exception(
-                    f"Wrong private key provided for account mywish.testnet")
-        mywish_account = init_account(private_key=private_key)
+                    f"Wrong private key provided for account {NEAR_ADDRESS}")
+
+        mywish_account = init_account(
+            NEAR_NETWORK_URL, NEAR_ADDRESS, private_key)
 
         # sending await transfer to new user account
-        self.new_account()
+        self.new_account(NEAR_NETWORK_TYPE)
         try:
             tx_account_hash = mywish_account.send_money(
                 self.deploy_address, 24 * 10**23)
@@ -250,7 +242,7 @@ class ContractDetailsNearToken(CommonDetails):
                 raise Exception(
                     f"Wrong private key provided for account {self.deploy_address}")
         near_account = init_account(
-            network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+            NEAR_NETWORK_URL, self.deploy_address, private_key)
 
         self.compile()
         args = {
@@ -280,7 +272,7 @@ class ContractDetailsNearToken(CommonDetails):
         self.contract.state = 'WAITING_ACTIVATION'
         self.contract.save()
 
-    def burn_keys(self):
+    def burn_keys(self, NEAR_NETWORK_TYPE: str, NEAR_NETWORK_URL: str):
         """
         burn_keys - функция для сжигания ключей после деплоя контракта
 
@@ -310,7 +302,7 @@ class ContractDetailsNearToken(CommonDetails):
                     f"Wrong public key provided for account {self.deploy_address}")
 
         near_account = init_account(
-            network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+            NEAR_NETWORK_URL, self.deploy_address, private_key)
 
         try:
             near_account.delete_access_key(
@@ -318,7 +310,7 @@ class ContractDetailsNearToken(CommonDetails):
         except Exception:
             traceback.print_exc()
 
-    def check_contract(self):
+    def check_contract(self, NEAR_NETWORK_TYPE: str, NEAR_NETWORK_URL: str):
         """
         check_contract - функция проверки валидность контракта
         и успешность транзакции сжигания ключей
@@ -345,7 +337,7 @@ class ContractDetailsNearToken(CommonDetails):
                     f"Wrong private key provided for account {self.deploy_address}")
 
         near_account = init_account(
-            network=NEAR_NETWORK_URL, account_id=self.deploy_address, private_key=private_key)
+            NEAR_NETWORK_URL, self.deploy_address, private_key)
 
         try:
             result = near_account.function_call(contract_id=self.deploy_address,
@@ -380,8 +372,15 @@ class ContractDetailsNearToken(CommonDetails):
             take_off_blocking(self.contract.network.name)
             return
 
-        self.burn_keys()
-        self.check_contract()
+        if not 'MAINNET' in self.contract.network.name:
+            NEAR_NETWORK_TYPE = 'testnet'
+            NEAR_NETWORK_URL = NETWORKS[self.contract.network.name]['node_url']
+        else:
+            NEAR_NETWORK_TYPE = 'mainnet'
+            NEAR_NETWORK_URL = NETWORKS[self.contract.network.name]['node_url']
+
+        self.burn_keys(NEAR_NETWORK_TYPE, NEAR_NETWORK_URL)
+        self.check_contract(NEAR_NETWORK_TYPE, NEAR_NETWORK_URL)
 
         self.contract.state = 'ACTIVE' if self.future_minting else 'DONE'
         self.contract.deployed_at = datetime.datetime.now()
