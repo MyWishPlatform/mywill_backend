@@ -3,7 +3,7 @@ alembic==1.5.2
 amqp==5.0.2
 aniso8601==8.1.0
 anyio==3.3.3
-asgiref==3.3.1
+asgiref==3.3.2
 asn1crypto==0.24.0
 astor==0.7.1
 attrdict==2.0.1
@@ -21,6 +21,7 @@ blessings==1.7
 bpython==0.17.1
 bs4==0.0.1
 bumpversion==0.5.3
+cached-property==1.5.2
 cachetools==4.2.4
 celery==5.0.5
 certifi==2018.11.29
@@ -58,6 +59,7 @@ django-timezone-field==4.1.1
 djangorestframework==3.13.1
 docopt==0.6.2
 ecdsa==0.13
+ed25519==1.5
 eth-abi==2.1.1
 eth-account==0.4.0
 eth-hash==0.3.1
@@ -85,6 +87,7 @@ gql==2.0.0
 graphql-core==2.3.2
 greenlet==0.4.15
 gunicorn==19.7.1
+gyp @ git+https://chromium.googlesource.com/external/gyp@9ecf45e37677743503342ee4c6a76eaee80e4a7f
 h11==0.12.0
 hdwallet==1.3.0
 hexbytes==0.2.1
@@ -118,6 +121,7 @@ mpmath==1.1.0
 multiaddr==0.0.9
 mypy-extensions==0.4.3
 Naked==0.1.31
+near-api-py @ git+https://github.com/MyWishPlatform/near-api-py.git@fec876c3b1a9c45011de20f0bd8dabc413cb2b01
 neo-boa==0.5.6
 neo-python==0.8.4
 neo-python-rpc==0.2.1
@@ -143,6 +147,7 @@ psutil==5.4.8
 psycopg2-binary==2.8.6
 ptyprocess==0.6.0
 py==1.7.0
+py-ecc==6.0.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyblake2==1.1.2
@@ -174,18 +179,18 @@ PyYAML==5.3.1
 redis==3.5.3
 regex==2020.11.13
 repoze.lru==0.7
-requests==2.26.0
+requests==2.28.0
 requests-http-signature==0.2.0
 requests-oauthlib==1.3.0
 requests-toolbelt==0.9.1
 rfc3986==1.5.0
-rlp==0.6.0
+rlp==1.0.0
 rsa==4.6
 Rx==1.6.1
 scrypt==0.8.6
 service-identity==18.1.0
 sha256==0.1
-six==1.15.0
+six==1.16.0
 sniffio==1.2.0
 solana==0.17.0
 soupsieve==2.0.1
@@ -212,4 +217,4 @@ web3==5.17.0
 websockets==8.1
 Werkzeug==1.0.1
 zipp==3.4.0
-zope.interface==5.2.0
+zope.interface==4.6.0
