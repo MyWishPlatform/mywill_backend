@@ -39,7 +39,7 @@ def is_solana_address(string: str) -> Union[bool, Exception]:
 
 
 def is_email(string):
-    # django.core.validators.validate_email does not eat emails without a dot 
+    # django.core.validators.validate_email does not eat emails without a dot
     # like user@localserver user@[IPv6:2001:db8::1] but angular does
     # EmailValidator has whitelist for domains, but not regex so whitelist=['.*'] does not work
     # so there custom simplified check
@@ -65,12 +65,26 @@ def is_eos_address(string):
 
 def is_eos_public(string):
     all(x in ascii_letters + digits for x in string) or die('{} is not a valid public key'.format(string))
-    
-    
-def is_near_address(admin_address: str):
-    mywish_account = init_account()
-    try:
-        mywish_account._provider.get_account(admin_address)
-    except near_api.providers.JsonProviderError:
+
+
+def is_near_address(admin_address: str, testnet: bool):
+    if testnet:
+        near_url = 'https://rpc.testnet.near.org'
+    else:
+        near_url = 'https://rpc.mainnet.near.org'
+    j = {
+        "jsonrpc": "2.0",
+        "id": "dontcare",
+        "method": "query",
+        "params": {
+            "request_type": "view_account",
+            "finality": "final",
+            "account_id": admin_address
+        }
+    }
+    res = requests.post(near_url, json=j, timeout=10)
+    res.raise_for_status()
+    content = json.loads(res.content)
+    if "error" in content:
         return False
     return True

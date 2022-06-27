@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 import lastwill.check as check
 from lastwill.consts import *
+from lastwill.contracts.api import *
 from lastwill.contracts.api_eos import *
 from lastwill.contracts.api_eth import *
 from lastwill.contracts.models import *
@@ -28,7 +29,7 @@ from lastwill.settings import MY_WISH_URL
 def deploy_near_contract(request, id=None):
     '''
     view for deploy near token
-    :param request: contain contract id
+    :param request: contain contract_id, promo
     :return: id, state
     '''
     # Костыль для быстрого ответа фронту
@@ -39,20 +40,7 @@ def deploy_near_contract(request, id=None):
             return HttpResponse(status=404)
         if contract.invisible:
             raise ValidationError({'result': 'Contract is deleted'}, code=404)
-        contract_details = contract.get_details()
-        response = {
-            'state': contract.state,
-            'admin_address': contract_details.admin_address,
-            'deploy_address': contract_details.deploy_address,
-            'token_short_name': contract_details.token_short_name,
-            'token_name': contract_details.token_name,
-            'contract_id': contract.id,
-            'token_type': contract_details.token_type,
-            'decimals': contract_details.decimals,
-            'future_minting': contract_details.future_minting,
-            'total_supply': contract_details.maximum_supply,
-        }
-        return JsonResponse(response)
+        return HttpResponse(status=200)
 
     user = request.user
     try:
@@ -67,18 +55,24 @@ def deploy_near_contract(request, id=None):
         raise ValidationError({'result': 'Wrong status in contract'}, code=404)
     contract_details = contract.get_details()
     contract_details.predeploy_validate()
-    # for MAINNET
-    # if contract.network.id == 40:
-    #     eth_cost = int(CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'])
-    #     wish_cost = int(eth_cost) * rate('ETH', 'WISH').value
-    #     if 'promo' in request.data:
-    #         promo = request.data['promo'].upper()
-    #         user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=MY_WISH_URL).balance
-    #         wish_cost = check_promocode_in_api(promo, 15, user, user_balance, contract.id, wish_cost)
-    #     if not UserSiteBalance.objects.select_for_update().filter(
-    #             user=user, subsite__site_name=MY_WISH_URL, balance__gte=wish_cost
-    #     ).update(balance=F('balance') - wish_cost):
-    #         raise ValidationError({'result': 'You have not money'}, code=400)
+
+    original_cost = contract.cost
+    currency = 'USDT'
+    site_id = 1
+    network = contract.network.name
+    promo_str = request.data.get('promo', None)
+    if promo_str:
+        promo_str = promo_str.upper()
+    promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
+    cost = check_promocode(promo_str, request.user, original_cost, contract, contract_details)
+    create_payment(request.user.id, '', currency, -cost, site_id, network)
+    if promo_str:
+        promo = Promo.objects.get(promo_str=promo_str.upper())
+        User2Promo(user=request.user, promo=promo, contract_id=contract.id).save()
+        promo.referral_bonus_usd += original_cost // NET_DECIMALS['USDT']
+        promo.use_count += 1
+        promo.save()
+
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.deploy_started_at = timezone.now()
     contract.save()
