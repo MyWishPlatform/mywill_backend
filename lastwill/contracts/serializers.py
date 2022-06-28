@@ -2097,7 +2097,7 @@ class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContractDetailsNearToken
-        fields = ('token_type', 'token_name', 'token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'future_minting')
+        fields = ('token_type', 'token_name', 'token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'future_minting', 'deploy_address')
 
     def validate(self, details):
         if not (check.is_near_address(details['admin_address'], True) or check.is_near_address(details['admin_address'], False)):
