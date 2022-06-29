@@ -47,9 +47,9 @@ dateparser==1.0.0
 defusedxml==0.6.0
 Django==3.2
 django-allauth==0.51.0
-django-appconf==1.0.2
+django-appconf==1.0.5
 django-celery-beat==2.2.0
-django-celery-email==1.1.5
+django-celery-email==3.0.0
 django-cors-headers==3.13.0
 django-extensions==2.2.6
 django-filter==2.4.0

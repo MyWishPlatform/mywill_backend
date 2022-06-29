@@ -10,13 +10,18 @@ services:
     networks:
       mywill_backend:
   rabbitmq:
-    image: rabbitmq:3.8.11
+    image: rabbitmq:3.8.34
     env_file: .env
     restart: unless-stopped
     networks:
       mywill_backend:
     ports:
       - 5672:5672
+      - 5671:5671
+      - 15691:15691
+      - 15692:15692
+      - 25672:25672
+      - 4369:4369
   scanner:
     env_file: .env
     image: myw1sh/mywish_scanner
@@ -31,11 +36,13 @@ services:
   signer:
     env_file: .env
     image: myw1sh/mywish_signer
+    restart: unless-stopped
+    networks:
+      mywill_backend:
     depends_on:
       - db
     volumes:
       - ./.docker/postgres-data:/var/lib/postgresql/data
-    restart: unless-stopped
   web:
     env_file: .env
     environment:
