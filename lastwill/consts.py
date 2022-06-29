@@ -119,7 +119,7 @@ CONTRACT_PRICE_USDT = {
 
     'SOLANA_TOKEN': 50,
     
-    'NEAR_TOKEN': 0,
+    'NEAR_TOKEN': 999,
 }
 
 CONTRACT_PRICE_ETH = {

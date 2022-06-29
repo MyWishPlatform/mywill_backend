@@ -25,6 +25,7 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
  - initialized() (with burn_keys() and check_contract() to be 100% sure)
 """
 
+
 def init_account(network: str, account_id: str, private_key: str):
     """
     init_account - функция инициализации аккаунта в near-api-py
@@ -134,14 +135,19 @@ class ContractDetailsNearToken(CommonDetails):
 
     def compile(self):
         dest = path.join(CONTRACTS_DIR, 'lastwill/near-contract/')
-        with open(path.join(dest, 'near.token.wasm'), 'rb') as f:
-            # код контракта представляет из себя побайтовый массив uint8
+        if not 'MAINNET' in self.contract.network.name:
+            with open(path.join(dest, 'near.token.wasm'), 'rb') as f:
+                # код контракта представляет из себя побайтовый массив uint8
+                bytecode = []
+                while True:
+                    char = f.read(1)
+                    if not char:
+                        break
+                    bytecode.append(uint8(int.from_bytes(char, byteorder)))
+        else:
+            # заглушка для контракта в мейннете,
+            # т.к. нынешний контракт отмечен "только для тестнета"
             bytecode = []
-            while True:
-                char = f.read(1)
-                if not char:
-                    break
-                bytecode.append(uint8(int.from_bytes(char, byteorder)))
         near_contract = NearContract()
         near_contract.bytecode = bytecode
         near_contract.contract = self.contract
@@ -350,8 +356,8 @@ class ContractDetailsNearToken(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            send_mail(common_subject, near_token_text.format(addr=self.deploy_address, network=NEAR_NETWORK_TYPE), DEFAULT_FROM_EMAIL,
-                      [self.contract.user.email])
+            send_mail(common_subject, near_token_text.format(addr=self.deploy_address, network=NEAR_NETWORK_TYPE),
+                      DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
