@@ -24,10 +24,6 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
  - deploy() (with compile() inside)
  - initialized() (with burn_keys() and check_contract() to be 100% sure)
 """
-# регулярка для валидации имени аккаунта
-# https://docs.near.org/docs/concepts/account#account-id-rules
-ACCOUNT_NAME_REGEX = '^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$'
-
 
 def init_account(network: str, account_id: str, private_key: str):
     """
@@ -52,6 +48,9 @@ def generate_account_name():
     Returns:
         str: строка с именем аккаунта
     """
+    # регулярка для валидации имени аккаунта
+    # https://docs.near.org/docs/concepts/account#account-id-rules
+    ACCOUNT_NAME_REGEX = '^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$'
     regex = re.compile(ACCOUNT_NAME_REGEX)
     result = f"mywish{''.join(choices(ascii_lowercase+digits+'-_', k=58))}"
     while not regex.match(result):
@@ -351,7 +350,7 @@ class ContractDetailsNearToken(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            send_mail(common_subject, near_token_text.format(addr=self.deploy_address), DEFAULT_FROM_EMAIL,
+            send_mail(common_subject, near_token_text.format(addr=self.deploy_address, network=NEAR_NETWORK_TYPE), DEFAULT_FROM_EMAIL,
                       [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
