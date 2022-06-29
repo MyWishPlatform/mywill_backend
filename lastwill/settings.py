@@ -310,10 +310,6 @@ CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
-    'update_binance_bridge_transaction_status_every_minute': {
-        'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
-        'schedule': crontab(minute='*'),
-    },
     'updating_coingecko_tokens_once_at_day': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
         'schedule': crontab(hour='*', minute=0),
@@ -326,22 +322,26 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'lastwill.swaps_common.tasks.order_limiter',
         'schedule': crontab(minute='*'),
     },
-    'running_swap_status_updater': {
-        'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_eth_pol_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_second_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
+    # 'update_binance_bridge_transaction_status_every_minute': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'running_swap_status_updater': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_eth_pol_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_pol_eth_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_second_pol_eth_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
+    #     'schedule': crontab(minute='*'),
+    # },
 }
 
 COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'
