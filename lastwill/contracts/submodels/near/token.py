@@ -15,8 +15,7 @@ from lastwill.consts import (CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRI
 from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 """
-24.05.2022
-ПЕРВИЧНАЯ ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
+ИНТЕГРАЦИЯ NEAR БЛОКЧЕЙНА
 
 Как выглядит флоу:
  - create contract class
@@ -24,13 +23,6 @@ from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
  - new_account()
  - deploy() (with compile() inside)
  - initialized() (with burn_keys() and check_contract() to be 100% sure)
-
-пусть константы пока будут тут,
-чтобы было проще исправлять
-
-TODO:
-- использовать константы из consts.py и settings_local.py 
-- добавить логику обработки mainnet (сейчас хардкод testnet)
 """
 # регулярка для валидации имени аккаунта
 # https://docs.near.org/docs/concepts/account#account-id-rules
@@ -183,12 +175,12 @@ class ContractDetailsNearToken(CommonDetails):
 
         if not 'MAINNET' in self.contract.network.name:
             NEAR_NETWORK_TYPE = 'testnet'
-            NEAR_NETWORK_URL = NETWORKS[self.near_contract.contract.network.name]['node_url']
-            NEAR_ADDRESS = NETWORKS[self.near_contract.contract.network.name]['address']
+            NEAR_NETWORK_URL = NETWORKS[self.contract.network.name]['node_url']
+            NEAR_ADDRESS = NETWORKS[self.contract.network.name]['address']
         else:
             NEAR_NETWORK_TYPE = 'mainnet'
-            NEAR_NETWORK_URL = NETWORKS[self.near_contract.contract.network.name]['node_url']
-            NEAR_ADDRESS = NETWORKS[self.near_contract.contract.network.name]['address']
+            NEAR_NETWORK_URL = NETWORKS[self.contract.network.name]['node_url']
+            NEAR_ADDRESS = NETWORKS[self.contract.network.name]['address']
 
         try:
             private_key = run(f'cat ~/.near-credentials/{NEAR_NETWORK_TYPE}/{NEAR_ADDRESS}.json',
