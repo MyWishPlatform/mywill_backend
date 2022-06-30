@@ -189,6 +189,7 @@ class CurrencyStatisticsCacheAdmin(ModelAdmin):
 class ContractAdmin(ModelAdmin):
     search_fields = 'id', 'name', 'address', 'user_address'
     list_display = '__str__', 'state', 'created_date', 'address', 'last_check', 'active_to'
+    raw_id_fields = ['user']
 
 
 @register(Heir)
@@ -199,6 +200,7 @@ class HeirAdmin(ModelAdmin):
 @register(EthContract)
 class EthContractAdmin(ModelAdmin):
     list_display = '__str__', 'address'
+    raw_id_fields = ['contract', 'original_contract']
 
 
 @register(TokenHolder)
@@ -224,6 +226,7 @@ class SolanaContractAdmin(ModelAdmin):
 @register(ContractDetailsToken)
 class ContractDetailsTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+    raw_id_fields = ['eth_contract_token', 'contract']
 
 
 @register(ContractDetailsNeo)
