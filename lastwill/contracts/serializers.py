@@ -40,6 +40,7 @@ from lastwill.contracts.models import (
 )
 from lastwill.contracts.models import send_in_queue
 from lastwill.contracts.submodels.common import create_ethcontract_in_compile
+from lastwill.contracts.submodels.tron import create_troncontract_in_compile
 from lastwill.contracts.decorators import *
 from lastwill.rates.api import rate
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
@@ -804,7 +805,7 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
                                 contract_details.contract.tokenholder_set.order_by('id').all()]
         if not contract_details.eth_contract_token:
-            contract_details.eth_contract_token = create_ethcontract_in_compile('','','','','')
+            contract_details.eth_contract_token = create_ethcontract_in_compile('', '', '', None, '')
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(
                 contract__state='ACTIVE'):
@@ -1432,6 +1433,8 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
                                 for th in
                                 contract_details.contract.tokenholder_set.order_by(
                                     'id').all()]
+        if not contract_details.tron_contract_token:
+            contract_details.tron_contract_token = create_troncontract_in_compile('', '', '', None, '')
         res['tron_contract_token'] = TRONContractSerializer().to_representation(
             contract_details.tron_contract_token)
         return res

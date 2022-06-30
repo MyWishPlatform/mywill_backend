@@ -51,6 +51,17 @@ def instantiate_tronapi(pk, net):
     tron.default_address = tron.address.from_private_key(tron.private_key).base58
     return tron
 
+def create_troncontract_in_compile(abi, bytecode, cv, contract, source_code):
+    tron_contract_token = TRONContract()
+    tron_contract_token.abi = abi
+    tron_contract_token.bytecode = bytecode
+    tron_contract_token.compiler_version = cv
+    tron_contract_token.contract = contract
+    tron_contract_token.original_contract = contract
+    tron_contract_token.source_code = source_code
+    tron_contract_token.save()
+    return tron_contract_token
+
 
 class TRONContract(EthContract):
     pass

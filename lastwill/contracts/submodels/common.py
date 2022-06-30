@@ -3,6 +3,7 @@ import os
 import uuid
 import binascii
 import pika
+import contextlib
 from copy import deepcopy
 from base58 import b58decode
 from ethereum import abi
@@ -161,12 +162,13 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
     print(details.temp_directory, flush=True)
     sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
-    os.mkdir(dest)
+    os.makedirs(dest)
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
 
     if config_name:
         preproc_config = os.path.join(dest, config_name)
-        os.unlink(preproc_config)
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(preproc_config)
     else:
         preproc_config = ''
     return dest, preproc_config
@@ -219,8 +221,8 @@ def test_neo_ico_params(config, params, dest):
 
 def send_in_queue(contract_id, type, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-        os.environ.get('PIKA_HOST', 'localhost'),
-        os.environ.get('PIKA_PORT', 5672),
+        os.environ.get('RABBITMQ_HOST', 'localhost'),
+        os.environ.get('RABBITMQ_PORT', 5672),
         'mywill',
         pika.PlainCredentials('java', 'java'),
     ))
