@@ -16,7 +16,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 import lastwill.check as check
-from lastwill.contracts.submodels.near.token import ContractDetailsNearToken
 from lastwill.parint import EthereumProvider
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -37,9 +36,10 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
     ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
-    ContractDetailsMoonriverToken, ContractDetailsSolanaToken
+    ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ContractDetailsNearToken
 )
 from lastwill.contracts.models import send_in_queue
+from lastwill.contracts.submodels.common import create_ethcontract_in_compile
 from lastwill.contracts.decorators import *
 from lastwill.rates.api import rate
 from lastwill.settings import EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS
@@ -803,6 +803,8 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
 
         res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
                                 contract_details.contract.tokenholder_set.order_by('id').all()]
+        if not contract_details.eth_contract_token:
+            contract_details.eth_contract_token = create_ethcontract_in_compile('','','','','')
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(
                 contract__state='ACTIVE'):
