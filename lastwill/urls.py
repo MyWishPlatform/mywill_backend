@@ -26,6 +26,7 @@ from lastwill.contracts.api import (
     EOSAirdropAddressViewSet,
     ICOtokensView,
     WhitelistAddressViewSet,
+    SolanaTokenInfoViewSet,
     buy_brand_report,
     cancel,
     change_contract_state,
@@ -63,6 +64,7 @@ from lastwill.contracts.api import (
     check_neo3_address,
     convert_neo3_address_to_hex,
     check_solana_address,
+    get_token_supply
 )
 from lastwill.contracts.api_common import (
     get_available_contracts,
@@ -166,6 +168,7 @@ router.register(r'sentences', SentenceViewSet)
 router.register(r'whitelist_addresses', WhitelistAddressViewSet)
 router.register(r'airdrop_addresses', AirdropAddressViewSet)
 router.register(r'eos_airdrop_addresses', EOSAirdropAddressViewSet)
+router.register(r'token_info', SolanaTokenInfoViewSet)
 # router.register('orders', OrderBookSwapsModelViewSet)
 
 
@@ -299,6 +302,7 @@ urlpatterns = [
     url(r'^api/check_neo3_address/$', check_neo3_address),
     url(r'^api/convert_neo3_address_to_hex/$', convert_neo3_address_to_hex),
     url(r'^api/check_solana_address/$', check_solana_address),
+    url(r'^api/get_token_supply/$', get_token_supply),
     url(r'^api/healthcheck', health_check),
 
     # dashboard
