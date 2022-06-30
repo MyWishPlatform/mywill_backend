@@ -21,7 +21,6 @@ MAIL_NETWORK = {
     'HECOCHAIN_TESTNET': 'HecoChainTest',
     'MOONRIVER_MAINNET': 'Moonriver',
     'SOLANA_TESTNET': 'Solana Testnet',
-    'SOLANA_MAINNET': 'Solana Mainnet',
 }
 
 API_NETWORK = {
@@ -44,7 +43,6 @@ API_NETWORK = {
     'HECOCHAIN_TESTNET': 'HECOCHAIN_TESTNET',
     'MOONRIVER_MAINNET': 'MOONRIVER_MAINNET',
     'SOLANA_TESTNET': 'SOLANA_TESTNET',
-    'SOLANA_MAINNET': 'SOLANA_MAINNET',
 }
 
 NETWORK_SUBSITE = {
@@ -67,7 +65,7 @@ NETWORK_SUBSITE = {
     'HECOCHAIN_TESTNET': 1,
     'MOONRIVER_MAINNET': 1,
     'SOLANA_TESTNET': 1,
-    'SOLANA_MAINNET': 1,
+
 }
 
 CONTRACT_PRICE_USDT = {
@@ -301,14 +299,11 @@ AVAILABLE_CONTRACT_TYPES = {
     38: [
         {'contract_type': 39, 'contract_name': 'Token'}
     ],
-    39: [
-        {'contract_type': 39, 'contract_name': 'Token'}
-    ]
 }
 
 NETWORK_TYPES = {
     'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36, 38],
-    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37, 39]
+    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37]
 }
 
 ALL_CONTRACT_STATES = [
@@ -376,6 +371,7 @@ ETH_COMMON_GAS_PRICES = {
     'HECOCHAIN_MAINNET': 6,
     'HECOCHAIN_TESTNET': 6,
     'MOONRIVER_MAINNET': 20,
+    'SOLANA_TESTNET': 5,
 }
 
 EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS = {
