@@ -1,5 +1,10 @@
 from django.contrib.admin import ModelAdmin, register
-
+from lastwill.swaps_common.tokentable.models import (
+    Tokens,
+    TokensCoinMarketCap,
+    CoinGeckoToken,
+    TokensUpdateTime
+)
 # New import 28.04.2022
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
