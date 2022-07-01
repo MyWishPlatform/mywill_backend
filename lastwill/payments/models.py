@@ -23,11 +23,7 @@ class BTCAccount(models.Model):
     address = models.CharField(max_length=50)
     used = models.BooleanField(default=False)
     balance = models.IntegerField(default=0)
-<<<<<<< HEAD
     user = models.ForeignKey(User, null=True, default=None, on_delete=models.SET_NULL)
-=======
-    user = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE)
->>>>>>> dev
 
     def __str__(self):
         return f"{self.user.__str__()} BTC account"

@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 from sqlite3 import IntegrityError
 import sys, traceback
 import time
-=======
->>>>>>> dev
 import datetime
 import sys
 import time
