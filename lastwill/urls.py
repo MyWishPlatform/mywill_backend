@@ -18,6 +18,7 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import re_path
+from lastwill.dashboard.views import advanced_rate_view, contracts_statistic_view, deploy_accounts_balances_view, users_statistic_view
 # from allauth.account.views import confirm_email as allauthemailconfirmation
 from rest_framework.routers import DefaultRouter
 
@@ -26,6 +27,7 @@ from lastwill.contracts.api import (
     ContractViewSet,
     EOSAirdropAddressViewSet,
     ICOtokensView,
+    SolanaTokenInfoViewSet,
     WhitelistAddressViewSet,
     buy_brand_report,
     cancel,
@@ -50,6 +52,7 @@ from lastwill.contracts.api import (
     get_test_tokens,
     get_testnet_tron_tokens,
     get_token_contracts,
+    get_token_supply,
     get_tokens_for_eth_address,
     get_tronish_balance,
     i_am_alive,
