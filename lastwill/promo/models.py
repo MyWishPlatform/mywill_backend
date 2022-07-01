@@ -10,11 +10,7 @@ class Promo(models.Model):
     use_count = models.IntegerField(default=0)
     use_count_max = models.IntegerField(null=True, default=None)
     promo_str = models.CharField(max_length=32, unique=True)
-<<<<<<< HEAD
     user = models.ForeignKey(User, null=True, default=None, on_delete=models.SET_NULL)
-=======
-    user = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE)
->>>>>>> dev
     referral_bonus_usd = models.IntegerField(default=0)
     reusable = models.BooleanField(default=False)
 
