@@ -1,32 +1,18 @@
-import logging
-import time
 import json
+import logging
 import os
-from typing import Union, Optional
+import time
+from typing import Optional, Union
 
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
-from web3.contract import ContractFunction, Contract
-from web3 import Web3, HTTPProvider
-from web3.types import (
-    Wei,
-    HexBytes,
-    ChecksumAddress,
-    ENS,
-    Address,
-    TxParams,
-)
+from web3 import HTTPProvider, Web3
+from web3.contract import Contract, ContractFunction
+from web3.types import ENS, Address, ChecksumAddress, HexBytes, TxParams, Wei
 
-from lastwill.settings_local import WALLET_ADDRESS, PRIVATE_KEY
+from lastwill.settings_local import PRIVATE_KEY, WALLET_ADDRESS
 
-from .consts import (
-    INFURA_URL,
-    MAX_SLIPPAGE,
-    RUBIC_ADDRESS,
-    UNISWAP_API_URL,
-    UNISWAP_ROUTER02_ADDRESS,
-)
-
+from .consts import (INFURA_URL, MAX_SLIPPAGE, RUBIC_ADDRESS, UNISWAP_API_URL, UNISWAP_ROUTER02_ADDRESS)
 
 AddressLike = Union[Address, ChecksumAddress, ENS]
 
@@ -41,8 +27,7 @@ def get_abi_by_filename(filename):
     Needed for a convenient format for storing abi contracts in files
     and receiving them as variables for further interaction
     """
-    build_dir = os.path.join(
-        os.getcwd(), 'lastwill/swaps_common/orderbook/contracts_abi/')
+    build_dir = os.path.join(os.getcwd(), 'lastwill/swaps_common/orderbook/contracts_abi/')
 
     with open(os.path.join(build_dir, filename), 'r') as contract:
         return json.load(contract)
@@ -75,10 +60,7 @@ def get_rbc_balance(wallet_address) -> Wei:
     """
     # TODO: rewrite func to get token status
     #  input: wallet address, token address
-    contract = load_contract(
-        'rubic_token.json',
-        RUBIC_ADDRESS
-    )
+    contract = load_contract('rubic_token.json', RUBIC_ADDRESS)
 
     return contract.functions.balanceOf(wallet_address).call()
 
@@ -114,17 +96,12 @@ def str_to_addr(s: str) -> AddressLike:
 
 
 # ------ Approval Utils -------------------------------------------------------
-def approve(
-    token_address: AddressLike,
-    max_approval: Optional[int] = None,
-    contract_address=UNISWAP_ROUTER02_ADDRESS
-):
+def approve(token_address: AddressLike, max_approval: Optional[int] = None, contract_address=UNISWAP_ROUTER02_ADDRESS):
     # gg
     max_approval_hex = f"0x{64 * 'f'}"
     max_approval_int = int(max_approval_hex, 16)
     max_approval = max_approval_int if not max_approval else max_approval
     # gg
-
     """Give an exchange/router max approval of a token."""
     # TODO: now it works only for rubic
     #  change rubic_abi to erc20_abi
@@ -132,9 +109,7 @@ def approve(
         'rubic_token.json',
         token_address,
     )
-    function = contract.functions.approve(
-        contract_address, max_approval
-    )
+    function = contract.functions.approve(contract_address, max_approval)
     tx = build_and_send_tx(function)
     logging.info('Txn body: {}'.format(tx))
     logging.info('yep')
@@ -163,11 +138,7 @@ def is_approved(token: AddressLike) -> bool:
     #     .allowance(WALLET_ADDRESS, contract_addr)
     #     .call()
     # )
-    amount = (
-        load_contract('erc20.json', token).functions
-        .allowance(WALLET_ADDRESS, contract_addr)
-        .call()
-    )
+    amount = (load_contract('erc20.json', token).functions.allowance(WALLET_ADDRESS, contract_addr).call())
 
     if amount >= max_approval_check_int:
         return True
@@ -183,17 +154,11 @@ def get_eth_token_output_price(
     """
     Public price for ETH to token trades with an exact output.
     """
-    contract = load_contract(
-        'uniswap_router02.json',
-        UNISWAP_ROUTER02_ADDRESS
-    )
-    price = contract.functions.getAmountsIn(
-        quantity_in_wei,
-        [
-            Web3.toChecksumAddress(get_weth_address()),
-            Web3.toChecksumAddress(token_address),
-        ]
-    ).call()[0]
+    contract = load_contract('uniswap_router02.json', UNISWAP_ROUTER02_ADDRESS)
+    price = contract.functions.getAmountsIn(quantity_in_wei, [
+        Web3.toChecksumAddress(get_weth_address()),
+        Web3.toChecksumAddress(token_address),
+    ]).call()[0]
 
     logging.info('ETH token output price is: {}'.format(price))
 
@@ -213,17 +178,11 @@ def get_token_eth_output_price(
     # abi = get_abi_by_filename("uniswap_router02.json")
     # contract = w3.eth.contract(address=UNISWAP_ROUTER02_ADDRESS, abi=abi)
 
-    contract = load_contract(
-        'uniswap_router02.json',
-        UNISWAP_ROUTER02_ADDRESS
-    )
-    price = contract.functions.getAmountsIn(
-        quantity_in_wei,
-        [
-            Web3.toChecksumAddress(token_address),
-            Web3.toChecksumAddress(get_weth_address()),
-        ]
-    ).call()[0]
+    contract = load_contract('uniswap_router02.json', UNISWAP_ROUTER02_ADDRESS)
+    price = contract.functions.getAmountsIn(quantity_in_wei, [
+        Web3.toChecksumAddress(token_address),
+        Web3.toChecksumAddress(get_weth_address()),
+    ]).call()[0]
 
     logging.info('Token ETH output price is: {}'.format(price))
 
@@ -246,25 +205,15 @@ def get_tx_params(value: Wei = Wei(0), gas: Wei = Wei(250000)) -> TxParams:
     }
 
 
-def eth_to_token_swap_output(
-    output_token: AddressLike,
-    qty: int,
-    recipient: Optional[AddressLike]
-) -> HexBytes:
+def eth_to_token_swap_output(output_token: AddressLike, qty: int, recipient: Optional[AddressLike]) -> HexBytes:
     """
     Convert ETH to tokens given an output amount.
     """
     if recipient is None:
         recipient = WALLET_ADDRESS
 
-    eth_qty = get_eth_token_output_price(
-        quantity_in_wei=qty,
-        token_address=output_token
-    )
-    contract = load_contract(
-        'uniswap_router02.json',
-        UNISWAP_ROUTER02_ADDRESS
-    )
+    eth_qty = get_eth_token_output_price(quantity_in_wei=qty, token_address=output_token)
+    contract = load_contract('uniswap_router02.json', UNISWAP_ROUTER02_ADDRESS)
     swap_func = contract.functions.swapETHForExactTokens
 
     sended_transaction = build_and_send_tx(
@@ -279,27 +228,19 @@ def eth_to_token_swap_output(
 
     # ---
     logging.info(sended_transaction)
-    result = w3.eth.waitForTransactionReceipt(
-        sended_transaction,
-        timeout=600
-    )
+    result = w3.eth.waitForTransactionReceipt(sended_transaction, timeout=600)
     logging.info(result)
     # ---
 
     return 1
 
 
-def token_to_eth_swap_output(
-    input_token: AddressLike, qty: Wei
-) -> HexBytes:
+def token_to_eth_swap_output(input_token: AddressLike, qty: Wei) -> HexBytes:
     """
     Convert tokens to ETH given an output amount.
     """
     # !---
-    cost = get_token_eth_output_price(
-        token_address=input_token,
-        quantity_in_wei=qty
-    )
+    cost = get_token_eth_output_price(token_address=input_token, quantity_in_wei=qty)
     # ---
     max_tokens = int((1 + MAX_SLIPPAGE) * cost)
     contract = load_contract(
@@ -315,25 +256,18 @@ def token_to_eth_swap_output(
             [input_token, get_weth_address()],
             WALLET_ADDRESS,
             deadline(),
-        ),
-    )
+        ),)
 
     # ---
     logging.info(sended_transaction)
-    result = w3.eth.waitForTransactionReceipt(
-        sended_transaction,
-        timeout=600
-    )
+    result = w3.eth.waitForTransactionReceipt(sended_transaction, timeout=600)
     logging.info(result)
     # ---
 
     return 1
 
 
-def build_and_send_tx(
-    function: ContractFunction,
-    tx_params: Optional[TxParams] = None
-) -> HexBytes:
+def build_and_send_tx(function: ContractFunction, tx_params: Optional[TxParams] = None) -> HexBytes:
     """
     Build and send a transaction.
     """
@@ -341,9 +275,7 @@ def build_and_send_tx(
         tx_params = get_tx_params()
 
     transaction = function.buildTransaction(tx_params)
-    signed_txn = w3.eth.account.sign_transaction(
-        transaction, private_key=PRIVATE_KEY
-    )
+    signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
 
     logging.info(signed_txn.rawTransaction)
 
@@ -373,8 +305,7 @@ def _get_rbc_eth_ratio(token_address) -> float:
     """
     transport = RequestsHTTPTransport(url=UNISWAP_API_URL)
     client = Client(transport=transport, fetch_schema_from_transport=True)
-    query = gql(
-        """
+    query = gql("""
         {
             token(id: "%s"){
                name
@@ -385,17 +316,14 @@ def _get_rbc_eth_ratio(token_address) -> float:
                totalLiquidity
             }
         }
-        """ % token_address.lower()
-    )
+        """ % token_address.lower())
 
     while 1:
         # Execute the query on the transport
         result = client.execute(query)
 
         if result:
-            logging.info('UNISWAP GQL response: {}'.format(
-                float(result.get("token").get("derivedETH")))
-            )
+            logging.info('UNISWAP GQL response: {}'.format(float(result.get("token").get("derivedETH"))))
 
             break
 

@@ -1,12 +1,5 @@
 from django.contrib.admin import ModelAdmin, register
 
-from lastwill.swaps_common.tokentable.models import (
-    Tokens,
-    TokensCoinMarketCap,
-    CoinGeckoToken,
-    TokensUpdateTime
-)
-
 # New import 28.04.2022
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
@@ -57,9 +50,7 @@ class TokensModelAdmin(ModelAdmin):
         'token_short_name',
         'address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(TokensCoinMarketCap)
@@ -96,9 +87,7 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
         'token_platform',
         'token_address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(CoinGeckoToken)
@@ -145,9 +134,7 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         '=short_title',
         '=address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(TokensUpdateTime)
@@ -160,15 +147,9 @@ class TokensUpdateTimeModelAdmin(ModelAdmin):
         'id',
         'last_time_updated',
     )
-    list_filter = (
-        'last_time_updated',
-    )
-    search_fields = (
-        'id',
-    )
-    ordering = (
-        'id',
-    )
+    list_filter = ('last_time_updated',)
+    search_fields = ('id',)
+    ordering = ('id',)
 
 
 #######################
@@ -176,7 +157,6 @@ class TokensUpdateTimeModelAdmin(ModelAdmin):
 # New code 28.04.2022 #
 #                     #
 #######################
-
 
 
 # contracts
@@ -453,4 +433,3 @@ class ContractDetailsMoonriverTokenAdmin(ModelAdmin):
 @register(ContractDetailsSolanaToken)
 class ContractDetailsSolanaTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
-

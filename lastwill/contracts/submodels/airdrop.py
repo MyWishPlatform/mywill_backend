@@ -1,7 +1,9 @@
-from django.db import models
 import datetime
+
+from django.db import models
+
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT)
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT
 from lastwill.emails_api import send_verification_mail
 
 
@@ -10,16 +12,14 @@ class AirdropAddress(models.Model):
     address = models.CharField(max_length=50, db_index=True)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
-    amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
-        db_index=True
-    )
+    amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, db_index=True)
 
     def __str__(self):
         return self.contract.__str__()
 
 
 class AbstractContractDetailsAirdrop(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -34,10 +34,7 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     verification_date_payment = models.DateField(null=True, default=None)
 
     def get_arguments(self, *args, **kwargs):
-        return [
-            self.admin_address,
-            self.token_address
-        ]
+        return [self.admin_address, self.token_address]
 
     def compile(self, _=''):
         dest = path.join(CONTRACTS_DIR, 'lastwill/airdrop-contract/')
@@ -45,10 +42,9 @@ class AbstractContractDetailsAirdrop(CommonDetails):
             airdrop_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'contracts/AirDrop.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        self.eth_contract = create_ethcontract_in_compile(
-            airdrop_json['abi'], airdrop_json['bytecode'][2:],
-            airdrop_json['compiler']['version'], self.contract, source_code
-        )
+        self.eth_contract = create_ethcontract_in_compile(airdrop_json['abi'], airdrop_json['bytecode'][2:],
+                                                          airdrop_json['compiler']['version'], self.contract,
+                                                          source_code)
         self.save()
 
     @blocking
@@ -75,16 +71,8 @@ class AbstractContractDetailsAirdrop(CommonDetails):
         return CONTRACT_GAS_LIMIT['AIRDROP']
 
     def airdrop(self, message):
-        new_state = {
-            'COMMITTED': 'sent',
-            'PENDING': 'processing',
-            'REJECTED': 'added'
-        }[message['status']]
-        old_state = {
-            'COMMITTED': 'processing',
-            'PENDING': 'added',
-            'REJECTED': 'processing'
-        }[message['status']]
+        new_state = {'COMMITTED': 'sent', 'PENDING': 'processing', 'REJECTED': 'added'}[message['status']]
+        old_state = {'COMMITTED': 'processing', 'PENDING': 'added', 'REJECTED': 'processing'}[message['status']]
 
         ids = []
         for js in message['airdroppedAddresses']:
@@ -113,11 +101,9 @@ class AbstractContractDetailsAirdrop(CommonDetails):
             ids.append(addr.id)
 
         if len(message['airdroppedAddresses']) != len(ids):
-            print('=' * 40, len(message['airdroppedAddresses']), len(ids),
-                  flush=True)
+            print('=' * 40, len(message['airdroppedAddresses']), len(ids), flush=True)
         AirdropAddress.objects.filter(id__in=ids).update(state=new_state)
-        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'),
-                                                   active=True).count() == 0:
+        if self.contract.airdropaddress_set.filter(state__in=('added', 'processing'), active=True).count() == 0:
             self.airdrop_in_progress = False
             self.save()
 

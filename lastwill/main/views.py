@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.middleware import csrf
+from django.shortcuts import redirect, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -15,15 +16,9 @@ def index(request):
 def balance(request):
     address = request.query_params.get('address', None)
     try:
-        return Response({
-                'result': ParInt().eth_getBalance(address),
-                'status': 0
-        })
+        return Response({'result': ParInt().eth_getBalance(address), 'status': 0})
     except (ParConnectExc, ParErrorExc) as e:
-        return Response({
-                'detail': str(e),
-                'status': 1
-        })
+        return Response({'detail': str(e), 'status': 1})
 
 
 def login(request):
@@ -34,6 +29,7 @@ def login(request):
 @api_view()
 def eth2rub(request):
     return Response({'RUB': rate('ETH', 'RUB').value})
+
 
 @api_view()
 def exc_rate(request):

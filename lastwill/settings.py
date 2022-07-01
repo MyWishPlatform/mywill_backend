@@ -16,7 +16,6 @@ from celery.schedules import crontab
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(os.path.realpath(__file__))
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -132,7 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -157,9 +155,7 @@ MEDIA_URL = '/media/'
 
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 
-STATICFILES_DIRS = (
-    PROJECT_STATIC_ROOT,
-)
+STATICFILES_DIRS = (PROJECT_STATIC_ROOT,)
 
 SITE_ID = 1
 REST_SESSION_LOGIN = True
@@ -175,9 +171,7 @@ ACCOUNT_ADAPTER = 'lastwill.profile.adapter.SubSiteRegistrationAdapter'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',],
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -293,18 +287,21 @@ try:
 except ImportError as exc:
     print("Can't load local settings")
 
-
 # REDIS settings
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = '6379'
 BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600, }
+BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 3600,
+}
 
 # CELERY settings
 CELERY_DATA_FORMAT = 'json'
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/0'
-CELERY_ACCEPT_CONTENT = [f'application/{CELERY_DATA_FORMAT}', ]
+CELERY_ACCEPT_CONTENT = [
+    f'application/{CELERY_DATA_FORMAT}',
+]
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT

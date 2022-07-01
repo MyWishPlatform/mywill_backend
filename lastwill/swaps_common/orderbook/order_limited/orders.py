@@ -1,50 +1,22 @@
 import logging
 from typing import Union
 
+from django.db.models import F, Q
 from django.db.models.query import QuerySet
-from django.db.models import Q, F
 
 from lastwill.consts import ETH_ADDRESS, NET_DECIMALS
+from lastwill.settings_local import (DEFAULT_MAX_ETH_VOLUME, DEFAULT_MAX_RBC_VOLUME, DEFAULT_MIN_ETH_VOLUME,
+                                     DEFAULT_MIN_RBC_VOLUME, ORDER_FEE, PROFIT_RATIO, WALLET_ADDRESS)
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
-from lastwill.settings_local import (
-    WALLET_ADDRESS,
-    ORDER_FEE,
-    PROFIT_RATIO,
-    DEFAULT_MIN_ETH_VOLUME,
-    DEFAULT_MIN_RBC_VOLUME,
-    DEFAULT_MAX_ETH_VOLUME,
-    DEFAULT_MAX_RBC_VOLUME,
-)
 
-from .consts import (
-    RUBIC_ADDRESS,
-    MAINNET_ORDERBOOK_ADDRESS,
-    MAINNET_ORDERBOOK_ABI,
-
-    DEFAULT_NETWORK_ID,
-    DEFAULT_GAS_LIMIT,
-)
+from .consts import (DEFAULT_GAS_LIMIT, DEFAULT_NETWORK_ID, MAINNET_ORDERBOOK_ABI, MAINNET_ORDERBOOK_ADDRESS,
+                     RUBIC_ADDRESS)
 from .etherscan import get_gas_price
-from .uniswap import (
-    HexBytes,
+from .uniswap import (AddressLike, HexBytes, Wei, _get_rbc_eth_ratio, approve, build_and_send_tx,
+                      eth_to_token_swap_output, get_eth_balance, get_eth_token_output_price, get_token_eth_output_price,
+                      is_approved, load_contract, token_to_eth_swap_output, w3)
 
-    approve,
-    build_and_send_tx,
-    is_approved,
-    eth_to_token_swap_output,
-    get_eth_balance,
-    get_eth_token_output_price,
-    _get_rbc_eth_ratio,
-    get_token_eth_output_price,
-    load_contract,
-    token_to_eth_swap_output,
-
-    AddressLike,
-    Wei,
-    w3,
-)
-
-ETH_DECIMALS = NET_DECIMALS.get('ETH', 10 ** 18)
+ETH_DECIMALS = NET_DECIMALS.get('ETH', 10**18)
 RBC_DECIMALS = NET_DECIMALS.get('RBC', ETH_DECIMALS)
 
 
@@ -72,11 +44,7 @@ def _get_matching_orders(
 
     _set_base_amount_contributed(queryset)
 
-    logging.info(
-        'Total public and active orders: {}'.format(
-            queryset.count()
-        )
-    )
+    logging.info('Total public and active orders: {}'.format(queryset.count()))
 
     return queryset.filter(
         Q(
@@ -88,8 +56,7 @@ def _get_matching_orders(
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
             quote_address=quote_token_address.lower(),
             is_closed_by_limiter=False,
-        ) |
-        Q(
+        ) | Q(
             network=network,
             contract_address=contract_address.lower(),
             base_address=quote_token_address.lower(),
@@ -98,8 +65,7 @@ def _get_matching_orders(
             base_amount_contributed=F('base_limit') * ETH_DECIMALS,
             quote_address=base_token_address.lower(),
             is_closed_by_limiter=False,
-        )
-    )
+        ))
 
 
 def _get_profitability_order(
@@ -132,7 +98,6 @@ def _get_profitability_order(
     # TODO: переименовать под более подхдящее имя, потому что в сделках могут
     # участвовать не только эфир и рубик.
 
-
     active_eth_rbc_orders = _get_matching_orders(
         queryset=_get_active_orders(),
         base_token_address=base_token_address.lower(),
@@ -156,24 +121,18 @@ def _get_profitability_order(
     }
 
     if active_eth_rbc_orders.exists():
-        logging.info(
-            f'Matching orders have been found is: {matching_order_count}.'
-        )
+        logging.info(f'Matching orders have been found is: {matching_order_count}.')
         rbc_eth_ratio = _get_rbc_eth_ratio(RUBIC_ADDRESS)
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
         for _, order in enumerate(active_eth_rbc_orders):
-            if (
-                order.base_address == base_token_address.lower() and
-                order.quote_address == quote_token_address.lower()
-            ):
-                if not _check_profitability(
-                    exchange_rate=rbc_eth_ratio,
-                    gas_fee=gas_fee,
-                    eth_value=float(order.base_limit),
-                    rbc_value=float(order.quote_limit),
-                    is_rbc=True
-                ):
+            if (order.base_address == base_token_address.lower() and
+                    order.quote_address == quote_token_address.lower()):
+                if not _check_profitability(exchange_rate=rbc_eth_ratio,
+                                            gas_fee=gas_fee,
+                                            eth_value=float(order.base_limit),
+                                            rbc_value=float(order.quote_limit),
+                                            is_rbc=True):
                     # print(f'{counter}. NOUP...')
                     continue
 
@@ -182,17 +141,13 @@ def _get_profitability_order(
                 profitable_orders.append(order.id)
 
                 _hide_order(order)
-            elif (
-                order.base_address == quote_token_address.lower() and
-                order.quote_address == base_token_address.lower()
-            ):
-                if not _check_profitability(
-                    exchange_rate=rbc_eth_ratio,
-                    gas_fee=gas_fee,
-                    rbc_value=float(order.base_limit),
-                    eth_value=float(order.quote_limit),
-                    is_rbc=False
-                ):
+            elif (order.base_address == quote_token_address.lower() and
+                  order.quote_address == base_token_address.lower()):
+                if not _check_profitability(exchange_rate=rbc_eth_ratio,
+                                            gas_fee=gas_fee,
+                                            rbc_value=float(order.base_limit),
+                                            eth_value=float(order.quote_limit),
+                                            is_rbc=False):
                     # print(f'{counter}. NOUP...')
                     continue
 
@@ -236,13 +191,11 @@ def _set_done_status_order(order: QuerySet):
     return 1
 
 
-def _check_profitability_eth_to_token(
-    exchange_rate: float,
-    gas_fee: float,
-    rbc_value: float,
-    eth_value: float,
-    is_rbc: bool = True
-):
+def _check_profitability_eth_to_token(exchange_rate: float,
+                                      gas_fee: float,
+                                      rbc_value: float,
+                                      eth_value: float,
+                                      is_rbc: bool = True):
     if not is_rbc:
         is_rbc = -1
     else:
@@ -259,13 +212,7 @@ def _check_profitability_eth_to_token(
         return False
 
 
-def _check_profitability(
-    exchange_rate: float,
-    gas_fee: float,
-    rbc_value: float,
-    eth_value: float,
-    is_rbc: bool = True
-):
+def _check_profitability(exchange_rate: float, gas_fee: float, rbc_value: float, eth_value: float, is_rbc: bool = True):
     # profit_coeff - value in ETH showing the minimum profit for which a transaction can be carried out
     """
     Calculate profit for active orderbook. Returns True if order is
@@ -326,10 +273,7 @@ def swap_token_on_uniswap(
         logging.info('if input token is native ETH')
         balance = get_eth_balance(WALLET_ADDRESS)
         logging.info('balance')
-        need = get_eth_token_output_price(
-            token_address=output_token,
-            quantity_in_wei=qty
-        )
+        need = get_eth_token_output_price(token_address=output_token, quantity_in_wei=qty)
         logging.info("balance: {}\nneed: {}".format(balance, need))
 
         if balance < need:
@@ -366,11 +310,7 @@ def swap_token_on_uniswap(
     return 0
 
 
-def _confirm_orders(
-    orders: QuerySet,
-    base_token_address,
-    quote_token_address
-):
+def _confirm_orders(orders: QuerySet, base_token_address, quote_token_address):
     """
     make transaction great again!
     """
@@ -390,15 +330,14 @@ def _confirm_orders(
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
         if _check_profitability(
-            rbc_eth_ratio / ETH_DECIMALS,
-            gas_fee,
-            eth_value=float(order.base_limit),
-            # TODO: Need fix. "rbc_eth_ratio / ETH_DECIMALS" is RBC # qty in ETH value.
-            # rbc_value=float(order.quote_limit),
-            # ---
-            rbc_value=1,
-            is_rbc=True
-        ):
+                rbc_eth_ratio / ETH_DECIMALS,
+                gas_fee,
+                eth_value=float(order.base_limit),
+                # TODO: Need fix. "rbc_eth_ratio / ETH_DECIMALS" is RBC # qty in ETH value.
+                # rbc_value=float(order.quote_limit),
+                # ---
+                rbc_value=1,
+                is_rbc=True):
             if not order.swaped_on_uniswap:
                 swap_token_on_uniswap(
                     order=order,
@@ -423,14 +362,11 @@ def _confirm_orders(
         # ---
         gas_fee = get_gas_price() * int(DEFAULT_GAS_LIMIT)
 
-        if _check_profitability_eth_to_token(
-            _get_rbc_eth_ratio(RUBIC_ADDRESS),
-            gas_fee,
-            rbc_value=float(order.base_limit),
-            eth_value=eth_rbc_ratio / ETH_DECIMALS,
-            is_rbc=False
-
-        ):
+        if _check_profitability_eth_to_token(_get_rbc_eth_ratio(RUBIC_ADDRESS),
+                                             gas_fee,
+                                             rbc_value=float(order.base_limit),
+                                             eth_value=eth_rbc_ratio / ETH_DECIMALS,
+                                             is_rbc=False):
             if not order.swaped_on_uniswap:
                 swap_token_on_uniswap(
                     order=order,
@@ -469,13 +405,11 @@ def _complete_order(order: QuerySet = None):
         # w3.toWei(float(order.quote_limit), unit='ether'),
         _get_quote_limit(order),
     )
-    logging.info(
-        '\nOrder memo: {}\nOrder qoute address: {}\nOrder quote limit: {}'.format(
-            order.memo_contract,
-            w3.toChecksumAddress(order.quote_address),
-            w3.toWei(float(order.quote_limit), unit='ether'),
-        )
-    )
+    logging.info('\nOrder memo: {}\nOrder qoute address: {}\nOrder quote limit: {}'.format(
+        order.memo_contract,
+        w3.toChecksumAddress(order.quote_address),
+        w3.toWei(float(order.quote_limit), unit='ether'),
+    ))
     tx_config = {
         "from": w3.toChecksumAddress(WALLET_ADDRESS),
         "gas": DEFAULT_GAS_LIMIT,
@@ -484,20 +418,14 @@ def _complete_order(order: QuerySet = None):
     }
 
     if order.quote_address == ETH_ADDRESS:
-        tx_config.update(
-            {"value": w3.toWei(float(order.quote_limit), unit='ether'),}
-        )
+        tx_config.update({
+            "value": w3.toWei(float(order.quote_limit), unit='ether'),
+        })
 
     logging.info(tx_config)
-    sended_transaction = build_and_send_tx(
-        transaction,
-        tx_params=tx_config
-    )
+    sended_transaction = build_and_send_tx(transaction, tx_params=tx_config)
     logging.info(sended_transaction)
-    result = w3.eth.waitForTransactionReceipt(
-        sended_transaction,
-        timeout=600
-    )
+    result = w3.eth.waitForTransactionReceipt(sended_transaction, timeout=600)
     # logging.info(result)
 
     if result:
@@ -539,16 +467,12 @@ def main(
 
     logging.info(orders.only('unique_link').values())
 
-    _confirm_orders(
-        orders,
-        base_token_address,
-        quote_token_address
-    )
+    _confirm_orders(orders, base_token_address, quote_token_address)
 
     return 1
 
 
-def _get_quote_limit(order:QuerySet):
+def _get_quote_limit(order: QuerySet):
     """
     Returns order's qoute limit from contract.
     """
@@ -557,16 +481,14 @@ def _get_quote_limit(order:QuerySet):
         MAINNET_ORDERBOOK_ABI,
         w3.toChecksumAddress(MAINNET_ORDERBOOK_ADDRESS),
     )
-    order_qoute_limit =  orderbook_contract.functions.quoteLimit(
-        order_hash
-    ).call()
+    order_qoute_limit = orderbook_contract.functions.quoteLimit(order_hash).call()
 
     logging.info('order_qoute_limit: {}'.format(order_qoute_limit))
 
     return order_qoute_limit
 
 
-def _check_base_amount_contribute(order:QuerySet):
+def _check_base_amount_contribute(order: QuerySet):
     """
     Проверяет заполненность левой стороны.
 
@@ -581,16 +503,12 @@ def _check_base_amount_contribute(order:QuerySet):
         MAINNET_ORDERBOOK_ABI,
         w3.toChecksumAddress(MAINNET_ORDERBOOK_ADDRESS),
     )
-    order_is_swaped = orderbook_contract.functions.isSwapped(
-        order_hash
-    ).call()
+    order_is_swaped = orderbook_contract.functions.isSwapped(order_hash).call()
 
     logging.info('order_is_swaped: {}'.format(order_is_swaped))
 
     if not order_is_swaped:
-        order_is_base_filled = orderbook_contract.functions.isBaseFilled(
-            order_hash
-        ).call()
+        order_is_base_filled = orderbook_contract.functions.isBaseFilled(order_hash).call()
 
         logging.info('order_is_base_filled: {}'.format(order_is_base_filled))
 
@@ -607,14 +525,12 @@ def _check_base_amount_contribute(order:QuerySet):
     return 0
 
 
-def _set_base_amount_contributed(orders:QuerySet):
+def _set_base_amount_contributed(orders: QuerySet):
     """
     Sets base amount contributed in orders.
     """
 
-    logging.info(
-        'Total non-base-amount-contributed orders: {}'.format(orders.count())
-    )
+    logging.info('Total non-base-amount-contributed orders: {}'.format(orders.count()))
 
     try:
         orderbook_contract = load_contract(
@@ -624,16 +540,12 @@ def _set_base_amount_contributed(orders:QuerySet):
 
         for counter, order in enumerate(orders):
             order_hash = order.memo_contract
-            order_is_base_raised = orderbook_contract.functions.baseRaised(
-                order_hash
-            ).call()
+            order_is_base_raised = orderbook_contract.functions.baseRaised(order_hash).call()
 
             order.base_amount_contributed = order_is_base_raised
             order.save()
 
-            logging.info(
-                '{}. Order updated: {}'.format(counter, order.id)
-            )
+            logging.info('{}. Order updated: {}'.format(counter, order.id))
     except Exception as exception_error:
         logging.error('Exception: {}'.format(exception_error))
 

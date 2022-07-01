@@ -1,15 +1,17 @@
 import datetime
+
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from lastwill.consts import (AUTHIO_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT)
 from lastwill.contracts.serializers import ContractSerializer
 from lastwill.contracts.submodels.common import Contract
-from lastwill.settings import MY_WISH_URL, EOSISH_URL, TRON_URL, WAVES_URL, VERIFICATION_CONTRACTS_IDS
-from lastwill.consts import NET_DECIMALS, VERIFICATION_PRICE_USDT, AUTHIO_PRICE_USDT
-from .models import *
 from lastwill.rates.api import rate
+from lastwill.settings import (EOSISH_URL, MY_WISH_URL, TRON_URL, VERIFICATION_CONTRACTS_IDS, WAVES_URL)
+
+from .models import *
 
 
 def check_and_get_discount(promo_str, contract_type, user):
@@ -44,13 +46,9 @@ def get_discount(request):
         contract_details = contract.get_details()
         if host == EOSISH_URL:
             kwargs = ContractSerializer().get_details_serializer(
-                contract.contract_type
-            )().to_representation(contract_details)
+                contract.contract_type)().to_representation(contract_details)
             cost = contract_details.calc_cost_eos(kwargs, contract.network) * (100 - discount) / 100
-            answer['discount_price'] = {
-                'EOS': cost,
-                'EOSISH': str(float(cost) * rate('EOS', 'EOSISH').value)
-            }
+            answer['discount_price'] = {'EOS': cost, 'EOSISH': str(float(cost) * rate('EOS', 'EOSISH').value)}
         elif host == MY_WISH_URL:
             options_cost = 0
             if contract.contract_type in (5, 28) and contract_details.authio:
@@ -62,46 +60,40 @@ def get_discount(request):
             cost = (contract.cost - options_cost) * (100 - discount) / 100 + options_cost
             answer['discount_price'] = {
                 'USDT': str(cost),
-                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
-                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
-                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8)),
+                'ETH': str(int(int(cost) / 10**6 * rate('USDT', 'ETH').value * 10**18)),
+                'WISH': str(int(int(cost) / 10**6 * rate('USDT', 'WISH').value * 10**18)),
+                'BTC': str(int(int(cost) / 10**6 * rate('USDT', 'BTC').value * 10**8)),
                 'TRX': str(int(int(cost) * rate('ETH', 'TRX').value)),
                 'TRONISH': str(int(int(cost) * rate('ETH', 'TRX').value))
             }
         elif host == TRON_URL:
             kwargs = ContractSerializer().get_details_serializer(
-                contract.contract_type
-            )().to_representation(contract_details)
+                contract.contract_type)().to_representation(contract_details)
             cost = contract_details.calc_cost_tron(kwargs, contract.network) * (100 - discount) / 100
 
-            answer['discount_price'] = {
-                'TRX': int(cost),
-                'TRONISH': int(cost)
-            }
+            answer['discount_price'] = {'TRX': int(cost), 'TRONISH': int(cost)}
         elif host == WAVES_URL:
             kwargs = ContractSerializer().get_details_serializer(
-                contract.contract_type
-            )().to_representation(contract_details)
+                contract.contract_type)().to_representation(contract_details)
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'USDT': str(cost),
-                'ETH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'ETH').value * 10 ** 18)),
-                'WISH': str(int(int(cost) / 10 ** 6 * rate('USDT', 'WISH').value * 10 ** 18)),
-                'BTC': str(int(int(cost) / 10 ** 6 * rate('USDT', 'BTC').value * 10 ** 8)),
+                'ETH': str(int(int(cost) / 10**6 * rate('USDT', 'ETH').value * 10**18)),
+                'WISH': str(int(int(cost) / 10**6 * rate('USDT', 'WISH').value * 10**18)),
+                'BTC': str(int(int(cost) / 10**6 * rate('USDT', 'BTC').value * 10**8)),
                 'TRX': str(int(int(cost) * rate('ETH', 'TRX').value)),
                 'TRONISH': str(int(int(cost) * rate('ETH', 'TRX').value))
             }
         else:
             kwargs = ContractSerializer().get_details_serializer(
-                contract.contract_type
-            )().to_representation(contract_details)
+                contract.contract_type)().to_representation(contract_details)
             cost = contract_details.calc_cost(kwargs, contract.network) * (100 - discount) / 100
             answer['discount_price'] = {
                 'ETH': str(cost),
                 'WISH': str(int(cost * rate('ETH', 'WISH').value)),
                 'BTC': str(int(cost * rate('ETH', 'BTC').value)),
-                'TRX': str(int(cost) / 10 ** 18 * rate('ETH', 'TRX').value * 10 ** 6),
-                'TRONISH': str(int(cost) / 10 ** 18 * rate('ETH', 'TRONISH').value * 10 ** 6)
+                'TRX': str(int(cost) / 10**18 * rate('ETH', 'TRX').value * 10**6),
+                'TRONISH': str(int(cost) / 10**18 * rate('ETH', 'TRONISH').value * 10**6)
             }
 
     return Response(answer)
@@ -110,15 +102,13 @@ def get_discount(request):
 def get_all_promos():
     count = 0
     for promo in Promo.objects.all():
-        print(
-            'promo: ' + str(promo.promo_str),
-            'start_date: ' + str(promo.start),
-            'stop_date: ' + str(promo.stop),
-            'used_times: ' + str(promo.use_count),
-            'is_limited: ' + str(promo.use_count_max),
-            '---------------',
-            sep='\n'
-        )
+        print('promo: ' + str(promo.promo_str),
+              'start_date: ' + str(promo.start),
+              'stop_date: ' + str(promo.stop),
+              'used_times: ' + str(promo.use_count),
+              'is_limited: ' + str(promo.use_count_max),
+              '---------------',
+              sep='\n')
         print()
         count += 1
     print('Promos total', count)

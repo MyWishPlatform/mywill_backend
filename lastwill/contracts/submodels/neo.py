@@ -1,30 +1,28 @@
 import math
-import subprocess
 import os
-import base58
+import subprocess
+from subprocess import PIPE, Popen
 
-from django.db import models
-from django.db import transaction
-from django.core.mail import send_mail
+import base58
 from django.contrib.postgres.fields import JSONField
+from django.core.mail import send_mail
+from django.db import models, transaction
 from django.utils import timezone
+from jinja2 import Environment, FileSystemLoader
+from neo.Core.TX.Transaction import ContractTransaction
+from neo.IO.MemoryStream import StreamManager
+from neo.SmartContract.ContractParameterType import ContractParameterType
+from neocore.Cryptography.Crypto import Crypto
+from neocore.IO.BinaryWriter import BinaryWriter
+from neocore.UInt160 import UInt160
 from rest_framework.exceptions import ValidationError
 
-from neo.Core.TX.Transaction import ContractTransaction
-from neocore.IO.BinaryWriter import BinaryWriter
-from neo.SmartContract.ContractParameterType import ContractParameterType
-from neo.IO.MemoryStream import StreamManager
-from neocore.Cryptography.Crypto import Crypto
-from neocore.UInt160 import UInt160
-from subprocess import Popen, PIPE
-
-from lastwill.contracts.submodels.common import *
 from email_messages import *
 from lastwill.consts import CONTRACT_PRICE_NEO
+from lastwill.contracts.submodels.common import *
 from lastwill.settings import NEO_CLI_DIR
-from jinja2 import Environment, FileSystemLoader
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
+from mailings_tasks import send_promo_mainnet, send_testnet_gift_emails
 
 
 class NeoContract(EthContract):
@@ -111,7 +109,6 @@ class ContractDetailsNeo(CommonDetails):
             raise Exception('compiler error while deploying')
 
         self.save()
-
         '''
         dest, preproc_config = create_directory(
             self, 'lastwill/neo-ico-contracts/*', 'token-config.json'
@@ -193,8 +190,8 @@ class ContractDetailsNeo(CommonDetails):
 
         data = stdout.decode()
         print(data)
-        tx_hash = data.split("Signed and relayed transaction with hash=",1)[1][:66]
-        contract_address = data.split("Contract hash: ",1)[1].split('\n')[0][:42]
+        tx_hash = data.split("Signed and relayed transaction with hash=", 1)[1][:66]
+        contract_address = data.split("Contract hash: ", 1)[1].split('\n')[0][:42]
 
         neo_contract = NeoContract()
         neo_contract.contract = self.contract
@@ -205,7 +202,6 @@ class ContractDetailsNeo(CommonDetails):
         self.neo_contract = neo_contract
         self.save()
         self.initialized({})
-
         '''
         from_addr = NETWORKS[self.contract.network.name]['address']
         bytecode = self.neo_contract.bytecode
@@ -263,10 +259,13 @@ class ContractDetailsNeo(CommonDetails):
         from_addr = NETWORKS[self.contract.network.name]['address']
         param_list = {
             'from_addr': from_addr,
-            'contract_params': [
-                {'type': str(ContractParameterType.String), 'value': 'init'},
-                {'type': str(ContractParameterType.Array), 'value': []}
-            ],
+            'contract_params': [{
+                'type': str(ContractParameterType.String),
+                'value': 'init'
+            }, {
+                'type': str(ContractParameterType.Array),
+                'value': []
+            }],
             'addr': self.neo_contract.address,
         }
 
@@ -274,9 +273,7 @@ class ContractDetailsNeo(CommonDetails):
 
         binary_tx = response['tx']
 
-        tx = ContractTransaction.DeserializeFromBufer(
-            binascii.unhexlify(binary_tx)
-        )
+        tx = ContractTransaction.DeserializeFromBufer(binascii.unhexlify(binary_tx))
         tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'])
         ms = StreamManager.GetStream()
@@ -298,7 +295,7 @@ class ContractDetailsNeo(CommonDetails):
     @postponable
     @check_transaction
     def initialized(self, message):
-        if self.contract.state  not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
+        if self.contract.state not in ('WAITING_FOR_DEPLOYMENT', 'ENDED'):
             return
 
         take_off_blocking(self.contract.network.name)
@@ -307,19 +304,13 @@ class ContractDetailsNeo(CommonDetails):
         self.contract.deployed_at = datetime.datetime.now()
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                    common_subject,
-                    neo_token_text.format(
-                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract.address)),
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-            )
+            send_mail(common_subject,
+                      neo_token_text.format(addr=Crypto.ToAddress(UInt160.ParseString(self.neo_contract.address)),),
+                      DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
                 send_promo_mainnet.delay(self.contract.user.email)
-
 
         msg = self.bot_message
         transaction.on_commit(lambda: send_message_to_subs.delay(msg, True))
@@ -333,27 +324,21 @@ class ContractDetailsNeo(CommonDetails):
 class ContractDetailsNeoICO(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/ICO.sol'
 
-    hard_cap = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    hard_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     token_name = models.CharField(max_length=512)
     token_short_name = models.CharField(max_length=64)
     admin_address = models.CharField(max_length=50)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
-    rate = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    rate = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     decimals = models.IntegerField()
     temp_directory = models.CharField(max_length=36)
 
-    neo_contract_crowdsale = models.ForeignKey(
-        NeoContract,
-        null=True,
-        default=None,
-        related_name='neo_ico_details_crowdsale',
-        on_delete=models.SET_NULL
-    )
+    neo_contract_crowdsale = models.ForeignKey(NeoContract,
+                                               null=True,
+                                               default=None,
+                                               related_name='neo_ico_details_crowdsale',
+                                               on_delete=models.SET_NULL)
 
     reused_token = models.BooleanField(default=False)
 
@@ -362,31 +347,28 @@ class ContractDetailsNeoICO(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(
-            self, 'lastwill/neo-ico-contracts/*', 'crowdsale-config.json'
-        )
+        dest, preproc_config = create_directory(self, 'lastwill/neo-ico-contracts/*', 'crowdsale-config.json')
         token_holders = self.contract.tokenholder_set.all()
-        preproc_params = {"constants": {
-            "D_NAME": self.token_name,
-            "D_SYMBOL": self.token_short_name,
-            "D_DECIMALS": int(self.decimals),
-            "D_PREMINT_COUNT": len(token_holders),
-            "D_OWNER": self.admin_address,
-            "D_START_TIME": self.start_date,
-            "D_END_TIME": self.stop_date,
-            "D_RATE": int(self.rate),
-            "D_HARD_CAP_NEO": str(self.hard_cap),
-            "D_PREMINT_SCRIPT_HASHES": [],
-            "D_PREMINT_AMOUNTS": []
-        }}
+        preproc_params = {
+            "constants": {
+                "D_NAME": self.token_name,
+                "D_SYMBOL": self.token_short_name,
+                "D_DECIMALS": int(self.decimals),
+                "D_PREMINT_COUNT": len(token_holders),
+                "D_OWNER": self.admin_address,
+                "D_START_TIME": self.start_date,
+                "D_END_TIME": self.stop_date,
+                "D_RATE": int(self.rate),
+                "D_HARD_CAP_NEO": str(self.hard_cap),
+                "D_PREMINT_SCRIPT_HASHES": [],
+                "D_PREMINT_AMOUNTS": []
+            }
+        }
         for th in token_holders:
             preproc_params["constants"]["D_PREMINT_SCRIPT_HASHES"].append(
-                list(binascii.unhexlify(address_to_scripthash(th.address)))[::-1]
-            )
+                list(binascii.unhexlify(address_to_scripthash(th.address)))[::-1])
             amount = [
-                int(x) for x in int(th.amount).to_bytes(
-                    math.floor(math.log(int(th.amount) or 1, 256)) + 1, 'little'
-                )
+                int(x) for x in int(th.amount).to_bytes(math.floor(math.log(int(th.amount) or 1, 256)) + 1, 'little')
             ]
             while len(amount) < 33:
                 amount.append(0)
@@ -400,15 +382,11 @@ class ContractDetailsNeoICO(CommonDetails):
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
 
-        with open(path.join(
-                dest,
-                'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.abi.json'
-        ), 'rb') as f:
+        with open(path.join(dest, 'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.abi.json'),
+                  'rb') as f:
             token_json = json.loads(f.read().decode('utf-8-sig'))
-        with open(path.join(
-                dest,
-                'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.avm'
-        ), mode='rb') as f:
+        with open(path.join(dest, 'Crowdsale.Contract/bin/Release/netcoreapp2.0/publish/Crowdsale.Contract.avm'),
+                  mode='rb') as f:
             bytecode = f.read()
         with open(path.join(dest, 'Crowdsale.Contract/Crowdsale.cs'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
@@ -470,9 +448,7 @@ class ContractDetailsNeoICO(CommonDetails):
         binary_tx = response['tx']
         contract_hash = response['hash']
 
-        tx = ContractTransaction.DeserializeFromBufer(
-            binascii.unhexlify(binary_tx)
-        )
+        tx = ContractTransaction.DeserializeFromBufer(binascii.unhexlify(binary_tx))
         tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'], flush=True)
         ms = StreamManager.GetStream()
@@ -501,10 +477,13 @@ class ContractDetailsNeoICO(CommonDetails):
         from_addr = NETWORKS[self.contract.network.name]['address']
         param_list = {
             'from_addr': from_addr,
-            'contract_params': [
-                {'type': str(ContractParameterType.String), 'value': 'init'},
-                {'type': str(ContractParameterType.Array), 'value': []}
-            ],
+            'contract_params': [{
+                'type': str(ContractParameterType.String),
+                'value': 'init'
+            }, {
+                'type': str(ContractParameterType.Array),
+                'value': []
+            }],
             'addr': self.neo_contract_crowdsale.address,
         }
 
@@ -512,9 +491,7 @@ class ContractDetailsNeoICO(CommonDetails):
 
         binary_tx = response['tx']
 
-        tx = ContractTransaction.DeserializeFromBufer(
-            binascii.unhexlify(binary_tx)
-        )
+        tx = ContractTransaction.DeserializeFromBufer(binascii.unhexlify(binary_tx))
         tx = sign_neo_transaction(tx, binary_tx, from_addr)
         print('after sign', tx.ToJson()['txid'])
         ms = StreamManager.GetStream()
@@ -547,13 +524,9 @@ class ContractDetailsNeoICO(CommonDetails):
 
         if self.contract.user.email:
             send_mail(
-                    common_subject,
-                    neo_token_text.format(
-                        addr = Crypto.ToAddress(UInt160.ParseString(self.neo_contract_crowdsale.address)),
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-            )
+                common_subject,
+                neo_token_text.format(addr=Crypto.ToAddress(UInt160.ParseString(self.neo_contract_crowdsale.address)),),
+                DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:

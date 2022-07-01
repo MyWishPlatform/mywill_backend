@@ -1,9 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    Profile, SubSite,
-    UserSiteBalance, APIToken
-)
+from .models import APIToken, Profile, SubSite, UserSiteBalance
 
 
 # profile

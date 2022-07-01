@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from lastwill.consts import MAX_WEI_DIGITS
 
@@ -10,7 +10,11 @@ class Promo(models.Model):
     use_count = models.IntegerField(default=0)
     use_count_max = models.IntegerField(null=True, default=None)
     promo_str = models.CharField(max_length=32, unique=True)
+<<<<<<< HEAD
     user = models.ForeignKey(User, null=True, default=None, on_delete=models.SET_NULL)
+=======
+    user = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE)
+>>>>>>> dev
     referral_bonus_usd = models.IntegerField(default=0)
     reusable = models.BooleanField(default=False)
 
@@ -32,7 +36,6 @@ class Promo2ContractType(models.Model):
     promo = models.ForeignKey(Promo, on_delete=models.CASCADE)
     contract_type = models.IntegerField()
     discount = models.IntegerField()
-    
+
     def __str__(self):
         return f"{self.promo.promo_str}"
-

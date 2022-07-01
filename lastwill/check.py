@@ -4,6 +4,9 @@ import base58
 import near_api
 import json
 from string import ascii_letters, digits
+from typing import Union
+
+import base58
 from rest_framework.serializers import ValidationError
 from solana.publickey import PublicKey
 from lastwill.contracts.submodels.near.token import init_account

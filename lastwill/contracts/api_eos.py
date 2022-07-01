@@ -1,47 +1,39 @@
 from binascii import hexlify, unhexlify
-from eospy.utils import sha256, ripemd160, str_to_hex, hex_to_int
 
-from django.http import JsonResponse
 from django.db.models import F
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-
-from rest_framework.response import Response
+from eospy.utils import hex_to_int, ripemd160, sha256, str_to_hex
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from lastwill.contracts.serializers import *
+from lastwill.consts import *
 from lastwill.contracts.models import *
+from lastwill.contracts.serializers import *
+from lastwill.deploy.models import *
 from lastwill.profile.models import *
 from lastwill.promo.models import *
-from lastwill.settings import EOSISH_URL
-from lastwill.deploy.models import *
-from lastwill.consts import *
 from lastwill.rates.api import rate
+from lastwill.settings import EOSISH_URL
 
 
 def check_account_name(name, network_id):
     network = Network.objects.get(id=network_id)
     if network.name == 'EOS_MAINNET':
-        eos_url = 'https://%s' % (
-            str(NETWORKS[network.name]['host']))
+        eos_url = 'https://%s' % (str(NETWORKS[network.name]['host']))
     else:
-        eos_url = 'http://%s:%s' % (
-        str(NETWORKS[network.name]['host']),
-        str(NETWORKS[network.name]['port']))
+        eos_url = 'http://%s:%s' % (str(NETWORKS[network.name]['host']), str(NETWORKS[network.name]['port']))
 
-    command_list = [
-            'cleos', '-u', eos_url, 'get', 'account', name, '--json'
-        ]
+    command_list = ['cleos', '-u', eos_url, 'get', 'account', name, '--json']
     proc = Popen(command_list, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if len(stdout) > 0:
         json.loads(stdout.decode())
-        raise ValidationError({
-            'result': 'Account with this name has already been created'
-        }, code=404)
+        raise ValidationError({'result': 'Account with this name has already been created'}, code=404)
 
 
-def check_eos_key(key, key_type=None) :
+def check_eos_key(key, key_type=None):
     '''
     method check eos public key
     :param key: eos key
@@ -55,7 +47,7 @@ def check_eos_key(key, key_type=None) :
     chksum = buffer[-8:]
     key = buffer[:-8]
     if key_type == 'sha256x2':
-            # legacy
+        # legacy
         first_sha = sha256(unhexlify(key))
         newChk = sha256(unhexlify(first_sha))[:8]
     else:
@@ -63,8 +55,8 @@ def check_eos_key(key, key_type=None) :
         if key_type:
             check += hexlify(bytearray(key_type, 'utf-8')).decode()
         newChk = ripemd160(unhexlify(check))[:8]
-    print('newChk: '+newChk)
-    if chksum != newChk :
+    print('newChk: ' + newChk)
+    if chksum != newChk:
         raise ValueError('Checksums do not match: {0} != {1} in your public key'.format(chksum, newChk))
     return key
 
@@ -84,12 +76,10 @@ def check_promocode_in_api(promo_str, contract_type, user, balance, cid, cost):
     if now_date >= promo.start and now_date <= promo.stop:
         p2c = Promo2ContractType.objects.filter(promo=promo, contract_type=contract_type).first()
         if not p2c:
-            raise ValidationError({'result': 'Promocode is not valid for this type of contract'},
-                                  code=404)
+            raise ValidationError({'result': 'Promocode is not valid for this type of contract'}, code=404)
         u2p = User2Promo.objects.filter(user=user, promo=promo).first()
         if u2p:
-            raise ValidationError({'result': 'Promocode already used'},
-                                  code=404)
+            raise ValidationError({'result': 'Promocode already used'}, code=404)
         discount = p2c.discount
         if balance >= discount:
             User2Promo(user=user, promo=promo, contract_id=cid).save()
@@ -99,47 +89,35 @@ def check_promocode_in_api(promo_str, contract_type, user, balance, cid, cost):
         raise ValidationError({'result': 'Promocode is not valid'}, code=404)
 
 
-
 def validate_account_name(name):
     if len(name) != 12:
         raise ValidationError({'result': 'Wrong lenght of account name'}, code=404)
     for symb in name:
         if symb.isupper():
-            raise ValidationError({'result': 'Upper case in account name'},
-                                  code=404)
+            raise ValidationError({'result': 'Upper case in account name'}, code=404)
         if symb in ['6', '7', '8', '9', '0']:
-            raise ValidationError({'result': 'Wrong number in account name'},
-                                  code=404)
+            raise ValidationError({'result': 'Wrong number in account name'}, code=404)
 
 
 def validate_eos_account_params(cpu, net, ram):
     if cpu > 50 or net > 50 or ram > 40 or cpu < 0 or net < 0 or ram < 0:
-        raise ValidationError({'result': 'Wrong value net, cpu or ram'},
-                              code=404)
+        raise ValidationError({'result': 'Wrong value net, cpu or ram'}, code=404)
 
 
 def calc_eos_cost(cpu, net, ram):
-    eos_url = 'https://%s' % (
-        str(NETWORKS['EOS_MAINNET']['host'])
-    )
-    command1 = [
-        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
-    ]
+    eos_url = 'https://%s' % (str(NETWORKS['EOS_MAINNET']['host']))
+    command1 = ['cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket']
     result = implement_cleos_command(command1)
     ram_cost = result['rows'][0]
-    ram_price = float(ram_cost['quote']['balance'].split()[0]) / float(
-        ram_cost['base']['balance'].split()[0]) * 1024
+    ram_price = float(ram_cost['quote']['balance'].split()[0]) / float(ram_cost['base']['balance'].split()[0]) * 1024
     print('get ram price', flush=True)
 
-    eos_cost = round(
-        (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
+    eos_cost = round((float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
     return eos_cost
 
 
 def log_userinfo(api_action, token, user=None, id=None):
-    logger = ('EOS API: called {action} with token {tok} ').format(
-        action=api_action, tok=token
-    )
+    logger = ('EOS API: called {action} with token {tok} ').format(action=api_action, tok=token)
     if user is not None:
         logger += 'for user {usr} '.format(usr=user)
     if id is not None:
@@ -148,9 +126,7 @@ def log_userinfo(api_action, token, user=None, id=None):
 
 
 def log_additions(api_action, add_params):
-    logger = 'EOS API: {action} parameters: {params}'.format(
-        action=api_action, params=add_params
-    )
+    logger = 'EOS API: {action} parameters: {params}'.format(action=api_action, params=add_params)
     print(logger, flush=True)
 
 
@@ -179,7 +155,7 @@ def create_eos_account(request):
     token_params['account_name'] = request.data['account_name']
     validate_account_name(request.data['account_name'])
     check_account_name(token_params['account_name'], int(request.data['network_id']))
-    if int(request.data['network_id']) not in [10,11]:
+    if int(request.data['network_id']) not in [10, 11]:
         raise ValidationError({'result': 'Wrong network id'}, code=404)
     network = Network.objects.get(id=int(request.data['network_id']))
     token_params['owner_public_key'] = request.data['owner_public_key']
@@ -190,7 +166,7 @@ def create_eos_account(request):
         token_params['stake_net_value'] = str(request.data['stake_net_value'])
     else:
         token_params['stake_net_value'] = '0.01'
-    if 'stake_cpu_value' in  request.data and len(str(request.data['stake_cpu_value'])) > 0:
+    if 'stake_cpu_value' in request.data and len(str(request.data['stake_cpu_value'])) > 0:
         token_params['stake_cpu_value'] = str(request.data['stake_cpu_value'])
     else:
         token_params['stake_cpu_value'] = '0.64'
@@ -200,29 +176,17 @@ def create_eos_account(request):
     else:
         token_params['buy_ram_kbytes'] = 4
     log_additions(log_action_name, token_params)
-    validate_eos_account_params(
-        float(token_params['stake_cpu_value']),
-        float(token_params['stake_net_value']),
-        token_params['buy_ram_kbytes']
-    )
+    validate_eos_account_params(float(token_params['stake_cpu_value']), float(token_params['stake_net_value']),
+                                token_params['buy_ram_kbytes'])
     name_contract = request.data['name'] if 'name' in request.data else 'contract'
-    contract = Contract(
-        state='CREATED',
-        name=name_contract,
-        contract_type=11,
-        network=network,
-        cost=0,
-        user=user
-    )
+    contract = Contract(state='CREATED', name=name_contract, contract_type=11, network=network, cost=0, user=user)
     contract.save()
-    eos_contract = EOSContract(
-        address=None,
-        source_code='',
-        abi={},
-        bytecode='',
-        compiler_version=None,
-        constructor_arguments=''
-    )
+    eos_contract = EOSContract(address=None,
+                               source_code='',
+                               abi={},
+                               bytecode='',
+                               compiler_version=None,
+                               constructor_arguments='')
     eos_contract.save()
     token_params['eos_contract'] = eos_contract
     ContractDetailsEOSAccountSerializer().create(contract, token_params)
@@ -467,7 +431,7 @@ def calculate_cost_eos_account_contract(request):
         'stake_cpu_value': details.stake_cpu_value,
         'buy_ram_kbytes': details.buy_ram_kbytes
     }
-    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network) /10 ** 4
+    eos_cost = ContractDetailsEOSAccount.calc_cost_eos(params, network) / 10**4
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
@@ -532,8 +496,7 @@ def get_profile_info(request):
     user = get_user_for_token(token)
     log_userinfo('get_profile_info', token, user)
     answer = {
-        'username': user.email if user.email else '{} {}'.format(
-            user.first_name, user.last_name),
+        'username': user.email if user.email else '{} {}'.format(user.first_name, user.last_name),
         'contracts': Contract.objects.filter(user=user, invisible=False).count(),
         'id': user.id,
         'lang': user.profile.lang,
@@ -558,7 +521,7 @@ def get_balance_info(request):
     network_id = request.data['network_id']
     net = Network.objects.get(id=network_id)
     log_additions(log_action_name, network_id)
-    balance = UserSiteBalance.objects.get(user=user, subsite__id = NETWORK_SUBSITE[net.name]).balance
+    balance = UserSiteBalance.objects.get(user=user, subsite__id=NETWORK_SUBSITE[net.name]).balance
     return JsonResponse({'balance': balance})
 
 
@@ -580,7 +543,10 @@ def get_eos_contracts(request):
     else:
         limit = 8
     log_additions(log_action_name, limit)
-    contracts = Contract.objects.filter(contract_type=11, user=user, network__name__in=['EOS_MAINNET', 'EOS_TESTNET'], invisible=False)
+    contracts = Contract.objects.filter(contract_type=11,
+                                        user=user,
+                                        network__name__in=['EOS_MAINNET', 'EOS_TESTNET'],
+                                        invisible=False)
     contracts = contracts.order_by('-created_date')[0:limit]
     answer = {'contracts': []}
     for c in contracts:

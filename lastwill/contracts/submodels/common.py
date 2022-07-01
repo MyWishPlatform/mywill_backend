@@ -1,38 +1,38 @@
-from os import path
+import binascii
 import os
 import uuid
 import binascii
 import pika
 import contextlib
 from copy import deepcopy
-from base58 import b58decode
-from ethereum import abi
-from requests_http_signature import HTTPSignatureAuth
-from hdwallet import BIP44HDWallet
-from hdwallet.symbols import ETH
+from os import path
 
-from django.db import models
-from django.db import transaction
+import pika
+from base58 import b58decode
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-
-from neo.Settings import settings
+from django.db import models, transaction
+from ethereum import abi
+from hdwallet import BIP44HDWallet
+from hdwallet.symbols import ETH
 from neo.Core.Witness import Witness
+from neo.Settings import settings
 from neocore.Cryptography.Crypto import Crypto
 from neocore.UInt160 import UInt160
+from requests_http_signature import HTTPSignatureAuth
 
-from lastwill.promo.utils import create_promocode
-from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY, NETWORKS
-from lastwill.parint import *
-from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
-    AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT
-from lastwill.deploy.models import Network
-from lastwill.contracts.decorators import *
 from email_messages import *
-from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
+from lastwill.consts import (AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT, ETH_COMMON_GAS_PRICES, MAIL_NETWORK,
+                             MAX_WEI_DIGITS, NET_DECIMALS, NETWORK_TYPES)
+from lastwill.contracts.decorators import *
+from lastwill.deploy.models import Network
+from lastwill.parint import *
+from lastwill.promo.utils import create_promocode
+from lastwill.settings import (CONTRACTS_DIR, CONTRACTS_TEMP_DIR, GAS_API_URL, KEY_ID, NETWORKS, ROOT_EXT_KEY,
+                               SECRET_KEY, SIGNER, SPEEDLVL, WEB3_ATTEMPT_COOLDOWN)
 from lastwill.telegram_bot.tasks import send_message_to_subs
+from mailings_tasks import send_promo_mainnet, send_testnet_gift_emails
 
 
 def address_to_scripthash(address):
@@ -56,17 +56,10 @@ def add_token_params(params, details, token_holders, pause, cont_mint):
     params["D_CONTRACTS_OWNER"] = "0x8ffff2c69f000c790809f6b8f9abfcbaab46b322"
     params["D_PAUSE_TOKENS"] = pause
     params["D_PREMINT_COUNT"] = len(token_holders)
-    params["D_PREMINT_ADDRESSES"] = ','.join(map(
-        lambda th: 'address(%s)' % th.address, token_holders
-    ))
-    params["D_PREMINT_AMOUNTS"] = ','.join(map(
-        lambda th: 'uint(%s)' % th.amount, token_holders
-    ))
-    params["D_PREMINT_FREEZES"] = ','.join(map(
-        lambda th: 'uint64(%s)' % (
-            th.freeze_date if th.freeze_date else 0
-        ), token_holders
-    ))
+    params["D_PREMINT_ADDRESSES"] = ','.join(map(lambda th: 'address(%s)' % th.address, token_holders))
+    params["D_PREMINT_AMOUNTS"] = ','.join(map(lambda th: 'uint(%s)' % th.amount, token_holders))
+    params["D_PREMINT_FREEZES"] = ','.join(
+        map(lambda th: 'uint64(%s)' % (th.freeze_date if th.freeze_date else 0), token_holders))
     return params
 
 
@@ -83,22 +76,16 @@ def add_crowdsale_params(params, details, time_bonuses, amount_bonuses):
     params["D_AUTO_FINALISE"] = details.platform_as_admin
     params["D_BONUS_TOKENS"] = "true" if time_bonuses or amount_bonuses else "false"
     params["D_WEI_RAISED_AND_TIME_BONUS_COUNT"] = len(time_bonuses)
-    params["D_WEI_RAISED_STARTS_BOUNDARIES"] = ','.join(
-        map(lambda b: 'uint(%s)' % b['min_amount'], time_bonuses))
-    params["D_WEI_RAISED_ENDS_BOUNDARIES"] = ','.join(
-        map(lambda b: 'uint(%s)' % b['max_amount'], time_bonuses))
-    params["D_TIME_STARTS_BOUNDARIES"] = ','.join(
-        map(lambda b: 'uint64(%s)' % b['min_time'], time_bonuses))
-    params["D_TIME_ENDS_BOUNDARIES"] = ','.join(
-        map(lambda b: 'uint64(%s)' % b['max_time'], time_bonuses))
+    params["D_WEI_RAISED_STARTS_BOUNDARIES"] = ','.join(map(lambda b: 'uint(%s)' % b['min_amount'], time_bonuses))
+    params["D_WEI_RAISED_ENDS_BOUNDARIES"] = ','.join(map(lambda b: 'uint(%s)' % b['max_amount'], time_bonuses))
+    params["D_TIME_STARTS_BOUNDARIES"] = ','.join(map(lambda b: 'uint64(%s)' % b['min_time'], time_bonuses))
+    params["D_TIME_ENDS_BOUNDARIES"] = ','.join(map(lambda b: 'uint64(%s)' % b['max_time'], time_bonuses))
     params["D_WEI_RAISED_AND_TIME_MILLIRATES"] = ','.join(
         map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])), time_bonuses))
     params["D_WEI_AMOUNT_BONUS_COUNT"] = len(amount_bonuses)
-    params["D_WEI_AMOUNT_BOUNDARIES"] = ','.join(
-        map(lambda b: 'uint(%s)' % b['max_amount'], reversed(amount_bonuses)))
+    params["D_WEI_AMOUNT_BOUNDARIES"] = ','.join(map(lambda b: 'uint(%s)' % b['max_amount'], reversed(amount_bonuses)))
     params["D_WEI_AMOUNT_MILLIRATES"] = ','.join(
-        map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])),
-            reversed(amount_bonuses)))
+        map(lambda b: 'uint(%s)' % (int(10 * b['bonus'])), reversed(amount_bonuses)))
     params["D_MYWISH_ADDRESS"] = '0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd'
     params["D_WHITELIST_ENABLED"] = details.whitelist
     return params
@@ -109,16 +96,9 @@ def add_amount_bonuses(details):
     if details.amount_bonuses:
         curr_min_amount = 0
         for bonus in details.amount_bonuses:
-            amount_bonuses.append({
-                'max_amount': bonus['min_amount'],
-                'bonus': bonus['bonus']
-            })
-            if int(bonus[
-                       'min_amount']) > curr_min_amount:  # fill gap with zero
-                amount_bonuses.append({
-                    'max_amount': bonus['max_amount'],
-                    'bonus': 0
-                })
+            amount_bonuses.append({'max_amount': bonus['min_amount'], 'bonus': bonus['bonus']})
+            if int(bonus['min_amount']) > curr_min_amount:  # fill gap with zero
+                amount_bonuses.append({'max_amount': bonus['max_amount'], 'bonus': 0})
             curr_min_amount = int(bonus['max_amount'])
     return amount_bonuses
 
@@ -177,22 +157,18 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
 def test_investment_pool_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system("/bin/bash -c 'cd {dest} && yarn compile'".format(
-            dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} && yarn compile'".format(dest=dest)):
         raise Exception('compiler error while testing')
-    if os.system("/bin/bash -c 'cd {dest} &&  yarn test'".format(
-            dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} &&  yarn test'".format(dest=dest)):
         raise Exception('testing error')
 
 
 def test_crowdsale_params(config, params, dest):
     with open(config, 'w') as f:
         f.write(json.dumps(params))
-    if os.system("/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(
-            dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} && yarn compile-crowdsale'".format(dest=dest)):
         raise Exception('compiler error while testing')
-    if os.system("/bin/bash -c 'cd {dest} &&  yarn test-crowdsale'".format(
-            dest=dest)):
+    if os.system("/bin/bash -c 'cd {dest} &&  yarn test-crowdsale'".format(dest=dest)):
         raise Exception('testing error')
 
 
@@ -227,19 +203,28 @@ def send_in_queue(contract_id, type, queue):
         pika.PlainCredentials('java', 'java'),
     ))
     channel = connection.channel()
-    channel.queue_declare(queue=queue, durable=True, auto_delete=False,
-                          exclusive=False)
+    channel.queue_declare(queue=queue, durable=True, auto_delete=False, exclusive=False)
     channel.basic_publish(
         exchange='',
         routing_key=queue,
-        body=json.dumps({'status': 'COMMITTED', 'contractId': contract_id}),
+        body=json.dumps({
+            'status': 'COMMITTED',
+            'contractId': contract_id
+        }),
         properties=pika.BasicProperties(type=type),
     )
     connection.close()
 
 
-def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_data=None, gas_price=None,
-                     chain_id=None, child_id=None):
+def sign_transaction(address,
+                     nonce,
+                     gaslimit,
+                     value=None,
+                     dest=None,
+                     contract_data=None,
+                     gas_price=None,
+                     chain_id=None,
+                     child_id=None):
     data = {
         'from': address,
         'nonce': nonce,
@@ -266,10 +251,10 @@ def sign_transaction(address, nonce, gaslimit, value=None, dest=None, contract_d
 
 
 def sign_neo_transaction(tx, binary_tx, address):
-    scripts = requests.post(
-        'http://{}/neo_sign/'.format(SIGNER),
-        json={'binary_tx': binary_tx, 'address': address}
-    ).json()
+    scripts = requests.post('http://{}/neo_sign/'.format(SIGNER), json={
+        'binary_tx': binary_tx,
+        'address': address
+    }).json()
     tx.scripts = [Witness(
         x['invocation'].encode(),
         x['verification'].encode(),
@@ -296,8 +281,13 @@ def transfer_crypto(details, dest):
     eth_amount = hex(int(1.2 * (gas_price * CONTRACT_GAS_LIMIT['TOKEN'])))
     chain_id = int(eth_int.eth_chainId(), 16)
 
-    signed_data = sign_transaction(address, nonce, gas_limit, value=eth_amount,
-                                   dest=dest, gas_price=gas_price, chain_id=chain_id)
+    signed_data = sign_transaction(address,
+                                   nonce,
+                                   gas_limit,
+                                   value=eth_amount,
+                                   dest=dest,
+                                   gas_price=gas_price,
+                                   chain_id=chain_id)
 
     tx_hash = eth_int.eth_sendRawTransaction(signed_data)
     return tx_hash
@@ -316,9 +306,7 @@ class Contract(models.Model):
     owner_address = models.CharField(max_length=50, null=True, default=None)
     user_address = models.CharField(max_length=50, null=True, default=None)
 
-    balance = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, default=None
-    )
+    balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, default=None)
     cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)
 
     name = models.CharField(max_length=200, null=True, default=None)
@@ -328,9 +316,7 @@ class Contract(models.Model):
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
-    compiler_version = models.CharField(
-        max_length=200, null=True, default=None
-    )
+    compiler_version = models.CharField(max_length=200, null=True, default=None)
 
     created_date = models.DateTimeField(auto_now_add=True)
     deployed_at = models.DateTimeField(null=True, default=None)
@@ -347,23 +333,17 @@ class Contract(models.Model):
     def __str__(self):
         return f"ID {self.id} {self.name} for {self.user.__str__()} in {self.network.name}"
 
-
     def save(self, *args, **kwargs):
         # disable balance saving to prevent collisions with java daemon
         print(args)
         str_args = ','.join([str(x) for x in args])
         if self.id:
-            kwargs['update_fields'] = list(
-                {f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')}
-                &
-                set(kwargs.get('update_fields', [f.name for f in Contract._meta.fields]))
-            )
+            kwargs['update_fields'] = list({f.name for f in Contract._meta.fields if f.name not in ('balance', 'id')} &
+                                           set(kwargs.get('update_fields', [f.name for f in Contract._meta.fields])))
         return super().save(*args, **kwargs)
 
     def get_details(self):
-        return getattr(self, self.get_details_model(
-            self.contract_type
-        ).__name__.lower() + '_set').first()
+        return getattr(self, self.get_details_model(self.contract_type).__name__.lower() + '_set').first()
 
     @classmethod
     def get_all_details_model(cls):
@@ -411,10 +391,8 @@ class Contract(models.Model):
         near_token = apps.get_model('contracts', 'ContractDetailsNearToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
-        contract_details_types[1] = {'name': 'Wallet contract (lost key)',
-                                     'model': lostkey}
-        contract_details_types[2] = {'name': 'Deferred payment contract',
-                                     'model': deffered}
+        contract_details_types[1] = {'name': 'Wallet contract (lost key)', 'model': lostkey}
+        contract_details_types[2] = {'name': 'Deferred payment contract', 'model': deffered}
         contract_details_types[4] = {'name': 'MyWish ICO', 'model': ico}
         contract_details_types[5] = {'name': 'Token contract', 'model': token}
         contract_details_types[6] = {'name': 'NEO contract', 'model': neo}
@@ -481,9 +459,7 @@ class EthContract(models.Model):
     source_code = models.TextField()
     bytecode = models.TextField()
     abi = JSONField(default={})
-    compiler_version = models.CharField(
-        max_length=200, null=True, default=None
-    )
+    compiler_version = models.CharField(max_length=200, null=True, default=None)
     constructor_arguments = models.TextField()
 
     def __str__(self):
@@ -491,6 +467,7 @@ class EthContract(models.Model):
 
 
 class CommonDetails(models.Model):
+
     class Meta:
         abstract = True
 
@@ -535,8 +512,7 @@ class CommonDetails(models.Model):
         arguments = self.get_arguments(eth_contract_attr_name)
         print('arguments', arguments, flush=True)
         eth_contract.constructor_arguments = binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else ''
+            tr.encode_constructor_arguments(arguments)).decode() if arguments else ''
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
 
         if self.white_label:
@@ -571,9 +547,8 @@ class CommonDetails(models.Model):
         print('nonce', nonce, flush=True)
         # print('BYTECODE', eth_contract.bytecode, flush=True) print('CONTRACT CODE', eth_contract.bytecode +
         # binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode() if arguments else '', flush=True)
-        data = eth_contract.bytecode + (binascii.hexlify(
-            tr.encode_constructor_arguments(arguments)
-        ).decode() if arguments else '')
+        data = eth_contract.bytecode + (binascii.hexlify(tr.encode_constructor_arguments(arguments)).decode()
+                                        if arguments else '')
         print('data =', data)
         # if arguments:
         #     data = eth_contract.bytecode + (binascii.hexlify(
@@ -588,8 +563,15 @@ class CommonDetails(models.Model):
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
         chain_id = int(eth_int.eth_chainId(), 16)
 
-        kwargs = {'address': address, 'nonce': nonce, 'gaslimit': self.get_gaslimit(), 'value': self.get_value(),
-                  'contract_data': data, 'gas_price': gas_price, 'chain_id': chain_id}
+        kwargs = {
+            'address': address,
+            'nonce': nonce,
+            'gaslimit': self.get_gaslimit(),
+            'value': self.get_value(),
+            'contract_data': data,
+            'gas_price': gas_price,
+            'chain_id': chain_id
+        }
 
         if self.white_label:
             kwargs['child_id'] = self.contract.id
@@ -637,23 +619,13 @@ class CommonDetails(models.Model):
             if self.contract.contract_type == 11:
                 send_mail(
                     eos_account_subject,
-                    eos_account_message.format(
-                        link=network_link.format(address=self.account_name),
-                        network_name=network_name
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
+                    eos_account_message.format(link=network_link.format(address=self.account_name),
+                                               network_name=network_name), DEFAULT_FROM_EMAIL,
+                    [self.contract.user.email])
             elif self.contract.contract_type == 10:
-                send_mail(
-                    eos_contract_subject,
-                    eos_contract_message.format(
-                        token_name=self.token_short_name,
-                        network_name=network_name
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [self.contract.user.email]
-                )
+                send_mail(eos_contract_subject,
+                          eos_contract_message.format(token_name=self.token_short_name, network_name=network_name),
+                          DEFAULT_FROM_EMAIL, [self.contract.user.email])
             elif self.contract.contract_type == 20:
                 pass
             else:
@@ -666,27 +638,21 @@ class CommonDetails(models.Model):
                         send_mail(
                             common_subject,
                             sale_message.format(
-                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                    'name'],
+                                contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]
+                                ['name'],
                                 link=network_link.format(address=eth_contract.address),
                                 network_name=network_name,
-                            ),
-                            DEFAULT_FROM_EMAIL,
-                            [self.contract.user.email]
-                        )
+                            ), DEFAULT_FROM_EMAIL, [self.contract.user.email])
                         break
                 else:
                     send_mail(
                         common_subject,
                         common_text.format(
-                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type][
-                                'name'],
+                            contract_type_name=self.contract.get_all_details_model()[self.contract.contract_type]
+                            ['name'],
                             link=network_link.format(address=eth_contract.address),
                             network_name=network_name,
-                        ),
-                        DEFAULT_FROM_EMAIL,
-                        [self.contract.user.email]
-                    )
+                        ), DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
@@ -699,14 +665,8 @@ class CommonDetails(models.Model):
         self.contract.state = 'POSTPONED'
         self.contract.postponed_at = datetime.datetime.now()
         self.contract.save()
-        send_mail(
-            postponed_subject,
-            postponed_message.format(
-                contract_id=self.contract.id
-            ),
-            DEFAULT_FROM_EMAIL,
-            [EMAIL_FOR_POSTPONED_MESSAGE]
-        )
+        send_mail(postponed_subject, postponed_message.format(contract_id=self.contract.id), DEFAULT_FROM_EMAIL,
+                  [EMAIL_FOR_POSTPONED_MESSAGE])
         print('contract postponed due to transaction fail', flush=True)
         take_off_blocking(self.contract.network.name, self.contract.id)
         print('queue unlocked due to transaction fail', flush=True)
@@ -728,13 +688,13 @@ class CommonDetails(models.Model):
 
         print('nonce', nonce)
         signed_data = sign_transaction(
-            address, nonce, 600000,
+            address,
+            nonce,
+            600000,
             gas_price=gas_price,
             chain_id=chain_id,
             dest=self.eth_contract.address,
-            contract_data=binascii.hexlify(
-                tr.encode_function_call('check', [])
-            ).decode(),
+            contract_data=binascii.hexlify(tr.encode_function_call('check', [])).decode(),
         )
         print('signed_data', signed_data)
         eth_int.eth_sendRawTransaction(signed_data)
@@ -745,7 +705,7 @@ class CommonDetails(models.Model):
             try:
                 response = requests.get(GAS_API_URL).json()
                 gas_price_current = response[SPEEDLVL] / 10
-                gas_price_current = int(gas_price_current * 10 ** 9)
+                gas_price_current = int(gas_price_current * 10**9)
                 return gas_price_current
             except (requests.RequestException, KeyError):
                 print('gas station api is unavailable', flush=True)
@@ -770,8 +730,11 @@ class CommonDetails(models.Model):
         contract_options = contract_options if any(contract_options) else 'NO OPTIONS'
 
         message = '<a>deployed contract\nid <b>{contract_id}</b>\n<b>{network}</b>\n<b>{contract_type}</b>\n<b>{contract_options}</b>\nuser id <b>{user_id}</b></a>'.format(
-            contract_id=self.contract.id, network=self.contract.network.name, contract_type=contract_type,
-            contract_options=contract_options, user_id=user_id)
+            contract_id=self.contract.id,
+            network=self.contract.network.name,
+            contract_type=contract_type,
+            contract_options=contract_options,
+            user_id=user_id)
 
         hyperlink = '<a href="{url}">\n{text}</a>'
         for idx, link in enumerate(links):
@@ -787,12 +750,10 @@ class CommonDetails(models.Model):
 class ContractDetailsPizza(CommonDetails):
     sol_path = 'lastwill/contracts/contracts/Pizza.sol'
     user_address = models.CharField(max_length=50)
-    pizzeria_address = models.CharField(
-        max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a'
-    )
+    pizzeria_address = models.CharField(max_length=50, default='0x1eee4c7d88aadec2ab82dd191491d1a9edf21e9a')
     timeout = models.IntegerField(default=60 * 60)
     code = models.IntegerField()
-    salt = models.CharField(max_length=len(str(2 ** 256)))
+    salt = models.CharField(max_length=len(str(2**256)))
     pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)  # weis
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
     eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
@@ -816,9 +777,7 @@ class TokenHolder(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
-    amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     freeze_date = models.IntegerField(null=True)
 
     def __str__(self):
@@ -838,9 +797,7 @@ class EOSTokenHolder(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
     name = models.CharField(max_length=512, null=True)
     address = models.CharField(max_length=50)
-    amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
+    amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
     freeze_date = models.IntegerField(null=True)
 
     def __str__(self):

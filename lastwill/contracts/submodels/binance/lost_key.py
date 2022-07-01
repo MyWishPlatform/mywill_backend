@@ -1,6 +1,6 @@
-from lastwill.contracts.submodels.lostkey import AbstractContractDetailsLostKey
+from lastwill.consts import CONTRACT_PRICE_USDT, NET_DECIMALS
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
+from lastwill.contracts.submodels.lostkey import AbstractContractDetailsLostKey
 
 
 @contract_details('Binance Wallet contract (lost key)')

@@ -1,4 +1,4 @@
-MAX_WEI_DIGITS = len(str(2 ** 256))
+MAX_WEI_DIGITS = len(str(2**256))
 MAIL_NETWORK = {
     'ETHEREUM_MAINNET': 'Ethereum',
     'ETHEREUM_ROPSTEN': 'Ropsten (Ethereum Testnet)',
@@ -22,6 +22,7 @@ MAIL_NETWORK = {
     'MOONRIVER_MAINNET': 'Moonriver',
     'SOLANA_TESTNET': 'Solana Testnet',
     'NEAR_TESTNET': 'Near Testnet'
+    'SOLANA_MAINNET': 'Solana Mainnet',
 }
 
 API_NETWORK = {
@@ -45,6 +46,7 @@ API_NETWORK = {
     'MOONRIVER_MAINNET': 'MOONRIVER_MAINNET',
     'SOLANA_TESTNET': 'SOLANA_TESTNET',
     'NEAR_TESTNET': 'NEAR_TESTNET',
+    'SOLANA_MAINNET': 'SOLANA_MAINNET',
 }
 
 NETWORK_SUBSITE = {
@@ -69,6 +71,7 @@ NETWORK_SUBSITE = {
     'SOLANA_TESTNET': 1,
     'NEAR_TESTNET': 1,
 
+    'SOLANA_MAINNET': 1,
 }
 
 CONTRACT_PRICE_USDT = {
@@ -83,19 +86,15 @@ CONTRACT_PRICE_USDT = {
     'ETH_LOSTKEY_TOKENS': 549,
     'ETH_SWAPS': 10,
     'ETH_TOKEN_PROTECTOR': 759,
-
     'EOS_ACCOUNT': 55,
     'EOS_ICO': 345,
     'EOS_TOKEN': 199,
     'EOS_TOKEN_SA': 295,
-
     'TRON_TOKEN': 199,
     'TRON_GAME_ASSETS': 99,
     'TRON_AIRDROP': 299,
     'TRON_LOSTKEY': 99,
-
     'WAVES_STO': 99,
-
     'BINANCE_LASTWILL': 99,
     'BINANCE_DEFFERED': 99,
     'BINANCE_ICO': 699,
@@ -105,18 +104,13 @@ CONTRACT_PRICE_USDT = {
     'BINANCE_INVPOOL': 99,
     'BINANCE_LOSTKEY': 99,
     'BINANCE_LOSTKEY_TOKENS': 99,
-
     'MATIC_TOKEN': 199,
     'MATIC_ICO': 399,
     'MATIC_AIRDROP': 299,
-
     'XINFIN_TOKEN': 199,
-
     'HECOCHAIN_TOKEN': 149,
     'HECOCHAIN_ICO': 35,
-
     'MOONRIVER_TOKEN': 199,
-
     'SOLANA_TOKEN': 50,
     
     'NEAR_TOKEN': 999,
@@ -190,11 +184,7 @@ NET_DECIMALS = {
     'NEAR': 10 ** 12,
 }
 
-TRON_REPLENISH_THRESHOLD = {
-    'NET': 36000,
-    'ENERGY': 5600000,
-    'MIN_TRX': 1000000
-}
+TRON_REPLENISH_THRESHOLD = {'NET': 36000, 'ENERGY': 5600000, 'MIN_TRX': 1000000}
 
 URL_STATS_CURRENCY_BODY = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
 URL_STATS_CURRENCY = {
@@ -203,12 +193,7 @@ URL_STATS_CURRENCY = {
     'RUB': "https://api.cryptonator.com/api/ticker/usd-rub",
 }
 
-URL_STATS_CURRENCY_ID = {
-    'MYWISH': 2236,
-    'BTC': 1,
-    'ETH': 1027,
-    'EOS': 1765
-}
+URL_STATS_CURRENCY_ID = {'MYWISH': 2236, 'BTC': 1, 'ETH': 1027, 'EOS': 1765}
 
 URL_STATS_ETH_QUERY = 'api?module=account&action=balance&address='
 URL_STATS_BALANCE = {
@@ -222,89 +207,205 @@ ETH_TESTNET_ADDRESS = '0x88dbD934eF3349f803E1448579F735BE8CAB410D'
 
 AVAILABLE_CONTRACT_TYPES = {
     1: [
-        {'contract_type': 0, 'contract_name': 'LastWill'},
-        {'contract_type': 1, 'contract_name': 'LostKey'},
-        {'contract_type': 2, 'contract_name': 'DefferedPayment'},
-        {'contract_type': 4, 'contract_name': 'ICO'},
-        {'contract_type': 5, 'contract_name': 'Token'},
-        {'contract_type': 8, 'contract_name': 'AirDrop'},
-        {'contract_type': 9, 'contract_name': 'InvestmentPool'},
+        {
+            'contract_type': 0,
+            'contract_name': 'LastWill'
+        },
+        {
+            'contract_type': 1,
+            'contract_name': 'LostKey'
+        },
+        {
+            'contract_type': 2,
+            'contract_name': 'DefferedPayment'
+        },
+        {
+            'contract_type': 4,
+            'contract_name': 'ICO'
+        },
+        {
+            'contract_type': 5,
+            'contract_name': 'Token'
+        },
+        {
+            'contract_type': 8,
+            'contract_name': 'AirDrop'
+        },
+        {
+            'contract_type': 9,
+            'contract_name': 'InvestmentPool'
+        },
     ],
     2: [
-        {'contract_type': 0, 'contract_name': 'LastWill'},
-        {'contract_type': 1, 'contract_name': 'LostKey'},
-        {'contract_type': 2, 'contract_name': 'DefferedPayment'},
-        {'contract_type': 4, 'contract_name': 'ICO'},
-        {'contract_type': 5, 'contract_name': 'Token'},
-        {'contract_type': 8, 'contract_name': 'AirDrop'},
-        {'contract_type': 9, 'contract_name': 'InvestmentPool'},
+        {
+            'contract_type': 0,
+            'contract_name': 'LastWill'
+        },
+        {
+            'contract_type': 1,
+            'contract_name': 'LostKey'
+        },
+        {
+            'contract_type': 2,
+            'contract_name': 'DefferedPayment'
+        },
+        {
+            'contract_type': 4,
+            'contract_name': 'ICO'
+        },
+        {
+            'contract_type': 5,
+            'contract_name': 'Token'
+        },
+        {
+            'contract_type': 8,
+            'contract_name': 'AirDrop'
+        },
+        {
+            'contract_type': 9,
+            'contract_name': 'InvestmentPool'
+        },
     ],
     5: [],
-    6: [
-        {'contract_type': 6, 'contract_name': 'Token'},
-        {'contract_type': 7, 'contract_name': 'ICO'}
-    ],
-    10: [
-        {'contract_type': 10, 'contract_name': 'Token'},
-        {'contract_type': 11, 'contract_name': 'Account'},
-        {'contract_type': 12, 'contract_name': 'ICO'},
-        {'contract_type': 13, 'contract_name': 'AirDrop'},
-        {'contract_type': 14, 'contract_name': 'TokenStandAlone'}
-
-    ],
-    11: [
-        {'contract_type': 10, 'contract_name': 'Token'},
-        {'contract_type': 11, 'contract_name': 'Account'},
-        {'contract_type': 12, 'contract_name': 'ICO'},
-        {'contract_type': 13, 'contract_name': 'AirDrop'},
-        {'contract_type': 14, 'contract_name': 'TokenStandAlone'}
-    ],
-    14: [
-        {'contract_type': 15, 'contract_name': 'Token'},
-        {'contract_type': 16, 'contract_name': 'GameAsset'},
-        {'contract_type': 17, 'contract_name': 'AirDrop'}
-
-    ],
-    15: [
-        {'contract_type': 15, 'contract_name': 'Token'},
-        {'contract_type': 16, 'contract_name': 'GameAsset'},
-        {'contract_type': 17, 'contract_name': 'AirDrop'}
-    ],
+    6: [{
+        'contract_type': 6,
+        'contract_name': 'Token'
+    }, {
+        'contract_type': 7,
+        'contract_name': 'ICO'
+    }],
+    10: [{
+        'contract_type': 10,
+        'contract_name': 'Token'
+    }, {
+        'contract_type': 11,
+        'contract_name': 'Account'
+    }, {
+        'contract_type': 12,
+        'contract_name': 'ICO'
+    }, {
+        'contract_type': 13,
+        'contract_name': 'AirDrop'
+    }, {
+        'contract_type': 14,
+        'contract_name': 'TokenStandAlone'
+    }],
+    11: [{
+        'contract_type': 10,
+        'contract_name': 'Token'
+    }, {
+        'contract_type': 11,
+        'contract_name': 'Account'
+    }, {
+        'contract_type': 12,
+        'contract_name': 'ICO'
+    }, {
+        'contract_type': 13,
+        'contract_name': 'AirDrop'
+    }, {
+        'contract_type': 14,
+        'contract_name': 'TokenStandAlone'
+    }],
+    14: [{
+        'contract_type': 15,
+        'contract_name': 'Token'
+    }, {
+        'contract_type': 16,
+        'contract_name': 'GameAsset'
+    }, {
+        'contract_type': 17,
+        'contract_name': 'AirDrop'
+    }],
+    15: [{
+        'contract_type': 15,
+        'contract_name': 'Token'
+    }, {
+        'contract_type': 16,
+        'contract_name': 'GameAsset'
+    }, {
+        'contract_type': 17,
+        'contract_name': 'AirDrop'
+    }],
     22: [
-        {'contract_type': 28, 'contract_name': 'Token'},
-        {'contract_type': 27, 'contract_name': 'ICO'},
-        {'contract_type': 29, 'contract_name': 'Airdrop'},
+        {
+            'contract_type': 28,
+            'contract_name': 'Token'
+        },
+        {
+            'contract_type': 27,
+            'contract_name': 'ICO'
+        },
+        {
+            'contract_type': 29,
+            'contract_name': 'Airdrop'
+        },
     ],
     23: [
-        {'contract_type': 28, 'contract_name': 'Token'},
-        {'contract_type': 27, 'contract_name': 'ICO'},
-        {'contract_type': 29, 'contract_name': 'Airdrop'},
+        {
+            'contract_type': 28,
+            'contract_name': 'Token'
+        },
+        {
+            'contract_type': 27,
+            'contract_name': 'ICO'
+        },
+        {
+            'contract_type': 29,
+            'contract_name': 'Airdrop'
+        },
     ],
     24: [
-        {'contract_type': 33, 'contract_name': 'Token'},
-        {'contract_type': 32, 'contract_name': 'ICO'},
-        {'contract_type': 34, 'contract_name': 'Airdrop'},
+        {
+            'contract_type': 33,
+            'contract_name': 'Token'
+        },
+        {
+            'contract_type': 32,
+            'contract_name': 'ICO'
+        },
+        {
+            'contract_type': 34,
+            'contract_name': 'Airdrop'
+        },
     ],
     25: [
-        {'contract_type': 33, 'contract_name': 'Token'},
-        {'contract_type': 32, 'contract_name': 'ICO'},
-        {'contract_type': 34, 'contract_name': 'Airdrop'},
+        {
+            'contract_type': 33,
+            'contract_name': 'Token'
+        },
+        {
+            'contract_type': 32,
+            'contract_name': 'ICO'
+        },
+        {
+            'contract_type': 34,
+            'contract_name': 'Airdrop'
+        },
     ],
-    28: [
-        {'contract_type': 36, 'contract_name': 'Token'}
-    ],
-    35: [
-        {'contract_type': 35, 'contract_name': 'Token'}
-    ],
-    36: [
-        {'contract_type': 36, 'contract_name': 'Token'}
-    ],
-    37: [
-        {'contract_type': 38, 'contract_name': 'Token'}
-    ],
-    38: [
-        {'contract_type': 39, 'contract_name': 'Token'}
-    ],
+    28: [{
+        'contract_type': 36,
+        'contract_name': 'Token'
+    }],
+    35: [{
+        'contract_type': 35,
+        'contract_name': 'Token'
+    }],
+    36: [{
+        'contract_type': 36,
+        'contract_name': 'Token'
+    }],
+    37: [{
+        'contract_type': 38,
+        'contract_name': 'Token'
+    }],
+    38: [{
+        'contract_type': 39,
+        'contract_name': 'Token'
+    }],
+    39: [{
+        'contract_type': 39,
+        'contract_name': 'Token'
+    }],
     40: [
         {'contract_type': 40, 'contract_name': 'Token'}
     ],
@@ -312,56 +413,106 @@ AVAILABLE_CONTRACT_TYPES = {
 
 NETWORK_TYPES = {
     'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36, 38, 40],
-    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37]
+    'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37, 39]
 }
 
+
 ALL_CONTRACT_STATES = [
-    'ACTIVE',
-    'CANCELLED',
-    'CREATED',
-    'DONE',
-    'ENDED',
-    'EXPIRED',
-    'KILLED',
-    'POSTPONED',
-    'TRIGGERED',
-    'UNDER_CROWDSALE',
-    'WAITING_ACTIVATION',
-    'WAITING_FOR_DEPLOYMENT',
-    'WAITING_FOR_PAYMENT'
+    'ACTIVE', 'CANCELLED', 'CREATED', 'DONE', 'ENDED', 'EXPIRED', 'KILLED', 'POSTPONED', 'TRIGGERED', 'UNDER_CROWDSALE',
+    'WAITING_ACTIVATION', 'WAITING_FOR_DEPLOYMENT', 'WAITING_FOR_PAYMENT'
 ]
 
 API_CONTRACT_PRICES = [
-    {'contract_type': 0, 'contract_name': 'LastWill',
-        'price': 0.257 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 1, 'contract_name': 'LostKey',
-        'price': 0.2 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 2, 'contract_name': 'DefferedPayment',
-        'price': 0.025 * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 4, 'contract_name': 'ICO',
-        'price': CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 5, 'contract_name': 'Token',
-        'price': CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 8, 'contract_name': 'AirDrop',
-        'price': CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 9, 'contract_name': 'InvestmentPool',
-        'price': CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH'], 'currency': 'ETH'},
-    {'contract_type': 10, 'contract_name': 'Token',
-        'price': CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 11, 'contract_name': 'Account',
-        'price': CONTRACT_PRICE_EOS['EOS_ACCOUNT'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 12, 'contract_name': 'ICO',
-        'price': CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 13, 'contract_name': 'AirDrop',
-        'price': CONTRACT_PRICE_EOS['EOS_AIRDROP'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 14, 'contract_name': 'TokenStandAlone',
-        'price': CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS'], 'currency': 'EOS'},
-    {'contract_type': 15, 'contract_name': 'Token',
-        'price': CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
-    {'contract_type': 16, 'contract_name': 'GameAsset',
-        'price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
-    {'contract_type': 17, 'contract_name': 'AirDrop',
-        'price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'], 'currency': 'TRX'},
+    {
+        'contract_type': 0,
+        'contract_name': 'LastWill',
+        'price': 0.257 * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 1,
+        'contract_name': 'LostKey',
+        'price': 0.2 * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 2,
+        'contract_name': 'DefferedPayment',
+        'price': 0.025 * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 4,
+        'contract_name': 'ICO',
+        'price': CONTRACT_PRICE_ETH['ICO'] * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 5,
+        'contract_name': 'Token',
+        'price': CONTRACT_PRICE_ETH['TOKEN'] * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 8,
+        'contract_name': 'AirDrop',
+        'price': CONTRACT_PRICE_ETH['AIRDROP'] * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 9,
+        'contract_name': 'InvestmentPool',
+        'price': CONTRACT_PRICE_ETH['INVESTMENT_POOL'] * NET_DECIMALS['ETH'],
+        'currency': 'ETH'
+    },
+    {
+        'contract_type': 10,
+        'contract_name': 'Token',
+        'price': CONTRACT_PRICE_EOS['EOS_TOKEN'] * NET_DECIMALS['EOS'],
+        'currency': 'EOS'
+    },
+    {
+        'contract_type': 11,
+        'contract_name': 'Account',
+        'price': CONTRACT_PRICE_EOS['EOS_ACCOUNT'] * NET_DECIMALS['EOS'],
+        'currency': 'EOS'
+    },
+    {
+        'contract_type': 12,
+        'contract_name': 'ICO',
+        'price': CONTRACT_PRICE_EOS['EOS_ICO'] * NET_DECIMALS['EOS'],
+        'currency': 'EOS'
+    },
+    {
+        'contract_type': 13,
+        'contract_name': 'AirDrop',
+        'price': CONTRACT_PRICE_EOS['EOS_AIRDROP'] * NET_DECIMALS['EOS'],
+        'currency': 'EOS'
+    },
+    {
+        'contract_type': 14,
+        'contract_name': 'TokenStandAlone',
+        'price': CONTRACT_PRICE_EOS['EOS_TOKEN_STANDALONE'] * NET_DECIMALS['EOS'],
+        'currency': 'EOS'
+    },
+    {
+        'contract_type': 15,
+        'contract_name': 'Token',
+        'price': CONTRACT_PRICE_TRON['TRON_TOKEN'] * NET_DECIMALS['TRX'],
+        'currency': 'TRX'
+    },
+    {
+        'contract_type': 16,
+        'contract_name': 'GameAsset',
+        'price': CONTRACT_PRICE_TRON['TRON_GAME_ASSET'] * NET_DECIMALS['TRX'],
+        'currency': 'TRX'
+    },
+    {
+        'contract_type': 17,
+        'contract_name': 'AirDrop',
+        'price': CONTRACT_PRICE_TRON['TRON_AIRDROP'] * NET_DECIMALS['TRX'],
+        'currency': 'TRX'
+    },
 ]
 
 ETHPLORER_URL = 'http://api.ethplorer.io/getAddressInfo/{address}?apiKey={key}'
@@ -407,7 +558,6 @@ EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS = {
         'RAM': 300,
     },
 }
-
 
 VERIFICATION_PRICE_USDT = 250
 

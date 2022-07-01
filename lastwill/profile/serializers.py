@@ -1,24 +1,23 @@
-import requests
-import os
-import hashlib
 import binascii
+import hashlib
+import os
 
+import requests
 from bip32utils import BIP32Key
 from eth_keys import keys
-
-from rest_framework.exceptions import PermissionDenied
-from rest_framework import serializers
 from rest_auth.registration.serializers import RegisterSerializer
-from rest_auth.serializers import (
-    LoginSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer,PasswordResetSerializer
-)
+from rest_auth.serializers import (LoginSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer,
+                                   PasswordResetSerializer)
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
-from lastwill.profile.models import Profile, UserSiteBalance, SubSite
-from lastwill.settings import ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH, BITCOIN_URLS, MY_WISH_URL, EOSISH_URL, TRON_URL, \
-    ROOT_PUBLIC_KEY_TRON, ROOT_PUBLIC_KEY_SWAPS, SWAPS_URL, ROOT_PUBLIC_KEY_PROTECTOR, TOKEN_PROTECTOR_URL, \
-    RUBIC_FIN_URL, RUBIC_EXC_URL
-from lastwill.profile.helpers import valid_totp
 from lastwill.profile.forms import SubSitePasswordResetForm
+from lastwill.profile.helpers import valid_totp
+from lastwill.profile.models import Profile, SubSite, UserSiteBalance
+from lastwill.settings import (BITCOIN_URLS, EOSISH_URL, MY_WISH_URL, ROOT_PUBLIC_KEY, ROOT_PUBLIC_KEY_EOSISH,
+                               ROOT_PUBLIC_KEY_PROTECTOR, ROOT_PUBLIC_KEY_SWAPS, ROOT_PUBLIC_KEY_TRON, RUBIC_EXC_URL,
+                               RUBIC_FIN_URL, SWAPS_URL, TOKEN_PROTECTOR_URL, TRON_URL)
+
 
 def generate_memo(m):
     memo_str = os.urandom(8)
@@ -28,68 +27,58 @@ def generate_memo(m):
 
 
 def registration_btc_address(btc_address):
-    requests.post(
-        BITCOIN_URLS['main'],
-        json={
-            'method': 'importaddress',
-            'params': [btc_address, btc_address, False],
-            'id': 1, 'jsonrpc': '1.0'
-        }
-    )
+    requests.post(BITCOIN_URLS['main'],
+                  json={
+                      'method': 'importaddress',
+                      'params': [btc_address, btc_address, False],
+                      'id': 1,
+                      'jsonrpc': '1.0'
+                  })
 
 
 def create_wish_balance(user, eth_address, btc_address, memo_str):
     wish = SubSite.objects.get(site_name=MY_WISH_URL)
-    UserSiteBalance(
-        user=user, subsite=wish,
-        eth_address=eth_address,
-        btc_address=btc_address,
-        tron_address='41' + eth_address[2:],
-        memo=memo_str
-    ).save()
+    UserSiteBalance(user=user,
+                    subsite=wish,
+                    eth_address=eth_address,
+                    btc_address=btc_address,
+                    tron_address='41' + eth_address[2:],
+                    memo=memo_str).save()
 
 
 def create_eosish_balance(user, eth_address, btc_address, memo_str):
     eosish = SubSite.objects.get(site_name=EOSISH_URL)
-    UserSiteBalance(
-        user=user, subsite=eosish,
-        eth_address=eth_address,
-        btc_address=btc_address,
-        memo=memo_str
-    ).save()
+    UserSiteBalance(user=user, subsite=eosish, eth_address=eth_address, btc_address=btc_address, memo=memo_str).save()
 
 
 def create_tron_balance(user, eth_address, btc_address, memo_str):
     tron = SubSite.objects.get(site_name=TRON_URL)
-    UserSiteBalance(
-        user=user, subsite=tron,
-        eth_address=eth_address,
-        btc_address=btc_address,
-        tron_address='41' + eth_address[2:],
-        memo=memo_str
-    ).save()
+    UserSiteBalance(user=user,
+                    subsite=tron,
+                    eth_address=eth_address,
+                    btc_address=btc_address,
+                    tron_address='41' + eth_address[2:],
+                    memo=memo_str).save()
 
 
 def create_swaps_balance(user, eth_address, btc_address, memo_str):
     swaps = SubSite.objects.get(site_name=SWAPS_URL)
-    UserSiteBalance(
-        user=user, subsite=swaps,
-        eth_address=eth_address,
-        btc_address=btc_address,
-        tron_address='41' + eth_address[2:],
-        memo=memo_str
-    ).save()
+    UserSiteBalance(user=user,
+                    subsite=swaps,
+                    eth_address=eth_address,
+                    btc_address=btc_address,
+                    tron_address='41' + eth_address[2:],
+                    memo=memo_str).save()
 
 
 def create_protector_balance(user, eth_address, btc_address, memo_str):
     protector = SubSite.objects.get(site_name=TOKEN_PROTECTOR_URL)
-    UserSiteBalance(
-        user=user, subsite=protector,
-        eth_address=eth_address,
-        btc_address=btc_address,
-        tron_address='41' + eth_address[2:],
-        memo=memo_str
-    ).save()
+    UserSiteBalance(user=user,
+                    subsite=protector,
+                    eth_address=eth_address,
+                    btc_address=btc_address,
+                    tron_address='41' + eth_address[2:],
+                    memo=memo_str).save()
 
 
 # def create_rubic_balance(user, eth_address, btc_address, memo_str):
@@ -147,6 +136,7 @@ def init_profile(user, is_social=False, metamask_address=None, lang='en', swaps=
 
 
 class UserRegisterSerializer(RegisterSerializer):
+
     def save(self, request):
         user = super().save(request)
         host = request.META['HTTP_HOST']

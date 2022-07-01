@@ -4,9 +4,9 @@ from django.db import models
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS)
 from lastwill.contracts.submodels.common import *
 from lastwill.settings import NETWORKS
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 
 
 class InvestAddress(models.Model):
@@ -14,16 +14,14 @@ class InvestAddress(models.Model):
     address = models.CharField(max_length=50, db_index=True)
     take_away = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
-    amount = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True,
-        db_index=True
-    )
+    amount = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True, db_index=True)
 
     def __str__(self):
         return self.contract
 
 
 class AbstractContractDetailsInvestmentPool(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -44,22 +42,12 @@ class AbstractContractDetailsInvestmentPool(CommonDetails):
     investment_tx_hash = models.CharField(max_length=70, default='')
     platform_as_admin = models.BooleanField(default=True)
 
-    balance = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
+    balance = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
-    soft_cap = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
-    hard_cap = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True
-    )
-    min_wei = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
-    max_wei = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True
-    )
+    soft_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
+    hard_cap = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
+    min_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
+    max_wei = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=None, null=True)
 
     def get_arguments(self, *args, **kwargs):
         return [
@@ -74,10 +62,9 @@ class AbstractContractDetailsInvestmentPool(CommonDetails):
         if self.temp_directory:
             print('already compiled')
             return
-        dest, preproc_config = create_directory(
-            self, sour_path='lastwill/investment-pool/*',
-            config_name='investment-pool-config.json'
-        )
+        dest, preproc_config = create_directory(self,
+                                                sour_path='lastwill/investment-pool/*',
+                                                config_name='investment-pool-config.json')
         preproc_params = {'constants': {}}
 
         preproc_params["constants"]["D_SOFT_CAP_WEI"] = str(self.soft_cap)
@@ -93,24 +80,20 @@ class AbstractContractDetailsInvestmentPool(CommonDetails):
         preproc_params["constants"]["D_REWARD_PERMILLE"] = int(self.admin_percent * 10)
 
         if self.min_wei:
-            preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(
-                int(self.min_wei))
+            preproc_params["constants"]["D_MIN_VALUE_WEI"] = str(int(self.min_wei))
         if self.max_wei:
-            preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(
-                int(self.max_wei))
+            preproc_params["constants"]["D_MAX_VALUE_WEI"] = str(int(self.max_wei))
         print('params', preproc_params, flush=True)
         test_investment_pool_params(preproc_config, preproc_params, dest)
         with open(preproc_config, 'w') as f:
             f.write(json.dumps(preproc_params))
-        with open(path.join(dest, 'build/contracts/InvestmentPool.json'),
-                  'rb') as f:
+        with open(path.join(dest, 'build/contracts/InvestmentPool.json'), 'rb') as f:
             investment_json = json.loads(f.read().decode('utf-8-sig'))
         with open(path.join(dest, 'build/InvestmentPool.sol'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
-        self.eth_contract = create_ethcontract_in_compile(
-            investment_json['abi'], investment_json['bytecode'][2:],
-            investment_json['compiler']['version'], self.contract, source_code
-        )
+        self.eth_contract = create_ethcontract_in_compile(investment_json['abi'], investment_json['bytecode'][2:],
+                                                          investment_json['compiler']['version'], self.contract,
+                                                          source_code)
         self.save()
 
     @blocking
@@ -134,20 +117,13 @@ class AbstractContractDetailsInvestmentPool(CommonDetails):
         return CONTRACT_GAS_LIMIT['INVESTMENT_POOL']
 
     def fundsAdded(self, message):
-        invest = InvestAddress(
-            contract=self.contract,
-            address=message['investorAddress'],
-            amount=message['value']
-        )
+        invest = InvestAddress(contract=self.contract, address=message['investorAddress'], amount=message['value'])
         invest.save()
         self.balance = message['balance']
         self.save()
 
     def tokenSent(self, message):
-        invest = InvestAddress.objects.filter(
-            address=message['investorAddress'],
-            amount=message['amount']
-        ).first()
+        invest = InvestAddress.objects.filter(address=message['investorAddress'], amount=message['amount']).first()
         if invest:
             invest.take_away = True
             invest.save()
