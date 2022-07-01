@@ -1,51 +1,53 @@
+from collections import OrderedDict
+
+import cloudscraper
+import requests
+from bs4 import BeautifulSoup
+from django.db.models import Q
 from django.http import Http404
 from django.views.generic import View
-
-from rest_framework import status
-from rest_framework import viewsets
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import BasePermission, SAFE_METHODS
-from rest_framework.permissions import IsAuthenticated
-from bs4 import BeautifulSoup
+from rest_framework import status, viewsets
+from rest_framework.permissions import (SAFE_METHODS, BasePermission, IsAuthenticated)
 from rest_framework.response import Response
-from collections import OrderedDict
-import cloudscraper
+from rest_framework.viewsets import ModelViewSet
+from web3 import HTTPProvider, Web3
 
-from lastwill.settings import BASE_DIR, ETHERSCAN_API_KEY, COINMARKETCAP_API_KEYS, VERIFICATION_CONTRACTS_IDS
-from lastwill.settings import MY_WISH_URL, TRON_URL, SWAPS_SUPPORT_MAIL, WAVES_URL, TOKEN_PROTECTOR_URL, RUBIC_EXC_URL, \
-    RUBIC_FIN_URL
-from lastwill.permissions import IsOwner, IsStaff
-from lastwill.snapshot.models import *
-from lastwill.promo.api import check_and_get_discount
-from lastwill.contracts.api_eos import *
-from lastwill.contracts.models import Contract, WhitelistAddress, AirdropAddress, EthContract, send_in_queue, \
-    ContractDetailsInvestmentPool, InvestAddress, EOSAirdropAddress, implement_cleos_command, CurrencyStatisticsCache, \
-    ContractDetailsBinanceInvestmentPool
-from lastwill.deploy.models import Network
-from lastwill.payments.api import create_payment
-from email_messages import authio_message, authio_subject, authio_google_subject, authio_google_message
-from .serializers import ContractSerializer, count_sold_tokens, WhitelistAddressSerializer, AirdropAddressSerializer, \
-    EOSAirdropAddressSerializer, deploy_swaps, deploy_protector, ContractDetailsTokenSerializer
+from email_messages import (authio_google_message, authio_google_subject, authio_message, authio_subject)
+from lastwill.check import is_neo3_address, is_solana_address
 from lastwill.consts import *
-import requests
-from lastwill.contracts.submodels.token_protector import ContractDetailsTokenProtector
-from django.db.models import Q
+from lastwill.contracts.api_eos import *
+from lastwill.contracts.models import (AirdropAddress, Contract, ContractDetailsBinanceInvestmentPool,
+                                       ContractDetailsInvestmentPool, CurrencyStatisticsCache, EOSAirdropAddress,
+                                       EthContract, InvestAddress, WhitelistAddress, implement_cleos_command,
+                                       send_in_queue)
+from lastwill.contracts.submodels.neo import neo3_address_to_hex
+from lastwill.contracts.submodels.token_protector import \
+    ContractDetailsTokenProtector
+from lastwill.deploy.models import Network
+from lastwill.parint import SolanaInt
+from lastwill.payments.api import create_payment
+from lastwill.permissions import IsOwner, IsStaff
+from lastwill.promo.api import check_and_get_discount
+from lastwill.rates.api import rate
+from lastwill.settings import (BASE_DIR, COINMARKETCAP_API_KEYS, ETHERSCAN_API_KEY, MY_WISH_URL, RUBIC_EXC_URL,
+                               RUBIC_FIN_URL, SWAPS_SUPPORT_MAIL, TOKEN_PROTECTOR_URL, TRON_URL,
+                               VERIFICATION_CONTRACTS_IDS, WAVES_URL)
+from lastwill.snapshot.models import *
 from tron_wif.hex2wif import hex2tronwif
 from web3 import Web3, HTTPProvider
 
-from lastwill.rates.api import rate
-from lastwill.check import is_neo3_address, is_solana_address
-from lastwill.contracts.submodels.neo import neo3_address_to_hex
+from .serializers import (AirdropAddressSerializer, ContractDetailsTokenSerializer, ContractSerializer,
+                          EOSAirdropAddressSerializer, WhitelistAddressSerializer, count_sold_tokens, deploy_protector,
+                          deploy_swaps)
 
-BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
+BROWSER_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
     if promo_str:
         try:
-            discount = check_and_get_discount(
-                promo_str, contract_type, user
-            )
+            discount = check_and_get_discount(promo_str, contract_type, user)
         except PermissionDenied:
             pass
         else:
@@ -59,10 +61,8 @@ def sendEMail(sub, text, mail):
     server.ehlo()
     server.login(EMAIL_HOST_USER_SWAPS, EMAIL_HOST_PASSWORD_SWAPS)
     message = "\r\n".join([
-        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS),
-        "To: {to}".format(to=mail),
-        "Subject: {sub}".format(sub=sub),
-        "",
+        "From: {address}".format(address=EMAIL_HOST_USER_SWAPS), "To: {to}".format(to=mail),
+        "Subject: {sub}".format(sub=sub), "",
         str(text)
     ])
     server.sendmail(EMAIL_HOST_USER_SWAPS, mail, message)
@@ -76,7 +76,7 @@ class ContractViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
+        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_ACTIVATION'):
             try:
                 self.perform_destroy(instance)
             except Http404:
@@ -109,9 +109,8 @@ class ContractViewSet(ModelViewSet):
 
 @api_view()
 def get_code(request):
-    with open(path.join(CONTRACTS_DIR, Contract.get_details_model(
-            int(request.query_params['contract_type'])
-    ).sol_path)) as f:
+    with open(path.join(CONTRACTS_DIR,
+                        Contract.get_details_model(int(request.query_params['contract_type'])).sol_path)) as f:
         return Response({'result': f.read()})
 
 
@@ -176,14 +175,18 @@ def get_eth_token_contracts(eth_contracts, res):
     for ec in eth_contracts:
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
-            if any([x.contract.contract_type == 4 and x.contract.state not in ('CREATED', 'ENDED') for x in
-                    ec.ico_details_token.all()]):
+            if any([
+                    x.contract.contract_type == 4 and x.contract.state not in ('CREATED', 'ENDED')
+                    for x in ec.ico_details_token.all()
+            ]):
                 state = 'running'
-            elif any([x.contract.contract_type == 4 and not x.continue_minting and x.contract.state == 'ENDED' for x in
-                      ec.ico_details_token.all()]):
+            elif any([
+                    x.contract.contract_type == 4 and not x.continue_minting and x.contract.state == 'ENDED'
+                    for x in ec.ico_details_token.all()
+            ]):
                 state = 'closed'
-            elif any([x.contract.contract_type == 5 and x.contract.state == 'ENDED' for x in
-                      ec.token_details_token.all()]):
+            elif any(
+                [x.contract.contract_type == 5 and x.contract.state == 'ENDED' for x in ec.token_details_token.all()]):
                 state = 'closed'
             else:
                 state = 'ok'
@@ -201,14 +204,20 @@ def get_binance_token_contracts(binance_contracts, res):
     for ec in binance_contracts:
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
-            if any([x.contract.contract_type == 27 and x.contract.state not in ('CREATED', 'ENDED') for x in
-                    ec.binance_ico_details_token.all()]):
+            if any([
+                    x.contract.contract_type == 27 and x.contract.state not in ('CREATED', 'ENDED')
+                    for x in ec.binance_ico_details_token.all()
+            ]):
                 state = 'running'
-            elif any([x.contract.contract_type == 27 and not x.continue_minting and x.contract.state == 'ENDED' for x in
-                      ec.binance_ico_details_token.all()]):
+            elif any([
+                    x.contract.contract_type == 27 and not x.continue_minting and x.contract.state == 'ENDED'
+                    for x in ec.binance_ico_details_token.all()
+            ]):
                 state = 'closed'
-            elif any([x.contract.contract_type == 28 and x.contract.state == 'ENDED' for x in
-                      ec.binance_token_details_token.all()]):
+            elif any([
+                    x.contract.contract_type == 28 and x.contract.state == 'ENDED'
+                    for x in ec.binance_token_details_token.all()
+            ]):
                 state = 'closed'
             else:
                 state = 'ok'
@@ -226,14 +235,20 @@ def get_matic_token_contracts(matic_contracts, res):
     for ec in matic_contracts:
         details = ec.contract.get_details()
         if details.eth_contract_token == ec:
-            if any([x.contract.contract_type == 32 and x.contract.state not in ('CREATED', 'ENDED') for x in
-                    ec.matic_ico_details_token.all()]):
+            if any([
+                    x.contract.contract_type == 32 and x.contract.state not in ('CREATED', 'ENDED')
+                    for x in ec.matic_ico_details_token.all()
+            ]):
                 state = 'running'
-            elif any([x.contract.contract_type == 32 and not x.continue_minting and x.contract.state == 'ENDED' for x in
-                      ec.matic_ico_details_token.all()]):
+            elif any([
+                    x.contract.contract_type == 32 and not x.continue_minting and x.contract.state == 'ENDED'
+                    for x in ec.matic_ico_details_token.all()
+            ]):
                 state = 'closed'
-            elif any([x.contract.contract_type == 33 and x.contract.state == 'ENDED' for x in
-                      ec.matic_token_details_token.all()]):
+            elif any([
+                    x.contract.contract_type == 33 and x.contract.state == 'ENDED'
+                    for x in ec.matic_token_details_token.all()
+            ]):
                 state = 'closed'
             else:
                 state = 'ok'
@@ -250,8 +265,10 @@ def get_matic_token_contracts(matic_contracts, res):
 def get_xinfin_token_contracts(xin_contracts, res):
     for ec in xin_contracts:
         details = ec.contract.get_details()
-        if any([x.contract.contract_type == 35 and x.contract.state == 'ENDED' for x in
-                ec.xinfin_token_details_token.all()]):
+        if any([
+                x.contract.contract_type == 35 and x.contract.state == 'ENDED'
+                for x in ec.xinfin_token_details_token.all()
+        ]):
             state = 'closed'
         else:
             state = 'ok'
@@ -269,8 +286,10 @@ def get_xinfin_token_contracts(xin_contracts, res):
 def get_moonriver_token_contracts(moonriver_contracts, res):
     for ec in moonriver_contracts:
         details = ec.contract.get_details()
-        if any([x.contract.contract_type == 38 and x.contract.state == 'ENDED' for x in
-                ec.moonriver_token_details_token.all()]):
+        if any([
+                x.contract.contract_type == 38 and x.contract.state == 'ENDED'
+                for x in ec.moonriver_token_details_token.all()
+        ]):
             state = 'closed'
         else:
             state = 'ok'
@@ -287,9 +306,7 @@ def get_moonriver_token_contracts(moonriver_contracts, res):
 def check_error_promocode(promo_str, contract_type):
     promo = Promo.objects.filter(promo_str=promo_str).first()
     if promo:
-        promo2ct = Promo2ContractType.objects.filter(
-            promo=promo, contract_type=contract_type
-        ).first()
+        promo2ct = Promo2ContractType.objects.filter(promo=promo, contract_type=contract_type).first()
         if not promo2ct:
             promo_str = None
     else:
@@ -304,9 +321,8 @@ def check_promocode(promo_str, user, cost, contract, details):
     if contract.contract_type in VERIFICATION_CONTRACTS_IDS and details.verification:
         options_price += VERIFICATION_PRICE_USDT * NET_DECIMALS['USDT']
 
-    cost = check_and_apply_promocode(
-        promo_str, user, contract.cost - options_price, contract.contract_type, contract.id
-    )
+    cost = check_and_apply_promocode(promo_str, user, contract.cost - options_price, contract.contract_type,
+                                     contract.id)
     return cost + options_price
 
 
@@ -326,12 +342,15 @@ def deploy(request):
     promo_str = request.data.get('promo', None)
     if promo_str:
         promo_str = promo_str.upper()
-    promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
-    cost = check_promocode(promo_str, request.user, original_cost, contract, contract_details)
+    promo_str = check_error_promocode(
+        promo_str, contract.contract_type) if promo_str else None
+    cost = check_promocode(promo_str, request.user,
+                           original_cost, contract, contract_details)
     create_payment(request.user.id, '', currency, -cost, site_id, network)
     if promo_str:
         promo = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=request.user, promo=promo, contract_id=contract.id).save()
+        User2Promo(user=request.user, promo=promo,
+                   contract_id=contract.id).save()
         promo.referral_bonus_usd += original_cost // NET_DECIMALS['USDT']
         promo.use_count += 1
         promo.save()
@@ -364,8 +383,8 @@ def i_am_alive(request):
 @api_view(http_method_names=['POST'])
 def cancel(request):
     contract = Contract.objects.get(id=request.data.get('id'))
-    if contract.user != request.user or contract.state not in ('ACTIVE', 'EXPIRED') or contract.contract_type not in (
-            0, 1, 18):
+    if contract.user != request.user or contract.state not in ('ACTIVE',
+                                                               'EXPIRED') or contract.contract_type not in (0, 1, 18):
         raise PermissionDenied()
     queue = NETWORKS[contract.network.name]['queue']
     send_in_queue(contract.id, 'cancel', queue)
@@ -386,20 +405,14 @@ def get_users(names):
     users = []
     for name in names:
         first_name, last_name = name.split()
-        user = User.objects.filter(
-            last_name=last_name,
-            first_name=first_name
-        ).first()
+        user = User.objects.filter(last_name=last_name, first_name=first_name).first()
         if user:
             users.append(user)
     return users
 
 
 def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
-    parameters = {
-        'id': id_list,
-        'convert': convert_currency
-    }
+    parameters = {'id': id_list, 'convert': convert_currency}
     headers = {
         'Accepts': 'application/json',
         'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEYS[2],
@@ -409,11 +422,11 @@ def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
     session.headers.update(headers)
 
     try:
-        response = session.get(URL_STATS_CURRENCY['CoinMarketCap'], params=parameters)
+        response = session.get(
+            URL_STATS_CURRENCY['CoinMarketCap'], params=parameters)
         data = response.text
         # print(data)
-    except (
-            requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
             requests.exceptions.TooManyRedirects) as e:
         print(e)
         data = {'error': 'Exception in fetching coinmarketcap statistics'}
@@ -446,9 +459,12 @@ def get_currency_statistics():
 
 
 def get_new_currency_statistics():
-    currencies_request_ids = ','.join(str(curr_id) for curr_id in URL_STATS_CURRENCY_ID.values())
-    cmc_info_usd = json.loads(get_coinmarketcap_statistics(currencies_request_ids))
-    cmc_info_eth = json.loads(get_coinmarketcap_statistics(currencies_request_ids, 'ETH'))
+    currencies_request_ids = ','.join(str(curr_id)
+                                      for curr_id in URL_STATS_CURRENCY_ID.values())
+    cmc_info_usd = json.loads(
+        get_coinmarketcap_statistics(currencies_request_ids))
+    cmc_info_eth = json.loads(
+        get_coinmarketcap_statistics(currencies_request_ids, 'ETH'))
 
     info_error_usd = cmc_info_usd['status']['error_message']
     info_error_eth = cmc_info_eth['status']['error_message']
@@ -461,7 +477,8 @@ def get_new_currency_statistics():
     data_usd = cmc_info_usd['data']
     data_eth = cmc_info_eth['data']
 
-    eosish_info = float(requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos'])
+    eosish_info = float(requests.get(
+        URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos'])
     usd_info = get_usd_rub_rates()
 
     currency_info = {}
@@ -497,12 +514,15 @@ def get_new_currency_statistics():
         currency_info[price_change_field] = price_change_24h
         currency_info[rank_field] = rank
 
-    wish_eth_info = data_eth[str(URL_STATS_CURRENCY_ID['MYWISH'])]['quote']['ETH']
+    wish_eth_info = data_eth[str(
+        URL_STATS_CURRENCY_ID['MYWISH'])]['quote']['ETH']
     currency_info['wish_price_eth'] = wish_eth_info['price']
-    wish_eth_change = currency_info['eth_percent_change_24h'] / wish_eth_info['percent_change_24h']
+    wish_eth_change = currency_info['eth_percent_change_24h'] / \
+        wish_eth_info['percent_change_24h']
     currency_info['wish_eth_percent_change_24h'] = wish_eth_change
     currency_info['eosish_price_eos'] = eosish_info
-    currency_info['eosish_price_usd'] = eosish_info * currency_info['eos_price_usd']
+    currency_info['eosish_price_usd'] = eosish_info * \
+        currency_info['eos_price_usd']
     currency_info['usd_price_rub'] = usd_info['price']
     currency_info['usd_percent_change_24h'] = usd_info['change_24h']
 
@@ -523,10 +543,9 @@ def get_new_currency_statistics():
 
 
 def get_balances_statistics():
-    neo_info = json.loads(requests.get(
-        URL_STATS_BALANCE['NEO'] +
-        '{address}'.format(address=NETWORKS['NEO_TESTNET']['address'])
-    ).content.decode())
+    neo_info = json.loads(
+        requests.get(URL_STATS_BALANCE['NEO'] +
+                     '{address}'.format(address=NETWORKS['NEO_TESTNET']['address'])).content.decode())
     neo_balance = 0.0
     gas_balance = 0.0
     for curr in neo_info['balance']:
@@ -534,19 +553,17 @@ def get_balances_statistics():
             gas_balance = curr['amount']
         if curr['asset'] == 'NEO':
             neo_balance = curr['amount']
-    eth_account_balance = float(json.loads(requests.get(url=
-                                                        URL_STATS_BALANCE[
-                                                            'ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
-                                                            address=ETH_MAINNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
-                                                        headers=BROWSER_HEADERS).content.decode())['result']) / \
-                          NET_DECIMALS['ETH']
-    eth_test_account_balance = float(json.loads(requests.get(url=
-                                                             URL_STATS_BALANCE[
-                                                                 'ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
-                                                                 address=ETH_TESTNET_ADDRESS,
-                                                                 api_key=ETHERSCAN_API_KEY),
-                                                             headers=BROWSER_HEADERS).content.decode())['result']) / \
-                               NET_DECIMALS['ETH']
+    eth_account_balance = float(json.loads(requests.get(url=URL_STATS_BALANCE[
+        'ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
+        address=ETH_MAINNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / \
+        NET_DECIMALS['ETH']
+    eth_test_account_balance = float(json.loads(requests.get(url=URL_STATS_BALANCE[
+        'ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
+        address=ETH_TESTNET_ADDRESS,
+        api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / \
+        NET_DECIMALS['ETH']
 
     # eth_account_balance = float(json.loads(requests.get(
     #     'https://api.etherscan.io/api?module=account&action=balance'
@@ -691,44 +708,33 @@ def get_balances_statistics():
 
 
 def get_ieo_statistics():
-    res = requests.get('https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
+    res = requests.get(
+        'https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
     return res.json()
 
 
 def get_usd_rub_rates():
     scraper = cloudscraper.create_scraper()
     res = scraper.get(url=URL_STATS_CURRENCY['RUB'], headers=BROWSER_HEADERS)
-    rub_rate = {
-        'price': res.json()['ticker']['price'],
-        'change_24h': res.json()['ticker']['change']
-    }
+    rub_rate = {'price': res.json()['ticker']['price'], 'change_24h': res.json()['ticker']['change']}
 
     return rub_rate
 
 
 def get_contracts_for_network(net, all_contracts, now, day):
     contracts = all_contracts.filter(network=net)
-    new_contracts = contracts.filter(created_date__lte=now,
-                                     created_date__gte=day)
+    new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
     created = contracts.filter(state__in=['CREATED'])
     now_created = created.filter(created_date__lte=now, created_date__gte=day)
-    active = contracts.filter(
-        state__in=['ACTIVE', 'WAITING', 'WAITING_ACTIVATION']
-    )
+    active = contracts.filter(state__in=['ACTIVE', 'WAITING', 'WAITING_ACTIVATION'])
     now_active = active.filter(created_date__lte=now, created_date__gte=day)
     done = contracts.filter(
-        state__in=[
-            'DONE', 'CANCELLED', 'ENDED', 'EXPIRED',
-            'UNDER_CROWDSALE', 'TRIGGERED', 'KILLED'
-        ]
-    )
+        state__in=['DONE', 'CANCELLED', 'ENDED', 'EXPIRED', 'UNDER_CROWDSALE', 'TRIGGERED', 'KILLED'])
     now_done = done.filter(created_date__lte=now, created_date__gte=day)
     error = contracts.filter(state__in=['POSTPONED'])
     now_error = error.filter(created_date__lte=now, created_date__gte=day)
     in_progress = contracts.filter(state__in=['WAITING_FOR_DEPLOYMENT'])
-    now_in_progress = in_progress.filter(
-        created_date__lte=now, created_date__gte=day
-    )
+    now_in_progress = in_progress.filter(created_date__lte=now, created_date__gte=day)
     answer = {
         'contracts': len(contracts),
         'new_contracts': len(new_contracts),
@@ -745,12 +751,9 @@ def get_contracts_for_network(net, all_contracts, now, day):
     }
     contract_details_types = Contract.get_all_details_model()
     for ctype in contract_details_types:
-        answer['contract_type_' + str(ctype)] = contracts.filter(
-            contract_type=ctype
-        ).count()
-        answer['contract_type_' + str(ctype) + '_new'] = contracts.filter(
-            contract_type=ctype
-        ).filter(created_date__lte=now, created_date__gte=day).count()
+        answer['contract_type_' + str(ctype)] = contracts.filter(contract_type=ctype).count()
+        answer['contract_type_' + str(ctype) + '_new'] = contracts.filter(contract_type=ctype).filter(
+            created_date__lte=now, created_date__gte=day).count()
     return answer
 
 
@@ -758,50 +761,36 @@ def get_contracts_for_network(net, all_contracts, now, day):
 # @permission_classes((permissions.IsAdminUser,))
 def get_statistics(request):
     now = datetime.datetime.now()
-    day = datetime.datetime.combine(
-        datetime.datetime.now().today(),
-        datetime.time(0, 0)
-    )
+    day = datetime.datetime.combine(datetime.datetime.now().today(), datetime.time(0, 0))
 
-    users = User.objects.all().exclude(
-        email='', password='', last_name='', first_name=''
-    ).exclude(email__startswith='testermc')
-    anonymous = User.objects.filter(
-        email='', password='', last_name='', first_name=''
-    )
+    users = User.objects.all().exclude(email='', password='', last_name='',
+                                       first_name='').exclude(email__startswith='testermc')
+    anonymous = User.objects.filter(email='', password='', last_name='', first_name='')
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
 
     try:
-        test_info = json.load(open(
-            path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')
-        ))
+        test_info = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))
         test_addresses = test_info['addresses']
         persons = test_info['persons']
         fb_test_users = get_users(persons)
-    except(FileNotFoundError, IOError):
+    except (FileNotFoundError, IOError):
         test_addresses = []
         fb_test_users = []
 
     answer = {
-        'user_statistics': {'users': len(users), 'new_users': len(new_users)},
+        'user_statistics': {
+            'users': len(users),
+            'new_users': len(new_users)
+        },
         'currency_statistics': get_currency_statistics(),
         'balances_statistics': get_balances_statistics(),
         'ieo': get_ieo_statistics()
     }
     networks = Network.objects.all()
-    contracts = Contract.objects.all().exclude(
-        user__in=anonymous
-    ).exclude(
-        user__in=fb_test_users
-    ).exclude(
-        user__email__in=test_addresses
-    ).exclude(
-        user__email__startswith='testermc'
-    )
+    contracts = Contract.objects.all().exclude(user__in=anonymous).exclude(user__in=fb_test_users).exclude(
+        user__email__in=test_addresses).exclude(user__email__startswith='testermc')
     for network in networks:
-        answer[network.name] = get_contracts_for_network(
-            network, contracts, now, day
-        )
+        answer[network.name] = get_contracts_for_network(network, contracts, now, day)
 
     return JsonResponse(answer)
 
@@ -809,39 +798,24 @@ def get_statistics(request):
 @api_view(http_method_names=['GET'])
 def get_statistics_landing(request):
     now = datetime.datetime.now()
-    day = datetime.datetime.combine(
-        datetime.datetime.now().today(),
-        datetime.time(0, 0)
-    )
-    users = User.objects.all().exclude(
-        email='', password='', last_name='', first_name=''
-    ).exclude(email__startswith='testermc')
-    anonymous = User.objects.filter(
-        email='', password='', last_name='', first_name=''
-    )
+    day = datetime.datetime.combine(datetime.datetime.now().today(), datetime.time(0, 0))
+    users = User.objects.all().exclude(email='', password='', last_name='',
+                                       first_name='').exclude(email__startswith='testermc')
+    anonymous = User.objects.filter(email='', password='', last_name='', first_name='')
     new_users = users.filter(date_joined__lte=now, date_joined__gte=day)
 
     try:
-        test_info = json.load(open(
-            path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')
-        ))
+        test_info = json.load(open(path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')))
         test_addresses = test_info['addresses']
         persons = test_info['persons']
         fb_test_users = get_users(persons)
-    except(FileNotFoundError, IOError):
+    except (FileNotFoundError, IOError):
         test_addresses = []
         fb_test_users = []
 
-    contracts = Contract.objects.all().exclude(user__in=anonymous).exclude(
-        user__in=fb_test_users
-    ).exclude(
-        user__email__in=test_addresses
-    ).exclude(
-        user__email__startswith='testermc'
-    )
-    new_contracts = contracts.filter(
-        created_date__lte=now, created_date__gte=day
-    )
+    contracts = Contract.objects.all().exclude(user__in=anonymous).exclude(user__in=fb_test_users).exclude(
+        user__email__in=test_addresses).exclude(user__email__startswith='testermc')
+    new_contracts = contracts.filter(created_date__lte=now, created_date__gte=day)
     answer = {
         'contracts': len(contracts),
         'new_contracts': len(new_contracts),
@@ -857,10 +831,12 @@ def get_cost_all_contracts(request):
     contract_details_types = Contract.get_all_details_model()
     for i in contract_details_types:
         answer[i] = {
-            'USDT': str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
-            'WISH': str(int(
-                contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']
-            ) * rate('USDT', 'WISH').value)
+            'USDT':
+                str(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']),
+            'WISH':
+                str(
+                    int(contract_details_types[i]['model'].min_cost() / NET_DECIMALS['USDT']) *
+                    rate('USDT', 'WISH').value)
         }
     return JsonResponse(answer)
 
@@ -977,35 +953,30 @@ def load_airdrop(request):
                 else:
                     if not x['address'].startswith('41'):
                         x['address'] = convert_airdrop_address_to_hex(x['address'])
-        AirdropAddress.objects.bulk_create([AirdropAddress(
-            contract=contract,
-            address=x['address'] if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower(),
-            amount=x['amount']
-        ) for x in addresses])
+        AirdropAddress.objects.bulk_create([
+            AirdropAddress(contract=contract,
+                           address=x['address']
+                           if contract.network.name in ['TRON_MAINNET', 'TRON_TESTNET'] else x['address'].lower(),
+                           amount=x['amount']) for x in addresses
+        ])
     else:
         if contract.eosairdropaddress_set.filter(state__in=('processing', 'sent')).count():
             raise PermissionDenied
         contract.eosairdropaddress_set.all().delete()
         addresses = request.data.get('addresses')
-        EOSAirdropAddress.objects.bulk_create([EOSAirdropAddress(
-            contract=contract,
-            address=x['address'].lower(),
-            amount=x['amount']
-        ) for x in addresses])
+        EOSAirdropAddress.objects.bulk_create(
+            [EOSAirdropAddress(contract=contract, address=x['address'].lower(), amount=x['amount']) for x in addresses])
     return JsonResponse({'result': 'ok'})
 
 
 @api_view(http_method_names=['GET'])
 def get_contract_for_link(request):
-    details = ContractDetailsInvestmentPool.objects.filter(
-        link=request.query_params['link'],
-        contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
-    )
+    details = ContractDetailsInvestmentPool.objects.filter(link=request.query_params['link'],
+                                                           contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED'))
     if not details:
-        details = ContractDetailsBinanceInvestmentPool.objects.filter(
-            link=request.query_params['link'],
-            contract__state__in=('ACTIVE', 'CANCELLED', 'DONE', 'ENDED')
-        )
+        details = ContractDetailsBinanceInvestmentPool.objects.filter(link=request.query_params['link'],
+                                                                      contract__state__in=('ACTIVE', 'CANCELLED',
+                                                                                           'DONE', 'ENDED'))
     contract = details.first().contract
     return JsonResponse(ContractSerializer().to_representation(contract))
 
@@ -1016,21 +987,16 @@ def get_invest_balance_day(request):
     now_date = datetime.datetime.now()
     if now_date.minute > 30:
         if now_date.hour != 23:
-            date = datetime.datetime(
-                now_date.year, now_date.month,
-                now_date.day, now_date.hour + 1, 0, 0
-            )
+            date = datetime.datetime(now_date.year, now_date.month, now_date.day, now_date.hour + 1, 0, 0)
         else:
-            date = datetime.datetime(
-                now_date.year, now_date.month,
-                now_date.day, 0, 0, 0
-            )
+            date = datetime.datetime(now_date.year, now_date.month, now_date.day, 0, 0, 0)
     else:
         date = datetime.datetime(
             now_date.year, now_date.month,
             now_date.day, now_date.hour, 0, 0
         )
-    invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
+    invests = InvestAddress.objects.filter(
+        contract=contract, created_date__lte=date)
     balance = 0
     for inv in invests:
         balance = balance + inv.amount
@@ -1052,11 +1018,12 @@ def check_status(request):
     host = NETWORKS[contract.network.name]['host']
     port = NETWORKS[contract.network.name]['port']
     if contract.network.name == 'EOS_MAINNET':
-        command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table',
-                   addr, addr, 'state']
+        command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table', addr, addr, 'state']
     else:
-        command = ['cleos', '-u', 'http://%s:%s' % (host, port), 'get', 'table', addr, addr, 'state']
-    stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+        command = ['cleos', '-u', 'http://%s:%s' %
+                   (host, port), 'get', 'table', addr, addr, 'state']
+    stdout, stderr = Popen(command, stdin=PIPE,
+                           stdout=PIPE, stderr=PIPE).communicate()
     if stdout:
         result = json.loads(stdout.decode())['rows'][0]
         if now > result['finish'] and int(result['total_tokens']) < details.soft_cap:
@@ -1074,21 +1041,17 @@ def check_status(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_cost(request):
-    eos_url = 'https://%s' % (
-        str(NETWORKS['EOS_MAINNET']['host'])
-    )
-    command1 = [
-        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket'
-    ]
+    eos_url = 'https://%s' % (str(NETWORKS['EOS_MAINNET']['host']))
+    command1 = ['cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket']
     result = implement_cleos_command(command1)
     ram = result['rows'][0]
-    ram_price = float(ram['quote']['balance'].split()[0]) / float(
-        ram['base']['balance'].split()[0]) * 1024
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0]) * 1024
     print('get ram price', flush=True)
     ram = request.query_params['buy_ram_kbytes']
     net = request.query_params['stake_net_value']
     cpu = request.query_params['stake_cpu_value']
-    eos_cost = round((float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
+    eos_cost = round(
+        (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
@@ -1102,17 +1065,11 @@ def get_eos_cost(request):
 
 @api_view(http_method_names=['POST', 'GET'])
 def get_eos_airdrop_cost(request):
-    eos_url = 'https://%s' % (
-        str(NETWORKS['EOS_MAINNET']['host'])
-    )
-    command1 = [
-        'cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio',
-        'rammarket'
-    ]
+    eos_url = 'https://%s' % (str(NETWORKS['EOS_MAINNET']['host']))
+    command1 = ['cleos', '-u', eos_url, 'get', 'table', 'eosio', 'eosio', 'rammarket']
     result = implement_cleos_command(command1)
     ram = result['rows'][0]
-    ram_price = float(ram['quote']['balance'].split()[0]) / float(
-        ram['base']['balance'].split()[0])
+    ram_price = float(ram['quote']['balance'].split()[0]) / float(ram['base']['balance'].split()[0])
     count = float(request.query_params['address_count'])
     eos_cost = round(250 + ram_price * 240 * count * 1.2, 4)
 
@@ -1127,15 +1084,13 @@ def get_eos_airdrop_cost(request):
 
 @api_view(http_method_names=['POST'])
 def check_eos_accounts_exists(request):
-    eos_url = 'https://%s' % (
-        str(NETWORKS['EOS_MAINNET']['host'])
-    )
+    eos_url = 'https://%s' % (str(NETWORKS['EOS_MAINNET']['host']))
 
     accounts = request.data['accounts']
-    response = requests.post(
-        eos_url + '/v1/chain-ext/get_accounts',
-        json={'verbose': False, 'accounts': accounts}
-    ).json()
+    response = requests.post(eos_url + '/v1/chain-ext/get_accounts', json={
+        'verbose': False,
+        'accounts': accounts
+    }).json()
     print(accounts, flush=True)
     print(response, flush=True)
     return JsonResponse({'not_exists': [x[0] for x in zip(accounts, response) if not x[1]]})
@@ -1150,33 +1105,27 @@ def send_authio_info(contract, details, authio_email):
         if th.freeze_date:
             mint_info = mint_info + str(
                 datetime.datetime.utcfromtimestamp(th.freeze_date).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
-    EmailMessage(
-        subject=authio_subject,
-        body=authio_message.format(
-            address=details.eth_contract_token.address,
-            email=authio_email,
-            token_name=details.token_name,
-            token_short_name=details.token_short_name,
-            token_type=details.token_type,
-            decimals=details.decimals,
-            mint_info=mint_info if mint_info else 'No',
-            admin_address=details.admin_address,
-            network=details.contract.network.name,
-        ),
-        from_email=DEFAULT_FROM_EMAIL,
-        to=[AUTHIO_EMAIL, SUPPORT_EMAIL]
-    ).send()
-    send_mail(
-        authio_google_subject,
-        authio_google_message,
-        DEFAULT_FROM_EMAIL,
-        [authio_email]
-    )
+    EmailMessage(subject=authio_subject,
+                 body=authio_message.format(
+                     address=details.eth_contract_token.address,
+                     email=authio_email,
+                     token_name=details.token_name,
+                     token_short_name=details.token_short_name,
+                     token_type=details.token_type,
+                     decimals=details.decimals,
+                     mint_info=mint_info if mint_info else 'No',
+                     admin_address=details.admin_address,
+                     network=details.contract.network.name,
+                 ),
+                 from_email=DEFAULT_FROM_EMAIL,
+                 to=[AUTHIO_EMAIL, SUPPORT_EMAIL]).send()
+    send_mail(authio_google_subject, authio_google_message, DEFAULT_FROM_EMAIL, [authio_email])
 
 
 @api_view(http_method_names=['POST'])
 def buy_brand_report(request):
-    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    print('id', request.data.get('contract_id'), type(
+        request.data.get('contract_id')), flush=True)
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
@@ -1192,8 +1141,7 @@ def buy_brand_report(request):
     net = contract.network.name
     create_payment(request.user.id, '', currency, -cost, site_id, net)
     details.authio_date_payment = datetime.datetime.now().date()
-    details.authio_date_getting = details.authio_date_payment + datetime.timedelta(
-        days=3)
+    details.authio_date_getting = details.authio_date_payment + datetime.timedelta(days=3)
     details.authio_email = authio_email
     details.authio = True
     details.save()
@@ -1214,9 +1162,10 @@ def get_authio_cost(request):
 @api_view(http_method_names=['GET'])
 def get_testnet_tron_tokens(request):
     user = request.user
-    contracts = Contract.objects.filter(
-        user=user, contract_type=15, network__name='TRON_TESTNET', state__in=('ACTIVE', 'ENDED', 'DONE')
-    )
+    contracts = Contract.objects.filter(user=user,
+                                        contract_type=15,
+                                        network__name='TRON_TESTNET',
+                                        state__in=('ACTIVE', 'ENDED', 'DONE'))
     answer = []
     for c in contracts:
         d = c.get_details()
@@ -1237,31 +1186,30 @@ def get_tokens_for_eth_address(request):
         check.is_address(address)
         result = get_parsing_tokenholdings(address)
         if not result:
-            result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()
+            result = requests.get(url=ETHPLORER_URL.format(
+                address=address, key=ETHPLORER_KEY)).json()
             if 'tokens' in result:
                 result = result['tokens']
             else:
                 result = []
     else:
-        contracts = Contract.objects.filter(
-            user=request.user, contract_type=5, network__name='ETHEREUM_ROPSTEN', state__in=('ACTIVE', 'ENDED', 'DONE')
-        )
+        contracts = Contract.objects.filter(user=request.user,
+                                            contract_type=5,
+                                            network__name='ETHEREUM_ROPSTEN',
+                                            state__in=('ACTIVE', 'ENDED', 'DONE'))
         result = []
         for contract in contracts:
             details = contract.get_details()
-            result.append(
-                {
-                    'tokenInfo':
-                        {
-                            'address': details.eth_contract_token.address,
-                            'decimals': details.decimals,
-                            'symbol': details.token_short_name,
-                            'name': details.token_name,
-                            'owner': details.admin_address
-                        },
-                    'balance': 0
-                }
-            )
+            result.append({
+                'tokenInfo': {
+                    'address': details.eth_contract_token.address,
+                    'decimals': details.decimals,
+                    'symbol': details.token_short_name,
+                    'name': details.token_name,
+                    'owner': details.admin_address
+                },
+                'balance': 0
+            })
     return Response(result)
 
 
@@ -1269,28 +1217,21 @@ def get_tokens_for_eth_address(request):
 def get_tronish_balance(request):
     eos_address = request.query_params.get('eos_address', None)
     if eos_address:
-        tronish_info = TRONSnapshotEOS.objects.filter(eos_address=eos_address).first()
+        tronish_info = TRONSnapshotEOS.objects.filter(
+            eos_address=eos_address).first()
         if tronish_info:
-            return Response({
-                'balance': tronish_info.balance / 10 ** 4 / 20 * 10 ** 6
-            })
+            return Response({'balance': tronish_info.balance / 10**4 / 20 * 10**6})
 
     eth_address = request.query_params.get('eth_address', None)
     if eth_address:
-        tronish_info = TRONSnapshotEth.objects.filter(
-            eth_address=eth_address).first()
+        tronish_info = TRONSnapshotEth.objects.filter(eth_address=eth_address).first()
         if tronish_info:
-            return Response({
-                'balance': tronish_info.balance / 10 ** 18 * 10 ** 6
-            })
+            return Response({'balance': tronish_info.balance / 10**18 * 10**6})
     tron_address = request.query_params.get('tron_address', None)
     if tron_address:
-        tronish_info = TRONSnapshotTRON.objects.filter(
-            tron_address=tron_address).first()
+        tronish_info = TRONSnapshotTRON.objects.filter(tron_address=tron_address).first()
         if tronish_info:
-            return Response({
-                'balance': tronish_info.balance / 10000
-            })
+            return Response({'balance': tronish_info.balance / 10000})
     return Response({'balance': 0})
 
 
@@ -1298,9 +1239,10 @@ def autodeploing(user_id, subsite_id):
     bb = UserSiteBalance.objects.get(subsite__id=subsite_id, user__id=user_id)
     if subsite_id == 4:
         contract_type = 20
-        contracts = Contract.objects.filter(user__id=user_id, contract_type=contract_type,
-                                            network__name='ETHEREUM_MAINNET', state='WAITING_FOR_PAYMENT').order_by(
-            '-created_date')
+        contracts = Contract.objects.filter(user__id=user_id,
+                                            contract_type=contract_type,
+                                            network__name='ETHEREUM_MAINNET',
+                                            state='WAITING_FOR_PAYMENT').order_by('-created_date')
     else:
         # subsite_id == 5:
         contract_type = 23
@@ -1312,8 +1254,7 @@ def autodeploing(user_id, subsite_id):
         contract_details = contract.get_details()
         contract_details.predeploy_validate()
         kwargs = ContractSerializer().get_details_serializer(
-            contract.contract_type
-        )().to_representation(contract_details)
+            contract.contract_type)().to_representation(contract_details)
         cost = contract_details.calc_cost_usdt(kwargs, contract.network)
         if bb.balance >= cost or bb.balance >= cost * 0.95:
             if subsite_id == 4:
@@ -1340,7 +1281,8 @@ def confirm_swaps_info(request):
         raise PermissionDenied
     if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
+    confirm_contracts = Contract.objects.filter(
+        user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
     for c in confirm_contracts:
         c.state = 'WAITING_FOR_PAYMENT'
         c.save()
@@ -1400,7 +1342,8 @@ def confirm_protector_tokens(request):
                                        contract_type=23).first()
     if contract:
         token_list = request.data.get('tokens')
-        protector_contract = ContractDetailsTokenProtector.objects.get(contract=contract)
+        protector_contract = ContractDetailsTokenProtector.objects.get(
+            contract=contract)
         protector_contract.approve_from_front(token_list)
         # protector_contract.confirm_tokens()
 
@@ -1411,8 +1354,10 @@ def confirm_protector_tokens(request):
 
 @api_view(http_method_names=['POST'])
 def skip_protector_approve(request):
-    contract = Contract.objects.filter(id=int(request.data.get('contract_id')), user=request.user,
-                                       contract_type=23, state='WAITING_FOR_APPROVE').first()
+    contract = Contract.objects.filter(id=int(request.data.get('contract_id')),
+                                       user=request.user,
+                                       contract_type=23,
+                                       state='WAITING_FOR_APPROVE').first()
     if contract:
         contract.state = 'ACTIVE'
         contract.deployed_at = datetime.datetime.now()
@@ -1472,7 +1417,8 @@ def get_contract_for_unique_link(request):
         raise PermissionDenied
     details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
     if not details:
-        details = ContractDetailsSWAPS2.objects.filter(unique_link=link).first()
+        details = ContractDetailsSWAPS2.objects.filter(
+            unique_link=link).first()
     if not details:
         raise PermissionDenied
     contract = details.contract
@@ -1481,7 +1427,8 @@ def get_contract_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_public_contracts(request):
-    contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    contracts = Contract.objects.filter(
+        contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
     result = []
     for contract in contracts:
         d = contract.get_details()
@@ -1503,7 +1450,7 @@ def change_contract_state(request):
         raise PermissionDenied
     if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
-    contract.state = 'WAITING_FOR_ACTIVATION'
+    contract.state = 'WAITING_ACTIVATION'
     contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
 
@@ -1514,22 +1461,16 @@ def send_message_author_swap(request):
     link = request.data.get('link')
     email = request.data.get('email')
     message = request.data.get('message')
-    sendEMail(
-        swaps_support_subject,
-        swaps_support_message.format(
-            id=contract_id,
-            email=email,
-            link=link,
-            msg=message.encode('utf-8')
-        ),
-        [SWAPS_SUPPORT_MAIL]
-    )
+    sendEMail(swaps_support_subject,
+              swaps_support_message.format(id=contract_id, email=email, link=link, msg=message.encode('utf-8')),
+              [SWAPS_SUPPORT_MAIL])
     return Response('ok')
 
 
 @api_view(http_method_names=['POST'])
 def buy_verification(request):
-    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    print('id', request.data.get('contract_id'), type(
+        request.data.get('contract_id')), flush=True)
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied
@@ -1559,7 +1500,10 @@ def buy_verification(request):
     elif contract.contract_type in (4, 27, 37, 32):
         send_verification_mail(
             network=details.contract.network.name,
-            addresses=(details.eth_contract_token.address, details.eth_contract_crowdsale.address,),
+            addresses=(
+                details.eth_contract_token.address,
+                details.eth_contract_crowdsale.address,
+            ),
             compiler=details.eth_contract_token.compiler_version,
             files={
                 'token.sol': details.eth_contract_token.source_code,

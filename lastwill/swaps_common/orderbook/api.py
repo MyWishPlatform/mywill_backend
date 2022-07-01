@@ -1,18 +1,18 @@
 import datetime
-from decimal import Decimal
 import random
 import string
+from decimal import Decimal
 
-from django.utils import timezone
 from django.core.paginator import Paginator
+from django.utils import timezone
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import PermissionDenied, ParseError, NotFound
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
 from rest_framework.response import Response
 
 from lastwill.contracts.submodels.common import Contract
-from lastwill.swaps_common.orderbook.models import OrderBookSwaps
-from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.settings import RUBIC_EXC_URL
+from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
+from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 
 STATE_EXPIRED = OrderBookSwaps.STATE_EXPIRED
 STATE_DONE = OrderBookSwaps.STATE_DONE
@@ -85,7 +85,7 @@ def get_swap_from_orderbook(swap_id):
         'state_changed_at': backend_contract.state_changed_at,
         'whitelist': backend_contract.whitelist,
         'whitelist_address': backend_contract.whitelist_address,
-        'base_amount_contributed':  str(backend_contract.base_amount_contributed),
+        'base_amount_contributed': str(backend_contract.base_amount_contributed),
         'quote_amount_contributed': str(backend_contract.quote_amount_contributed),
         'notification_email': backend_contract.notification_email,
         'notification_tg': backend_contract.notification_telegram_name,
@@ -112,9 +112,7 @@ def create_contract_swaps_backend(request):
     # пришлют релевантный сети адрес контракта.
     contract_address = contract_details['contract_address'].lower()
     # ---
-    stop_date_conv = datetime.datetime.strptime(
-        contract_details['stop_date'], '%Y-%m-%d %H:%M'
-    )
+    stop_date_conv = datetime.datetime.strptime(contract_details['stop_date'], '%Y-%m-%d %H:%M')
 
     # base_coin_id_param = contract_details['base_coin_id'] if 'base_coin_id' in contract_details else 0
     # quote_coin_id_param = contract_details['quote_coin_id'] if 'quote_coin_id' in contract_details else 0
@@ -122,10 +120,7 @@ def create_contract_swaps_backend(request):
     broker_fee = contract_details['broker_fee'] if 'broker_fee' in contract_details else False
     comment = contract_details['comment'] if 'comment' in contract_details else ""
 
-    link = ''.join(
-        random.choice(string.ascii_lowercase + string.digits) for _ in
-        range(6)
-    )
+    link = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
 
     memo = '0x' + ''.join(random.choice('abcdef' + string.digits) for _ in range(64))
 
@@ -138,15 +133,11 @@ def create_contract_swaps_backend(request):
     notification_tg = ''
     if notification:
         if not ('notification_email' in contract_details or 'notification_tg' in contract_details):
-            raise ParseError(
-                'notificaion_email or notification_tg must be passed'
-            )
+            raise ParseError('notificaion_email or notification_tg must be passed')
 
         notification_defaults = request.user.swapsnotificationdefaults_set.all()
         if not notification_defaults:
-            notification_defaults = SwapsNotificationDefaults(
-                user=request.user
-            )
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
         else:
             notification_defaults = notification_defaults.first()
 
@@ -190,8 +181,7 @@ def create_contract_swaps_backend(request):
         quote_amount_total=0,
         notification_email=notification_email,
         notification_telegram_name=notification_tg,
-        notification=notification
-    )
+        notification=notification)
 
     if broker_fee:
         backend_contract.broker_fee = contract_details['broker_fee']
@@ -340,15 +330,11 @@ def edit_contract_swaps_backend(request, swap_id):
 
     if swap_order.notification:
         if not ('notification_email' in params or 'notification_tg' in params):
-            raise ParseError(
-                'notificaion_email or notification_tg must be passed'
-            )
+            raise ParseError('notificaion_email or notification_tg must be passed')
 
         notification_defaults = request.user.swapsnotificationdefaults_set.all()
         if not notification_defaults:
-            notification_defaults = SwapsNotificationDefaults(
-                user=request.user
-            )
+            notification_defaults = SwapsNotificationDefaults(user=request.user)
         else:
             notification_defaults = notification_defaults.first()
 
@@ -408,7 +394,8 @@ def get_swap_v3_public(request):
     res = []
     for order in backend_contracts:
         # if order.state != 'EXPIRED' and order.state == 'ACTIVE':
-        if order.state not in [STATE_EXPIRED, STATE_EXPIRED.upper()] and order.state in [STATE_ACTIVE, STATE_ACTIVE.upper()]:
+        if order.state not in [STATE_EXPIRED, STATE_EXPIRED.upper()
+                              ] and order.state in [STATE_ACTIVE, STATE_ACTIVE.upper()]:
             res.append(get_swap_from_orderbook(order.id))
 
     return Response(res)
@@ -425,9 +412,7 @@ def set_swaps_expired(request):
     for id in orders_ids:
         order = OrderBookSwaps.objects.filter(id=id)
         if not order:
-            raise ParseError(
-                'trade with id {order_id} not exist'.format(order_id=id)
-            )
+            raise ParseError('trade with id {order_id} not exist'.format(order_id=id))
 
         order = order.first()
         if now > order.stop_date:
@@ -447,9 +432,7 @@ def set_swaps_expired(request):
     for id in swaps_ids:
         swaps = Contract.objects.filter(id=id)
         if not swaps:
-            raise ParseError(
-                'contract with {swaps_id} not exist'.format(swaps_id=id)
-            )
+            raise ParseError('contract with {swaps_id} not exist'.format(swaps_id=id))
 
         swaps = swaps.first()
         if now > swaps.get_details().stop_date:
@@ -561,13 +544,11 @@ def get_non_active_orders(request):
     for row in orders:
         res.append(get_swap_from_orderbook(row.id))
 
-    return Response({
-        'total': paginator.count,
-        'pages': paginator.num_pages,
-        'list': res
-    })
+    return Response({'total': paginator.count, 'pages': paginator.num_pages, 'list': res})
 
 
-@api_view(http_method_names=['GET', ])
+@api_view(http_method_names=[
+    'GET',
+])
 def health_check(request):
     return Response(data='I\'m alive!', status=200)

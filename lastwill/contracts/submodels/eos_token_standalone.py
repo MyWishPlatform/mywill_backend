@@ -1,14 +1,15 @@
 import json
+
 from django.core.mail import send_mail
 from django.db import transaction
 
+from lastwill.consts import (CONTRACT_PRICE_EOS, CONTRACT_PRICE_USDT, EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS,
+                             EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS, MAX_WEI_DIGITS, NET_DECIMALS)
 from lastwill.contracts.submodels.eos import *
-from lastwill.json_templates import create_eos_token_sa_json, token_standalone_init_tx
-from lastwill.settings import EOS_TEST_URL, EOS_TEST_URL_ENV, EOS_TEST_FOLDER
-from lastwill.consts import MAX_WEI_DIGITS, CONTRACT_PRICE_EOS, NET_DECIMALS, CONTRACT_PRICE_USDT, \
-    EOS_SA_TOKEN_NEW_ACCOUNT_PARAMS, EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS
+from lastwill.json_templates import (create_eos_token_sa_json, token_standalone_init_tx)
+from lastwill.settings import EOS_TEST_FOLDER, EOS_TEST_URL, EOS_TEST_URL_ENV
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
+from mailings_tasks import send_promo_mainnet, send_testnet_gift_emails
 
 
 def get_frac(resource, system_state, account_state, value):
@@ -16,7 +17,7 @@ def get_frac(resource, system_state, account_state, value):
     account_resource_weight = int(account_state[f'{resource}_weight'])
     system_resource_weight = int(system_state['rows'][0][resource]['weight'])
 
-    frac = 10 ** 18 * account_resource_weight / (system_resource_weight * account_resource_max)
+    frac = 10**18 * account_resource_weight / (system_resource_weight * account_resource_max)
     return int(round(value * frac, 0))
 
 
@@ -26,11 +27,11 @@ class ContractDetailsEOSTokenSA(CommonDetails):
     admin_address = models.CharField(max_length=12)
     decimals = models.IntegerField()
     eos_contract = models.ForeignKey(
-            EOSContract,
-            null=True,
-            default=None,
-            related_name='eos_token_sa_details',
-            on_delete=models.SET_NULL,
+        EOSContract,
+        null=True,
+        default=None,
+        related_name='eos_token_sa_details',
+        on_delete=models.SET_NULL,
     )
     temp_directory = models.CharField(max_length=36)
     maximum_supply = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, null=True)
@@ -83,7 +84,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         with open(path.join(dest, 'eosio.token.cpp'), 'rb') as f:
             source_code = f.read().decode('utf-8-sig')
         data = {
-            "maximum_supply": int(self.maximum_supply / 10 ** self.decimals),
+            "maximum_supply": int(self.maximum_supply / 10**self.decimals),
             "decimals": self.decimals,
             "symbol": self.token_short_name
         }
@@ -96,11 +97,9 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             f.write('''#define ADMIN {admin}'''.format(admin=self.admin_address))
         if os.system("/bin/bash -c 'cd {dest} && make'".format(dest=EOS_TEST_FOLDER)):
             raise Exception('make in test folder error')
-        if os.system(
-                "/bin/bash -c 'cd {dest} && {env} {command}'".format(
-                    dest=dest, env=EOS_TEST_URL_ENV, command=EOS_TEST_URL)
-
-        ):
+        if os.system("/bin/bash -c 'cd {dest} && {env} {command}'".format(dest=dest,
+                                                                          env=EOS_TEST_URL_ENV,
+                                                                          command=EOS_TEST_URL)):
             raise Exception('compiler error token standalone')
         eos_contract = EOSContract()
         eos_contract.abi = abi
@@ -143,9 +142,7 @@ class ContractDetailsEOSTokenSA(CommonDetails):
             new_account_net_frac=get_frac('net', system_state, account_state, new_account_net),
             ram_bytes=ram_kbytes * 1024,
         )
-        command = [
-            'cleos', '-u', eos_url, 'push', 'transaction', json.dumps(tx), '-j', '-p', creator_account
-        ]
+        command = ['cleos', '-u', eos_url, 'push', 'transaction', json.dumps(tx), '-j', '-p', creator_account]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
         print('tx_hash:', tx_hash, flush=True)
@@ -155,7 +152,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.contract.state = 'WAITING_FOR_DEPLOYMENT'
         self.contract.save()
 
-
     @blocking
     @postponable
     def newAccount(self, message):
@@ -163,10 +159,10 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         password = NETWORKS[self.contract.network.name]['eos_password']
         creator_account = NETWORKS[self.contract.network.name]['address']
         if self.contract.network.name == 'EOS_MAINNET':
-            eos_url = 'https://%s' % (
-            str(NETWORKS[self.contract.network.name]['host']))
+            eos_url = 'https://%s' % (str(NETWORKS[self.contract.network.name]['host']))
         else:
-            eos_url = 'http://%s:%s' % (str(NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
+            eos_url = 'http://%s:%s' % (str(
+                NETWORKS[self.contract.network.name]['host']), str(NETWORKS[self.contract.network.name]['port']))
         dest = path.join(CONTRACTS_TEMP_DIR, self.temp_directory)
 
         if self.decimals != 0:
@@ -174,15 +170,15 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         else:
             max_supply = str(self.maximum_supply)
 
-        raw_data = json.dumps({'maximum_supply': max_supply + ' ' + self.token_short_name, 'issuer': self.admin_address})
-
+        raw_data = json.dumps({
+            'maximum_supply': max_supply + ' ' + self.token_short_name,
+            'issuer': self.admin_address
+        })
 
         unlock_eos_account(wallet_name, password)
 
         contract_addr = 'eosio.token'
-        command = [
-                'cleos', '-u', eos_url, 'convert', 'pack_action_data', contract_addr, 'create', str(raw_data)
-        ]
+        command = ['cleos', '-u', eos_url, 'convert', 'pack_action_data', contract_addr, 'create', str(raw_data)]
         print('command', command, flush=True)
         data = implement_cleos_command(command)
         print('data:', data, data[-1] == '\n')
@@ -196,19 +192,13 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         print('command:', command, flush=True)
         abi = implement_cleos_command(command)['actions'][0]['data'][20:]
 
-        actions = create_eos_token_sa_json(
-                self.token_account,
-                self.eos_contract.bytecode,
-                abi,
-                self.admin_address,
-                data
-        )
+        actions = create_eos_token_sa_json(self.token_account, self.eos_contract.bytecode, abi, self.admin_address,
+                                           data)
         with open(path.join(dest, 'deploy_params.json'), 'w') as f:
             f.write(json.dumps(actions))
         command = [
             'cleos', '-u', eos_url, 'push', 'transaction',
-            path.join(dest, 'deploy_params.json'), '-j',
-            '-p', self.token_account
+            path.join(dest, 'deploy_params.json'), '-j', '-p', self.token_account
         ]
         print('command:', command, flush=True)
         tx_hash = implement_cleos_command(command)['transaction_id']
@@ -216,8 +206,6 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         print('SUCCESS')
         self.eos_contract.tx_hash = tx_hash
         self.eos_contract.save()
-
-
 
     def deployed(self, message):
         return
@@ -234,15 +222,9 @@ class ContractDetailsEOSTokenSA(CommonDetails):
         self.contract.save()
         if self.contract.user.email:
             network_name = MAIL_NETWORK[self.contract.network.name]
-            send_mail(
-                eos_contract_subject,
-                eos_contract_message.format(
-                    token_name=self.token_short_name,
-                    network_name=network_name
-                ),
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+            send_mail(eos_contract_subject,
+                      eos_contract_message.format(token_name=self.token_short_name, network_name=network_name),
+                      DEFAULT_FROM_EMAIL, [self.contract.user.email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:

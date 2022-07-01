@@ -1,12 +1,14 @@
 import json
 from os import path
+
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+
 from lastwill.contracts.submodels.common import Contract
-from lastwill.rates.api import rate
-from lastwill.settings import DASHBOARD_NETWORKS, BASE_DIR
 from lastwill.dashboard.api import *
+from lastwill.rates.api import rate
+from lastwill.settings import BASE_DIR, DASHBOARD_NETWORKS
 
 
 @api_view()
@@ -40,13 +42,11 @@ def get_users():
     try:
         filename = path.join(BASE_DIR, 'lastwill/contracts/test_addresses.json')
         test_emails = json.load(open(filename))['addresses']
-    except(FileNotFoundError, IOError):
+    except (FileNotFoundError, IOError):
         test_emails = []
 
-    users = User.objects.all().exclude(
-        email__in=test_emails).exclude(
-        email='', password='', last_name='', first_name='').exclude(
-        email__startswith='testermc')
+    users = User.objects.all().exclude(email__in=test_emails).exclude(
+        email='', password='', last_name='', first_name='').exclude(email__startswith='testermc')
 
     return users
 
@@ -115,10 +115,7 @@ def users_statistic_view(request):
     users = get_users()
     now = datetime.now()
     midnight = datetime.combine(now.today(), time(0, 0))
-    response = {
-        'all': users.count(),
-        'new': users.filter(date_joined__lte=midnight, date_joined__gte=now).count()
-    }
+    response = {'all': users.count(), 'new': users.filter(date_joined__lte=midnight, date_joined__gte=now).count()}
     return JsonResponse(response)
 
 

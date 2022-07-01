@@ -1,19 +1,17 @@
-from lastwill.consts import CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT
+from lastwill.consts import (CONTRACT_PRICE_USDT, VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT)
+from lastwill.contracts.submodels.common import *
 from lastwill.contracts.submodels.common import EthContract
 from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
-from lastwill.contracts.submodels.common import *
 from lastwill.settings import XIN_ATTEMPTS
 
 
 @contract_details('XinFin Token contract')
 class ContractDetailsXinFinToken(AbstractContractDetailsToken):
-    eth_contract_token = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='xinfin_token_details_token',
-        on_delete=models.SET_NULL
-    )
+    eth_contract_token = models.ForeignKey(EthContract,
+                                           null=True,
+                                           default=None,
+                                           related_name='xinfin_token_details_token',
+                                           on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):

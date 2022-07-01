@@ -1,16 +1,14 @@
 from django.contrib.admin import ModelAdmin, register
-
 from lastwill.swaps_common.tokentable.models import (
     Tokens,
     TokensCoinMarketCap,
     CoinGeckoToken,
     TokensUpdateTime
 )
-
 # New import 28.04.2022
 from lastwill.contracts.models import (
     Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
-    NeoContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    NeoContract, NearContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
     ContractDetailsToken, ContractDetailsICO,
     ContractDetailsAirdrop, AirdropAddress, TRONContract,
     ContractDetailsLastwill, ContractDetailsLostKey,
@@ -26,6 +24,7 @@ from lastwill.contracts.models import (
     ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
     ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
     ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
+    ContractDetailsNearToken,
     ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
     ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ProtectorChecker
 )
@@ -56,9 +55,7 @@ class TokensModelAdmin(ModelAdmin):
         'token_short_name',
         'address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(TokensCoinMarketCap)
@@ -95,9 +92,7 @@ class TokensCoinMarketCapModelAdmin(ModelAdmin):
         'token_platform',
         'token_address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(CoinGeckoToken)
@@ -144,9 +139,7 @@ class CoinGeckoTokenModelAdmin(ModelAdmin):
         '=short_title',
         '=address',
     )
-    ordering = (
-        'id',
-    )
+    ordering = ('id',)
 
 
 @register(TokensUpdateTime)
@@ -159,15 +152,9 @@ class TokensUpdateTimeModelAdmin(ModelAdmin):
         'id',
         'last_time_updated',
     )
-    list_filter = (
-        'last_time_updated',
-    )
-    search_fields = (
-        'id',
-    )
-    ordering = (
-        'id',
-    )
+    list_filter = ('last_time_updated',)
+    search_fields = ('id',)
+    ordering = ('id',)
 
 
 #######################
@@ -175,7 +162,6 @@ class TokensUpdateTimeModelAdmin(ModelAdmin):
 # New code 28.04.2022 #
 #                     #
 #######################
-
 
 
 # contracts
@@ -220,6 +206,10 @@ class NeoContractAdmin(ModelAdmin):
 
 @register(SolanaContract)
 class SolanaContractAdmin(ModelAdmin):
+    list_display = '__str__', 'address'
+
+@register(NearContract)
+class NearContractAdmin(ModelAdmin):
     list_display = '__str__', 'address'
 
 
@@ -332,6 +322,10 @@ class ContractDetailsEOSTokenSAAdmin(ModelAdmin):
 @register(ContractDetailsTRONToken)
 class ContractDetailsTRONTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+@register(ContractDetailsNearToken)
+class ContractDetailsNearTokenAdmin(ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'deploy_address', 'white_label'
 
 
 @register(ContractDetailsGameAssets)
@@ -447,4 +441,3 @@ class ContractDetailsMoonriverTokenAdmin(ModelAdmin):
 @register(ContractDetailsSolanaToken)
 class ContractDetailsSolanaTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
-

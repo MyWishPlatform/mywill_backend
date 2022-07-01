@@ -1,17 +1,14 @@
 import requests
-
 from django.db.models import Q
 
 from .models import PanamaTransaction
-
 
 BINANCE_BRIDGE_API_URL = "http://api.binance.org/bridge"
 
 
 # get data about transaction from binance api
 def get_status_by_id(panama_trans_id):
-    url = "{URL}/api/v1/swaps/{id}".format(
-        URL=BINANCE_BRIDGE_API_URL, id=panama_trans_id)
+    url = "{URL}/api/v1/swaps/{id}".format(URL=BINANCE_BRIDGE_API_URL, id=panama_trans_id)
     response = requests.get(url)
     if response.json().get("code") == 20000:
         data = response.json().get("data")
@@ -20,29 +17,28 @@ def get_status_by_id(panama_trans_id):
             actualToAmount = amount - networkFee
         """
         try:
-            actualFromAmount=data.get("actualFromAmount")
-            actualToAmount=data.get("actualToAmount")
+            actualFromAmount = data.get("actualFromAmount")
+            actualToAmount = data.get("actualToAmount")
         except Exception:
-            actualFromAmount=data.get("amount")
-            actualToAmount=float(data.get("amount")) - float(data.get("networkFee"))
+            actualFromAmount = data.get("amount")
+            actualToAmount = float(data.get("amount")) - float(data.get("networkFee"))
 
         if not actualToAmount or not actualToAmount:
             actualFromAmount = data.get("amount")
             actualToAmount = float(data.get("amount")) - float(data.get("networkFee"))
 
-        return dict(
-            fromNetwork=data.get("fromNetwork"),
-            toNetwork=data.get("toNetwork"),
-            actualFromAmount=actualFromAmount,
-            actualToAmount=actualToAmount,
-            symbol=data.get("symbol"),
-            updateTime=data.get("updateTime"),
-            status=data.get("status"),
-            transaction_id=data.get("id"),
-            walletFromAddress=data.get("walletAddress"),
-            walletToAddress=data.get("toAddress"),
-            walletDepositAddress=data.get("depositAddress")
-        )
+        return dict(fromNetwork=data.get("fromNetwork"),
+                    toNetwork=data.get("toNetwork"),
+                    actualFromAmount=actualFromAmount,
+                    actualToAmount=actualToAmount,
+                    symbol=data.get("symbol"),
+                    updateTime=data.get("updateTime"),
+                    status=data.get("status"),
+                    transaction_id=data.get("id"),
+                    walletFromAddress=data.get("walletAddress"),
+                    walletToAddress=data.get("toAddress"),
+                    walletDepositAddress=data.get("depositAddress"))
+
 
 # update one db entry
 def update_or_create_transaction_status(data):

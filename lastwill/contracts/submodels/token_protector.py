@@ -1,16 +1,16 @@
-from django.conf.global_settings import DEFAULT_FROM_EMAIL
-
-from lastwill.contracts.submodels.common import *
-from django.utils import timezone
-from rest_framework.exceptions import ValidationError
 import datetime
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES
-from django.db import models
-from django.db import transaction
+
+from django.conf.global_settings import DEFAULT_FROM_EMAIL
+from django.db import models, transaction
+from django.utils import timezone
 from ethereum.utils import checksum_encode
-from web3 import Web3, HTTPProvider, IPCProvider
+from rest_framework.exceptions import ValidationError
+from web3 import HTTPProvider, IPCProvider, Web3
+
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, ETH_COMMON_GAS_PRICES, NET_DECIMALS)
+from lastwill.contracts.submodels.common import *
 from lastwill.telegram_bot.tasks import send_message_to_subs
-from mailings_tasks import send_testnet_gift_emails, send_promo_mainnet
+from mailings_tasks import send_promo_mainnet, send_testnet_gift_emails
 
 
 @contract_details('Token protector contract')
@@ -19,7 +19,7 @@ class ContractDetailsTokenProtector(CommonDetails):
     reserve_address = models.CharField(max_length=50)
     end_timestamp = models.IntegerField()
     email = models.CharField(max_length=200, null=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
     temp_directory = models.CharField(max_length=36)
     approving_time = models.IntegerField(null=True, default=None)
     month_mail_sent = models.BooleanField(default=False)
@@ -29,7 +29,6 @@ class ContractDetailsTokenProtector(CommonDetails):
     oracle_inactive_interval = models.IntegerField()
     last_account_nonce = models.IntegerField()
     last_active_time = models.DateTimeField(null=True, default=None)
-
 
     def predeploy_validate(self):
         # now = timezone.now().timestamp()
@@ -48,12 +47,7 @@ class ContractDetailsTokenProtector(CommonDetails):
         email = self.email if self.email else self.contract.user.email
         print('email', email, flush=True)
         try:
-            send_mail(
-                protector_deployed_subject,
-                protector_deployed_text,
-                DEFAULT_FROM_EMAIL,
-                [email]
-            )
+            send_mail(protector_deployed_subject, protector_deployed_text, DEFAULT_FROM_EMAIL, [email])
             if not 'MAINNET' in self.contract.network.name:
                 send_testnet_gift_emails.delay(self.contract.user.profile.id)
             else:
@@ -98,21 +92,22 @@ class ContractDetailsTokenProtector(CommonDetails):
         if self.temp_directory:
             print('already compiled', flush=True)
             return
-        dest, preproc_config = create_directory(
-            self, sour_path='lastwill/token_saver/*',
-            config_name='c-preprocessor-config.json'
-        )
+        dest, preproc_config = create_directory(self,
+                                                sour_path='lastwill/token_saver/*',
+                                                config_name='c-preprocessor-config.json')
 
         backend_address = checksum_encode(NETWORKS[self.contract.network.name]['address'])
 
-        preproc_params = {'constants': {
-            "D_OWNER_ADDRESS": checksum_encode(self.owner_address),
-            "D_RESERVE_ADDRESS": checksum_encode(self.reserve_address),
-            "D_BACKEND_ADDRESS": backend_address,
-            "D_END_TIMESTAMP": self.end_timestamp,
-            "D_ORACLE_ENABLE": self.with_oracle,
-            "D_ORACLE_ADDRESS": backend_address
-        }}
+        preproc_params = {
+            'constants': {
+                "D_OWNER_ADDRESS": checksum_encode(self.owner_address),
+                "D_RESERVE_ADDRESS": checksum_encode(self.reserve_address),
+                "D_BACKEND_ADDRESS": backend_address,
+                "D_END_TIMESTAMP": self.end_timestamp,
+                "D_ORACLE_ENABLE": self.with_oracle,
+                "D_ORACLE_ADDRESS": backend_address
+            }
+        }
 
         print('params for testing', preproc_params, flush=True)
         self.compile_and_test(preproc_config, preproc_params, dest)
@@ -136,16 +131,13 @@ class ContractDetailsTokenProtector(CommonDetails):
     def compile_and_test(self, config, params, dest):
         with open(config, 'w') as f:
             f.write(json.dumps(params))
-        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(
-                dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./compile.sh'".format(dest=dest)):
             raise Exception('compiler error while testing')
-        if os.system("/bin/bash -c 'cd {dest} && ./test-compiled.sh'".format(
-                dest=dest)):
+        if os.system("/bin/bash -c 'cd {dest} && ./test-compiled.sh'".format(dest=dest)):
             raise Exception('testing error')
 
     def get_arguments(self, *args, **kwargs):
-        return [
-        ]
+        return []
 
     def try_confirm_execute(self):
         if self.approving_time:
@@ -157,15 +149,13 @@ class ContractDetailsTokenProtector(CommonDetails):
                 self.save()
                 self.confirm_tokens()
 
-
     @check_transaction
     def TokenProtectorApprove(self, message):
         token_address = message['tokenAddress'].lower()
         if int(message['tokens']) > 0:
             approved_token = ApprovedToken.objects.filter(contract=self, address=token_address).first()
             if not approved_token:
-                approved_token = ApprovedToken(contract=self, address=token_address,
-                                               approve_from_scanner=True)
+                approved_token = ApprovedToken(contract=self, address=token_address, approve_from_scanner=True)
                 approved_token.save()
                 print('approved from scanner', flush=True)
             else:
@@ -179,14 +169,12 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         self.try_confirm_execute()
 
-
     def approve_from_front(self, tokens):
         for token in tokens:
             token = token.lower()
             approved_token = ApprovedToken.objects.filter(contract=self, address=token).first()
             if not approved_token:
-                approved_token = ApprovedToken(contract=self, address=token,
-                                               approve_from_front=True)
+                approved_token = ApprovedToken(contract=self, address=token, approve_from_front=True)
                 approved_token.save()
                 print('approved from front')
             else:
@@ -202,27 +190,33 @@ class ContractDetailsTokenProtector(CommonDetails):
 
         self.try_confirm_execute()
 
-
     def confirm_tokens(self):
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         w3 = Web3(HTTPProvider(eth_int.url))
         contract = w3.eth.contract(address=checksum_encode(self.eth_contract.address), abi=self.eth_contract.abi)
 
-        tokens_to_confirm = list(map(checksum_encode, list(
-            ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address', flat=True))))
+        tokens_to_confirm = list(
+            map(checksum_encode,
+                list(ApprovedToken.objects.filter(contract=self, is_confirmed=False).values_list('address',
+                                                                                                 flat=True))))
 
         print('tokens to confirm', tokens_to_confirm, flush=True)
 
-        txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction(
-            {'from': checksum_encode(NETWORKS[self.contract.network.name]['address']), 'gas': self.get_gaslimit()})
+        txn = contract.functions.addTokenType(tokens_to_confirm).buildTransaction({
+            'from': checksum_encode(NETWORKS[self.contract.network.name]['address']),
+            'gas': self.get_gaslimit()
+        })
 
         print('txn', txn, flush=True)
 
         nonce = int(eth_int.eth_getTransactionCount(NETWORKS[self.contract.network.name]['address'], "pending"), 16)
         gas_price = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
-        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'],
+                                  nonce,
+                                  3000000,
                                   value=0,
-                                  dest=self.eth_contract.address, contract_data=txn['data'][2:],
+                                  dest=self.eth_contract.address,
+                                  contract_data=txn['data'][2:],
                                   gas_price=gas_price)
 
         print('signed', signed, flush=True)
@@ -230,8 +224,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         tx_hash = eth_int.eth_sendRawTransaction(signed)
 
         print('hash', tx_hash, flush=True)
-
-
 
     def TokenProtectorTokensToSave(self, message):
         for approved_token in ApprovedToken.objects.filter(contract=self, is_confirmed=False):
@@ -241,7 +233,6 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'ACTIVE'
         self.contract.save()
 
-
     def execute_contract(self):
 
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
@@ -250,9 +241,12 @@ class ContractDetailsTokenProtector(CommonDetails):
         gas_price_current = int(1.1 * int(eth_int.eth_gasPrice(), 16))
         gas_price_fixed = ETH_COMMON_GAS_PRICES[self.contract.network.name] * NET_DECIMALS['ETH_GAS_PRICE']
         gas_price = gas_price_current if gas_price_current < gas_price_fixed else gas_price_fixed
-        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'], nonce, 3000000,
+        signed = sign_transaction(NETWORKS[self.contract.network.name]['address'],
+                                  nonce,
+                                  3000000,
                                   value=0,
-                                  dest=self.eth_contract.address, contract_data=None,
+                                  dest=self.eth_contract.address,
+                                  contract_data=None,
                                   gas_price=gas_price)
 
         print('signed', signed, flush=True)
@@ -264,25 +258,17 @@ class ContractDetailsTokenProtector(CommonDetails):
         self.contract.state = 'WAITING_FOR_EXECUTION'
         self.contract.save()
 
-
     def TokenProtectorTransactionInfo(self, message):
         self.contract.state = 'DONE'
         self.contract.save()
-
 
     def SelfdestructionEvent(self, message):
         self.contract.state = 'CANCELLED'
         self.contract.save()
 
-
     def execution_before_mail(self, days):
         email = self.email if self.email else self.contract.user.email
-        send_mail(
-            protector_execution_subject,
-            protector_execution_text.format(days=days),
-            DEFAULT_FROM_EMAIL,
-            [email]
-        )
+        send_mail(protector_execution_subject, protector_execution_text.format(days=days), DEFAULT_FROM_EMAIL, [email])
         if days == 1:
             self.day_mail_sent = True
         elif days > 7:
@@ -318,6 +304,7 @@ class ApprovedToken(models.Model):
 
     def __str__(self):
         return self.contract.__str__()
+
 
 class ProtectorChecker(models.Model):
     last_check = models.DateTimeField(default=None, null=True)

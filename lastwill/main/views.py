@@ -1,5 +1,6 @@
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.middleware import csrf
+from django.shortcuts import redirect, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -9,21 +10,15 @@ from lastwill.rates.api import rate
 
 def index(request):
     csrf_token = csrf.get_token(request)
-    return render_to_response('index.html', {'csrf_token': csrf_token, 'request': request})
+    return render(request, 'index.html', {'csrf_token': csrf_token, 'request': request})
 
 @api_view()
 def balance(request):
     address = request.query_params.get('address', None)
     try:
-        return Response({
-                'result': ParInt().eth_getBalance(address),
-                'status': 0
-        })
+        return Response({'result': ParInt().eth_getBalance(address), 'status': 0})
     except (ParConnectExc, ParErrorExc) as e:
-        return Response({
-                'detail': str(e),
-                'status': 1
-        })
+        return Response({'detail': str(e), 'status': 1})
 
 
 def login(request):
@@ -34,6 +29,7 @@ def login(request):
 @api_view()
 def eth2rub(request):
     return Response({'RUB': rate('ETH', 'RUB').value})
+
 
 @api_view()
 def exc_rate(request):

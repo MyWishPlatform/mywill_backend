@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Network, DeployAddress
+from .models import DeployAddress, Network
 
 
 # deployment info

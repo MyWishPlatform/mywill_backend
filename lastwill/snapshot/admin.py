@@ -1,11 +1,7 @@
 from django.contrib import admin
 
-from .models import (
-    SnapshotRow, SnapshotEOSRow,
-    TRONSnapshotEth, TRONSnapshotTRON,
-    TRONSnapshotEOS, TRONISHAirdropEOSISHHolders,
-    TRONISHAirdropWISHHolders
-)
+from .models import (SnapshotEOSRow, SnapshotRow, TRONISHAirdropEOSISHHolders, TRONISHAirdropWISHHolders,
+                     TRONSnapshotEOS, TRONSnapshotEth, TRONSnapshotTRON)
 
 
 # snapshots

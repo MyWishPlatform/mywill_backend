@@ -1,9 +1,4 @@
-from rest_framework.serializers import (
-    CharField,
-    DateTimeField,
-    DecimalField,
-    ModelSerializer,
-)
+from rest_framework.serializers import (CharField, DateTimeField, DecimalField, ModelSerializer)
 
 from .models import PanamaTransaction
 

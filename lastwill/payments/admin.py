@@ -1,10 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    InternalPayment,
-    BTCAccount,
-    FreezeBalance
-)
+from .models import BTCAccount, FreezeBalance, InternalPayment
 
 
 # payments

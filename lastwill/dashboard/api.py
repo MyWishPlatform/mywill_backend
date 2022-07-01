@@ -1,13 +1,14 @@
-import requests
+from collections import defaultdict
 from datetime import datetime, time
-from lastwill.consts import NET_DECIMALS
-from lastwill.parint import EthereumProvider
-from lastwill.settings import NETWORKS
-from web3 import Web3, HTTPProvider
+
+import requests
+from web3 import HTTPProvider, Web3
+
+from lastwill.consts import AVAILABLE_CONTRACT_TYPES, NET_DECIMALS
 from lastwill.contracts.models import Contract
 from lastwill.deploy.models import Network
-from collections import defaultdict
-from lastwill.consts import AVAILABLE_CONTRACT_TYPES, NET_DECIMALS
+from lastwill.parint import EthereumProvider
+from lastwill.settings import NETWORKS
 
 
 def get_tron_balance(network):
@@ -65,13 +66,8 @@ def deployed_contracts_statistic(from_date, to_date, is_testnet=True):
 
     for network in networks:
         results = {}
-        results = defaultdict(lambda: {'amount': 0,
-                                       'with_verification': 0,
-                                       'with_authio': 0,
-                                       'cost': 0}, results)
-        contracts = Contract.objects.filter(network=network,
-                                            deployed_at__gte=from_date,
-                                            deployed_at__lte=to_date)
+        results = defaultdict(lambda: {'amount': 0, 'with_verification': 0, 'with_authio': 0, 'cost': 0}, results)
+        contracts = Contract.objects.filter(network=network, deployed_at__gte=from_date, deployed_at__lte=to_date)
 
         contract_types = AVAILABLE_CONTRACT_TYPES.get(network.id, [])
         for contract in contracts:

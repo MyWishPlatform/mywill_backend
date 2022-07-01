@@ -1,20 +1,21 @@
 import datetime
-import bitcoin
-from ethereum import abi
 
+import bitcoin
+from django.core.mail import send_mail
 from django.db import models
 from django.db.models import F
-from django.core.mail import send_mail
 from django.utils import timezone
+from ethereum import abi
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.submodels.common import *
 from email_messages import *
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS)
+from lastwill.contracts.submodels.common import *
 from lastwill.settings import LASTWILL_ALIVE_TIMEOUT
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 
 
 class AbstractContractDetailsLastwill(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -26,16 +27,14 @@ class AbstractContractDetailsLastwill(CommonDetails):
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
     email = models.CharField(max_length=256, null=True, default=None)
-    btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None)
+    btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None, on_delete=models.SET_NULL)
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
     last_reset = models.DateTimeField(null=True, default=None)
     last_press_imalive = models.DateTimeField(null=True, default=None)
-    btc_duty = models.DecimalField(
-        max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0
-    )
+    btc_duty = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0, default=0)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -45,9 +44,10 @@ class AbstractContractDetailsLastwill(CommonDetails):
     def contractPayment(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
-        ContractDetailsLastwill.objects.select_for_update().filter(
-            id=self.id
-        ).update(btc_duty=F('btc_duty') + message['value'])
+        with transaction.atomic():
+            ContractDetailsLastwill.objects.select_for_update().filter(
+                id=self.id
+            ).update(btc_duty=F('btc_duty') + message['value'])
         queues = {
             'RSK_MAINNET': 'notification-rsk-fgw',
             'RSK_TESTNET': 'notification-rsk-testnet-fgw'
@@ -64,20 +64,15 @@ class AbstractContractDetailsLastwill(CommonDetails):
         gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_PAYMENT']
         gas_price = NET_DECIMALS['ETH_GAS_PRICE']
         if balance < contract.get_details().btc_duty + gas_limit * gas_price:
-            send_mail(
-                'RSK',
-                'No RSK funds ' + contract.network.name,
-                DEFAULT_FROM_EMAIL,
-                [EMAIL_FOR_POSTPONED_MESSAGE]
-            )
+            send_mail('RSK', 'No RSK funds ' + contract.network.name, DEFAULT_FROM_EMAIL, [EMAIL_FOR_POSTPONED_MESSAGE])
             return
         nonce = int(eth_int.eth_getTransactionCount(wl_address, "pending"), 16)
-        signed_data = sign_transaction(
-            wl_address, nonce, gas_limit,
-            value=int(contract.get_details().btc_duty),
-            dest=contract.get_details().eth_contract.address,
-            gas_price=gas_price
-        )
+        signed_data = sign_transaction(wl_address,
+                                       nonce,
+                                       gas_limit,
+                                       value=int(contract.get_details().btc_duty),
+                                       dest=contract.get_details().eth_contract.address,
+                                       gas_price=gas_price)
         self.eth_contract.tx_hansh = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract.save()
 
@@ -87,19 +82,14 @@ class AbstractContractDetailsLastwill(CommonDetails):
             [h.address for h in self.contract.heir_set.all()],
             [h.percentage for h in self.contract.heir_set.all()],
             self.check_interval,
-            False if self.contract.network.name in
-                     ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
+            False if self.contract.network.name in ['ETHEREUM_MAINNET', 'ETHEREUM_ROPSTEN'] else True,
         ]
 
     @classmethod
     def min_cost(cls):
         network = Network.objects.get(name='ETHEREUM_MAINNET')
         now = datetime.datetime.now()
-        cost = cls.calc_cost({
-            'check_interval': 1,
-            'heirs': [],
-            'active_to': now
-        }, network)
+        cost = cls.calc_cost({'check_interval': 1, 'heirs': [], 'active_to': now}, network)
         return cost
 
     @staticmethod
@@ -123,13 +113,9 @@ class AbstractContractDetailsLastwill(CommonDetails):
         DBg = 9646
         B = heirs_num
         Cc = 124852
-        DxC = max(abs(
-            (datetime.date.today() - active_to).total_seconds() / check_interval
-        ), 1)
+        DxC = max(abs((datetime.date.today() - active_to).total_seconds() / check_interval), 1)
         O = 25000 * NET_DECIMALS['ETH_GAS_PRICE']
-        result = 2 * int(
-            Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC
-        ) + 80000
+        result = 2 * int(Tg * Gp + Gp * (Cg + B * CBg) + Gp * (Dg + DBg * B) + (Gp * Cc + O) * DxC) + 80000
         if network.name == 'RSK_MAINNET':
             result += 2 * NET_DECIMALS['ETH']
         return CONTRACT_PRICE_USDT['ETH_LASTWILL'] * NET_DECIMALS['USDT']
@@ -164,20 +150,12 @@ class AbstractContractDetailsLastwill(CommonDetails):
             if heir.email:
                 send_mail(
                     heir_subject,
-                    heir_message.format(
-                        user_address=heir.address,
-                        link_tx=link.format(tx=message['transactionHash'])
-                    ),
-                    DEFAULT_FROM_EMAIL,
-                    [heir.email]
-                )
+                    heir_message.format(user_address=heir.address, link_tx=link.format(tx=message['transactionHash'])),
+                    DEFAULT_FROM_EMAIL, [heir.email])
         self.contract.state = 'TRIGGERED'
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                carry_out_subject, carry_out_message,
-                DEFAULT_FROM_EMAIL, [self.contract.user.email]
-            )
+            send_mail(carry_out_subject, carry_out_message, DEFAULT_FROM_EMAIL, [self.contract.user.email])
 
     def get_gaslimit(self):
         Cg = 1270525
@@ -193,10 +171,7 @@ class AbstractContractDetailsLastwill(CommonDetails):
                 address = bitcoin.privkey_to_address(priv, magicbyte=0)
             else:
                 address = bitcoin.privkey_to_address(priv, magicbyte=0x6F)
-            btc_key = BtcKey4RSK(
-                private_key=binascii.hexlify(priv).decode(),
-                btc_address=address
-            )
+            btc_key = BtcKey4RSK(private_key=binascii.hexlify(priv).decode(), btc_address=address)
             btc_key.save()
             self.btc_key = btc_key
             self.save()
@@ -207,20 +182,18 @@ class AbstractContractDetailsLastwill(CommonDetails):
         if self.last_press_imalive:
             delta = self.last_press_imalive - timezone.now()
             if delta.days < 1 and delta.total_seconds() < LASTWILL_ALIVE_TIMEOUT:
-                take_off_blocking(
-                    self.contract.network.name, address=self.contract.address
-                )
+                take_off_blocking(self.contract.network.name, address=self.contract.address)
         tr = abi.ContractTranslator(self.eth_contract.abi)
         eth_int = EthereumProvider().get_provider(network=self.contract.network.name)
         address = self.contract.network.deployaddress_set.all()[0].address
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
-            address, nonce, gas_limit,
+            address,
+            nonce,
+            gas_limit,
             dest=self.eth_contract.address,
-            contract_data=binascii.hexlify(
-                tr.encode_function_call('imAvailable', [])
-            ).decode(),
+            contract_data=binascii.hexlify(tr.encode_function_call('imAvailable', [])).decode(),
         )
         self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract.save()
@@ -234,11 +207,11 @@ class AbstractContractDetailsLastwill(CommonDetails):
         nonce = int(eth_int.eth_getTransactionCount(address, "pending"), 16)
         gas_limit = CONTRACT_GAS_LIMIT['LASTWILL_COMMON']
         signed_data = sign_transaction(
-            address, nonce, gas_limit,
+            address,
+            nonce,
+            gas_limit,
             dest=self.eth_contract.address,
-            contract_data=binascii.hexlify(
-                tr.encode_function_call('kill', [])
-            ).decode(),
+            contract_data=binascii.hexlify(tr.encode_function_call('kill', [])).decode(),
         )
         self.eth_contract.tx_hash = eth_int.eth_sendRawTransaction(signed_data)
         self.eth_contract.save()
@@ -246,9 +219,10 @@ class AbstractContractDetailsLastwill(CommonDetails):
     def fundsAdded(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
-        ContractDetailsLastwill.objects.select_for_update().filter(
-            id=self.id
-        ).update(btc_duty=F('btc_duty') - message['value'])
+        with transaction.atomic():
+            ContractDetailsLastwill.objects.select_for_update().filter(
+                id=self.id
+            ).update(btc_duty=F('btc_duty') - message['value'])
         take_off_blocking(self.contract.network.name)
 
 

@@ -1,13 +1,13 @@
 from django.core.mail import send_mail
-
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from lastwill.permissions import CreateOnly, IsStaff
+from lastwill.settings import DEFAULT_FROM_EMAIL, UNBLOCKING_EMAIL
 
 from .models import Sentence
 from .serializers import SentenceSerializer
-from lastwill.permissions import IsStaff, CreateOnly
-from lastwill.settings import UNBLOCKING_EMAIL, DEFAULT_FROM_EMAIL
 
 
 class SentenceViewSet(ModelViewSet):
@@ -29,14 +29,6 @@ def send_unblocking_info(request):
     Message: {message}
     Telegram: {telegram}
     Page: {page}
-    """.format(
-        name=name, email=email, telegram=telegram, message=message, page=page
-    )
-    send_mail(
-        'Request from rocknblock.io contact form',
-        text,
-        DEFAULT_FROM_EMAIL,
-        [UNBLOCKING_EMAIL]
-    )
+    """.format(name=name, email=email, telegram=telegram, message=message, page=page)
+    send_mail('Request from rocknblock.io contact form', text, DEFAULT_FROM_EMAIL, [UNBLOCKING_EMAIL])
     return Response({'result': 'ok'})
-
