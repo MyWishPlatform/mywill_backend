@@ -106,6 +106,10 @@ class ContractViewSet(ModelViewSet):
             return result
         return result.filter(user=self.request.user).exclude(state='ARCHIVED')
 
+class SolanaTokenInfoViewSet(ModelViewSet):
+    queryset = SolanaTokenInfo.objects.all()
+    serializer_class = SolanaTokenInfoSerializer
+    permission_classes = (IsAuthenticated, IsStaff | IsOwner)
 
 @api_view()
 def get_code(request):
@@ -1594,3 +1598,17 @@ def check_solana_address(request):
         return JsonResponse({'validation': False})
 
     return JsonResponse({'validation': True})
+
+@api_view(http_method_names=['POST'])
+def get_token_supply(request):
+    data = request.data
+    address = data['address']
+    network_id = data['network']
+    network = Network.objects.get(id=network_id)
+    try:
+        conn = SolanaInt(network.name).connect()
+        resp = conn.get_token_supply(address)
+        supply = resp['result']['value']['amount']
+        return JsonResponse({'supply': supply})
+    except KeyError:
+        return Response('wrong address')

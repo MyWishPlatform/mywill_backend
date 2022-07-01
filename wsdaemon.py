@@ -79,7 +79,7 @@ class WSP(WebSocketServerProtocol):
 def run(connection, proto_dict):
     channel = yield connection.channel()
     queue = yield channel.queue_declare(queue='websockets', durable=True, auto_delete=False, exclusive=False)
-    queue_object, consumer_tag = yield channel.basic_consume(queue='websockets', no_ack=True)
+    queue_object, consumer_tag = yield channel.basic_consume('websockets', auto_ack=True)
     l = task.LoopingCall(read, queue_object, proto_dict)
     l.start(0.01)
 

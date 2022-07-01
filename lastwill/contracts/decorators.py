@@ -1,4 +1,3 @@
-from sqlite3 import IntegrityError
 import sys, traceback
 import time
 import datetime
@@ -96,7 +95,7 @@ def blocking(f):
                 DeployAddress.objects.select_for_update().filter(
                     Q(network__name=network_name) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
                 ).update(locked_by=args[0].contract.id)
-        except (IntegrityError, RuntimeError) as _:
+        except RuntimeError as _:
             from traceback import print_exc
             print_exc()
         except Exception:

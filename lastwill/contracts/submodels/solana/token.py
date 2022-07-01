@@ -52,7 +52,7 @@ class SolanaTokenInfo(models.Model):
 
 @contract_details('Solana SPL Token contract')
 class ContractDetailsSolanaToken(CommonDetails):
-    solana_contract = models.ForeignKey(SolanaContract, null=True, default=None)
+    solana_contract = models.ForeignKey(SolanaContract, null=True, default=None, on_delete=models.CASCADE)
     token_name = models.CharField(max_length=50)
     token_short_name = models.CharField(max_length=10)
     decimals = models.IntegerField()
