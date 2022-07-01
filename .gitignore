@@ -3,9 +3,9 @@ templates/.DS_Store
 templates/account/.DS_Store
 .DS_Store
 .idea/
-.env
-**.docker/
+*.docker/
 **env/
+*env
 **__pycache__**
 */.DS_Store
 */__pycache__/
@@ -16,7 +16,7 @@ lastwill/static_collect/
 mywill_frontend/
 mywill_sign/
 test**
-**/migrations/????_**.py
+# **/migrations/????_**.py
 */*/test_addresses.json
 emails.csv
 promo_file.csv

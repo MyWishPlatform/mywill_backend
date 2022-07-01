@@ -8,7 +8,7 @@ from lastwill.emails_api import send_verification_mail
 
 
 class AirdropAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     address = models.CharField(max_length=50, db_index=True)
     active = models.BooleanField(default=True)
     state = models.CharField(max_length=10, default='added')
@@ -23,10 +23,10 @@ class AbstractContractDetailsAirdrop(CommonDetails):
     class Meta:
         abstract = True
 
-    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
     airdrop_in_progress = models.BooleanField(default=False)
 
     verification = models.BooleanField(default=False)

@@ -25,6 +25,7 @@ from .submodels.matic.token import *
 from .submodels.moonriver.token import *
 from .submodels.neo import *
 from .submodels.solana.token import *
+from .submodels.near.token import *
 from .submodels.swaps import *
 from .submodels.token_protector import *
 from .submodels.tron import *

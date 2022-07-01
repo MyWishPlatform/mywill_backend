@@ -1,6 +1,9 @@
 import binascii
 import os
 import uuid
+import binascii
+import pika
+import contextlib
 from copy import deepcopy
 from os import path
 
@@ -139,12 +142,13 @@ def create_directory(details, sour_path='lastwill/ico-crowdsale/*', config_name=
     print(details.temp_directory, flush=True)
     sour = path.join(CONTRACTS_DIR, sour_path)
     dest = path.join(CONTRACTS_TEMP_DIR, details.temp_directory)
-    os.mkdir(dest)
+    os.makedirs(dest)
     os.system('cp -as {sour} {dest}'.format(sour=sour, dest=dest))
 
     if config_name:
         preproc_config = os.path.join(dest, config_name)
-        os.unlink(preproc_config)
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(preproc_config)
     else:
         preproc_config = ''
     return dest, preproc_config
@@ -192,13 +196,12 @@ def test_neo_ico_params(config, params, dest):
 
 
 def send_in_queue(contract_id, type, queue):
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            'localhost',
-            5672,
-            'mywill',
-            pika.PlainCredentials('java', 'java'),
-        ))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        os.environ.get('RABBITMQ_HOST', 'localhost'),
+        os.environ.get('RABBITMQ_PORT', 5672),
+        'mywill',
+        pika.PlainCredentials('java', 'java'),
+    ))
     channel = connection.channel()
     channel.queue_declare(queue=queue, durable=True, auto_delete=False, exclusive=False)
     channel.basic_publish(
@@ -385,6 +388,7 @@ class Contract(models.Model):
         hecochain_ico = apps.get_model('contracts', 'ContractDetailsHecoChainICO')
         moonriver_token = apps.get_model('contracts', 'ContractDetailsMoonriverToken')
         solana_token = apps.get_model('contracts', 'ContractDetailsSolanaToken')
+        near_token = apps.get_model('contracts', 'ContractDetailsNearToken')
 
         contract_details_types[0] = {'name': 'Will contract', 'model': lastwill}
         contract_details_types[1] = {'name': 'Wallet contract (lost key)', 'model': lostkey}
@@ -425,6 +429,7 @@ class Contract(models.Model):
         contract_details_types[37] = {'name': 'HecoChain MyWish ICO', 'model': hecochain_ico}
         contract_details_types[38] = {'name': 'Moonriver Token contract', 'model': moonriver_token}
         contract_details_types[39] = {'name': 'Solana Token contract', 'model': solana_token}
+        contract_details_types[40] = {'name': 'Near Token contract', 'model': near_token}
         return contract_details_types
 
     @classmethod
@@ -444,8 +449,10 @@ real contract to deploy to ethereum
 
 
 class EthContract(models.Model):
-    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.CASCADE)
-    original_contract = models.ForeignKey(Contract, null=True, default=None, related_name='orig_ethcontract', on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.SET_NULL)
+    original_contract = models.ForeignKey(
+        Contract, null=True, default=None, related_name='orig_ethcontract', on_delete=models.SET_NULL
+    )
     address = models.CharField(max_length=50, null=True, default=None)
     tx_hash = models.CharField(max_length=90, null=True, default=None)
 
@@ -749,7 +756,7 @@ class ContractDetailsPizza(CommonDetails):
     salt = models.CharField(max_length=len(str(2**256)))
     pizza_cost = models.DecimalField(max_digits=MAX_WEI_DIGITS, decimal_places=0)  # weis
     order_id = models.DecimalField(max_digits=50, decimal_places=0, unique=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):
@@ -778,7 +785,7 @@ class TokenHolder(models.Model):
 
 
 class WhitelistAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     address = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
 

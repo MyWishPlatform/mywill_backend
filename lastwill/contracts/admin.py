@@ -2,19 +2,27 @@ from django.contrib.admin import ModelAdmin, register
 
 # New import 28.04.2022
 from lastwill.contracts.models import (
-    AirdropAddress, ApprovedToken, Contract, ContractDetailsAirdrop, ContractDetailsBinanceAirdrop,
-    ContractDetailsBinanceDelayedPayment, ContractDetailsBinanceICO, ContractDetailsBinanceInvestmentPool,
-    ContractDetailsBinanceLastwill, ContractDetailsBinanceLostKey, ContractDetailsBinanceLostKeyTokens,
-    ContractDetailsBinanceToken, ContractDetailsDelayedPayment, ContractDetailsEOSAccount, ContractDetailsEOSAirdrop,
-    ContractDetailsEOSICO, ContractDetailsEOSToken, ContractDetailsEOSTokenSA, ContractDetailsGameAssets,
-    ContractDetailsHecoChainICO, ContractDetailsHecoChainToken, ContractDetailsICO, ContractDetailsInvestmentPool,
-    ContractDetailsLastwill, ContractDetailsLostKey, ContractDetailsLostKeyTokens, ContractDetailsMaticAirdrop,
-    ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMoonriverToken, ContractDetailsNeo,
-    ContractDetailsNeoICO, ContractDetailsSolanaToken, ContractDetailsToken, ContractDetailsTokenProtector,
-    ContractDetailsTRONAirdrop, ContractDetailsTRONLostkey, ContractDetailsTRONToken, ContractDetailsWavesSTO,
-    ContractDetailsXinFinToken, CurrencyStatisticsCache, EOSAirdropAddress, EOSContract, EOSTokenHolder, EthContract,
-    Heir, InvestAddress, NeoContract, ProtectorChecker, SolanaContract, TokenHolder, TRONContract, WhitelistAddress)
-from lastwill.swaps_common.tokentable.models import (CoinGeckoToken, Tokens, TokensCoinMarketCap, TokensUpdateTime)
+    Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
+    NeoContract, NearContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    ContractDetailsToken, ContractDetailsICO,
+    ContractDetailsAirdrop, AirdropAddress, TRONContract,
+    ContractDetailsLastwill, ContractDetailsLostKey,
+    ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
+    InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
+    ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
+    ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
+    ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
+    ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
+    ContractDetailsWavesSTO, CurrencyStatisticsCache,
+    ContractDetailsTokenProtector, ApprovedToken,
+    ContractDetailsBinanceLostKeyTokens, ContractDetailsBinanceToken, ContractDetailsBinanceDelayedPayment,
+    ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
+    ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
+    ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
+    ContractDetailsNearToken,
+    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
+    ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ProtectorChecker
+)
 
 
 @register(Tokens)
@@ -193,6 +201,10 @@ class NeoContractAdmin(ModelAdmin):
 class SolanaContractAdmin(ModelAdmin):
     list_display = '__str__', 'address'
 
+@register(NearContract)
+class NearContractAdmin(ModelAdmin):
+    list_display = '__str__', 'address'
+
 
 @register(ContractDetailsToken)
 class ContractDetailsTokenAdmin(ModelAdmin):
@@ -302,6 +314,10 @@ class ContractDetailsEOSTokenSAAdmin(ModelAdmin):
 @register(ContractDetailsTRONToken)
 class ContractDetailsTRONTokenAdmin(ModelAdmin):
     list_display = '__str__', 'token_short_name', 'admin_address', 'white_label'
+
+@register(ContractDetailsNearToken)
+class ContractDetailsNearTokenAdmin(ModelAdmin):
+    list_display = '__str__', 'token_short_name', 'admin_address', 'deploy_address', 'white_label'
 
 
 @register(ContractDetailsGameAssets)

@@ -10,7 +10,7 @@ from lastwill.settings import NETWORKS
 
 
 class InvestAddress(models.Model):
-    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     address = models.CharField(max_length=50, db_index=True)
     take_away = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -25,11 +25,11 @@ class AbstractContractDetailsInvestmentPool(CommonDetails):
     class Meta:
         abstract = True
 
-    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     admin_address = models.CharField(max_length=50)
     admin_percent = models.FloatField()
     temp_directory = models.CharField(max_length=36)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
     start_date = models.IntegerField()
     stop_date = models.IntegerField()
     whitelist = models.BooleanField(default=False)

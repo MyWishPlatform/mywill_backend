@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+from sqlite3 import IntegrityError
+import sys, traceback
+import time
+=======
+>>>>>>> dev
 import datetime
 import sys
 import time
@@ -87,9 +93,16 @@ def blocking(f):
     def wrapper(*args, **kwargs):
         network_name = args[0].contract.network.name
         address = NETWORKS[args[0].contract.network.name]['address']
-        if not DeployAddress.objects.select_for_update().filter(
-                Q(network__name=network_name) & Q(address=address) &
-            (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))).update(locked_by=args[0].contract.id):
+        try:
+            # https://docs.djangoproject.com/en/3.2/topics/db/transactions/#django.db.transaction.atomic
+            with transaction.atomic():
+                DeployAddress.objects.select_for_update().filter(
+                    Q(network__name=network_name) & Q(address=address) & (Q(locked_by__isnull=True) | Q(locked_by=args[0].contract.id))
+                ).update(locked_by=args[0].contract.id)
+        except (IntegrityError, RuntimeError) as _:
+            from traceback import print_exc
+            print_exc()
+        except Exception:
             print('address locked. sleeping 5 and requeueing the message', flush=True)
             time.sleep(5)
             raise NeedRequeue()
@@ -102,10 +115,15 @@ def take_off_blocking(network, contract_id=None, address=None):
     if not address:
         address = NETWORKS[network]['address']
     if not contract_id:
-        DeployAddress.objects.select_for_update().filter(network__name=network, address=address).update(locked_by=None)
+        with transaction.atomic():
+            DeployAddress.objects.select_for_update().filter(
+                network__name=network, address=address
+            ).update(locked_by=None)
     else:
-        DeployAddress.objects.select_for_update().filter(network__name=network, address=address,
-                                                         locked_by=contract_id).update(locked_by=None)
+        with transaction.atomic():
+            DeployAddress.objects.select_for_update().filter(
+                network__name=network, address=address, locked_by=contract_id
+            ).update(locked_by=None)
 
 
 class memoize_timeout:

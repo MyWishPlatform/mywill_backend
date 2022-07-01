@@ -31,6 +31,13 @@ from lastwill.payments.api import create_payment
 from lastwill.profile.models import Profile
 
 
+"""
+rabbitmqctl add_user java java
+rabbitmqctl add_vhost mywill
+rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
+"""
+
+
 class Receiver(threading.Thread):
 
     def __init__(self, network):
@@ -39,7 +46,7 @@ class Receiver(threading.Thread):
 
     def run(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost',
+            os.environ.get('RABBITMQ_HOST', '127.0.0.1'),
             5672,
             'mywill',
             pika.PlainCredentials('java', 'java'),
@@ -409,7 +416,7 @@ class WSInterface(threading.Thread):
 
     def run(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            '127.0.0.1',
+            os.environ.get('RABBITMQ_HOST', '127.0.0.1'),
             5672,
             'mywill',
             pika.PlainCredentials('java', 'java'),
@@ -426,13 +433,6 @@ class WSInterface(threading.Thread):
                 body=json.dumps(message),
                 properties=pika.BasicProperties(expiration='30000', type=str(user)),
             )
-
-
-"""
-rabbitmqctl add_user java java
-rabbitmqctl add_vhost mywill
-rabbitmqctl set_permissions -p mywill java ".*" ".*" ".*"
-"""
 
 
 def save_profile(sender, instance, **kwargs):

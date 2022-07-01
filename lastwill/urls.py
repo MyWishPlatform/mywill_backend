@@ -22,25 +22,84 @@ from django.urls import re_path
 from rest_framework.routers import DefaultRouter
 
 from lastwill.contracts.api import (
-    AirdropAddressViewSet, ContractViewSet, EOSAirdropAddressViewSet, ICOtokensView, SolanaTokenInfoViewSet,
-    WhitelistAddressViewSet, buy_brand_report, buy_verification, cancel, change_contract_state,
-    check_eos_accounts_exists, check_neo3_address, check_solana_address, check_status, confirm_protector_info,
-    confirm_protector_tokens, confirm_swaps_info, convert_neo3_address_to_hex, deploy, get_authio_cost, get_code,
-    get_contract_for_link, get_contract_for_unique_link, get_cost_all_contracts, get_eos_airdrop_cost, get_eos_cost,
-    get_invest_balance_day, get_public_contracts, get_statistics, get_statistics_landing, get_test_tokens,
-    get_testnet_tron_tokens, get_token_contracts, get_token_supply, get_tokens_for_eth_address, get_tronish_balance,
-    get_verification_cost, get_whitelabel_cost, i_am_alive, load_airdrop, neo_crowdsale_finalize,
-    send_message_author_swap, skip_protector_approve, test_comp)
-from lastwill.contracts.api_common import (get_available_contracts, get_contract_price, get_contracts)
-from lastwill.contracts.api_eos import (calculate_cost_eos_account, calculate_cost_eos_account_contract,
-                                        create_eos_account, delete_eos_account_contract, deploy_eos_account,
-                                        edit_eos_account, get_all_blockchains, get_balance_info, get_eos_contracts,
-                                        get_profile_info, show_eos_account)
-from lastwill.contracts.api_eth import (calculate_cost_eth_token_contract, create_eth_token, delete_eth_token_contract,
-                                        deploy_eth_token, edit_eth_token, get_source_code_eth_token, show_eth_token)
-from lastwill.dashboard.views import (advanced_rate_view, contracts_statistic_view, deploy_accounts_balances_view,
-                                      users_statistic_view)
-from lastwill.main.views import (balance, eth2rub, exc_rate, index, login, redirect_contribute)
+    AirdropAddressViewSet,
+    ContractViewSet,
+    EOSAirdropAddressViewSet,
+    ICOtokensView,
+    WhitelistAddressViewSet,
+    buy_brand_report,
+    cancel,
+    change_contract_state,
+    check_eos_accounts_exists,
+    check_status,
+    confirm_protector_info,
+    confirm_protector_tokens,
+    confirm_swaps_info,
+    deploy,
+    get_authio_cost,
+    get_code,
+    get_contract_for_link,
+    get_contract_for_unique_link,
+    get_cost_all_contracts,
+    get_eos_airdrop_cost,
+    get_eos_cost,
+    get_invest_balance_day,
+    get_public_contracts,
+    get_statistics,
+    get_statistics_landing,
+    get_test_tokens,
+    get_testnet_tron_tokens,
+    get_token_contracts,
+    get_tokens_for_eth_address,
+    get_tronish_balance,
+    i_am_alive,
+    load_airdrop,
+    neo_crowdsale_finalize,
+    send_message_author_swap,
+    skip_protector_approve,
+    test_comp,
+    get_verification_cost,
+    buy_verification,
+    get_whitelabel_cost,
+    check_neo3_address,
+    convert_neo3_address_to_hex,
+    check_solana_address,
+)
+from lastwill.contracts.api_common import (
+    get_available_contracts,
+    get_contract_price,
+    get_contracts
+)
+from lastwill.contracts.api_eos import (
+    calculate_cost_eos_account,
+    calculate_cost_eos_account_contract,
+    create_eos_account,
+    delete_eos_account_contract,
+    deploy_eos_account,
+    edit_eos_account,
+    get_all_blockchains,
+    get_balance_info,
+    get_eos_contracts,
+    get_profile_info,
+    show_eos_account
+)
+from lastwill.contracts.api_eth import (
+    calculate_cost_eth_token_contract,
+    create_eth_token,
+    delete_eth_token_contract,
+    deploy_eth_token, edit_eth_token,
+    get_source_code_eth_token,
+    show_eth_token
+)
+from lastwill.contracts.api_near import deploy_near_contract
+from lastwill.main.views import (
+    balance,
+    eth2rub,
+    exc_rate,
+    index,
+    login,
+    redirect_contribute
+)
 from lastwill.other.api import SentenceViewSet, send_unblocking_info
 from lastwill.panama_bridge.views import UserTransactionsView
 from lastwill.profile.helpers import generate_metamask_message
@@ -142,6 +201,8 @@ urlpatterns = [
     url(r'^api/deploy_eth_token/$', deploy_eth_token),
     url(r'^api/calculate_cost_eth_token/$', calculate_cost_eth_token_contract),
     url(r'^api/delete_eth_token/$', delete_eth_token_contract),
+    url(r'^api/deploy_near_token/$', deploy_near_contract),
+    url(r'^api/deploy_near_token/(?P<id>\d+)/$', deploy_near_contract),
     url(r'^api/delete_all_api_tokens/$', delete_api_tokens),
     url(r'^api/get_source_code_eth_token/$', get_source_code_eth_token),
     url(r'^api/get_contract_price/$', get_contract_price),

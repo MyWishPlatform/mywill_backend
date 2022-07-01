@@ -110,6 +110,7 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
         'PORT': os.getenv('POSTGRES_PORT', 5432),
+        'CONN_MAX_AGE': None
     }
 }
 
@@ -201,18 +202,29 @@ REST_AUTH_SERIALIZERS = {
 
 OLD_PASSWORD_FIELD_ENABLED = True
 
-SOCIALACCOUNT_PROVIDERS = {'facebook': {'SCOPE': ['email'],}, 'google': {'SCOPE': ['email'],}}
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        'SCOPE': ['email'],
+    },
+    'google': {
+        'SCOPE': ['email'],
+    }
+}
+
 
 LOGGING = {
-    'version': 1,  # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+    # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+    'version': 1,
     'handlers': {
         'logstash': {
             'level': 'DEBUG',
             'class': 'logstash.LogstashHandler',
             'host': 'kibana.mywish.io',
             'port': 5045,
-            'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-            'fqdn': False,  # Fully qualified domain name. Default value: false.
+            # 'type' field in logstash message. Default value: 'logstash'.
+            'message_type': 'logstash',
+            # Fully qualified domain name. Default value: false.
+            'fqdn': False,
             'tags': ['tag1', 'tag2'],  # list of tags. Default: None.
         },
     },
@@ -276,7 +288,7 @@ except ImportError as exc:
     print("Can't load local settings")
 
 # REDIS settings
-REDIS_HOST = '127.0.0.1'
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = '6379'
 BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 BROKER_TRANSPORT_OPTIONS = {
@@ -295,10 +307,6 @@ CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
-    'update_binance_bridge_transaction_status_every_minute': {
-        'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
-        'schedule': crontab(minute='*'),
-    },
     'updating_coingecko_tokens_once_at_day': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
         'schedule': crontab(hour='*', minute=0),
@@ -311,22 +319,26 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'lastwill.swaps_common.tasks.order_limiter',
         'schedule': crontab(minute='*'),
     },
-    'running_swap_status_updater': {
-        'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_eth_pol_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_second_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
+    # 'update_binance_bridge_transaction_status_every_minute': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'running_swap_status_updater': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_eth_pol_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_pol_eth_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_second_pol_eth_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
+    #     'schedule': crontab(minute='*'),
+    # },
 }
 
 COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'

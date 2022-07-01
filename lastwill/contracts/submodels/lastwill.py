@@ -27,9 +27,9 @@ class AbstractContractDetailsLastwill(CommonDetails):
     active_to = models.DateTimeField()
     last_check = models.DateTimeField(null=True, default=None)
     next_check = models.DateTimeField(null=True, default=None)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.CASCADE)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
     email = models.CharField(max_length=256, null=True, default=None)
-    btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None, on_delete=models.CASCADE)
+    btc_key = models.ForeignKey(BtcKey4RSK, null=True, default=None, on_delete=models.SET_NULL)
     platform_alive = models.BooleanField(default=False)
     platform_cancel = models.BooleanField(default=False)
     last_reset = models.DateTimeField(null=True, default=None)
@@ -44,9 +44,14 @@ class AbstractContractDetailsLastwill(CommonDetails):
     def contractPayment(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
-        ContractDetailsLastwill.objects.select_for_update().filter(id=self.id).update(btc_duty=F('btc_duty') +
-                                                                                      message['value'])
-        queues = {'RSK_MAINNET': 'notification-rsk-fgw', 'RSK_TESTNET': 'notification-rsk-testnet-fgw'}
+        with transaction.atomic():
+            ContractDetailsLastwill.objects.select_for_update().filter(
+                id=self.id
+            ).update(btc_duty=F('btc_duty') + message['value'])
+        queues = {
+            'RSK_MAINNET': 'notification-rsk-fgw',
+            'RSK_TESTNET': 'notification-rsk-testnet-fgw'
+        }
         queue = queues[self.contract.network.name]
         send_in_queue(self.contract.id, 'make_payment', queue)
 
@@ -214,8 +219,10 @@ class AbstractContractDetailsLastwill(CommonDetails):
     def fundsAdded(self, message):
         if self.contract.network.name not in ['RSK_MAINNET', 'RSK_TESTNET']:
             return
-        ContractDetailsLastwill.objects.select_for_update().filter(id=self.id).update(btc_duty=F('btc_duty') -
-                                                                                      message['value'])
+        with transaction.atomic():
+            ContractDetailsLastwill.objects.select_for_update().filter(
+                id=self.id
+            ).update(btc_duty=F('btc_duty') - message['value'])
         take_off_blocking(self.contract.network.name)
 
 

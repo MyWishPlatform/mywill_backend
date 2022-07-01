@@ -17,6 +17,31 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 import email_messages
 import lastwill.check as check
+from lastwill.parint import EthereumProvider
+from lastwill.contracts.models import (
+    Contract, Heir, EthContract, TokenHolder, WhitelistAddress,
+    NeoContract, NearContract, SolanaContract, ContractDetailsNeoICO, ContractDetailsNeo,
+    ContractDetailsToken, ContractDetailsICO,
+    ContractDetailsAirdrop, AirdropAddress, TRONContract,
+    ContractDetailsLastwill, ContractDetailsLostKey,
+    ContractDetailsDelayedPayment, ContractDetailsInvestmentPool,
+    InvestAddress, EOSTokenHolder, ContractDetailsEOSToken, EOSContract,
+    ContractDetailsEOSAccount, ContractDetailsEOSICO, EOSAirdropAddress,
+    ContractDetailsEOSAirdrop, ContractDetailsEOSTokenSA,
+    ContractDetailsTRONToken, ContractDetailsGameAssets, ContractDetailsTRONAirdrop,
+    ContractDetailsTRONLostkey, ContractDetailsLostKeyTokens,
+    ContractDetailsWavesSTO, ContractDetailsSWAPS, InvestAddresses, ContractDetailsSWAPS2,
+    ContractDetailsTokenProtector, ApprovedToken,
+    ContractDetailsBinanceLostKeyTokens, ContractDetailsBinanceToken, ContractDetailsBinanceDelayedPayment,
+    ContractDetailsBinanceLostKey, ContractDetailsBinanceLastwill, ContractDetailsBinanceInvestmentPool,
+    ContractDetailsBinanceICO, ContractDetailsBinanceAirdrop,
+    ContractDetailsMaticICO, ContractDetailsMaticToken, ContractDetailsMaticAirdrop,
+    ContractDetailsXinFinToken, ContractDetailsHecoChainToken, ContractDetailsHecoChainICO,
+    ContractDetailsMoonriverToken, ContractDetailsSolanaToken, ContractDetailsNearToken
+)
+from lastwill.contracts.models import send_in_queue
+from lastwill.contracts.submodels.common import create_ethcontract_in_compile
+from lastwill.contracts.submodels.tron import create_troncontract_in_compile
 from lastwill.consts import MAIL_NETWORK, NET_DECIMALS
 from lastwill.contracts.decorators import *
 from lastwill.contracts.models import (
@@ -330,6 +355,7 @@ class ContractSerializer(serializers.ModelSerializer):
             37: ContractDetailsHecoChainICOSerializer,
             38: ContractDetailsMoonriverTokenSerializer,
             39: ContractDetailsSolanaTokenSerializer,
+            40: ContractDetailsNearTokenSerializer
         }[contract_type]
 
 
@@ -782,10 +808,10 @@ class ContractDetailsTokenSerializer(serializers.ModelSerializer):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
 
-        res['token_holders'] = [
-            token_holder_serializer.to_representation(th)
-            for th in contract_details.contract.tokenholder_set.order_by('id').all()
-        ]
+        res['token_holders'] = [token_holder_serializer.to_representation(th) for th in
+                                contract_details.contract.tokenholder_set.order_by('id').all()]
+        if not contract_details.eth_contract_token:
+            contract_details.eth_contract_token = create_ethcontract_in_compile('', '', '', None, '')
         res['eth_contract_token'] = EthContractSerializer().to_representation(contract_details.eth_contract_token)
         if contract_details.eth_contract_token and contract_details.eth_contract_token.ico_details_token.filter(
                 contract__state='ACTIVE'):
@@ -1406,11 +1432,14 @@ class ContractDetailsTRONTokenSerializer(serializers.ModelSerializer):
     def to_representation(self, contract_details):
         res = super().to_representation(contract_details)
         token_holder_serializer = TokenHolderSerializer()
-        res['token_holders'] = [
-            token_holder_serializer.to_representation(th)
-            for th in contract_details.contract.tokenholder_set.order_by('id').all()
-        ]
-        res['tron_contract_token'] = TRONContractSerializer().to_representation(contract_details.tron_contract_token)
+        res['token_holders'] = [token_holder_serializer.to_representation(th)
+                                for th in
+                                contract_details.contract.tokenholder_set.order_by(
+                                    'id').all()]
+        if not contract_details.tron_contract_token:
+            contract_details.tron_contract_token = create_troncontract_in_compile('', '', '', None, '')
+        res['tron_contract_token'] = TRONContractSerializer().to_representation(
+            contract_details.tron_contract_token)
         return res
 
     def update(self, contract, details, contract_details):
@@ -2086,6 +2115,66 @@ class ContractDetailsSolanaTokenSerializer(ContractDetailsSolanaSerializer):
         model = ContractDetailsSolanaToken
 
 
+class NearContractSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = NearContract
+        fields = ('id', 'address')
+
+
+class ContractDetailsNearTokenSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ContractDetailsNearToken
+        fields = ('token_type', 'token_name', 'token_short_name', 'admin_address', 'decimals', 'maximum_supply', 'future_minting', 'deploy_address')
+
+    def validate(self, details):
+        if not (check.is_near_address(details['admin_address'], True) or check.is_near_address(details['admin_address'], False)):
+            raise ValidationError
+        details['decimals'] = int(details['decimals'])
+        if details['decimals'] < 0 or details['decimals'] > 24:
+            raise ValidationError
+        details['maximum_supply'] = int(details['maximum_supply'])
+        if details['maximum_supply'] < 0 or details['maximum_supply'] > 2**128 - 1:
+            raise ValidationError
+        if any([x in string.punctuation for x in details['token_name']]):
+            raise ValidationError
+        if any([x in string.punctuation for x in details['token_short_name']]):
+            raise ValidationError
+
+    def to_representation(self, contract_details):
+        res = super().to_representation(contract_details)
+        res['near_contract_token'] = NearContractSerializer().to_representation(contract_details.near_contract)
+        token_holder_serializer = TokenHolderSerializer()
+        res['token_holders'] = [
+            token_holder_serializer.to_representation(th)
+            for th in
+            contract_details.contract.tokenholder_set.order_by('id').all()
+        ]
+        return res
+
+    def create(self, contract, contract_details):
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().create(kwargs)
+
+    def update(self, contract, details, contract_details):
+        contract.tokenholder_set.all().delete()
+        token_holders = contract_details.pop('token_holders')
+        for th_json in token_holders:
+            th_json['address'] = th_json['address']
+            kwargs = th_json.copy()
+            kwargs['contract'] = contract
+            TokenHolder(**kwargs).save()
+        kwargs = contract_details.copy()
+        kwargs['contract'] = contract
+        return super().update(details, kwargs)
 class SolanaTokenInfoSerializer(serializers.ModelSerializer):
 
     class Meta:

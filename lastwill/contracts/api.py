@@ -39,7 +39,8 @@ from .serializers import (AirdropAddressSerializer, ContractDetailsTokenSerializ
                           EOSAirdropAddressSerializer, WhitelistAddressSerializer, count_sold_tokens, deploy_protector,
                           deploy_swaps)
 
-BROWSER_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
+BROWSER_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Geko/20100101 Firefox/69.0'}
 
 
 def check_and_apply_promocode(promo_str, user, cost, contract_type, cid):
@@ -74,7 +75,7 @@ class ContractViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_ACTIVATION'):
+        if instance.state in ('CREATED', 'WAITING_FOR_PAYMENT', 'WAITING_ACTIVATION'):
             try:
                 self.perform_destroy(instance)
             except Http404:
@@ -346,12 +347,15 @@ def deploy(request):
     promo_str = request.data.get('promo', None)
     if promo_str:
         promo_str = promo_str.upper()
-    promo_str = check_error_promocode(promo_str, contract.contract_type) if promo_str else None
-    cost = check_promocode(promo_str, request.user, original_cost, contract, contract_details)
+    promo_str = check_error_promocode(
+        promo_str, contract.contract_type) if promo_str else None
+    cost = check_promocode(promo_str, request.user,
+                           original_cost, contract, contract_details)
     create_payment(request.user.id, '', currency, -cost, site_id, network)
     if promo_str:
         promo = Promo.objects.get(promo_str=promo_str.upper())
-        User2Promo(user=request.user, promo=promo, contract_id=contract.id).save()
+        User2Promo(user=request.user, promo=promo,
+                   contract_id=contract.id).save()
         promo.referral_bonus_usd += original_cost // NET_DECIMALS['USDT']
         promo.use_count += 1
         promo.save()
@@ -423,7 +427,8 @@ def get_coinmarketcap_statistics(id_list, convert_currency='USD'):
     session.headers.update(headers)
 
     try:
-        response = session.get(URL_STATS_CURRENCY['CoinMarketCap'], params=parameters)
+        response = session.get(
+            URL_STATS_CURRENCY['CoinMarketCap'], params=parameters)
         data = response.text
         # print(data)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
@@ -459,9 +464,12 @@ def get_currency_statistics():
 
 
 def get_new_currency_statistics():
-    currencies_request_ids = ','.join(str(curr_id) for curr_id in URL_STATS_CURRENCY_ID.values())
-    cmc_info_usd = json.loads(get_coinmarketcap_statistics(currencies_request_ids))
-    cmc_info_eth = json.loads(get_coinmarketcap_statistics(currencies_request_ids, 'ETH'))
+    currencies_request_ids = ','.join(str(curr_id)
+                                      for curr_id in URL_STATS_CURRENCY_ID.values())
+    cmc_info_usd = json.loads(
+        get_coinmarketcap_statistics(currencies_request_ids))
+    cmc_info_eth = json.loads(
+        get_coinmarketcap_statistics(currencies_request_ids, 'ETH'))
 
     info_error_usd = cmc_info_usd['status']['error_message']
     info_error_eth = cmc_info_eth['status']['error_message']
@@ -474,7 +482,8 @@ def get_new_currency_statistics():
     data_usd = cmc_info_usd['data']
     data_eth = cmc_info_eth['data']
 
-    eosish_info = float(requests.get(URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos'])
+    eosish_info = float(requests.get(
+        URL_STATS_CURRENCY['EOSISH']).json()['eosish']['eos'])
     usd_info = get_usd_rub_rates()
 
     currency_info = {}
@@ -510,12 +519,15 @@ def get_new_currency_statistics():
         currency_info[price_change_field] = price_change_24h
         currency_info[rank_field] = rank
 
-    wish_eth_info = data_eth[str(URL_STATS_CURRENCY_ID['MYWISH'])]['quote']['ETH']
+    wish_eth_info = data_eth[str(
+        URL_STATS_CURRENCY_ID['MYWISH'])]['quote']['ETH']
     currency_info['wish_price_eth'] = wish_eth_info['price']
-    wish_eth_change = currency_info['eth_percent_change_24h'] / wish_eth_info['percent_change_24h']
+    wish_eth_change = currency_info['eth_percent_change_24h'] / \
+        wish_eth_info['percent_change_24h']
     currency_info['wish_eth_percent_change_24h'] = wish_eth_change
     currency_info['eosish_price_eos'] = eosish_info
-    currency_info['eosish_price_usd'] = eosish_info * currency_info['eos_price_usd']
+    currency_info['eosish_price_usd'] = eosish_info * \
+        currency_info['eos_price_usd']
     currency_info['usd_price_rub'] = usd_info['price']
     currency_info['usd_percent_change_24h'] = usd_info['change_24h']
 
@@ -546,19 +558,17 @@ def get_balances_statistics():
             gas_balance = curr['amount']
         if curr['asset'] == 'NEO':
             neo_balance = curr['amount']
-    eth_account_balance = float(json.loads(requests.get(url=
-                                                        URL_STATS_BALANCE[
-                                                            'ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
-                                                            address=ETH_MAINNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
-                                                        headers=BROWSER_HEADERS).content.decode())['result']) / \
-                          NET_DECIMALS['ETH']
-    eth_test_account_balance = float(json.loads(requests.get(url=
-                                                             URL_STATS_BALANCE[
-                                                                 'ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
-                                                                 address=ETH_TESTNET_ADDRESS,
-                                                                 api_key=ETHERSCAN_API_KEY),
-                                                             headers=BROWSER_HEADERS).content.decode())['result']) / \
-                               NET_DECIMALS['ETH']
+    eth_account_balance = float(json.loads(requests.get(url=URL_STATS_BALANCE[
+        'ETH'] + '{address}&tag=latest&apikey={api_key}'.format(
+        address=ETH_MAINNET_ADDRESS, api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / \
+        NET_DECIMALS['ETH']
+    eth_test_account_balance = float(json.loads(requests.get(url=URL_STATS_BALANCE[
+        'ETH_ROPSTEN'] + '{address}&tag=latest&apikey={api_key}'.format(
+        address=ETH_TESTNET_ADDRESS,
+        api_key=ETHERSCAN_API_KEY),
+        headers=BROWSER_HEADERS).content.decode())['result']) / \
+        NET_DECIMALS['ETH']
 
     # eth_account_balance = float(json.loads(requests.get(
     #     'https://api.etherscan.io/api?module=account&action=balance'
@@ -703,7 +713,8 @@ def get_balances_statistics():
 
 
 def get_ieo_statistics():
-    res = requests.get('https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
+    res = requests.get(
+        'https://www.bitforex.com/server/cointrade.act?cmd=getTicker&busitype=coin-btc-swap')
     return res.json()
 
 
@@ -985,8 +996,12 @@ def get_invest_balance_day(request):
         else:
             date = datetime.datetime(now_date.year, now_date.month, now_date.day, 0, 0, 0)
     else:
-        date = datetime.datetime(now_date.year, now_date.month, now_date.day, now_date.hour, 0, 0)
-    invests = InvestAddress.objects.filter(contract=contract, created_date__lte=date)
+        date = datetime.datetime(
+            now_date.year, now_date.month,
+            now_date.day, now_date.hour, 0, 0
+        )
+    invests = InvestAddress.objects.filter(
+        contract=contract, created_date__lte=date)
     balance = 0
     for inv in invests:
         balance = balance + inv.amount
@@ -1010,8 +1025,10 @@ def check_status(request):
     if contract.network.name == 'EOS_MAINNET':
         command = ['cleos', '-u', 'https://%s:%s' % (host, port), 'get', 'table', addr, addr, 'state']
     else:
-        command = ['cleos', '-u', 'http://%s:%s' % (host, port), 'get', 'table', addr, addr, 'state']
-    stdout, stderr = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+        command = ['cleos', '-u', 'http://%s:%s' %
+                   (host, port), 'get', 'table', addr, addr, 'state']
+    stdout, stderr = Popen(command, stdin=PIPE,
+                           stdout=PIPE, stderr=PIPE).communicate()
     if stdout:
         result = json.loads(stdout.decode())['rows'][0]
         if now > result['finish'] and int(result['total_tokens']) < details.soft_cap:
@@ -1038,7 +1055,8 @@ def get_eos_cost(request):
     ram = request.query_params['buy_ram_kbytes']
     net = request.query_params['stake_net_value']
     cpu = request.query_params['stake_cpu_value']
-    eos_cost = round((float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
+    eos_cost = round(
+        (float(ram) * ram_price + float(net) + float(cpu)) * 2 + 0.3, 0)
     print('eos cost', eos_cost, flush=True)
 
     return JsonResponse({
@@ -1111,7 +1129,8 @@ def send_authio_info(contract, details, authio_email):
 
 @api_view(http_method_names=['POST'])
 def buy_brand_report(request):
-    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    print('id', request.data.get('contract_id'), type(
+        request.data.get('contract_id')), flush=True)
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     authio_email = request.data.get('authio_email')
     host = request.META['HTTP_HOST']
@@ -1172,7 +1191,8 @@ def get_tokens_for_eth_address(request):
         check.is_address(address)
         result = get_parsing_tokenholdings(address)
         if not result:
-            result = requests.get(url=ETHPLORER_URL.format(address=address, key=ETHPLORER_KEY)).json()
+            result = requests.get(url=ETHPLORER_URL.format(
+                address=address, key=ETHPLORER_KEY)).json()
             if 'tokens' in result:
                 result = result['tokens']
             else:
@@ -1202,7 +1222,8 @@ def get_tokens_for_eth_address(request):
 def get_tronish_balance(request):
     eos_address = request.query_params.get('eos_address', None)
     if eos_address:
-        tronish_info = TRONSnapshotEOS.objects.filter(eos_address=eos_address).first()
+        tronish_info = TRONSnapshotEOS.objects.filter(
+            eos_address=eos_address).first()
         if tronish_info:
             return Response({'balance': tronish_info.balance / 10**4 / 20 * 10**6})
 
@@ -1265,7 +1286,8 @@ def confirm_swaps_info(request):
         raise PermissionDenied
     if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
-    confirm_contracts = Contract.objects.filter(user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
+    confirm_contracts = Contract.objects.filter(
+        user=request.user, state='WAITING_FOR_PAYMENT', contract_type=20)
     for c in confirm_contracts:
         c.state = 'WAITING_FOR_PAYMENT'
         c.save()
@@ -1325,7 +1347,8 @@ def confirm_protector_tokens(request):
                                        contract_type=23).first()
     if contract:
         token_list = request.data.get('tokens')
-        protector_contract = ContractDetailsTokenProtector.objects.get(contract=contract)
+        protector_contract = ContractDetailsTokenProtector.objects.get(
+            contract=contract)
         protector_contract.approve_from_front(token_list)
         # protector_contract.confirm_tokens()
 
@@ -1399,7 +1422,8 @@ def get_contract_for_unique_link(request):
         raise PermissionDenied
     details = ContractDetailsSWAPS.objects.filter(unique_link=link).first()
     if not details:
-        details = ContractDetailsSWAPS2.objects.filter(unique_link=link).first()
+        details = ContractDetailsSWAPS2.objects.filter(
+            unique_link=link).first()
     if not details:
         raise PermissionDenied
     contract = details.contract
@@ -1408,7 +1432,8 @@ def get_contract_for_unique_link(request):
 
 @api_view(http_method_names=['GET'])
 def get_public_contracts(request):
-    contracts = Contract.objects.filter(contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
+    contracts = Contract.objects.filter(
+        contract_type__in=[20, 21], network__name='ETHEREUM_MAINNET', state='ACTIVE')
     result = []
     for contract in contracts:
         d = contract.get_details()
@@ -1430,7 +1455,7 @@ def change_contract_state(request):
         raise PermissionDenied
     if host not in [SWAPS_URL, RUBIC_EXC_URL, RUBIC_FIN_URL]:
         raise PermissionDenied
-    contract.state = 'WAITING_FOR_ACTIVATION'
+    contract.state = 'WAITING_ACTIVATION'
     contract.save()
     return JsonResponse(ContractSerializer().to_representation(contract))
 
@@ -1449,7 +1474,8 @@ def send_message_author_swap(request):
 
 @api_view(http_method_names=['POST'])
 def buy_verification(request):
-    print('id', request.data.get('contract_id'), type(request.data.get('contract_id')), flush=True)
+    print('id', request.data.get('contract_id'), type(
+        request.data.get('contract_id')), flush=True)
     contract = Contract.objects.get(id=request.data.get('contract_id'))
     if contract.user != request.user or contract.state not in ('ACTIVE', 'DONE', 'ENDED'):
         raise PermissionDenied

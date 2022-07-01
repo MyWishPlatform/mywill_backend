@@ -44,6 +44,17 @@ def instantiate_tronapi(pk, net):
     tron.default_address = tron.address.from_private_key(tron.private_key).base58
     return tron
 
+def create_troncontract_in_compile(abi, bytecode, cv, contract, source_code):
+    tron_contract_token = TRONContract()
+    tron_contract_token.abi = abi
+    tron_contract_token.bytecode = bytecode
+    tron_contract_token.compiler_version = cv
+    tron_contract_token.contract = contract
+    tron_contract_token.original_contract = contract
+    tron_contract_token.source_code = source_code
+    tron_contract_token.save()
+    return tron_contract_token
+
 
 class TRONContract(EthContract):
     pass
@@ -436,7 +447,7 @@ class ContractDetailsGameAssets(CommonDetails):
 
 @contract_details('Tron Airdrop contract')
 class ContractDetailsTRONAirdrop(CommonDetails):
-    contract = models.ForeignKey(Contract, null=True, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, null=True, on_delete=models.SET_NULL)
     admin_address = models.CharField(max_length=50)
     token_address = models.CharField(max_length=50)
     temp_directory = models.CharField(max_length=36)

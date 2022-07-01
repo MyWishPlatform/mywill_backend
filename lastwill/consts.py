@@ -21,6 +21,7 @@ MAIL_NETWORK = {
     'HECOCHAIN_TESTNET': 'HecoChainTest',
     'MOONRIVER_MAINNET': 'Moonriver',
     'SOLANA_TESTNET': 'Solana Testnet',
+    'NEAR_TESTNET': 'Near Testnet'
     'SOLANA_MAINNET': 'Solana Mainnet',
 }
 
@@ -44,6 +45,7 @@ API_NETWORK = {
     'HECOCHAIN_TESTNET': 'HECOCHAIN_TESTNET',
     'MOONRIVER_MAINNET': 'MOONRIVER_MAINNET',
     'SOLANA_TESTNET': 'SOLANA_TESTNET',
+    'NEAR_TESTNET': 'NEAR_TESTNET',
     'SOLANA_MAINNET': 'SOLANA_MAINNET',
 }
 
@@ -67,6 +69,8 @@ NETWORK_SUBSITE = {
     'HECOCHAIN_TESTNET': 1,
     'MOONRIVER_MAINNET': 1,
     'SOLANA_TESTNET': 1,
+    'NEAR_TESTNET': 1,
+
     'SOLANA_MAINNET': 1,
 }
 
@@ -108,6 +112,8 @@ CONTRACT_PRICE_USDT = {
     'HECOCHAIN_ICO': 35,
     'MOONRIVER_TOKEN': 199,
     'SOLANA_TOKEN': 50,
+    
+    'NEAR_TOKEN': 999,
 }
 
 CONTRACT_PRICE_ETH = {
@@ -154,27 +160,28 @@ CONTRACT_GAS_LIMIT = {
 }
 
 NET_DECIMALS = {
-    'ETH': 10**18,
-    'ETH_GAS_PRICE': 10**9,
-    'EOS': 10**4,
-    'WISH': 10**18,
-    'EOSISH': 10**4,
-    'BSCBNB': 10**18,
-    'BNB': 10**18,
-    'BWISH': 10**18,
-    'WWISH': 10**18,
-    'BSCWISH': 10**18,
-    'BTC': 10**8,
-    'TRON': 10**6,
-    'TRONISH': 10**6,
-    'TRX': 10**6,
-    'USDT': 10**6,
-    'SWAP': 10**18,
-    'OKB': 10**18,
-    'RBC': 10**18,
-    'XIN': 10**18,
-    'HT': 10**18,  # HecoChain
-    'MOVR': 10**18,
+    'ETH': 10 ** 18,
+    'ETH_GAS_PRICE': 10 ** 9,
+    'EOS': 10 ** 4,
+    'WISH': 10 ** 18,
+    'EOSISH': 10 ** 4,
+    'BSCBNB': 10 ** 18,
+    'BNB': 10 ** 18,
+    'BWISH': 10 ** 18,
+    'WWISH': 10 ** 18,
+    'BSCWISH': 10 ** 18,
+    'BTC': 10 ** 8,
+    'TRON': 10 ** 6,
+    'TRONISH': 10 ** 6,
+    'TRX': 10 ** 6,
+    'USDT': 10 ** 6,
+    'SWAP': 10 ** 18,
+    'OKB': 10 ** 18,
+    'RBC': 10 ** 18,
+    'XIN': 10 ** 18,
+    'HT': 10 ** 18,  # HecoChain
+    'MOVR': 10 ** 18,
+    'NEAR': 10 ** 12,
 }
 
 TRON_REPLENISH_THRESHOLD = {'NET': 36000, 'ENERGY': 5600000, 'MIN_TRX': 1000000}
@@ -398,13 +405,17 @@ AVAILABLE_CONTRACT_TYPES = {
     39: [{
         'contract_type': 39,
         'contract_name': 'Token'
-    }]
+    }],
+    40: [
+        {'contract_type': 40, 'contract_name': 'Token'}
+    ],
 }
 
 NETWORK_TYPES = {
-    'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36, 38],
+    'testnet': [2, 4, 6, 11, 15, 17, 23, 25, 36, 38, 40],
     'mainnet': [1, 3, 5, 10, 14, 16, 22, 24, 28, 35, 37, 39]
 }
+
 
 ALL_CONTRACT_STATES = [
     'ACTIVE', 'CANCELLED', 'CREATED', 'DONE', 'ENDED', 'EXPIRED', 'KILLED', 'POSTPONED', 'TRIGGERED', 'UNDER_CROWDSALE',
@@ -520,6 +531,8 @@ ETH_COMMON_GAS_PRICES = {
     'HECOCHAIN_MAINNET': 6,
     'HECOCHAIN_TESTNET': 6,
     'MOONRIVER_MAINNET': 20,
+    'SOLANA_TESTNET': 5,
+    'NEAR_TESTNET': 300,
 }
 
 EOS_SA_TOKEN_ACCOUNT_CREATOR_PARAMS = {
