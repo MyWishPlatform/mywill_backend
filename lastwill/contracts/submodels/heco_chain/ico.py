@@ -1,23 +1,20 @@
-from lastwill.contracts.submodels.ico import AbstractContractDetailsICO
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS)
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
+from lastwill.contracts.submodels.ico import AbstractContractDetailsICO
+
 
 @contract_details('HecoChain MyWish ICO')
 class ContractDetailsHecoChainICO(AbstractContractDetailsICO):
-    eth_contract_token = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='hecochain_ico_details_token',
-        on_delete=models.SET_NULL
-    )
-    eth_contract_crowdsale = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='hecochain_ico_details_crowdsale',
-        on_delete=models.SET_NULL
-    )
+    eth_contract_token = models.ForeignKey(EthContract,
+                                           null=True,
+                                           default=None,
+                                           related_name='hecochain_ico_details_token',
+                                           on_delete=models.SET_NULL)
+    eth_contract_crowdsale = models.ForeignKey(EthContract,
+                                               null=True,
+                                               default=None,
+                                               related_name='hecochain_ico_details_crowdsale',
+                                               on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):

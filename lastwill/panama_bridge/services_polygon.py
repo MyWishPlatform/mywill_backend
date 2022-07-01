@@ -1,18 +1,18 @@
 import logging
+
 import requests
 from hexbytes import HexBytes
-from web3 import Web3, HTTPProvider
+from web3 import HTTPProvider, Web3
 
-from .models import PanamaTransaction
 # from networks.models import Network
 # from contracts.services import (
 # get_infura_provider,
 # get_abi_by_filename,
 # )
-from lastwill.swaps_common.orderbook.order_limited.uniswap import (
-    get_abi_by_filename,
-)
+from lastwill.swaps_common.orderbook.order_limited.uniswap import \
+    get_abi_by_filename
 
+from .models import PanamaTransaction
 
 # Consts - now there, because panama_bridge app need to refactor
 ETH_POL_STATUS = 'DepositInProgress'
@@ -60,28 +60,20 @@ def update_pol_eth_status(debug=False):
     try:
         # pol_provider = get_infura_provider(provider_url=POL_PR_URL)
         # pol_provider = get_infura_provider(provider_url=POL_TEST_PR_URL)
-        pol_provider = get_infura_provider(
-            provider_url=POL_PR_URL if debug else POL_TEST_PR_URL
-        )
+        pol_provider = get_infura_provider(provider_url=POL_PR_URL if debug else POL_TEST_PR_URL)
     except Exception as exception_error:
-        logging.error(
-            """
+        logging.error("""
             Get provider.
             Error message:
             {error_message}
-            """.format(
-                error_massage=exception_error.__str__()
-            )
-        )
+            """.format(error_massage=exception_error.__str__()))
 
         return 0
 
     for transaction in polygon_transactions:
         try:
 
-            receipt = pol_provider.eth.getTransactionReceipt(
-                transaction.transaction_id
-            )
+            receipt = pol_provider.eth.getTransactionReceipt(transaction.transaction_id)
 
             # if TESTNET:
             #     url = POLYGON_API_URL_TESTNET + str(receipt.blockNumber)
@@ -89,10 +81,8 @@ def update_pol_eth_status(debug=False):
             #     url = POLYGON_API_URL + str(receipt.blockNumber)
             # url = POLYGON_API_URL + str(receipt.blockNumber)
             # url = POLYGON_API_URL_TESTNET + str(receipt.blockNumber)
-            url = '{url}{block_number}'.format(
-                url=POLYGON_API_URL if debug else POLYGON_API_URL_TESTNET,
-                block_bumber=str(receipt.blockNumber)
-            )
+            url = '{url}{block_number}'.format(url=POLYGON_API_URL if debug else POLYGON_API_URL_TESTNET,
+                                               block_bumber=str(receipt.blockNumber))
 
             response = requests.get(url)
 
@@ -100,23 +90,14 @@ def update_pol_eth_status(debug=False):
                 transaction.status = WAITING_FOR_DEPOSIT_STATUS
                 transaction.save()
 
-            logging.info(
-                'Polygon -> Ethereum updating on {tx_id}'.format(
-                    tx_id=transaction.transaction_id
-                )
-            )
+            logging.info('Polygon -> Ethereum updating on {tx_id}'.format(tx_id=transaction.transaction_id))
         except Exception as exception_error:
-            logging.error(
-                """
+            logging.error("""
                 Polygon -> Ethereum error on {tx_id}.
                 Error description:
                 {error_message}
-                """.format(
-                    tx_id=transaction.transaction_id,
-                    error_message=exception_error.__str__()
-                )
-            )
-            
+                """.format(tx_id=transaction.transaction_id, error_message=exception_error.__str__()))
+
             continue
 
 
@@ -147,38 +128,28 @@ def second_get_pol_eth_status(debug=False):
     #     return 0
 
     # w3 = get_infura_provider(provider_url=INFURA_URL)
-    w3 = get_infura_provider(
-        provider_url=INFURA_URL if debug else INFURA_URL_GOERLI_TESTNET
-    )
+    w3 = get_infura_provider(provider_url=INFURA_URL if debug else INFURA_URL_GOERLI_TESTNET)
 
     # check updating for active transaction
     for transaction in polygon_transactions:
 
         try:
-            receipt = w3.eth.getTransactionReceipt(
-                transaction.second_transaction_id
-            )
+            receipt = w3.eth.getTransactionReceipt(transaction.second_transaction_id)
 
             if receipt.status:
                 transaction.status = ETH_POL_STATUS_COMPLETED
                 transaction.save()
 
-            logging.info(
-                'Polygon -> Ethereum second part updating on {}.'.format(
-                    transaction.second_transaction_id
-                )
-            )
+            logging.info('Polygon -> Ethereum second part updating on {}.'.format(transaction.second_transaction_id))
         except Exception as exception_error:
-            logging.error(
-                """
+            logging.error("""
                 Polygon -> Ethereum second part error on {tx_id}.
                 Error description:
                 {error_message}
                 """.format(
-                    tx_id=transaction.second_transaction_id,
-                    error_message=exception_error.__str__(),
-                )
-            )
+                tx_id=transaction.second_transaction_id,
+                error_message=exception_error.__str__(),
+            ))
 
             continue
 
@@ -213,9 +184,7 @@ def update_eth_pol_status(debug=False):
     #     return 0
     # w3 = get_infura_provider(provider_url=INFURA_URL)
     # w3 = get_infura_provider(provider_url=INFURA_URL_GOERLI_TESTNET)
-    w3 = get_infura_provider(
-        provider_url=INFURA_URL if debug else INFURA_URL_GOERLI_TESTNET
-    )
+    w3 = get_infura_provider(provider_url=INFURA_URL if debug else INFURA_URL_GOERLI_TESTNET)
 
     # network = Network.displayed_objects.get(
     #     title=POLYGON_NETWORK,
@@ -227,9 +196,7 @@ def update_eth_pol_status(debug=False):
     #     return 0
     # pol_provider = get_infura_provider(provider_url=POL_PR_URL)
     # pol_provider = get_infura_provider(provider_url=POL_TEST_PR_URL)
-    pol_provider = get_infura_provider(
-        provider_url=POL_PR_URL if debug else POL_TEST_PR_URL
-    )
+    pol_provider = get_infura_provider(provider_url=POL_PR_URL if debug else POL_TEST_PR_URL)
 
     # check status for active transaction on blockchain
     for transaction in polygon_transactions:
@@ -261,21 +228,15 @@ def update_eth_pol_status(debug=False):
                     transaction.status = ETH_POL_STATUS_COMPLETED
                     transaction.save()
 
-            logging.info(
-                'Ethereum -> Polygon second part updating on {}.'.format(
-                    transaction.second_transaction_id
-                )
-            )
+            logging.info('Ethereum -> Polygon second part updating on {}.'.format(transaction.second_transaction_id))
         except Exception as exception_error:
-            logging.error(
-                """
+            logging.error("""
                 Ethereum-> Polygon error on {tx_id}.
                 Error description:
                 {error_message}
                 """.format(
-                    tx_id=transaction.second_transaction_id,
-                    error_message=exception_error.__str__(),
-                )
-            )
+                tx_id=transaction.second_transaction_id,
+                error_message=exception_error.__str__(),
+            ))
 
             continue

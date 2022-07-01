@@ -1,9 +1,9 @@
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from lastwill.contracts.api_eos import *
 from lastwill.consts import *
+from lastwill.contracts.api_eos import *
 
 
 @api_view(http_method_names=['GET'])
@@ -57,8 +57,11 @@ def get_contracts(request):
     answer = []
     for c in contracts:
         answer.append({
-            'id': c.id, 'name': c.name, 'network_name': c.network.name,
-            'network_id': c.network.id, 'contract_type': c.contract_type,
+            'id': c.id,
+            'name': c.name,
+            'network_name': c.network.name,
+            'network_id': c.network.id,
+            'contract_type': c.contract_type,
             'state': c.state
         })
     return Response(answer)
@@ -80,7 +83,8 @@ def get_contract_price(request):
     else:
         if int(request.data['contract_type']) not in [x for x in range(18)]:
             raise ValidationError({'result': 'Wrong contract_type'}, code=404)
-        if int(request.data['contract_type']) == 3 or int(request.data['contract_type']) == 6 or int(request.data['contract_type']) == 7:
+        if int(request.data['contract_type']) == 3 or int(request.data['contract_type']) == 6 or int(
+                request.data['contract_type']) == 7:
             raise ValidationError({'result': 'Wrong contract_type'}, code=404)
         for x in API_CONTRACT_PRICES:
             if x['contract_type'] == int(request.data['contract_type']):

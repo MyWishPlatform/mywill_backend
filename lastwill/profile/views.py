@@ -1,44 +1,31 @@
-import pyotp
 import uuid
 
-from django.core.exceptions import ObjectDoesNotExist
+import pyotp
+from allauth.account import app_settings
+from allauth.account.adapter import get_adapter
+from allauth.account.models import (EmailAddress, EmailConfirmation, EmailConfirmationHMAC)
+from allauth.account.utils import (complete_signup, get_login_redirect_url, get_next_redirect_url,
+                                   logout_on_password_change, passthrough_next_redirect_url, perform_login,
+                                   sync_user_email_addresses, url_str_to_user_pk)
 from django.contrib import messages
-from django.views.generic.base import TemplateResponseMixin, TemplateView, View
-from django.shortcuts import redirect
-from django.core.mail import send_mail
-from django.http import (
-    Http404,
-    HttpResponsePermanentRedirect,
-    HttpResponseRedirect,
-)
 from django.contrib.sites.shortcuts import get_current_site
-
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
+from django.http import (Http404, HttpResponsePermanentRedirect, HttpResponseRedirect)
+from django.shortcuts import redirect
+from django.views.generic.base import TemplateResponseMixin, TemplateView, View
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from allauth.account import app_settings
-from allauth.account.adapter import get_adapter
-from allauth.account.utils import (
-    complete_signup,
-    get_login_redirect_url,
-    get_next_redirect_url,
-    logout_on_password_change,
-    passthrough_next_redirect_url,
-    perform_login,
-    sync_user_email_addresses,
-    url_str_to_user_pk,
-)
-from allauth.account.models import EmailAddress, EmailConfirmation, EmailConfirmationHMAC
-from lastwill.rates.api import rate
-from tron_wif.hex2wif import hex2tronwif
 from lastwill.contracts.models import Contract
 from lastwill.profile.helpers import valid_totp
-from lastwill.settings import BINANCE_PAYMENT_ADDRESS, MY_WISH_URL, SUPPORT_EMAIL, DEFAULT_FROM_EMAIL, WAVES_URL, \
-    SWAPS_URL, RUBIC_EXC_URL
-from lastwill.profile.models import SubSite, UserSiteBalance, APIToken
+from lastwill.profile.models import APIToken, SubSite, UserSiteBalance
+from lastwill.rates.api import rate
+from lastwill.settings import (BINANCE_PAYMENT_ADDRESS, DEFAULT_FROM_EMAIL, MY_WISH_URL, RUBIC_EXC_URL, SUPPORT_EMAIL,
+                               SWAPS_URL, WAVES_URL)
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
-
+from tron_wif.hex2wif import hex2tronwif
 
 
 class ConfirmEmailView(TemplateResponseMixin, View):
@@ -58,11 +45,8 @@ class ConfirmEmailView(TemplateResponseMixin, View):
     def post(self, *args, **kwargs):
         self.object = confirmation = self.get_object()
         confirmation.confirm(self.request)
-        get_adapter(self.request).add_message(
-            self.request,
-            messages.SUCCESS,
-            'account/messages/email_confirmed.txt',
-            {'email': confirmation.email_address.email})
+        get_adapter(self.request).add_message(self.request, messages.SUCCESS, 'account/messages/email_confirmed.txt',
+                                              {'email': confirmation.email_address.email})
         if app_settings.LOGIN_ON_EMAIL_CONFIRMATION:
             resp = self.login_on_confirm(confirmation)
             if resp is not None:
@@ -113,18 +97,17 @@ class ConfirmEmailView(TemplateResponseMixin, View):
         return ctx
 
     def get_redirect_url(self):
-        return get_adapter(self.request).get_email_confirmation_redirect_url(
-            self.request)
+        return get_adapter(self.request).get_email_confirmation_redirect_url(self.request)
 
 
 confirm_email = ConfirmEmailView.as_view()
 
 
 class UserConfirmEmailView(ConfirmEmailView):
+
     def post(self, *args, **kwargs):
         self.object = confirmation = self.get_object()
         confirmation.confirm(self.request)
-
         '''get_adapter(self.request).add_message(
             self.request,
             messages.SUCCESS,
@@ -180,28 +163,28 @@ def profile_view(request):
         swaps_notification_type = swaps_notification_set.notification
 
     swaps_notifications = {
-            'email': swaps_notification_email,
-            'telegram_name': swaps_notification_telegram_name,
-            'notification': swaps_notification_type
-        }
+        'email': swaps_notification_email,
+        'telegram_name': swaps_notification_telegram_name,
+        'notification': swaps_notification_type
+    }
 
     answer = {
-            'username': user_name,
-            'contracts': Contract.objects.filter(user=request.user).count(),
-            'balance': str(user_balance.balance),
-            'internal_address': user_balance.eth_address,
-            'internal_btc_address': user_balance.btc_address,
-            'use_totp': request.user.profile.use_totp,
-            'is_social': request.user.profile.is_social,
-            'id': request.user.id,
-            'lang': request.user.profile.lang,
-            'memo': user_balance.memo,
-            'eos_address': 'mywishcoming',
-            'bnb_address': BINANCE_PAYMENT_ADDRESS,
-            'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else '',
-            'usdt_balance': str(int(int(user_balance.balance) / 10 ** 18 * rate('WISH', 'USDT').value * 10 ** 6)),
-            'is_swaps_admin': request.user.profile.is_swaps_admin,
-            'swaps_notifications': swaps_notifications
+        'username': user_name,
+        'contracts': Contract.objects.filter(user=request.user).count(),
+        'balance': str(user_balance.balance),
+        'internal_address': user_balance.eth_address,
+        'internal_btc_address': user_balance.btc_address,
+        'use_totp': request.user.profile.use_totp,
+        'is_social': request.user.profile.is_social,
+        'id': request.user.id,
+        'lang': request.user.profile.lang,
+        'memo': user_balance.memo,
+        'eos_address': 'mywishcoming',
+        'bnb_address': BINANCE_PAYMENT_ADDRESS,
+        'tron_address': hex2tronwif(user_balance.tron_address) if user_balance.tron_address else '',
+        'usdt_balance': str(int(int(user_balance.balance) / 10**18 * rate('WISH', 'USDT').value * 10**6)),
+        'is_swaps_admin': request.user.profile.is_swaps_admin,
+        'swaps_notifications': swaps_notifications
     }
     return Response(answer)
 
@@ -214,9 +197,9 @@ def generate_key(request):
     user.profile.totp_key = pyotp.random_base32()
     user.profile.save()
     return Response({
-            'secret': user.profile.totp_key,
-            'issuer': 'mywish.io',
-            'user': user.email if user.email else str(user.id),
+        'secret': user.profile.totp_key,
+        'issuer': 'mywish.io',
+        'user': user.email if user.email else str(user.id),
     })
 
 
@@ -276,13 +259,8 @@ def create_api_token(request):
     api_token = APIToken(user=user, token=token_str, comment=text)
     api_token.save()
     send_mail(
-        'User create api token',
-        'User with id={id} {email_info} create token for api'.format(
-            id=user.id, email_info='email is {email}'.format(email=user.email)
-        ),
-        DEFAULT_FROM_EMAIL,
-        [SUPPORT_EMAIL]
-    )
+        'User create api token', 'User with id={id} {email_info} create token for api'.format(
+            id=user.id, email_info='email is {email}'.format(email=user.email)), DEFAULT_FROM_EMAIL, [SUPPORT_EMAIL])
     answer = {
         "user_id": user.id,
         "token": api_token.token,
@@ -298,18 +276,16 @@ def get_api_tokens(request):
     user = request.user
     if user.is_anonymous:
         raise PermissionDenied()
-    answer = {"tokens":[]}
+    answer = {"tokens": []}
     tokens = APIToken.objects.filter(user=user, active=True)
     for token in tokens:
-        answer["tokens"].append(
-            {
-                "user_id": user.id,
-                "token": token.token,
-                "label": token.comment,
-                "active": token.active,
-                "last_accessed": token.last_accessed
-            }
-        )
+        answer["tokens"].append({
+            "user_id": user.id,
+            "token": token.token,
+            "label": token.comment,
+            "active": token.active,
+            "last_accessed": token.last_accessed
+        })
     return Response(answer)
 
 
@@ -335,4 +311,3 @@ def delete_api_tokens(request):
         token.active = False
         token.save()
     return Response({"result": "ok"})
-

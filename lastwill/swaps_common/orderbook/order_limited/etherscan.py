@@ -1,10 +1,9 @@
 import logging
+
 import requests
 
-from .consts import (
-    ETHERSCAN_API_URL,
-    ETHERSCAN_API_KEY,
-)
+from .consts import ETHERSCAN_API_KEY, ETHERSCAN_API_URL
+
 
 def get_gas_price() -> int:
     """
@@ -25,9 +24,5 @@ def get_gas_price() -> int:
 
         return result
     except (KeyError, Exception):
-        logging.warning(
-            f'Unable to get gas from Etnerscan.io.\nDescription: \n{response}.'
-        )
-        print(
-            f'Unable to get gas from Etnerscan.io.\nDescription: \n{response}.'
-        )
+        logging.warning(f'Unable to get gas from Etnerscan.io.\nDescription: \n{response}.')
+        print(f'Unable to get gas from Etnerscan.io.\nDescription: \n{response}.')

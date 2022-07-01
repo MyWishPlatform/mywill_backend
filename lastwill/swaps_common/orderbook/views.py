@@ -1,26 +1,24 @@
 from copy import deepcopy
 
 from django_filters.rest_framework.backends import DjangoFilterBackend
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED, HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-)
+from rest_framework.response import Response
+from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND)
+from rest_framework.viewsets import ModelViewSet
 
 from lastwill.settings import RUBIC_EXC_URL
 from lastwill.swaps_common.mailing.models import SwapsNotificationDefaults
 from lastwill.swaps_common.orderbook.models import OrderBookSwaps
 from lastwill.swaps_common.orderbook.serializers import \
-     OrderBookSwapsModelSerializer
+    OrderBookSwapsModelSerializer
 
 
 class OrderBookSwapsModelViewSet(ModelViewSet):
     queryset = OrderBookSwaps.objects.all()
     serializer_class = OrderBookSwapsModelSerializer
-    filter_backends = [DjangoFilterBackend,]
+    filter_backends = [
+        DjangoFilterBackend,
+    ]
     filterset_fields = [
         'network',
         'contract_address',
@@ -31,11 +29,15 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.action in [
-            'create_order',
+                'create_order',
         ]:
-            return [IsAuthenticated(),]
+            return [
+                IsAuthenticated(),
+            ]
 
-        return [AllowAny(),]
+        return [
+            AllowAny(),
+        ]
 
     def create_order(self, request):
         """
@@ -158,17 +160,17 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
         notification = new_contract.get('notification')
 
         if request.META['HTTP_HOST'] == RUBIC_EXC_URL:
-            new_contract.update({'is_rubic_order': True, })
+            new_contract.update({
+                'is_rubic_order': True,
+            })
 
         if notification:
             notification_email = new_contract.get('notification_email')
             notification_tg = new_contract.get('notification_tg')
 
             if not notification_email or not notification_tg:
-                return _get_response_object(
-                    message='Notificaion email or notification tg must be passed.',
-                    status_code=HTTP_400_BAD_REQUEST
-                )
+                return _get_response_object(message='Notificaion email or notification tg must be passed.',
+                                            status_code=HTTP_400_BAD_REQUEST)
 
             noti_defaults = user.swapsnotificationdefaults_set.all()
 
@@ -186,17 +188,11 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
         deserialized_data = self.get_serializer(data=new_contract)
 
         if not deserialized_data.is_valid():
-            return _get_response_object(
-                message=deserialized_data.errors,
-                status_code=HTTP_400_BAD_REQUEST
-            )
+            return _get_response_object(message=deserialized_data.errors, status_code=HTTP_400_BAD_REQUEST)
 
         self.perform_create(deserialized_data)
 
-        return _get_response_object(
-            message=deserialized_data.validated_data,
-            status_code=HTTP_201_CREATED
-        )
+        return _get_response_object(message=deserialized_data.validated_data, status_code=HTTP_201_CREATED)
 
     def get_orders(self, request):
         """
@@ -245,23 +241,18 @@ class OrderBookSwapsModelViewSet(ModelViewSet):
                         .order_by('state_changed_at')
 
         if not orders.exists():
-            return _get_response_object(
-                message='No orders has been founded.',
-                status_code=HTTP_404_NOT_FOUND
-            )
+            return _get_response_object(message='No orders has been founded.', status_code=HTTP_404_NOT_FOUND)
 
         serialized_data = self.get_serializer(orders, many=True)
 
-        return _get_response_object(
-            message={
-                'count': len(serialized_data.data),
-                'data': serialized_data.data,
-            },
-            status_code=HTTP_200_OK
-        )
+        return _get_response_object(message={
+            'count': len(serialized_data.data),
+            'data': serialized_data.data,
+        },
+                                    status_code=HTTP_200_OK)
 
 
-def _get_response_object(message, status_code:int=HTTP_200_OK):
+def _get_response_object(message, status_code: int = HTTP_200_OK):
     """
         Возвращает объект Response c передаваемыми параметрами.
 
@@ -271,7 +262,4 @@ def _get_response_object(message, status_code:int=HTTP_200_OK):
         - message : any
         - status_code : int, по-умолчанию HTTP_200_OK
     """
-    return Response(
-        data=message,
-        status=status_code
-    )
+    return Response(data=message, status=status_code)

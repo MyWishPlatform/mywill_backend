@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 import json
-import requests
 import sys
-from lastwill.settings import NETWORKS
+
+import requests
 from solana.rpc.api import Client
+
+from lastwill.settings import NETWORKS
 
 
 class InterfaceConnectExc(Exception):
+
     def __init__(self, name, *args):
         if not name:
             name = 'interface'
@@ -21,6 +24,7 @@ class InterfaceErrorExc(Exception):
 
 
 class ParConnectExc(InterfaceConnectExc):
+
     def __init__(self, *args):
         super().__init__(name='parity')
 
@@ -30,6 +34,7 @@ class ParErrorExc(InterfaceErrorExc):
 
 
 class ParInt:
+
     def __init__(self, network=None):
         if network is None:
             if len(sys.argv) > 1 and sys.argv[1] in NETWORKS:
@@ -41,18 +46,16 @@ class ParInt:
         print('parity interface', self.node_url, flush=True)
 
     def __getattr__(self, method):
+
         def f(*args):
             arguments = {
-                    'method': method,
-                    'params': args,
-                    'id': 1,
-                    'jsonrpc': '2.0',
+                'method': method,
+                'params': args,
+                'id': 1,
+                'jsonrpc': '2.0',
             }
             try:
-                temp = requests.post(self.node_url,
-                        json=arguments,
-                        headers={'Content-Type': 'application/json'}
-                )
+                temp = requests.post(self.node_url, json=arguments, headers={'Content-Type': 'application/json'})
             except requests.exceptions.ConnectionError as e:
                 raise ParConnectExc()
             print('raw response', temp.content, flush=True)
@@ -60,6 +63,7 @@ class ParInt:
             if result.get('error'):
                 raise ParErrorExc(result['error']['message'])
             return result['result']
+
         return f
 
 
@@ -68,6 +72,7 @@ class NeoInt(ParInt):
 
 
 class SolanaInt:
+
     def __init__(self, network: str = None):
         if network is None:
             raise AttributeError('network argument is unfilled')
@@ -80,6 +85,7 @@ class SolanaInt:
 
 
 class InfuraConnectExc(InterfaceConnectExc):
+
     def __init__(self, *args):
         super().__init__(name='infura')
 
@@ -89,6 +95,7 @@ class InfuraErrorExc(InterfaceErrorExc):
 
 
 class InfuraInt:
+
     def __init__(self, network=None):
         if network is None:
             if len(sys.argv) > 1 and sys.argv[1] in NETWORKS:
@@ -107,19 +114,16 @@ class InfuraInt:
         print('infura interface', self.url, flush=True)
 
     def __getattr__(self, method):
+
         def f(*args):
             arguments = {
-                    'method': method,
-                    'params': args,
-                    'id': 1,
-                    'jsonrpc': '2.0',
+                'method': method,
+                'params': args,
+                'id': 1,
+                'jsonrpc': '2.0',
             }
             try:
-                temp = requests.post(
-                        self.url,
-                        json=arguments,
-                        headers={'Content-Type': 'application/json'}
-                )
+                temp = requests.post(self.url, json=arguments, headers={'Content-Type': 'application/json'})
             except requests.exceptions.ConnectionError as e:
                 raise InfuraConnectExc()
             print('raw response', temp.content, flush=True)
@@ -127,6 +131,7 @@ class InfuraInt:
             if result.get('error'):
                 raise InfuraErrorExc(result['error']['message'])
             return result['result']
+
         return f
 
 

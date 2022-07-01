@@ -1,14 +1,15 @@
-from django.db import models
 from django.core.mail import send_mail
+from django.db import models
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT
 from email_messages import *
+from lastwill.consts import (CONTRACT_GAS_LIMIT, CONTRACT_PRICE_USDT, NET_DECIMALS)
+from lastwill.contracts.submodels.common import *
 
 
 class AbstractContractDetailsDelayedPayment(CommonDetails):
+
     class Meta:
         abstract = True
 
@@ -19,7 +20,7 @@ class AbstractContractDetailsDelayedPayment(CommonDetails):
     user_address = models.CharField(max_length=50)
     recepient_address = models.CharField(max_length=50)
     recepient_email = models.CharField(max_length=200, null=True)
-    eth_contract = models.ForeignKey(EthContract, null=True, default=None)
+    eth_contract = models.ForeignKey(EthContract, null=True, default=None, on_delete=models.SET_NULL)
 
     def predeploy_validate(self):
         now = timezone.now()
@@ -54,28 +55,19 @@ class AbstractContractDetailsDelayedPayment(CommonDetails):
         if self.recepient_email:
             send_mail(
                 heir_subject,
-                heir_message.format(
-                    user_address=self.recepient_address,
-                    link_tx=link.format(tx=message['transactionHash'])
-                ),
-                DEFAULT_FROM_EMAIL,
-                [self.recepient_email]
-            )
+                heir_message.format(user_address=self.recepient_address,
+                                    link_tx=link.format(tx=message['transactionHash'])), DEFAULT_FROM_EMAIL,
+                [self.recepient_email])
         self.contract.state = 'TRIGGERED'
         self.contract.save()
         if self.contract.user.email:
-            send_mail(
-                carry_out_subject,
-                carry_out_message,
-                DEFAULT_FROM_EMAIL,
-                [self.contract.user.email]
-            )
+            send_mail(carry_out_subject, carry_out_message, DEFAULT_FROM_EMAIL, [self.contract.user.email])
 
     def get_arguments(self, *args, **kwargs):
         return [
             self.user_address,
             self.recepient_address,
-            2 ** 256 - 1,
+            2**256 - 1,
             int(self.date.timestamp()),
         ]
 
@@ -86,6 +78,7 @@ class AbstractContractDetailsDelayedPayment(CommonDetails):
     @postponable
     def deploy(self):
         return super().deploy()
+
 
 @contract_details('Deferred payment contract')
 class ContractDetailsDelayedPayment(AbstractContractDetailsDelayedPayment):

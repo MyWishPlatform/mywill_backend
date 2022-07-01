@@ -1,24 +1,21 @@
-from django.http import JsonResponse
 from django.db.models import F
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from lastwill.contracts.api_eos import *
 import lastwill.check as check
+from lastwill.consts import *
+from lastwill.contracts.api_eos import *
 from lastwill.contracts.models import *
+from lastwill.deploy.models import *
 from lastwill.profile.models import *
 from lastwill.settings import MY_WISH_URL
-from lastwill.deploy.models import *
-from lastwill.consts import *
 
 
 def log_userinfo(api_action, token, user=None, id=None):
-    logger = ('ETH API: called {action} with token {tok} ').format(
-        action=api_action, tok=token
-    )
+    logger = ('ETH API: called {action} with token {tok} ').format(action=api_action, tok=token)
     if user is not None:
         logger += 'for user {usr} '.format(usr=user)
     if id is not None:
@@ -27,19 +24,15 @@ def log_userinfo(api_action, token, user=None, id=None):
 
 
 def log_additions(api_action, add_params):
-    logger = 'ETH API: {action} parameters: {params}'.format(
-        action=api_action, params=add_params
-    )
+    logger = 'ETH API: {action} parameters: {params}'.format(action=api_action, params=add_params)
     print(logger, flush=True)
 
 
 def validate_token_short_name(name):
     if len(name) > 64:
-        raise ValidationError({'result': 'Too long token short name'},
-                              code=404)
+        raise ValidationError({'result': 'Too long token short name'}, code=404)
     if len(name) == 0:
-        raise ValidationError({'result': 'Empty token short name'},
-                              code=404)
+        raise ValidationError({'result': 'Empty token short name'}, code=404)
     for symb in name:
         if not symb.isupper():
             raise ValidationError({'result': 'Wrong symbol in token short name'}, code=404)
@@ -47,11 +40,9 @@ def validate_token_short_name(name):
 
 def validate_token_name(name):
     if len(name) == 0:
-        raise ValidationError({'result': 'Empty token name'},
-                              code=404)
+        raise ValidationError({'result': 'Empty token name'}, code=404)
     if len(name) > 512:
-        raise ValidationError({'result': 'Too long token name'},
-                              code=404)
+        raise ValidationError({'result': 'Too long token name'}, code=404)
 
 
 @api_view(http_method_names=['POST'])
@@ -90,17 +81,8 @@ def create_eth_token(request):
         'token_holders': []
     }
     log_additions(log_action_name, token_params)
-    Contract.get_details_model(
-        5
-    ).calc_cost(token_params, network)
-    contract = Contract(
-        state='CREATED',
-        name='Contract',
-        contract_type=5,
-        network=network,
-        cost=0,
-        user=user
-    )
+    Contract.get_details_model(5).calc_cost(token_params, network)
+    contract = Contract(state='CREATED', name='Contract', contract_type=5, network=network, cost=0, user=user)
     contract.save()
 
     contract_details = ContractDetailsTokenSerializer().create(contract, token_params)
@@ -264,7 +246,6 @@ def delete_eth_token_contract(request):
     return Response('Contract with id {id} deleted'.format(id=contract.id))
 
 
-
 @api_view(http_method_names=['POST'])
 def deploy_eth_token(request):
     '''
@@ -296,9 +277,15 @@ def deploy_eth_token(request):
             promo = request.data['promo'].upper()
             user_balance = UserSiteBalance.objects.get(user=user, subsite__site_name=MY_WISH_URL).balance
             wish_cost = check_promocode_in_api(promo, 15, user, user_balance, contract.id, wish_cost)
-        if not UserSiteBalance.objects.select_for_update().filter(
-                user=user, subsite__site_name=MY_WISH_URL, balance__gte=wish_cost
-        ).update(balance=F('balance') - wish_cost):
+        try:
+            with transaction.atomic():
+                UserSiteBalance.objects.select_for_update().filter(
+                    user=user, subsite__site_name=MY_WISH_URL, balance__gte=wish_cost
+                ).update(balance=F('balance') - wish_cost)
+        except (IntegrityError, RuntimeError) as _:
+            from traceback import print_exc
+            print_exc()
+        except Exception:    
             raise ValidationError({'result': 'You have not money'}, code=400)
     contract.state = 'WAITING_FOR_DEPLOYMENT'
     contract.deploy_started_at = datetime.datetime.now()

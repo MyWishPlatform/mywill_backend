@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class TokentableConfig(AppConfig):
-    name = 'panama_bridge'
+    name = 'lastwill.panama_bridge'

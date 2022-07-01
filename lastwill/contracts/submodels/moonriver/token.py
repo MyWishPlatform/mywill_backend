@@ -1,18 +1,16 @@
-from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
+from lastwill.consts import (AUTHIO_PRICE_USDT, CONTRACT_PRICE_USDT, NET_DECIMALS, VERIFICATION_PRICE_USDT,
+                             WHITELABEL_PRICE_USDT)
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT, \
-     VERIFICATION_PRICE_USDT, WHITELABEL_PRICE_USDT, AUTHIO_PRICE_USDT
+from lastwill.contracts.submodels.ico import AbstractContractDetailsToken
 
 
 @contract_details('Moonriver Token contract')
 class ContractDetailsMoonriverToken(AbstractContractDetailsToken):
-    eth_contract_token = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='moonriver_token_details_token',
-        on_delete=models.SET_NULL
-    )
+    eth_contract_token = models.ForeignKey(EthContract,
+                                           null=True,
+                                           default=None,
+                                           related_name='moonriver_token_details_token',
+                                           on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):
@@ -32,4 +30,3 @@ class ContractDetailsMoonriverToken(AbstractContractDetailsToken):
         if 'white_label' in kwargs and kwargs['white_label']:
             price += WHITELABEL_PRICE_USDT
         return price * NET_DECIMALS['USDT']
-

@@ -1,17 +1,16 @@
-from lastwill.contracts.submodels.lostkey import AbstractContractDetailsLostKeyTokens
+from lastwill.consts import CONTRACT_PRICE_USDT, NET_DECIMALS
 from lastwill.contracts.submodels.common import *
-from lastwill.consts import NET_DECIMALS, CONTRACT_PRICE_USDT
+from lastwill.contracts.submodels.lostkey import \
+    AbstractContractDetailsLostKeyTokens
 
 
 @contract_details('Binance Wallet contract (lost key)')
 class ContractDetailsBinanceLostKeyTokens(AbstractContractDetailsLostKeyTokens):
-    eth_contract = models.ForeignKey(
-        EthContract,
-        null=True,
-        default=None,
-        related_name='binance_lostkey_details',
-        on_delete=models.SET_NULL
-    )
+    eth_contract = models.ForeignKey(EthContract,
+                                     null=True,
+                                     default=None,
+                                     related_name='binance_lostkey_details',
+                                     on_delete=models.SET_NULL)
 
     @classmethod
     def min_cost(cls):

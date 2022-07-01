@@ -11,7 +11,7 @@ class Network(models.Model):
 class DeployAddress(models.Model):
     address = models.CharField(max_length=50)
     locked_by = models.IntegerField(null=True, default=None)
-    network = models.ForeignKey(Network, default=1)
+    network = models.ForeignKey(Network, default=1, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.address} to {self.network.name}"

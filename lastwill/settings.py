@@ -16,14 +16,13 @@ from celery.schedules import crontab
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(os.path.realpath(__file__))
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -105,12 +104,12 @@ WSGI_APPLICATION = 'lastwill.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lastwill_new',
-        'USER': 'lastwill_new',
-        'PASSWORD': 'lastwill_new',
-        'HOST': 'localhost',
-        'PORT': 5432,
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.getenv('POSTGRES_PORT', 5432),
         'CONN_MAX_AGE': None
     }
 }
@@ -131,7 +130,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -157,9 +155,7 @@ MEDIA_URL = '/media/'
 
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 
-STATICFILES_DIRS = (
-    PROJECT_STATIC_ROOT,
-)
+STATICFILES_DIRS = (PROJECT_STATIC_ROOT,)
 
 SITE_ID = 1
 REST_SESSION_LOGIN = True
@@ -175,14 +171,12 @@ ACCOUNT_ADAPTER = 'lastwill.profile.adapter.SubSiteRegistrationAdapter'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',],
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SIGNER='https://sign.mywish.io/sign/'
+SIGNER = 'https://sign.mywish.io/sign/'
 SOL_PATH = '/var/www/contracts_repos/lastwill/contracts/LastWillOraclize.sol'
 ORACLIZE_PROXY = '0xf4c716ec3a201b960ca75a74452e663b00cf58b9'
 
@@ -200,10 +194,10 @@ CONTRACTS_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 # MESSAGE_QUEUE = 'notification'
 
 REST_AUTH_SERIALIZERS = {
-        'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
-        'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
-        'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
-        'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
+    'LOGIN_SERIALIZER': 'lastwill.profile.serializers.UserLoginSerializer2FA',
+    'PASSWORD_CHANGE_SERIALIZER': 'lastwill.profile.serializers.PasswordChangeSerializer2FA',
+    'PASSWORD_RESET_CONFIRM_SERIALIZER': 'lastwill.profile.serializers.PasswordResetConfirmSerializer2FA',
+    'PASSWORD_RESET_SERIALIZER': 'lastwill.profile.serializers.SubSitePasswordResetSerializer',
 }
 
 OLD_PASSWORD_FIELD_ENABLED = True
@@ -218,33 +212,34 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
-
-
 LOGGING = {
-  'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-  'handlers': {
-      'logstash': {
-          'level': 'DEBUG',
-          'class': 'logstash.LogstashHandler',
-          'host': 'kibana.mywish.io',
-          'port': 5045,
-          'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-          'fqdn': False, # Fully qualified domain name. Default value: false.
-          'tags': ['tag1', 'tag2'], # list of tags. Default: None.
-      },
-  },
-  'loggers': {
-      'django.request': {
-          'handlers': ['logstash'],
-          'level': 'DEBUG',
-          'propagate': True,
-      },
-  },
-  'lastwill.swaps_common': {
-    'level': 'DEBUG',
-    'handlers': ['console', 'file'],
-    'propagate': False
-  },
+    # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+    'version': 1,
+    'handlers': {
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.LogstashHandler',
+            'host': 'kibana.mywish.io',
+            'port': 5045,
+            # 'type' field in logstash message. Default value: 'logstash'.
+            'message_type': 'logstash',
+            # Fully qualified domain name. Default value: false.
+            'fqdn': False,
+            'tags': ['tag1', 'tag2'],  # list of tags. Default: None.
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['logstash'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+    'lastwill.swaps_common': {
+        'level': 'DEBUG',
+        'handlers': ['console', 'file'],
+        'propagate': False
+    },
 }
 
 # SOCIALACCOUNT_EMAIL_REQUIRED = True
@@ -292,27 +287,26 @@ try:
 except ImportError as exc:
     print("Can't load local settings")
 
-
 # REDIS settings
-REDIS_HOST = '127.0.0.1'
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = '6379'
 BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600, }
+BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 3600,
+}
 
 # CELERY settings
 CELERY_DATA_FORMAT = 'json'
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/0'
-CELERY_ACCEPT_CONTENT = [f'application/{CELERY_DATA_FORMAT}', ]
+CELERY_ACCEPT_CONTENT = [
+    f'application/{CELERY_DATA_FORMAT}',
+]
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_RESULT_SERIALIZER = CELERY_DATA_FORMAT
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
-    'update_binance_bridge_transaction_status_every_minute': {
-        'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
-        'schedule': crontab(minute='*'),
-    },
     'updating_coingecko_tokens_once_at_day': {
         'task': 'lastwill.swaps_common.tokentable.tasks.update_coingecko_tokens',
         'schedule': crontab(hour='*', minute=0),
@@ -325,22 +319,26 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'lastwill.swaps_common.tasks.order_limiter',
         'schedule': crontab(minute='*'),
     },
-    'running_swap_status_updater': {
-        'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_eth_pol_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
-    'update_polygon_second_pol_eth_status': {
-        'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
-        'schedule': crontab(minute='*'),
-    },
+    # 'update_binance_bridge_transaction_status_every_minute': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_binance_bridge_transaction_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'running_swap_status_updater': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_swap_status_from_backend',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_eth_pol_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_eth_pol_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_pol_eth_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_pol_eth_status',
+    #     'schedule': crontab(minute='*'),
+    # },
+    # 'update_polygon_second_pol_eth_status': {
+    #     'task': 'lastwill.panama_bridge.tasks.update_polygon_second_pol_eth_status',
+    #     'schedule': crontab(minute='*'),
+    # },
 }
 
 COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/coins/{coin_id}'
@@ -400,7 +398,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'MATIC_MAINNET',
             'testnet': 'MATIC_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'ico': 32,
             'token': 33,
             'airdrop': 34,
@@ -411,7 +409,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'TRON_MAINNET',
             'testnet': 'TRON_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'token': 15,
             'game_asset': 16,
             'airdrop': 17,
@@ -422,7 +420,7 @@ DASHBOARD_NETWORKS = {
             'mainnet': 'EOS_MAINNET',
             'testnet': 'EOS_TESTNET',
         },
-         'contracts': {
+        'contracts': {
             'token': 10,
             'account': 11,
             'ico': 12,

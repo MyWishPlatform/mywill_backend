@@ -1,9 +1,10 @@
-import traceback
 import sys
+import traceback
 
-from lastwill.telegram_bot.models import BotSub
-from lastwill.telegram_bot.core_bot import bot
 from celery import shared_task
+
+from lastwill.telegram_bot.core_bot import bot
+from lastwill.telegram_bot.models import BotSub
 
 
 @shared_task

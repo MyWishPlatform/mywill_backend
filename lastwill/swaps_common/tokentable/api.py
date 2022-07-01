@@ -6,18 +6,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from lastwill.swaps_common.tokentable.models import (
-    CoinGeckoToken,
-    Tokens,
-    TokensCoinMarketCap,
-)
 from lastwill.contracts.models import *
-from lastwill.settings import (
-    DEFAULT_IMAGE_LINK,
-    COINMARKETCAP_API_KEYS,
-    MY_WISH_URL,
-    RUBIC_EXC_URL
-)
+from lastwill.settings import (COINMARKETCAP_API_KEYS, DEFAULT_IMAGE_LINK, MY_WISH_URL, RUBIC_EXC_URL)
+from lastwill.swaps_common.tokentable.models import (CoinGeckoToken, Tokens, TokensCoinMarketCap)
 
 
 def add_eth_for_test(result):
@@ -39,8 +30,7 @@ def get_test_tokens(token_name=None, token_short_name=None, address=None):
         if token_short_name == 'ETH':
             result = add_eth_for_test(result)
         else:
-            token_list = token_list.filter(
-                token_short_name__startswith=token_short_name.upper())
+            token_list = token_list.filter(token_short_name__startswith=token_short_name.upper())
 
     if token_name:
         token_list = token_list.filter(token_name__istartswith=token_name)
@@ -75,8 +65,7 @@ def get_all_tokens(request):
     token_list = Tokens.objects.all()
     if token_short_name:
         token_list = token_list.filter(
-            Q(token_short_name__icontains=token_short_name.upper()) | Q(token_name__icontains=token_short_name.lower())
-        )
+            Q(token_short_name__icontains=token_short_name.upper()) | Q(token_name__icontains=token_short_name.lower()))
 
     if address:
         token_list = token_list.filter(address=address.lower())
@@ -101,9 +90,8 @@ def get_all_tokens(request):
 @api_view()
 def get_standarts_tokens(request):
     tokens_all = Tokens.objects.all()
-    token_list = tokens_all.filter(token_short_name__in=[
-        'BNB', 'MKR', 'CRO', 'BAT', 'USDC', 'OMG', 'TUSD', 'LINK', 'ZIL', 'HOT'
-    ])
+    token_list = tokens_all.filter(
+        token_short_name__in=['BNB', 'MKR', 'CRO', 'BAT', 'USDC', 'OMG', 'TUSD', 'LINK', 'ZIL', 'HOT'])
 
     result = []
     for t in token_list:
@@ -138,7 +126,6 @@ def get_cmc_tokens(request):
     else:
         scheme = request.scheme
 
-
     token_list = []
     token_objects = TokensCoinMarketCap.objects.all()
 
@@ -149,7 +136,7 @@ def get_cmc_tokens(request):
             'token_name': t.token_name,
             'token_short_name': t.token_short_name,
             'platform': t.token_platform,
-            'address':  t.token_address,
+            'address': t.token_address,
             'image_link': '{}://{}{}'.format(scheme, serve_url, t.image.url),
             'rank': t.token_rank,
             'rate': t.token_price
@@ -192,8 +179,10 @@ def get_coins_rate(request):
 
     data = json.loads(response.text)
 
-    return Response({'coin1': data['data'][str(id1)]['quote']['USD']['price'],
-                     'coin2': data['data'][str(id2)]['quote']['USD']['price']})
+    return Response({
+        'coin1': data['data'][str(id1)]['quote']['USD']['price'],
+        'coin2': data['data'][str(id2)]['quote']['USD']['price']
+    })
 
 
 @api_view()
@@ -211,12 +200,10 @@ def get_coingecko_tokens(request):
     if not coingecko_tokens:
         return get_response('No coingecko tokens.', HTTP_404_NOT_FOUND)
 
-    return get_response(
-        data_to_response={
-            'total': len(coingecko_tokens),
-            'tokens': coingecko_tokens,
-        }
-    )
+    return get_response(data_to_response={
+        'total': len(coingecko_tokens),
+        'tokens': coingecko_tokens,
+    })
 
 
 def get_response(data_to_response, status_to_response=HTTP_200_OK):
@@ -268,13 +255,9 @@ def get_actual_coingecko_tokens(request):
                 'token_title': token.title,
                 'token_short_title': token.short_title.upper(),
                 'platform': token.platform,
-                'address':  token.address,
+                'address': token.address,
                 'decimals': token.decimals,
-                'image_link': '{}://{}{}'.format(
-                    scheme,
-                    serve_url,
-                    token.image_file.url
-                ),
+                'image_link': '{}://{}{}'.format(scheme, serve_url, token.image_file.url),
                 'coingecko_rank': token.rank,
                 'usd_price': token.usd_price,
                 'used_in_iframe': token.used_in_iframe,

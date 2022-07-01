@@ -1,39 +1,26 @@
 import logging
 from decimal import Decimal
-from requests import get
 
 # from django.db.models.query import QuerySet
 from django.utils import timezone
-from rest_framework.status import (
-    HTTP_201_CREATED,
-    HTTP_400_BAD_REQUEST,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
-from web3 import Web3, HTTPProvider
-# from web3.exceptions import TransactionNotFound
+from requests import get
+from rest_framework.status import (HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR)
+from web3 import HTTPProvider, Web3
 
 from lastwill.consts import NET_DECIMALS
+from lastwill.settings_local import (  # ETH_PROVIDER_URL,; BSC_PROVIDER_URL,
+    BSC_SWAP_CONTRACT_ADDRESS, ETH_SWAP_CONTRACT_ADDRESS, SWAP_BACKEND_URL)
 from lastwill.swaps_common.orderbook.order_limited.uniswap import load_contract
-from lastwill.settings_local import (
-    # ETH_PROVIDER_URL,
-    # BSC_PROVIDER_URL,
-    ETH_SWAP_CONTRACT_ADDRESS,
-    BSC_SWAP_CONTRACT_ADDRESS,
-    SWAP_BACKEND_URL,
-)
 
 from .models import PanamaTransaction
 
-RBC_DECIMALS = NET_DECIMALS.get('RBC', 10 ** 18)
+# from web3.exceptions import TransactionNotFound
+
+RBC_DECIMALS = NET_DECIMALS.get('RBC', 10**18)
 
 
 # def create_swap(network:int, tx_hash:str):
-def create_swap(
-    from_network:int,
-    tx_id:str,
-    from_amount:str,
-    wallet_address:str
-):
+def create_swap(from_network: int, tx_id: str, from_amount: str, wallet_address: str):
     # {
     #    "type": "swap_rbc",
     #    "fromNetwork": int (1 - BSC / 2 - ETH),
@@ -52,7 +39,6 @@ def create_swap(
             'Swap with hash {} already exist.'.format(tx_id),
             HTTP_400_BAD_REQUEST,
         )
-
 
     networks = {
         'BSC': {
@@ -75,8 +61,7 @@ def create_swap(
         contract = load_contract(
             network.get('contract_abi'),
             # Web3.toChecksumAddress(network.get('contract_address'))
-            Web3.toChecksumAddress(ETH_SWAP_CONTRACT_ADDRESS)
-        )
+            Web3.toChecksumAddress(ETH_SWAP_CONTRACT_ADDRESS))
         from_network = network.get('blockchain_id')
 
         if from_network == 1:
@@ -109,8 +94,7 @@ def create_swap(
 
         new_swap.save()
 
-        logging.info(
-            """Swap with hash {transaction_id} was successfully added.
+        logging.info("""Swap with hash {transaction_id} was successfully added.
                The swap body:
                Type: {type},
                Transaction id: {transaction_id},
@@ -126,21 +110,20 @@ def create_swap(
                Updated at: {update_time},
                Status: {status}
             """.format(
-                type=new_swap.type,
-                transaction_id=new_swap.transaction_id,
-                from_network=new_swap.from_network,
-                to_network=new_swap.to_network,
-                eth_symbol=new_swap.eth_symbol,
-                bsc_symbol=new_swap.bsc_symbol,
-                wallet_from_address=new_swap.wallet_from_address,
-                wallet_to_address=new_swap.wallet_to_address,
-                actual_from_amount=new_swap.actual_from_amount,
-                actual_to_amount=new_swap.actual_to_amount,
-                wallet_deposit_address=new_swap.wallet_deposit_address,
-                update_time=new_swap.update_time,
-                status=new_swap.status,
-            )
-        )
+            type=new_swap.type,
+            transaction_id=new_swap.transaction_id,
+            from_network=new_swap.from_network,
+            to_network=new_swap.to_network,
+            eth_symbol=new_swap.eth_symbol,
+            bsc_symbol=new_swap.bsc_symbol,
+            wallet_from_address=new_swap.wallet_from_address,
+            wallet_to_address=new_swap.wallet_to_address,
+            actual_from_amount=new_swap.actual_from_amount,
+            actual_to_amount=new_swap.actual_to_amount,
+            wallet_deposit_address=new_swap.wallet_deposit_address,
+            update_time=new_swap.update_time,
+            status=new_swap.status,
+        ))
 
         return (
             'Swap with hash {} was successfully added.'.format(tx_id),
@@ -252,7 +235,7 @@ def create_swap(
         )
 
 
-def check_swap_status(swap_tx_hash:str, backend_url:str=SWAP_BACKEND_URL):
+def check_swap_status(swap_tx_hash: str, backend_url: str = SWAP_BACKEND_URL):
     response = get(backend_url.format(swap_tx_hash))
 
     return response.json()['status']
@@ -271,20 +254,18 @@ def update_swap_status():
         # if status == 'FAIL':
         #     swap.status = swap.FAIL
         if status == 'IN_PROCESS':
-            swap.update_time=timezone.now()
+            swap.update_time = timezone.now()
             swap.status = 'DepositInProgress'
         elif status == 'SUCCESS':
-            swap.update_time=timezone.now()
+            swap.update_time = timezone.now()
             swap.status = 'Completed'
 
         swap.save()
 
-        logging.info(
-            'Swap with hash {} was updated status to {} at {}.'.format(
-                swap.transaction_id,
-                swap.status,
-                swap.update_time,
-            )
-        )
+        logging.info('Swap with hash {} was updated status to {} at {}.'.format(
+            swap.transaction_id,
+            swap.status,
+            swap.update_time,
+        ))
 
     return 1
