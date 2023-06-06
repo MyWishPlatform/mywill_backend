@@ -2,6 +2,8 @@ import pyotp
 from ethereum.utils import ecrecover_to_pub, sha3
 from eth_utils.hexadecimal import encode_hex, decode_hex, add_0x_prefix
 from eth_account.messages import defunct_hash_message
+from web3.auto import w3
+from eth_account.messages import encode_defunct
 from rest_framework.exceptions import ValidationError
 from random import choice
 from string import ascii_letters
@@ -31,11 +33,10 @@ def valid_metamask_message(address, message, signature):
     if v not in (27,28):
         v += 27
 
-    message_hash = defunct_hash_message(text=message)
-    pubkey = ecrecover_to_pub(decode_hex(message_hash.hex()), v, r, s)
-    signer_address = encode_hex(sha3(pubkey)[-20:])
+    message_hash = encode_defunct(text=message)
+    signer_address = w3.eth.account.recover_message(message_hash, signature=signature)
 
-    if signer_address != address.lower():
+    if signer_address.lower() != address.lower():
         raise ValidationError({'result': 'Incorrect signature'}, code=400)
 
     return True

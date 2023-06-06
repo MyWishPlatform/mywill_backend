@@ -740,7 +740,7 @@ class CommonDetails(models.Model):
         if self.contract.network.name == 'ETHEREUM_MAINNET':
             try:
                 response = requests.get(GAS_API_URL).json()
-                gas_price_current = response[SPEEDLVL] / 10
+                gas_price_current = int(response[SPEEDLVL])
                 gas_price_current = int(gas_price_current * 10 ** 9)
                 return gas_price_current
             except (requests.RequestException, KeyError):

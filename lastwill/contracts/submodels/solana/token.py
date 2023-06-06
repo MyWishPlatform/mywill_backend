@@ -15,7 +15,7 @@ def confirm_solana_tx(response, network):
     conn = SolanaInt(network.name).connect()
     for attempt in range(5):
         print(f'attempt {attempt} to confirm transaction', flush=True)
-        tx_data = conn.get_transaction(response['result'])
+        tx_data = conn.get_confirmed_transaction(response['result'])
         if tx_data['result'] is not None:
             print(tx_data)
             error = tx_data['result']['meta']['err']
