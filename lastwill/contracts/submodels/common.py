@@ -23,7 +23,7 @@ from neocore.UInt160 import UInt160
 
 from lastwill.promo.utils import create_promocode
 from lastwill.settings import SIGNER, CONTRACTS_DIR, CONTRACTS_TEMP_DIR, WEB3_ATTEMPT_COOLDOWN
-from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_KEY, NETWORKS
+from lastwill.settings import SECRET_KEY, KEY_ID, GAS_API_URL, SPEEDLVL, ROOT_EXT_PUB_KEY, NETWORKS
 from lastwill.parint import *
 from lastwill.consts import MAX_WEI_DIGITS, MAIL_NETWORK, ETH_COMMON_GAS_PRICES, NET_DECIMALS, NETWORK_TYPES, \
     AVAILABLE_CONTRACT_TYPES, CONTRACT_GAS_LIMIT
@@ -277,7 +277,9 @@ def sign_neo_transaction(tx, binary_tx, address):
 
 def get_whitelabel_address(contract_id):
     hd_wallet = BIP44HDWallet(symbol=ETH, account=0, change=False, address=0)
-    hd_wallet.from_root_xprivate_key(ROOT_EXT_KEY)
+    hd_wallet.from_xpublic_key(ROOT_EXT_PUB_KEY)
+    hd_wallet.clean_derivation()
+    hd_wallet.from_path('m/44/60/0/0/0')
     derived_wallet = hd_wallet.from_index(contract_id)
     address = derived_wallet.address()
     return address
